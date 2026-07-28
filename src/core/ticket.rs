@@ -1,44 +1,23 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
-use serde::Deserialize;
+use anyhow::{bail, Context, Result};
+use regex::Regex;
 
-/// A parsed ticket from .tickets/{id}-{slug}.md
+// --- Constants ---
+
+pub const STATUS_VALUES: &[&str] = &["open", "in_progress", "done"];
+pub const ENV_VALUES: &[&str] = &["corp", "personal", "either"];
+
+// --- Ticket ---
+
+/// A parsed ticket preserving raw frontmatter for surgical edits.
 #[derive(Debug, Clone)]
 pub struct Ticket {
-    pub id: String,
-    pub title: String,
-    pub status: String,
-    pub blocked_by: Vec<String>,
-    pub priority: Option<String>,
-    pub env: Option<String>,
-    pub spec: Option<String>,
     pub path: PathBuf,
+    /// Ordered frontmatter entries: (key, raw_value) — key="" for blank lines.
+    pub fm: Vec<(String, String)>,
+    /// Everything after the closing --- fence.
     pub body: String,
-}
-
-/// Frontmatter fields (serde-driven)
-#[derive(Debug, Deserialize)]
-struct Frontmatter {
-    id: String,
-    title: String,
-    status: String,
-    #[serde(default)]
-    blocked_by: Vec<String>,
-    #[serde(default)]
-    priority: Option<String>,
-    #[serde(default)]
-    env: Option<String>,
-    #[serde(default)]
-    spec: Option<String>,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum TicketError {
-    #[error("no frontmatter delimiters in {path}")]
-    NoFrontmatter { path: PathBuf },
-    #[error("invalid frontmatter in {path}: {reason}")]
-    InvalidFrontmatter { path: PathBuf, reason: String },
 }
 
 impl Ticket {
@@ -46,51 +25,258 @@ impl Ticket {
     pub fn parse(path: &Path) -> Result<Self> {
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("reading {}", path.display()))?;
+        Self::parse_str(&content, path)
+    }
 
-        let (frontmatter_str, body) = split_frontmatter(&content)
-            .ok_or_else(|| TicketError::NoFrontmatter { path: path.to_owned() })?;
+    /// Parse from a string (for testing).
+    pub fn parse_str(content: &str, path: &Path) -> Result<Self> {
+        let lines: Vec<&str> = content.split('\n').collect();
 
-        let fm: Frontmatter = serde_yaml::from_str(frontmatter_str)
-            .map_err(|e| TicketError::InvalidFrontmatter {
-                path: path.to_owned(),
-                reason: e.to_string(),
-            })?;
+        // Opening fence
+        if lines.is_empty() || !is_fence(lines[0]) {
+            bail!("{}: no opening frontmatter fence on line 1", path.display());
+        }
+
+        // Parse frontmatter lines
+        let key_re = Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*):(.*)$").unwrap();
+        let mut fm: Vec<(String, String)> = Vec::new();
+        let mut close_idx = None;
+
+        for (i, line) in lines.iter().enumerate().skip(1) {
+            if is_fence(line) {
+                close_idx = Some(i);
+                break;
+            }
+            if let Some(caps) = key_re.captures(line) {
+                fm.push((caps[1].to_string(), caps[2].to_string()));
+            } else if (line.starts_with(' ') || line.starts_with('\t')) && !fm.is_empty() {
+                // Continuation line
+                let last = fm.last_mut().unwrap();
+                last.1.push('\n');
+                last.1.push_str(line);
+            } else if line.trim().is_empty() {
+                fm.push((String::new(), (*line).to_string()));
+            } else {
+                bail!("{}: unparseable frontmatter line {}: {:?}", path.display(), i + 1, line);
+            }
+        }
+
+        let close_idx = close_idx
+            .ok_or_else(|| anyhow::anyhow!("{}: no closing frontmatter fence", path.display()))?;
+
+        // Check required fields
+        for req in &["id", "title", "status", "blocked_by"] {
+            if !fm.iter().any(|(k, _)| k == req) {
+                bail!("{}: missing required field: {}", path.display(), req);
+            }
+        }
+
+        let body = lines[close_idx + 1..].join("\n");
 
         Ok(Ticket {
-            id: fm.id,
-            title: fm.title,
-            status: fm.status,
-            blocked_by: fm.blocked_by,
-            priority: fm.priority,
-            env: fm.env,
-            spec: fm.spec,
             path: path.to_owned(),
-            body: body.to_owned(),
+            fm,
+            body,
         })
     }
 
-    pub fn is_done(&self) -> bool {
-        self.status == "done"
+    /// Get a field's trimmed value.
+    pub fn get(&self, key: &str) -> Option<&str> {
+        self.fm.iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.trim())
     }
 
-    pub fn is_open(&self) -> bool {
-        self.status == "open"
+    pub fn id(&self) -> &str {
+        self.get("id")
+            .unwrap_or("")
+            .trim_matches('"')
+            .trim_matches('\'')
+    }
+
+    pub fn title(&self) -> &str {
+        self.get("title")
+            .unwrap_or("")
+            .trim_matches('"')
+            .trim_matches('\'')
+    }
+
+    pub fn status(&self) -> &str {
+        self.get("status").unwrap_or("")
+    }
+
+    pub fn blocked_by(&self) -> Vec<String> {
+        let raw = self.get("blocked_by").unwrap_or("");
+        let re = Regex::new(r#"\[(.*)\]"#).unwrap();
+        match re.captures(raw) {
+            Some(caps) => caps[1]
+                .split(',')
+                .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
+                .filter(|s| !s.is_empty())
+                .collect(),
+            None => Vec::new(),
+        }
+    }
+
+    pub fn env(&self) -> &str {
+        self.get("env")
+            .map(|v| v.trim_matches('"'))
+            .unwrap_or("either")
+    }
+
+    pub fn priority(&self) -> Option<&str> {
+        self.get("priority").map(|v| v.trim_matches('"'))
     }
 
     pub fn is_high_priority(&self) -> bool {
-        self.priority.as_deref() == Some("high")
+        self.priority() == Some("high")
+    }
+
+    pub fn numeric_key(&self) -> (u64, String) {
+        let id = self.id();
+        let re = Regex::new(r"^(\d+)(.*)$").unwrap();
+        match re.captures(id) {
+            Some(caps) => (caps[1].parse().unwrap_or(u64::MAX), caps[2].to_string()),
+            None => (u64::MAX, id.to_string()),
+        }
+    }
+
+    // --- Mutation ---
+
+    /// Set a field value (raw text). Replaces if exists, appends if not.
+    pub fn set_field(&mut self, key: &str, value: &str) {
+        for (k, v) in self.fm.iter_mut() {
+            if k == key {
+                *v = format!(" {}", value);
+                return;
+            }
+        }
+        self.fm.push((key.to_string(), format!(" {}", value)));
+    }
+
+    // --- Serialization ---
+
+    /// Serialize preserving raw frontmatter (surgical writes).
+    pub fn serialize(&self) -> String {
+        let mut parts = vec!["---".to_string()];
+        for (k, v) in &self.fm {
+            if k.is_empty() {
+                parts.push(v.clone());
+            } else {
+                parts.push(format!("{}:{}", k, v));
+            }
+        }
+        parts.push("---".to_string());
+        let header = parts.join("\n");
+        format!("{}\n{}", header, self.body)
+    }
+
+    /// Write the ticket back to disk.
+    pub fn write(&self) -> Result<()> {
+        std::fs::write(&self.path, self.serialize())
+            .with_context(|| format!("writing {}", self.path.display()))
     }
 }
 
-/// Split content into (frontmatter, body) at the --- delimiters.
-fn split_frontmatter(content: &str) -> Option<(&str, &str)> {
-    let content = content.strip_prefix("---\n").or_else(|| content.strip_prefix("---\r\n"))?;
-    let end = content.find("\n---\n")
-        .or_else(|| content.find("\n---\r\n"))
-        .or_else(|| content.find("\r\n---\r\n"))?;
-    let frontmatter = &content[..end];
-    let body = &content[end + 4..]; // skip \n---\n
-    Some((frontmatter, body))
+fn is_fence(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed == "---"
+}
+
+// --- Corpus ---
+
+/// Load all tickets from a .tickets/ directory.
+pub fn load_corpus(dir: &Path) -> Result<Vec<Ticket>> {
+    let mut tickets = Vec::new();
+    let mut entries: Vec<_> = std::fs::read_dir(dir)
+        .with_context(|| format!("reading {}", dir.display()))?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
+        .collect();
+    entries.sort_by_key(|e| e.file_name());
+
+    for entry in entries {
+        let ticket = Ticket::parse(&entry.path())?;
+        tickets.push(ticket);
+    }
+    Ok(tickets)
+}
+
+/// Compute the frontier: open tickets with all deps done, env-filtered, priority-sorted.
+pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
+    let crew_env = std::env::var("CREW_ENV").unwrap_or_default();
+    let done: std::collections::HashSet<&str> = corpus.iter()
+        .filter(|t| t.status() == "done")
+        .map(|t| t.id())
+        .collect();
+
+    let mut pool: Vec<&Ticket> = corpus.iter()
+        .filter(|t| {
+            if t.status() != "open" {
+                return false;
+            }
+            if !t.blocked_by().iter().all(|dep| done.contains(dep.as_str())) {
+                return false;
+            }
+            if !crew_env.is_empty() && t.env() != "either" && t.env() != crew_env {
+                return false;
+            }
+            true
+        })
+        .collect();
+
+    pool.sort_by_key(|t| (!t.is_high_priority(), t.numeric_key()));
+    pool
+}
+
+/// Find the maximum numeric id in a list of filenames.
+pub fn max_id(names: &[String]) -> u64 {
+    let re = Regex::new(r"^(\d+)-").unwrap();
+    names.iter()
+        .filter_map(|n| re.captures(n).map(|c| c[1].parse::<u64>().unwrap_or(0)))
+        .max()
+        .unwrap_or(0)
+}
+
+/// Determine the id zero-padding width from existing filenames.
+pub fn id_width(names: &[String]) -> usize {
+    let re = Regex::new(r"^(\d+)-").unwrap();
+    names.iter()
+        .filter_map(|n| re.captures(n).map(|c| c[1].len()))
+        .max()
+        .unwrap_or(2)
+}
+
+/// Find a ticket by id in the corpus.
+pub fn find_ticket<'a>(corpus: &'a [Ticket], id: &str) -> Result<&'a Ticket> {
+    corpus.iter()
+        .find(|t| t.id() == id)
+        .ok_or_else(|| anyhow::anyhow!("no ticket with id {}", id))
+}
+
+/// Generate the text for a new ticket file.
+pub fn new_ticket_text(id: &str, title: &str, blocked_by: &[String], env: Option<&str>, spec: Option<&str>, priority: Option<&str>) -> String {
+    let mut fm_lines = vec![
+        format!("id: \"{}\"", id),
+        format!("title: \"{}\"", title),
+        "status: open".to_string(),
+    ];
+    let deps = blocked_by.iter()
+        .map(|d| format!("\"{}\"", d))
+        .collect::<Vec<_>>()
+        .join(", ");
+    fm_lines.push(format!("blocked_by: [{}]", deps));
+    if let Some(e) = env {
+        fm_lines.push(format!("env: {}", e));
+    }
+    if let Some(s) = spec {
+        fm_lines.push(format!("spec: \"{}\"", s));
+    }
+    if let Some(p) = priority {
+        fm_lines.push(format!("priority: {}", p));
+    }
+    let body = format!("\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n", title);
+    format!("---\n{}\n---\n{}", fm_lines.join("\n"), body)
 }
 
 #[cfg(test)]
@@ -102,23 +288,48 @@ mod tests {
     #[test]
     fn parse_basic_ticket() {
         let mut f = NamedTempFile::new().unwrap();
-        writeln!(f, "---\nid: \"01\"\ntitle: \"Test ticket\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n- [ ] AC1").unwrap();
+        write!(f, "---\nid: \"01\"\ntitle: \"Test ticket\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n- [ ] AC1\n").unwrap();
         let t = Ticket::parse(f.path()).unwrap();
-        assert_eq!(t.id, "01");
-        assert_eq!(t.title, "Test ticket");
-        assert_eq!(t.status, "open");
-        assert!(t.blocked_by.is_empty());
-        assert!(t.is_open());
+        assert_eq!(t.id(), "01");
+        assert_eq!(t.title(), "Test ticket");
+        assert_eq!(t.status(), "open");
+        assert!(t.blocked_by().is_empty());
     }
 
     #[test]
     fn parse_ticket_with_deps() {
         let mut f = NamedTempFile::new().unwrap();
-        writeln!(f, "---\nid: \"05\"\ntitle: \"Depends on others\"\nstatus: open\nblocked_by: [\"01\", \"03\"]\npriority: high\nenv: corp\nspec: my-spec\n---\n\n# Body").unwrap();
+        write!(f, "---\nid: \"05\"\ntitle: \"Depends on others\"\nstatus: open\nblocked_by: [\"01\", \"03\"]\npriority: high\nenv: corp\nspec: \"my-spec\"\n---\n\n# Body\n").unwrap();
         let t = Ticket::parse(f.path()).unwrap();
-        assert_eq!(t.blocked_by, vec!["01", "03"]);
+        assert_eq!(t.blocked_by(), vec!["01", "03"]);
         assert!(t.is_high_priority());
-        assert_eq!(t.env.as_deref(), Some("corp"));
-        assert_eq!(t.spec.as_deref(), Some("my-spec"));
+        assert_eq!(t.env(), "corp");
+    }
+
+    #[test]
+    fn frontier_filters_correctly() {
+        let content_done = "---\nid: \"01\"\ntitle: \"Done\"\nstatus: done\nblocked_by: []\n---\n";
+        let content_open = "---\nid: \"02\"\ntitle: \"Open\"\nstatus: open\nblocked_by: [\"01\"]\n---\n";
+        let content_blocked = "---\nid: \"03\"\ntitle: \"Blocked\"\nstatus: open\nblocked_by: [\"99\"]\n---\n";
+
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("01-done.md"), content_done).unwrap();
+        std::fs::write(dir.path().join("02-open.md"), content_open).unwrap();
+        std::fs::write(dir.path().join("03-blocked.md"), content_blocked).unwrap();
+
+        let corpus = load_corpus(dir.path()).unwrap();
+        let front = frontier(&corpus);
+        assert_eq!(front.len(), 1);
+        assert_eq!(front[0].id(), "02");
+    }
+
+    #[test]
+    fn surgical_edit_preserves_unknown_fields() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\ncustom_field: hello\n---\n\n# Body\n";
+        let mut t = Ticket::parse_str(content, Path::new("test.md")).unwrap();
+        t.set_field("status", "done");
+        let out = t.serialize();
+        assert!(out.contains("status: done"));
+        assert!(out.contains("custom_field: hello"));
     }
 }
