@@ -154,6 +154,11 @@ impl Ticket {
         self.fm.push((key.to_string(), format!(" {}", value)));
     }
 
+    /// Remove a field entirely (for clearing optional fields).
+    pub fn remove_field(&mut self, key: &str) {
+        self.fm.retain(|(k, _)| k != key);
+    }
+
     // --- Serialization ---
 
     /// Serialize preserving raw frontmatter (surgical writes).

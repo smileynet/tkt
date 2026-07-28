@@ -109,13 +109,19 @@ pub fn run() -> i32 {
         Commands::New { slug, title, spec, env, priority, blocked_by } => {
             cmd_new(&slug, title.as_deref(), spec.as_deref(), env.as_deref(), priority.as_deref(), &blocked_by.unwrap_or_default())
         }
-        Commands::Batch { .. } => { eprintln!("tkt: batch not yet implemented"); Err(anyhow::anyhow!("unimplemented")) }
+        Commands::Batch { items, spec, env, priority, blocked_by } => {
+            cmd_batch(&items, spec.as_deref(), env.as_deref(), priority.as_deref(), &blocked_by.unwrap_or_default())
+        }
         Commands::Claim { id } => cmd_claim(&id),
         Commands::Close { id, note, ac } => cmd_close(&id, note.as_deref(), &ac.unwrap_or_default()),
-        Commands::Edit { .. } => { eprintln!("tkt: edit not yet implemented"); Err(anyhow::anyhow!("unimplemented")) }
-        Commands::Renumber { .. } => { eprintln!("tkt: renumber not yet implemented"); Err(anyhow::anyhow!("unimplemented")) }
-        Commands::SyncPlan { .. } => { eprintln!("tkt: sync-plan not yet implemented"); Err(anyhow::anyhow!("unimplemented")) }
-        Commands::Validate { .. } => { eprintln!("tkt: validate not yet implemented"); Err(anyhow::anyhow!("unimplemented")) }
+        Commands::Edit { id, title, blocked_by, env, spec, priority, ac } => {
+            cmd_edit(&id, title.as_deref(), blocked_by.as_deref(), env.as_deref(), spec.as_deref(), priority.as_deref(), &ac.unwrap_or_default())
+        }
+        Commands::Renumber { old_id, new_id, file } => cmd_renumber(&old_id, &new_id, file.as_deref()),
+        Commands::SyncPlan { check, fix, strict, brief, plan } => {
+            cmd_sync_plan(check, fix, strict, brief, plan.as_deref())
+        }
+        Commands::Validate { strict, brief } => cmd_validate(strict, brief),
     };
     match result {
         Ok(code) => code,
@@ -354,4 +360,427 @@ fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
         }
     }
     result
+}
+
+// --- cmd_edit ---
+
+fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option<&str>, spec: Option<&str>, priority: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
+    let dir = tickets_dir()?;
+    let corpus = core::load_corpus(&dir)?;
+    let t = core::find_ticket(&corpus, id)?;
+    let mut t = t.clone();
+    let mut changed: Vec<&str> = Vec::new();
+
+    if let Some(title_val) = title {
+        if title_val.is_empty() {
+            bail!("title is required and cannot be cleared");
+        }
+        t.set_field("title", &format!("\"{}\"", title_val));
+        changed.push("title");
+    }
+    if let Some(deps_str) = blocked_by {
+        let deps: Vec<&str> = deps_str.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+        let formatted = deps.iter().map(|d| format!("\"{}\"", d)).collect::<Vec<_>>().join(", ");
+        t.set_field("blocked_by", &format!("[{}]", formatted));
+        changed.push("blocked_by");
+    }
+    if let Some(env_val) = env {
+        if env_val.is_empty() {
+            t.remove_field("env");
+        } else {
+            if !core::ENV_VALUES.contains(&env_val) {
+                bail!("env must be one of {} (or '' to clear)", core::ENV_VALUES.join("/"));
+            }
+            t.set_field("env", env_val);
+        }
+        changed.push("env");
+    }
+    if let Some(spec_val) = spec {
+        if spec_val.is_empty() {
+            t.remove_field("spec");
+        } else {
+            t.set_field("spec", &format!("\"{}\"", spec_val));
+        }
+        changed.push("spec");
+    }
+    if let Some(prio_val) = priority {
+        if prio_val.is_empty() {
+            t.remove_field("priority");
+        } else {
+            if prio_val != "high" {
+                bail!("priority must be 'high' (or '' to clear)");
+            }
+            t.set_field("priority", prio_val);
+        }
+        changed.push("priority");
+    }
+    if !ac_indices.is_empty() {
+        t.body = flip_ac_boxes(&t.body, ac_indices);
+        changed.push("ac");
+    }
+
+    if changed.is_empty() {
+        bail!("nothing to edit — pass at least one field option");
+    }
+
+    t.write()?;
+    let repo = git::repo_root(&dir)?;
+    let rel_path = t.path.strip_prefix(&repo).unwrap_or(&t.path).to_string_lossy().replace('\\', "/");
+    git::add(&repo, &[&rel_path])?;
+    git::commit(&repo, &format!("chore(tickets): edit {} ({})", id, changed.join(", ")))?;
+    if has_remote(&repo) {
+        let _ = git::push(&repo);
+    }
+    println!("edited {}: {}", t.path.file_name().unwrap().to_string_lossy(), changed.join(", "));
+    Ok(0)
+}
+
+// --- cmd_validate ---
+
+fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
+    let dir = tickets_dir()?;
+    let mut findings: Vec<Finding> = Vec::new();
+
+    let mut corpus: Vec<Ticket> = Vec::new();
+    for entry in std::fs::read_dir(&dir)?.filter_map(|e| e.ok()) {
+        if entry.path().extension().is_some_and(|ext| ext == "md") {
+            match Ticket::parse(&entry.path()) {
+                Ok(t) => corpus.push(t),
+                Err(e) => findings.push(Finding {
+                    file: entry.file_name().to_string_lossy().to_string(),
+                    rule: "unparseable".to_string(),
+                    message: e.to_string(),
+                    severity: "error".to_string(),
+                }),
+            }
+        }
+    }
+
+    let mut ids: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    for t in &corpus {
+        let name = t.path.file_name().unwrap().to_string_lossy().to_string();
+        if !core::STATUS_VALUES.contains(&t.status()) {
+            findings.push(Finding { file: name.clone(), rule: "bad-status".into(),
+                message: format!("status {:?} not in {}", t.status(), core::STATUS_VALUES.join("/")), severity: "error".into() });
+        }
+        let env = t.env();
+        if env != "either" && !core::ENV_VALUES.contains(&env) {
+            findings.push(Finding { file: name.clone(), rule: "bad-env".into(),
+                message: format!("env {:?} not in {}", env, core::ENV_VALUES.join("/")), severity: "error".into() });
+        }
+        if !name.starts_with(&format!("{}-", t.id())) {
+            findings.push(Finding { file: name.clone(), rule: "id-filename-mismatch".into(),
+                message: format!("id {:?} vs filename", t.id()), severity: "error".into() });
+        }
+        if let Some(existing) = ids.get(t.id()) {
+            findings.push(Finding { file: name.clone(), rule: "duplicate-id".into(),
+                message: format!("id {:?} also in {}", t.id(), existing), severity: "error".into() });
+        }
+        ids.entry(t.id().to_string()).or_insert(name.clone());
+    }
+
+    // Dangling blocked_by
+    let known: std::collections::HashSet<&str> = corpus.iter().map(|t| t.id()).collect();
+    for t in &corpus {
+        for dep in t.blocked_by() {
+            if !known.contains(dep.as_str()) {
+                findings.push(Finding {
+                    file: t.path.file_name().unwrap().to_string_lossy().to_string(),
+                    rule: "dangling-blocked-by".into(),
+                    message: format!("ref {:?} has no ticket", dep), severity: "error".into(),
+                });
+            }
+        }
+    }
+
+    // Unchecked ACs on done tickets
+    let unchecked_re = Regex::new(r"- \[ \]").unwrap();
+    for t in &corpus {
+        if t.status() == "done" {
+            let count = unchecked_re.find_iter(&t.body).count();
+            if count > 0 {
+                findings.push(Finding {
+                    file: t.path.file_name().unwrap().to_string_lossy().to_string(),
+                    rule: "unchecked-acs-on-done".into(),
+                    message: format!("{} unchecked box(es)", count), severity: "warning".into(),
+                });
+            }
+        }
+    }
+
+    let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();
+    let warnings: Vec<&Finding> = findings.iter().filter(|f| f.severity == "warning").collect();
+    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) { "fail" } else { "pass" };
+
+    if brief {
+        for f in &findings {
+            println!("{}: {} [{}] {}", f.severity, f.file, f.rule, f.message);
+        }
+        println!("{} ({} finding(s))", status, findings.len());
+    } else {
+        println!("{{\"status\":\"{}\",\"findings\":[{}]}}",
+            status,
+            findings.iter().map(|f| format!(
+                "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
+                f.file, f.rule, f.message.replace('"', "\\\""), f.severity
+            )).collect::<Vec<_>>().join(",")
+        );
+    }
+    Ok(if status == "fail" { 1 } else { 0 })
+}
+
+// --- cmd_sync_plan ---
+
+fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: Option<&str>) -> Result<i32> {
+    let dir = tickets_dir()?;
+    let repo = git::repo_root(&dir)?;
+    let plan = match plan_path {
+        Some(p) => PathBuf::from(p),
+        None => repo.join("docs").join("plan.md"),
+    };
+    if !plan.is_file() {
+        bail!("no plan file at {}", plan.display());
+    }
+
+    let corpus = core::load_corpus(&dir)?;
+    let corpus_map: std::collections::HashMap<&str, &Ticket> = corpus.iter().map(|t| (t.id(), t)).collect();
+    let mut plan_text = std::fs::read_to_string(&plan)?;
+    let plan_row_re = Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap();
+
+    let mut findings: Vec<Finding> = Vec::new();
+    let mut fixed_count = 0;
+
+    for caps in plan_row_re.captures_iter(&plan_text.clone()) {
+        let tid = caps[1].trim();
+        let status_cell = &caps[2];
+        let plan_done = status_cell.contains("✅");
+
+        if let Some(t) = corpus_map.get(tid) {
+            let ticket_done = t.status() == "done";
+            if plan_done != ticket_done {
+                if _fix {
+                    let new_status = if ticket_done { " ✅ done " } else { " open " };
+                    let row_re = Regex::new(&format!(r"(?m)^(\|\s*{}\s*\|[^|]*\|)[^|]*(\|\s*)$", regex::escape(tid))).unwrap();
+                    plan_text = row_re.replace(&plan_text, format!("${{1}}{}${{2}}", new_status)).to_string();
+                    fixed_count += 1;
+                } else {
+                    findings.push(Finding {
+                        file: t.path.file_name().unwrap().to_string_lossy().to_string(),
+                        rule: "plan-status-drift".into(),
+                        message: format!("plan says {}, ticket is {}",
+                            if plan_done { "done" } else { "not done" }, t.status()),
+                        severity: "error".into(),
+                    });
+                }
+            }
+        }
+    }
+
+    // Missing plan rows
+    let plan_ids: std::collections::HashSet<String> = plan_row_re.captures_iter(&plan_text)
+        .map(|c| c[1].trim().to_string())
+        .collect();
+    for t in &corpus {
+        if t.status() != "done" && !plan_ids.contains(t.id()) {
+            findings.push(Finding {
+                file: t.path.file_name().unwrap().to_string_lossy().to_string(),
+                rule: "missing-plan-row".into(),
+                message: format!("{} ticket has no plan row", t.status()),
+                severity: "warning".into(),
+            });
+        }
+    }
+
+    if _fix && fixed_count > 0 {
+        std::fs::write(&plan, &plan_text)?;
+    }
+
+    let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();
+    let warnings: Vec<&Finding> = findings.iter().filter(|f| f.severity == "warning").collect();
+    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) { "fail" } else { "pass" };
+
+    if _fix {
+        if !findings.is_empty() {
+            print_findings(&findings, brief, status);
+        } else if brief {
+            println!("pass (fixed {}, 0 remaining)", fixed_count);
+        } else {
+            println!("{{\"status\":\"pass\",\"findings\":[],\"fixed\":{}}}", fixed_count);
+        }
+    } else {
+        print_findings(&findings, brief, status);
+    }
+    Ok(if status == "fail" { 1 } else { 0 })
+}
+
+// --- cmd_batch ---
+
+fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: Option<&str>, blocked_by: &[String]) -> Result<i32> {
+    // Parse items: "slug" or "slug:title"
+    let mut parsed: Vec<(&str, String)> = Vec::new();
+    for raw in items {
+        let (slug, title) = match raw.split_once(':') {
+            Some((s, t)) => (s, t.trim().to_string()),
+            None => (raw.as_str(), raw.replace('-', " ")),
+        };
+        let slug_re = Regex::new(r"^[a-z0-9][a-z0-9-]*$").unwrap();
+        if !slug_re.is_match(slug) {
+            bail!("invalid slug {:?}", slug);
+        }
+        parsed.push((slug, title));
+    }
+
+    let dir = tickets_dir()?;
+    let repo = git::repo_root(&dir)?;
+    let remote = has_remote(&repo);
+    if remote {
+        git::fetch(&repo)?;
+    }
+
+    let names = ticket_filenames(&dir);
+    let base = core::max_id(&names) + 1;
+    let width = core::id_width(&names);
+
+    let mut files: Vec<String> = Vec::new();
+    for (i, (slug, title)) in parsed.iter().enumerate() {
+        let tid = format!("{:0>width$}", base + i as u64, width = width);
+        let filename = format!("{}-{}.md", tid, slug);
+        let path = dir.join(&filename);
+        let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
+        std::fs::write(&path, &content)?;
+        files.push(format!(".tickets/{}", filename));
+    }
+
+    // Stage all files
+    for f in &files {
+        git::add(&repo, &[f.as_str()])?;
+    }
+    let tids: Vec<String> = (0..parsed.len())
+        .map(|i| format!("{:0>width$}", base + i as u64, width = width))
+        .collect();
+    git::commit(&repo, &format!("chore(tickets): batch {} ({})", tids.join(","), parsed.iter().map(|(s,_)| *s).collect::<Vec<_>>().join(", ")))?;
+
+    if remote {
+        match git::push(&repo) {
+            Ok(()) => {}
+            Err(e) => bail!("push failed: {}. Pull and retry.", e),
+        }
+    }
+
+    for (i, (slug, _)) in parsed.iter().enumerate() {
+        let tid = format!("{:0>width$}", base + i as u64, width = width);
+        println!("allocated {}-{}.md (pushed — id claimed, status: open)", tid, slug);
+    }
+    Ok(0)
+}
+
+// --- cmd_renumber ---
+
+fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
+    let id_re = Regex::new(r"^\d+$").unwrap();
+    if !id_re.is_match(new_id) {
+        bail!("new id must be digits, got {:?}", new_id);
+    }
+
+    let dir = tickets_dir()?;
+    let repo = git::repo_root(&dir)?;
+    let corpus = core::load_corpus(&dir)?;
+
+    let holders: Vec<&Ticket> = corpus.iter().filter(|t| t.id() == old_id).collect();
+    if holders.is_empty() {
+        bail!("no ticket with id {:?}", old_id);
+    }
+    if holders.len() > 1 && file_hint.is_none() {
+        let names: Vec<_> = holders.iter().map(|t| t.path.file_name().unwrap().to_string_lossy().to_string()).collect();
+        bail!("id {:?} is held by {} files ({}) — pass --file", old_id, holders.len(), names.join(", "));
+    }
+
+    let src = if holders.len() == 1 {
+        holders[0]
+    } else {
+        holders.iter().find(|t| t.path.file_name().unwrap().to_string_lossy() == file_hint.unwrap())
+            .ok_or_else(|| anyhow::anyhow!("--file {:?} does not hold id {:?}", file_hint.unwrap(), old_id))?
+    };
+
+    if corpus.iter().any(|t| t.id() == new_id) {
+        bail!("id {:?} already exists locally", new_id);
+    }
+
+    // Rename file
+    let old_path = src.path.clone();
+    let slug = old_path.file_name().unwrap().to_string_lossy()
+        .splitn(2, '-').nth(1).unwrap_or("unknown.md").to_string();
+    let new_path = dir.join(format!("{}-{}", new_id, slug));
+
+    let mut t = src.clone();
+    // Preserve quoting style for id field
+    let old_raw = t.get("id").unwrap_or("");
+    let new_val = if old_raw.starts_with('"') { format!("\"{}\"", new_id) } else { new_id.to_string() };
+    t.set_field("id", &new_val);
+    t.path = new_path.clone();
+    t.write()?;
+    std::fs::remove_file(&old_path)?;
+
+    // Update inbound refs
+    let mut refs_updated = 0;
+    if holders.len() == 1 {
+        for other in &corpus {
+            if other.path == old_path { continue; }
+            if other.blocked_by().contains(&old_id.to_string()) {
+                let mut other = other.clone();
+                let raw = other.get("blocked_by").unwrap_or("").to_string();
+                let updated = raw.replace(old_id, new_id);
+                other.set_field("blocked_by", &updated);
+                other.write()?;
+                refs_updated += 1;
+            }
+        }
+    }
+
+    // Commit (stage old removal + new file + any updated refs)
+    let old_rel = old_path.strip_prefix(&repo).unwrap_or(&old_path).to_string_lossy().replace('\\', "/");
+    let new_rel = new_path.strip_prefix(&repo).unwrap_or(&new_path).to_string_lossy().replace('\\', "/");
+    git::git(&repo, &["add", &old_rel, &new_rel])?;
+    // Stage any modified ref files
+    for other in &corpus {
+        if other.path == old_path { continue; }
+        if other.blocked_by().contains(&old_id.to_string()) {
+            let rel = other.path.strip_prefix(&repo).unwrap_or(&other.path).to_string_lossy().replace('\\', "/");
+            git::add(&repo, &[&rel])?;
+        }
+    }
+    git::commit(&repo, &format!("chore(tickets): renumber {} -> {}", old_id, new_id))?;
+    if has_remote(&repo) {
+        let _ = git::push(&repo);
+    }
+
+    println!("renumbered {} -> {} ({} inbound ref(s) updated)", old_id, new_path.file_name().unwrap().to_string_lossy(), refs_updated);
+    Ok(0)
+}
+
+// --- Helpers ---
+
+#[derive(Debug)]
+struct Finding {
+    file: String,
+    rule: String,
+    message: String,
+    severity: String,
+}
+
+fn print_findings(findings: &[Finding], brief: bool, status: &str) {
+    if brief {
+        for f in findings {
+            println!("{}: {} [{}] {}", f.severity, f.file, f.rule, f.message);
+        }
+        println!("{} ({} finding(s))", status, findings.len());
+    } else {
+        println!("{{\"status\":\"{}\",\"findings\":[{}]}}",
+            status,
+            findings.iter().map(|f| format!(
+                "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
+                f.file, f.rule, f.message.replace('"', "\\\""), f.severity
+            )).collect::<Vec<_>>().join(",")
+        );
+    }
 }
