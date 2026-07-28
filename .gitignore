@@ -1,0 +1,15 @@
+# Build artifacts
+/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Project conventions
+.scratch/
+.references/
+
+# OS
+.DS_Store
+Thumbs.db
