@@ -92,6 +92,10 @@ Describe the work...
 - **Surgical edits** — changes one field without disturbing the rest of the file
 - **Single binary** — no runtime dependencies beyond `git` on PATH
 
+## Inspired By
+
+**[tk](https://github.com/nicholasgasior/tk)** — The original git-native ticket tool that proved markdown files + frontmatter is the right model for lightweight work tracking. tkt builds on tk's insight that files are the database, adding dependency-graph frontier computation, atomic push-to-claim race detection, and surgical frontmatter edits that preserve unknown fields.
+
 ## License
 
 MIT
