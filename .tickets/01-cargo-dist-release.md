@@ -2,8 +2,7 @@
 id: "01"
 title: "Set up cargo-dist and publish v0.1.0"
 status: open
-blocked_by: []
-priority: high
+blocked_by: ["02", "03", "04", "06", "07", "08", "09", "10", "11", "12", "13"]
 ---
 
 # Set up cargo-dist and publish v0.1.0

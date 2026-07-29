@@ -167,7 +167,12 @@ fn cmd_ready(json: bool) -> Result<i32> {
 
     if json {
         for t in &front {
-            println!("{{\"id\":\"{}\",\"title\":\"{}\",\"status\":\"{}\"}}", t.id(), t.title(), t.status());
+            println!(
+                "{{\"id\":\"{}\",\"title\":\"{}\",\"status\":\"{}\"}}",
+                core::json_string_escape(t.id()),
+                core::json_string_escape(t.title()),
+                core::json_string_escape(t.status()),
+            );
         }
     } else {
         for t in &front {
@@ -224,11 +229,14 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
 
     // Push (with retry on rejection — race detection)
     match git::push(&repo)? {
-        true => {
+        git::PushResult::Success => {
             println!("allocated {} (pushed — id claimed, status: open)", filename);
             Ok(0)
         }
-        false => {
+        git::PushResult::Failed(stderr) => {
+            bail!("push failed: {}", stderr);
+        }
+        git::PushResult::Rejected => {
             // Lost race: undo commit, pull, re-scan for next id
             git::undo_commit_keep_file(&repo)?;
             std::fs::remove_file(&path)?;
@@ -248,12 +256,15 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
             git::commit(&repo, &format!("chore(tickets): new {} {}", tid2, slug))?;
 
             match git::push(&repo)? {
-                true => {
+                git::PushResult::Success => {
                     let note = format!(" (renumbered {}→{})", tid, tid2);
                     println!("allocated {}{} (pushed — id claimed, status: open)", filename2, note);
                     Ok(0)
                 }
-                false => {
+                git::PushResult::Failed(stderr) => {
+                    bail!("push failed on retry: {}", stderr);
+                }
+                git::PushResult::Rejected => {
                     bail!("allocation failed after 2 attempts (push repeatedly rejected)");
                 }
             }
@@ -402,12 +413,12 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
         if title_val.is_empty() {
             bail!("title is required and cannot be cleared");
         }
-        t.set_field("title", &format!("\"{}\"", title_val));
+        t.set_field("title", &format!("\"{}\"", core::yaml_scalar_escape(title_val)));
         changed.push("title");
     }
     if let Some(deps_str) = blocked_by {
         let deps: Vec<&str> = deps_str.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
-        let formatted = deps.iter().map(|d| format!("\"{}\"", d)).collect::<Vec<_>>().join(", ");
+        let formatted = deps.iter().map(|d| format!("\"{}\"", core::yaml_scalar_escape(d))).collect::<Vec<_>>().join(", ");
         t.set_field("blocked_by", &format!("[{}]", formatted));
         changed.push("blocked_by");
     }
@@ -426,7 +437,7 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
         if spec_val.is_empty() {
             t.remove_field("spec");
         } else {
-            t.set_field("spec", &format!("\"{}\"", spec_val));
+            t.set_field("spec", &format!("\"{}\"", core::yaml_scalar_escape(spec_val)));
         }
         changed.push("spec");
     }
@@ -456,7 +467,9 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
     git::add(&repo, &[&rel_path])?;
     git::commit(&repo, &format!("chore(tickets): edit {} ({})", id, changed.join(", ")))?;
     if has_remote(&repo) {
-        let _ = git::push_with_retry(&repo);
+        git::push_with_retry(&repo)?;
+    } else {
+        eprintln!("committed locally, no remote configured");
     }
     println!("edited {}: {}", t.path.file_name().unwrap().to_string_lossy(), changed.join(", "));
     Ok(0)
@@ -775,7 +788,9 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     }
     git::commit(&repo, &format!("chore(tickets): renumber {} -> {}", old_id, new_id))?;
     if has_remote(&repo) {
-        let _ = git::push_with_retry(&repo);
+        git::push_with_retry(&repo)?;
+    } else {
+        eprintln!("committed locally, no remote configured");
     }
 
     println!("renumbered {} -> {} ({} inbound ref(s) updated)", old_id, new_path.file_name().unwrap().to_string_lossy(), refs_updated);
@@ -803,7 +818,10 @@ fn print_findings(findings: &[Finding], brief: bool, status: &str) {
             status,
             findings.iter().map(|f| format!(
                 "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
-                f.file, f.rule, f.message.replace('"', "\\\""), f.severity
+                core::json_string_escape(&f.file),
+                core::json_string_escape(&f.rule),
+                core::json_string_escape(&f.message),
+                core::json_string_escape(&f.severity),
             )).collect::<Vec<_>>().join(",")
         );
     }

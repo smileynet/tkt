@@ -259,15 +259,57 @@ pub fn find_ticket<'a>(corpus: &'a [Ticket], id: &str) -> Result<&'a Ticket> {
         .ok_or_else(|| anyhow::anyhow!("no ticket with id {}", id))
 }
 
+/// Escape a string for use inside YAML double-quoted scalars.
+/// Handles: backslash, double-quote, newline, carriage return, tab, null, and other control chars.
+pub fn yaml_scalar_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 8);
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\0' => out.push_str("\\0"),
+            c if c.is_control() => {
+                // YAML unicode escape: \xNN for ASCII control chars
+                out.push_str(&format!("\\x{:02X}", c as u32));
+            }
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+/// Escape a string for use inside a JSON string value (between quotes).
+/// Handles: backslash, double-quote, newline, carriage return, tab, and control chars.
+pub fn json_string_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 8);
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c.is_control() => {
+                out.push_str(&format!("\\u{:04X}", c as u32));
+            }
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
 /// Generate the text for a new ticket file.
 pub fn new_ticket_text(id: &str, title: &str, blocked_by: &[String], env: Option<&str>, spec: Option<&str>, priority: Option<&str>) -> String {
     let mut fm_lines = vec![
-        format!("id: \"{}\"", id),
-        format!("title: \"{}\"", title),
+        format!("id: \"{}\"", yaml_scalar_escape(id)),
+        format!("title: \"{}\"", yaml_scalar_escape(title)),
         "status: open".to_string(),
     ];
     let deps = blocked_by.iter()
-        .map(|d| format!("\"{}\"", d))
+        .map(|d| format!("\"{}\"", yaml_scalar_escape(d)))
         .collect::<Vec<_>>()
         .join(", ");
     fm_lines.push(format!("blocked_by: [{}]", deps));
@@ -275,7 +317,7 @@ pub fn new_ticket_text(id: &str, title: &str, blocked_by: &[String], env: Option
         fm_lines.push(format!("env: {}", e));
     }
     if let Some(s) = spec {
-        fm_lines.push(format!("spec: \"{}\"", s));
+        fm_lines.push(format!("spec: \"{}\"", yaml_scalar_escape(s)));
     }
     if let Some(p) = priority {
         fm_lines.push(format!("priority: {}", p));
@@ -336,5 +378,47 @@ mod tests {
         let out = t.serialize();
         assert!(out.contains("status: done"));
         assert!(out.contains("custom_field: hello"));
+    }
+
+    #[test]
+    fn yaml_escape_handles_special_chars() {
+        assert_eq!(yaml_scalar_escape("hello"), "hello");
+        assert_eq!(yaml_scalar_escape(""), "");
+        assert_eq!(yaml_scalar_escape(r#"Fix "ready""#), r#"Fix \"ready\""#);
+        assert_eq!(yaml_scalar_escape("back\\slash"), "back\\\\slash");
+        assert_eq!(yaml_scalar_escape("line\nbreak"), "line\\nbreak");
+        assert_eq!(yaml_scalar_escape("tab\there"), "tab\\there");
+        assert_eq!(yaml_scalar_escape("cr\rhere"), "cr\\rhere");
+        assert_eq!(yaml_scalar_escape("null\0byte"), "null\\0byte");
+        assert_eq!(yaml_scalar_escape("unicode: café"), "unicode: café");
+        // Combined adversarial
+        assert_eq!(yaml_scalar_escape("a\"b\\c\nd"), "a\\\"b\\\\c\\nd");
+    }
+
+    #[test]
+    fn json_escape_handles_special_chars() {
+        assert_eq!(json_string_escape("hello"), "hello");
+        assert_eq!(json_string_escape(""), "");
+        assert_eq!(json_string_escape(r#"has "quotes""#), r#"has \"quotes\""#);
+        assert_eq!(json_string_escape("back\\slash"), "back\\\\slash");
+        assert_eq!(json_string_escape("line\nbreak"), "line\\nbreak");
+        assert_eq!(json_string_escape("tab\there"), "tab\\there");
+        assert_eq!(json_string_escape("cr\rhere"), "cr\\rhere");
+        assert_eq!(json_string_escape("unicode: café"), "unicode: café");
+        // Control char gets \u escape
+        let with_ctrl = format!("ctrl{}here", '\x01');
+        assert_eq!(json_string_escape(&with_ctrl), "ctrl\\u0001here");
+        // Combined adversarial
+        assert_eq!(json_string_escape("a\"b\\c\nd"), "a\\\"b\\\\c\\nd");
+    }
+
+    #[test]
+    fn new_ticket_text_escapes_title() {
+        let text = new_ticket_text("01", "Fix \"ready\" command", &[], None, None, None);
+        assert!(text.contains(r#"title: "Fix \"ready\" command""#));
+        // Should be valid frontmatter (parseable)
+        let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();
+        // The title accessor trims quotes, so escaped quotes appear as-is in raw value
+        assert!(t.get("title").unwrap().contains("ready"));
     }
 }
