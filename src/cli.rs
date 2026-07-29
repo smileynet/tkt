@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -6,6 +7,15 @@ use regex::Regex;
 
 use crate::core::{self, Ticket};
 use crate::git;
+
+// --- Compiled regex patterns ---
+
+static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"- \[ \]").unwrap()
+});
+static RE_PLAN_ROW: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap()
+});
 
 /// Domain-level failure: expected conditions like "ticket not found", "status conflict",
 /// "validation drift". These exit with code 1.
@@ -397,8 +407,7 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     t.write()?;
 
     // Warn about unchecked ACs
-    let unchecked_re = Regex::new(r"- \[ \]").unwrap();
-    let unchecked = unchecked_re.find_iter(&t.body).count();
+    let unchecked = RE_UNCHECKED_AC.find_iter(&t.body).count();
     if unchecked > 0 {
         eprintln!("warning: {} unchecked acceptance box(es) — fill in before trusting history", unchecked);
     }
@@ -450,9 +459,8 @@ fn chrono_date() -> String {
 }
 
 fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
-    let re = Regex::new(r"- \[ \]").unwrap();
     let mut result = body.to_string();
-    let matches: Vec<_> = re.find_iter(body).collect();
+    let matches: Vec<_> = RE_UNCHECKED_AC.find_iter(body).collect();
 
     // Work backwards to preserve indices
     for &idx in indices.iter().rev() {
@@ -712,10 +720,9 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
     }
 
     // Unchecked ACs on done tickets
-    let unchecked_re = Regex::new(r"- \[ \]").unwrap();
     for t in &corpus {
         if t.status() == "done" {
-            let count = unchecked_re.find_iter(&t.body).count();
+            let count = RE_UNCHECKED_AC.find_iter(&t.body).count();
             if count > 0 {
                 findings.push(Finding {
                     file: t.path.file_name().unwrap().to_string_lossy().to_string(),
@@ -750,12 +757,11 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
     let corpus = core::load_corpus(&dir)?;
     let corpus_map: std::collections::HashMap<&str, &Ticket> = corpus.iter().map(|t| (t.id(), t)).collect();
     let mut plan_text = std::fs::read_to_string(&plan)?;
-    let plan_row_re = Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap();
 
     let mut findings: Vec<Finding> = Vec::new();
     let mut fixed_count = 0;
 
-    for caps in plan_row_re.captures_iter(&plan_text.clone()) {
+    for caps in RE_PLAN_ROW.captures_iter(&plan_text.clone()) {
         let tid = caps[1].trim();
         let status_cell = &caps[2];
         let plan_done = status_cell.contains("✅");
@@ -782,7 +788,7 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
     }
 
     // Missing plan rows
-    let plan_ids: std::collections::HashSet<String> = plan_row_re.captures_iter(&plan_text)
+    let plan_ids: std::collections::HashSet<String> = RE_PLAN_ROW.captures_iter(&plan_text)
         .map(|c| c[1].trim().to_string())
         .collect();
     for t in &corpus {

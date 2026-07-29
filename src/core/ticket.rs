@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 use anyhow::{bail, Context, Result};
 use regex::Regex;
@@ -7,6 +8,21 @@ use regex::Regex;
 
 pub const STATUS_VALUES: &[&str] = &["open", "in_progress", "done"];
 pub const ENV_VALUES: &[&str] = &["corp", "personal", "either"];
+
+// --- Compiled regex patterns ---
+
+static RE_FM_KEY: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*):(.*)$").unwrap()
+});
+static RE_BRACKET_LIST: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"\[(.*)\]"#).unwrap()
+});
+static RE_NUMERIC_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(\d+)(.*)$").unwrap()
+});
+static RE_FILENAME_ID: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(\d+)-").unwrap()
+});
 
 // --- Ticket ---
 
@@ -38,7 +54,7 @@ impl Ticket {
         }
 
         // Parse frontmatter lines
-        let key_re = Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*):(.*)$").unwrap();
+        let key_re = &*RE_FM_KEY;
         let mut fm: Vec<(String, String)> = Vec::new();
         let mut close_idx = None;
 
@@ -107,7 +123,7 @@ impl Ticket {
 
     pub fn blocked_by(&self) -> Vec<String> {
         let raw = self.get("blocked_by").unwrap_or("");
-        let re = Regex::new(r#"\[(.*)\]"#).unwrap();
+        let re = &*RE_BRACKET_LIST;
         match re.captures(raw) {
             Some(caps) => caps[1]
                 .split(',')
@@ -134,7 +150,7 @@ impl Ticket {
 
     pub fn numeric_key(&self) -> (u64, String) {
         let id = self.id();
-        let re = Regex::new(r"^(\d+)(.*)$").unwrap();
+        let re = &*RE_NUMERIC_PREFIX;
         match re.captures(id) {
             Some(caps) => (caps[1].parse().unwrap_or(u64::MAX), caps[2].to_string()),
             None => (u64::MAX, id.to_string()),
@@ -236,18 +252,16 @@ pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
 
 /// Find the maximum numeric id in a list of filenames.
 pub fn max_id(names: &[String]) -> u64 {
-    let re = Regex::new(r"^(\d+)-").unwrap();
     names.iter()
-        .filter_map(|n| re.captures(n).map(|c| c[1].parse::<u64>().unwrap_or(0)))
+        .filter_map(|n| RE_FILENAME_ID.captures(n).map(|c| c[1].parse::<u64>().unwrap_or(0)))
         .max()
         .unwrap_or(0)
 }
 
 /// Determine the id zero-padding width from existing filenames.
 pub fn id_width(names: &[String]) -> usize {
-    let re = Regex::new(r"^(\d+)-").unwrap();
     names.iter()
-        .filter_map(|n| re.captures(n).map(|c| c[1].len()))
+        .filter_map(|n| RE_FILENAME_ID.captures(n).map(|c| c[1].len()))
         .max()
         .unwrap_or(2)
 }
