@@ -8,6 +8,7 @@
 
 # Project conventions
 .scratch/
+!.scratch/HANDOFF.md
 .references/
 
 # OS
