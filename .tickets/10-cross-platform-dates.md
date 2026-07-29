@@ -1,7 +1,7 @@
 ---
 id: "10"
 title: "deterministic cross-platform date generation"
-status: open
+status: done
 blocked_by: []
 ---
 
