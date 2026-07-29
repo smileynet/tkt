@@ -1,7 +1,7 @@
 ---
 id: "09"
 title: "implement exit code 2 for crash-class failures"
-status: open
+status: done
 blocked_by: ["07"]
 ---
 
