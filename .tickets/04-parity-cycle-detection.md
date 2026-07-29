@@ -1,7 +1,7 @@
 ---
 id: "04"
 title: "cycle detection in validate command"
-status: open
+status: done
 blocked_by: []
 ---
 
