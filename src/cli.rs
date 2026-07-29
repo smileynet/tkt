@@ -533,6 +533,102 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
         }
     }
 
+    // Cycle detection via DFS
+    {
+        use std::collections::HashMap;
+
+        // Build adjacency: id -> list of blocked_by ids (only known ones)
+        let adj: HashMap<String, Vec<String>> = corpus.iter()
+            .map(|t| {
+                let deps: Vec<String> = t.blocked_by().into_iter()
+                    .filter(|d| known.contains(d.as_str()))
+                    .collect();
+                (t.id().to_string(), deps)
+            })
+            .collect();
+
+        // DFS states: 0=unvisited, 1=visiting (in current path), 2=visited (complete)
+        let mut state: HashMap<&str, u8> = adj.keys().map(|k| (k.as_str(), 0u8)).collect();
+        let mut path: Vec<&str> = Vec::new();
+        let mut cycles: Vec<Vec<String>> = Vec::new();
+
+        fn dfs<'a>(
+            node: &'a str,
+            adj: &'a HashMap<String, Vec<String>>,
+            state: &mut HashMap<&'a str, u8>,
+            path: &mut Vec<&'a str>,
+            cycles: &mut Vec<Vec<String>>,
+        ) {
+            state.insert(node, 1);
+            path.push(node);
+
+            if let Some(deps) = adj.get(node) {
+                for dep in deps {
+                    match state.get(dep.as_str()) {
+                        Some(&1) => {
+                            // Found cycle — extract from where dep first appears in path
+                            if let Some(pos) = path.iter().position(|&n| n == dep.as_str()) {
+                                let mut cycle: Vec<String> = path[pos..].iter().map(|s| s.to_string()).collect();
+                                cycle.push(dep.to_string()); // close the cycle
+                                cycles.push(cycle);
+                            }
+                        }
+                        Some(&0) => {
+                            dfs(dep.as_str(), adj, state, path, cycles);
+                        }
+                        _ => {} // already visited (2) or unknown, skip
+                    }
+                }
+            }
+
+            path.pop();
+            state.insert(node, 2);
+        }
+
+        // Sort keys for deterministic output
+        let mut nodes: Vec<&str> = adj.keys().map(|s| s.as_str()).collect();
+        nodes.sort();
+        for node in nodes {
+            if state.get(node) == Some(&0) {
+                dfs(node, &adj, &mut state, &mut path, &mut cycles);
+            }
+        }
+
+        // Deduplicate cycles: normalize by rotating to start at the smallest id
+        let mut unique_cycles: Vec<String> = Vec::new();
+        let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+        for cycle in &cycles {
+            // cycle is [a, b, c, a] — the path portion is [a, b, c]
+            let path_part = &cycle[..cycle.len() - 1];
+            // Rotate to start at minimum
+            if let Some(min_pos) = path_part.iter().enumerate().min_by_key(|(_, v)| *v).map(|(i, _)| i) {
+                let mut normalized: Vec<&str> = path_part[min_pos..].iter().map(|s| s.as_str()).collect();
+                normalized.extend(path_part[..min_pos].iter().map(|s| s.as_str()));
+                let key = normalized.join(" -> ");
+                if seen.insert(key.clone()) {
+                    unique_cycles.push(format!("{} -> {}", key, normalized[0]));
+                }
+            }
+        }
+
+        // Map cycle back to file for reporting
+        let id_to_file: HashMap<&str, String> = corpus.iter()
+            .map(|t| (t.id(), t.path.file_name().unwrap().to_string_lossy().to_string()))
+            .collect();
+
+        for cycle_desc in &unique_cycles {
+            // Attribute to the first ticket in the cycle
+            let first_id = cycle_desc.split(" -> ").next().unwrap_or("");
+            let file = id_to_file.get(first_id).cloned().unwrap_or_else(|| "unknown".to_string());
+            findings.push(Finding {
+                file,
+                rule: "cycle".into(),
+                message: format!("dependency cycle: {}", cycle_desc),
+                severity: "error".into(),
+            });
+        }
+    }
+
     // Unchecked ACs on done tickets
     let unchecked_re = Regex::new(r"- \[ \]").unwrap();
     for t in &corpus {
@@ -552,20 +648,7 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
     let warnings: Vec<&Finding> = findings.iter().filter(|f| f.severity == "warning").collect();
     let status = if !errors.is_empty() || (strict && !warnings.is_empty()) { "fail" } else { "pass" };
 
-    if brief {
-        for f in &findings {
-            println!("{}: {} [{}] {}", f.severity, f.file, f.rule, f.message);
-        }
-        println!("{} ({} finding(s))", status, findings.len());
-    } else {
-        println!("{{\"status\":\"{}\",\"findings\":[{}]}}",
-            status,
-            findings.iter().map(|f| format!(
-                "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
-                f.file, f.rule, f.message.replace('"', "\\\""), f.severity
-            )).collect::<Vec<_>>().join(",")
-        );
-    }
+    print_findings(&findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
 }
 

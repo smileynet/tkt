@@ -279,3 +279,77 @@ fn test_edit_changes_field() {
     let (_, out) = run_tkt(&clone, &["ready"]);
     assert!(out.contains("[HIGH]") || out.contains("02"), "should show on frontier: {}", out);
 }
+
+
+#[test]
+fn test_validate_detects_self_cycle() {
+    let (_tmp, clone) = setup_repo();
+
+    // Remove seed ticket to avoid id conflict
+    std::fs::remove_file(clone.join(".tickets/01-seed.md")).unwrap();
+
+    // Ticket that depends on itself
+    std::fs::write(
+        clone.join(".tickets/01-self-cycle.md"),
+        "---\nid: \"01\"\ntitle: \"Self cycle\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Self\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add self-cycle"]);
+
+    let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
+    assert_eq!(code, 1, "should fail with cycle: {}", out);
+    assert!(out.contains("cycle"), "should mention cycle: {}", out);
+    assert!(out.contains("01"), "should mention id 01: {}", out);
+}
+
+#[test]
+fn test_validate_detects_two_node_cycle() {
+    let (_tmp, clone) = setup_repo();
+
+    // Remove seed ticket to avoid id conflict
+    std::fs::remove_file(clone.join(".tickets/01-seed.md")).unwrap();
+
+    std::fs::write(
+        clone.join(".tickets/01-alpha.md"),
+        "---\nid: \"01\"\ntitle: \"Alpha\"\nstatus: open\nblocked_by: [\"02\"]\n---\n\n# A\n",
+    ).unwrap();
+    std::fs::write(
+        clone.join(".tickets/02-beta.md"),
+        "---\nid: \"02\"\ntitle: \"Beta\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# B\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add cycle pair"]);
+
+    let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
+    assert_eq!(code, 1, "should fail with cycle: {}", out);
+    assert!(out.contains("cycle"), "should mention cycle: {}", out);
+    assert!(out.contains("01") && out.contains("02"), "should mention both ids: {}", out);
+}
+
+#[test]
+fn test_validate_no_false_positive_on_acyclic() {
+    let (_tmp, clone) = setup_repo();
+
+    // Remove seed ticket to set up clean chain
+    std::fs::remove_file(clone.join(".tickets/01-seed.md")).unwrap();
+
+    // Linear chain: 03 depends on 02 depends on 01, all valid
+    std::fs::write(
+        clone.join(".tickets/01-first.md"),
+        "---\nid: \"01\"\ntitle: \"First\"\nstatus: done\nblocked_by: []\n---\n\n# F\n",
+    ).unwrap();
+    std::fs::write(
+        clone.join(".tickets/02-second.md"),
+        "---\nid: \"02\"\ntitle: \"Second\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# S\n",
+    ).unwrap();
+    std::fs::write(
+        clone.join(".tickets/03-third.md"),
+        "---\nid: \"03\"\ntitle: \"Third\"\nstatus: open\nblocked_by: [\"02\"]\n---\n\n# T\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add chain"]);
+
+    let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
+    assert_eq!(code, 0, "acyclic chain should pass: {}", out);
+    assert!(!out.contains("cycle"), "should not mention cycle: {}", out);
+}
