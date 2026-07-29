@@ -217,14 +217,36 @@ fn cmd_ready(json: bool) -> Result<i32> {
 }
 
 fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str>, priority: Option<&str>, blocked_by: &[String]) -> Result<i32> {
-    // Validate slug
-    let slug_re = Regex::new(r"^[a-z0-9][a-z0-9-]*$").unwrap();
-    if !slug_re.is_match(slug) {
-        domain_bail!("invalid slug {:?} — allowed: lowercase letters, digits, dashes", slug);
+    // Validate inputs
+    if let Err(e) = core::validate::validate_slug(slug) {
+        domain_bail!("{}", e);
     }
 
     let title_owned = slug.replace('-', " ");
     let title = title.unwrap_or(&title_owned);
+    if let Err(e) = core::validate::validate_free_text(title, "title", 200) {
+        domain_bail!("{}", e);
+    }
+    if let Some(s) = spec {
+        if let Err(e) = core::validate::validate_free_text(s, "spec", 100) {
+            domain_bail!("{}", e);
+        }
+    }
+    if let Some(e) = env {
+        if let Err(err) = core::validate::validate_env(e) {
+            domain_bail!("{}", err);
+        }
+    }
+    if let Some(p) = priority {
+        if let Err(err) = core::validate::validate_priority(p) {
+            domain_bail!("{}", err);
+        }
+    }
+    for dep in blocked_by {
+        if let Err(e) = core::validate::validate_id(dep) {
+            domain_bail!("--blocked-by: {}", e);
+        }
+    }
     let dir = tickets_dir()?;
     let repo = git::repo_root(&dir)?;
     let remote = has_remote(&repo);
@@ -456,11 +478,22 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
         if title_val.is_empty() {
             domain_bail!("title is required and cannot be cleared");
         }
+        if let Err(e) = core::validate::validate_free_text(title_val, "title", 200) {
+            domain_bail!("{}", e);
+        }
         t.set_field("title", &format!("\"{}\"", core::yaml_scalar_escape(title_val)));
         changed.push("title");
     }
     if let Some(deps_str) = blocked_by {
         let deps: Vec<&str> = deps_str.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+        for dep in &deps {
+            if let Err(e) = core::validate::validate_id(dep) {
+                domain_bail!("--blocked-by: {}", e);
+            }
+        }
+        if let Err(e) = core::validate::validate_no_self_dep(id, &deps) {
+            domain_bail!("{}", e);
+        }
         let formatted = deps.iter().map(|d| format!("\"{}\"", core::yaml_scalar_escape(d))).collect::<Vec<_>>().join(", ");
         t.set_field("blocked_by", &format!("[{}]", formatted));
         changed.push("blocked_by");
@@ -480,6 +513,9 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
         if spec_val.is_empty() {
             t.remove_field("spec");
         } else {
+            if let Err(e) = core::validate::validate_free_text(spec_val, "spec", 100) {
+                domain_bail!("{}", e);
+            }
             t.set_field("spec", &format!("\"{}\"", core::yaml_scalar_escape(spec_val)));
         }
         changed.push("spec");
@@ -782,6 +818,28 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
 // --- cmd_batch ---
 
 fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: Option<&str>, blocked_by: &[String]) -> Result<i32> {
+    // Validate shared options
+    if let Some(s) = spec {
+        if let Err(e) = core::validate::validate_free_text(s, "spec", 100) {
+            domain_bail!("{}", e);
+        }
+    }
+    if let Some(e) = env {
+        if let Err(err) = core::validate::validate_env(e) {
+            domain_bail!("{}", err);
+        }
+    }
+    if let Some(p) = priority {
+        if let Err(err) = core::validate::validate_priority(p) {
+            domain_bail!("{}", err);
+        }
+    }
+    for dep in blocked_by {
+        if let Err(e) = core::validate::validate_id(dep) {
+            domain_bail!("--blocked-by: {}", e);
+        }
+    }
+
     // Parse items: "slug" or "slug:title"
     let mut parsed: Vec<(&str, String)> = Vec::new();
     for raw in items {
@@ -789,11 +847,19 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
             Some((s, t)) => (s, t.trim().to_string()),
             None => (raw.as_str(), raw.replace('-', " ")),
         };
-        let slug_re = Regex::new(r"^[a-z0-9][a-z0-9-]*$").unwrap();
-        if !slug_re.is_match(slug) {
-            domain_bail!("invalid slug {:?}", slug);
+        if let Err(e) = core::validate::validate_slug(slug) {
+            domain_bail!("{}", e);
+        }
+        if let Err(e) = core::validate::validate_free_text(&title, "title", 200) {
+            domain_bail!("{}", e);
         }
         parsed.push((slug, title));
+    }
+
+    // Check for duplicate slugs
+    let slugs: Vec<&str> = parsed.iter().map(|(s, _)| *s).collect();
+    if let Err(e) = core::validate::validate_no_duplicate_slugs(&slugs) {
+        domain_bail!("{}", e);
     }
 
     let dir = tickets_dir()?;
@@ -840,9 +906,8 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
 // --- cmd_renumber ---
 
 fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
-    let id_re = Regex::new(r"^\d+$").unwrap();
-    if !id_re.is_match(new_id) {
-        domain_bail!("new id must be digits, got {:?}", new_id);
+    if let Err(e) = core::validate::validate_id(new_id) {
+        domain_bail!("new id: {}", e);
     }
 
     let dir = tickets_dir()?;

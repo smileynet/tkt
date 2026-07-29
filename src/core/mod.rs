@@ -1,4 +1,5 @@
 pub mod ticket;
+pub mod validate;
 
 pub use ticket::{
     Ticket, load_corpus, frontier, find_ticket, max_id, id_width, new_ticket_text,
