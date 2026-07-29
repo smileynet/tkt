@@ -1,7 +1,7 @@
 ---
 id: "12"
 title: "Python parity test harness"
-status: open
+status: done
 blocked_by: ["08", "09"]
 ---
 
