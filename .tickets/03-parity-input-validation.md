@@ -1,7 +1,7 @@
 ---
 id: "03"
 title: "R18 input validation for slugs and free text"
-status: open
+status: done
 blocked_by: ["08"]
 ---
 
