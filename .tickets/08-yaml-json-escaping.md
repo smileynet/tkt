@@ -1,7 +1,7 @@
 ---
 id: "08"
 title: "safe YAML generation and structured JSON output"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---

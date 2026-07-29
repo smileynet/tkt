@@ -1,7 +1,7 @@
 ---
 id: "07"
 title: "propagate push failures instead of silently succeeding"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
