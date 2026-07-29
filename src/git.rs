@@ -119,3 +119,24 @@ pub fn undo_commit_keep_file(repo: &Path) -> Result<()> {
     git(repo, &["reset", "--soft", "HEAD~1"])?;
     Ok(())
 }
+
+
+/// List ticket filenames from the remote (origin/main) without modifying the working tree.
+/// Returns filenames like ["01-auth.md", "02-feature.md"].
+/// Returns an empty vec if origin/main doesn't exist or has no .tickets/ directory.
+pub fn remote_ticket_names(repo: &Path) -> Vec<String> {
+    // Try to list from origin/main (or origin/HEAD as fallback)
+    let output = Command::new("git")
+        .args(["-C", &repo.to_string_lossy(), "ls-tree", "--name-only", "origin/main", ".tickets/"])
+        .output();
+
+    match output {
+        Ok(o) if o.status.success() => {
+            String::from_utf8_lossy(&o.stdout)
+                .lines()
+                .map(|l| l.to_string())
+                .collect()
+        }
+        _ => Vec::new(),
+    }
+}

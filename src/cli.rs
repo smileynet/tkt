@@ -268,7 +268,16 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
         git::fetch(&repo)?;
     }
 
-    let names = ticket_filenames(&dir);
+    // Union local + remote filenames for allocation
+    let mut names = ticket_filenames(&dir);
+    if remote {
+        let remote_names = git::remote_ticket_names(&repo);
+        for rn in remote_names {
+            if !names.contains(&rn) {
+                names.push(rn);
+            }
+        }
+    }
     let next_id = core::max_id(&names) + 1;
     let width = core::id_width(&names);
     let tid = format!("{:0>width$}", next_id, width = width);
@@ -303,8 +312,14 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
             std::fs::remove_file(&path)?;
             git::pull_rebase(&repo)?;
 
-            // Re-scan and retry with new id
-            let names = ticket_filenames(&dir);
+            // Re-scan with local + remote union and retry with new id
+            let mut names = ticket_filenames(&dir);
+            let remote_names = git::remote_ticket_names(&repo);
+            for rn in remote_names {
+                if !names.contains(&rn) {
+                    names.push(rn);
+                }
+            }
             let next_id = core::max_id(&names) + 1;
             let width = core::id_width(&names);
             let tid2 = format!("{:0>width$}", next_id, width = width);
@@ -335,20 +350,36 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
 
 fn cmd_claim(id: &str) -> Result<i32> {
     let dir = tickets_dir()?;
+    let repo = git::repo_root(&dir)?;
+    let remote = has_remote(&repo);
+
+    // Preflight: fetch and check current remote state of the ticket
+    if remote {
+        git::fetch(&repo)?;
+    }
+
+    // Load from working tree (post-fetch, working tree reflects local state)
+    // For correctness, also check remote state if we have a remote
     let corpus = core::load_corpus(&dir)?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
         Err(_) => domain_bail!("no ticket with id {:?}", id),
     };
 
-    if t.status() != "open" {
-        domain_bail!("{} is {}, not open", t.id(), t.status());
+    // If remote exists, verify the ticket is still open on the remote
+    if remote {
+        let remote_path = format!(".tickets/{}", t.path.file_name().unwrap().to_string_lossy());
+        if let Ok(content) = git::git(&repo, &["show", &format!("origin/main:{}", remote_path)]) {
+            if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &t.path) {
+                if remote_ticket.status() != "open" {
+                    domain_bail!("{} is {}, not open (updated on remote)", id, remote_ticket.status());
+                }
+            }
+        }
     }
 
-    let repo = git::repo_root(&dir)?;
-    let remote = has_remote(&repo);
-    if remote {
-        git::fetch(&repo)?;
+    if t.status() != "open" {
+        domain_bail!("{} is {}, not open", t.id(), t.status());
     }
 
     let mut t = t.clone();
@@ -372,20 +403,34 @@ fn cmd_claim(id: &str) -> Result<i32> {
 
 fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     let dir = tickets_dir()?;
+    let repo = git::repo_root(&dir)?;
+    let remote = has_remote(&repo);
+
+    // Preflight: fetch to check remote state
+    if remote {
+        git::fetch(&repo)?;
+    }
+
     let corpus = core::load_corpus(&dir)?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
         Err(_) => domain_bail!("no ticket with id {:?}", id),
     };
 
-    if t.status() == "done" {
-        domain_bail!("{} is already done", t.id());
+    // Check remote state if available
+    if remote {
+        let remote_path = format!(".tickets/{}", t.path.file_name().unwrap().to_string_lossy());
+        if let Ok(content) = git::git(&repo, &["show", &format!("origin/main:{}", remote_path)]) {
+            if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &t.path) {
+                if remote_ticket.status() == "done" {
+                    domain_bail!("{} is already done (updated on remote)", id);
+                }
+            }
+        }
     }
 
-    let repo = git::repo_root(&dir)?;
-    let remote = has_remote(&repo);
-    if remote {
-        git::fetch(&repo)?;
+    if t.status() == "done" {
+        domain_bail!("{} is already done", t.id());
     }
 
     let mut t = t.clone();
@@ -477,11 +522,33 @@ fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
 
 fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option<&str>, spec: Option<&str>, priority: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     let dir = tickets_dir()?;
+    let repo = git::repo_root(&dir)?;
+    let remote = has_remote(&repo);
+
+    // Preflight: fetch to check remote state
+    if remote {
+        git::fetch(&repo)?;
+    }
+
     let corpus = core::load_corpus(&dir)?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
         Err(_) => domain_bail!("no ticket with id {:?}", id),
     };
+
+    // Verify ticket still exists on remote (only check, don't block — ticket may be new/local-only)
+    if remote {
+        let remote_path = format!(".tickets/{}", t.path.file_name().unwrap().to_string_lossy());
+        // Check if remote has the ticket and it was deleted — but don't block local-only tickets
+        if let Ok(content) = git::git(&repo, &["show", &format!("origin/main:{}", remote_path)]) {
+            if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &t.path) {
+                if remote_ticket.status() == "done" {
+                    domain_bail!("ticket {} was closed on remote", id);
+                }
+            }
+        }
+    }
+
     let mut t = t.clone();
     let mut changed: Vec<&str> = Vec::new();
 
@@ -552,11 +619,10 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
     }
 
     t.write()?;
-    let repo = git::repo_root(&dir)?;
     let rel_path = t.path.strip_prefix(&repo).unwrap_or(&t.path).to_string_lossy().replace('\\', "/");
     git::add(&repo, &[&rel_path])?;
     git::commit(&repo, &format!("chore(tickets): edit {} ({})", id, changed.join(", ")))?;
-    if has_remote(&repo) {
+    if remote {
         git::push_with_retry(&repo)?;
     } else {
         eprintln!("committed locally, no remote configured");
@@ -915,31 +981,82 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
         git::fetch(&repo)?;
     }
 
-    let names = ticket_filenames(&dir);
-    let base = core::max_id(&names) + 1;
-    let width = core::id_width(&names);
-
-    let mut files: Vec<String> = Vec::new();
-    for (i, (slug, title)) in parsed.iter().enumerate() {
-        let tid = format!("{:0>width$}", base + i as u64, width = width);
-        let filename = format!("{}-{}.md", tid, slug);
-        let path = dir.join(&filename);
-        let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
-        std::fs::write(&path, &content)?;
-        files.push(format!(".tickets/{}", filename));
+    // Union local + remote filenames for allocation
+    let mut names = ticket_filenames(&dir);
+    if remote {
+        let remote_names = git::remote_ticket_names(&repo);
+        for rn in remote_names {
+            if !names.contains(&rn) {
+                names.push(rn);
+            }
+        }
     }
 
-    // Stage all files
-    for f in &files {
-        git::add(&repo, &[f.as_str()])?;
-    }
-    let tids: Vec<String> = (0..parsed.len())
-        .map(|i| format!("{:0>width$}", base + i as u64, width = width))
-        .collect();
-    git::commit(&repo, &format!("chore(tickets): batch {} ({})", tids.join(","), parsed.iter().map(|(s,_)| *s).collect::<Vec<_>>().join(", ")))?;
+    let allocate_and_commit = |dir: &Path, repo: &Path, names: &[String], parsed: &[(&str, String)]| -> Result<(u64, usize, Vec<String>)> {
+        let base = core::max_id(names) + 1;
+        let width = core::id_width(names);
+        let mut files: Vec<String> = Vec::new();
+        for (i, (slug, title)) in parsed.iter().enumerate() {
+            let tid = format!("{:0>width$}", base + i as u64, width = width);
+            let filename = format!("{}-{}.md", tid, slug);
+            let path = dir.join(&filename);
+            let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
+            std::fs::write(&path, &content)?;
+            files.push(format!(".tickets/{}", filename));
+        }
+        for f in &files {
+            git::add(repo, &[f.as_str()])?;
+        }
+        let tids: Vec<String> = (0..parsed.len())
+            .map(|i| format!("{:0>width$}", base + i as u64, width = width))
+            .collect();
+        git::commit(repo, &format!("chore(tickets): batch {} ({})", tids.join(","), parsed.iter().map(|(s,_)| *s).collect::<Vec<_>>().join(", ")))?;
+        Ok((base, width, files))
+    };
+
+    let (mut base, mut width, files) = allocate_and_commit(&dir, &repo, &names, &parsed)?;
 
     if remote {
-        git::push_with_retry(&repo)?;
+        match git::push(&repo)? {
+            git::PushResult::Success => {}
+            git::PushResult::Failed(stderr) => {
+                domain_bail!("push failed: {}", stderr);
+            }
+            git::PushResult::Rejected => {
+                // Collision: undo commit, clean up files, re-fetch, rescan, reallocate
+                git::undo_commit_keep_file(&repo)?;
+                for f in &files {
+                    let path = repo.join(f);
+                    let _ = std::fs::remove_file(&path);
+                }
+                git::git(&repo, &["checkout", "--", ".tickets/"])?;
+                git::pull_rebase(&repo)?;
+
+                // Rescan with remote names
+                let mut names = ticket_filenames(&dir);
+                let remote_names = git::remote_ticket_names(&repo);
+                for rn in remote_names {
+                    if !names.contains(&rn) {
+                        names.push(rn);
+                    }
+                }
+
+                let result = allocate_and_commit(&dir, &repo, &names, &parsed)?;
+                base = result.0;
+                width = result.1;
+                let _ = result.2; // files not needed after re-allocation
+
+                match git::push(&repo)? {
+                    git::PushResult::Success => {}
+                    git::PushResult::Failed(stderr) => {
+                        domain_bail!("push failed on retry: {}", stderr);
+                    }
+                    git::PushResult::Rejected => {
+                        domain_bail!("batch allocation failed after 2 attempts (push repeatedly rejected)");
+                    }
+                }
+            }
+        }
     }
 
     for (i, (slug, _)) in parsed.iter().enumerate() {

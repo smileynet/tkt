@@ -416,3 +416,88 @@ fn test_query_outputs_json_lines() {
     assert!(line2.contains("\"priority\""), "should have priority: {}", line2);
     assert!(line2.contains("\"spec\""), "should have spec: {}", line2);
 }
+
+
+#[test]
+fn test_competing_allocation_no_collision() {
+    // Two clones allocate: first pushes, second gets rejected and reallocates
+    let tmp = TempDir::new().unwrap();
+    let remote = tmp.path().join("remote.git");
+    let clone_a = tmp.path().join("clone-a");
+    let clone_b = tmp.path().join("clone-b");
+
+    // Create bare remote
+    Command::new("git").args(["init", "--bare", "-q", "-b", "main"]).arg(&remote).output().unwrap();
+
+    // Clone A
+    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_a).output().unwrap();
+    git(&clone_a, &["config", "user.email", "a@test"]);
+    git(&clone_a, &["config", "user.name", "a"]);
+    git(&clone_a, &["config", "core.autocrlf", "false"]);
+    std::fs::create_dir_all(clone_a.join(".tickets")).unwrap();
+    std::fs::write(
+        clone_a.join(".tickets/01-seed.md"),
+        "---\nid: \"01\"\ntitle: \"Seed\"\nstatus: done\nblocked_by: []\n---\n\n# Seed\n",
+    ).unwrap();
+    git(&clone_a, &["add", "-A"]);
+    git(&clone_a, &["commit", "-qm", "seed"]);
+    git(&clone_a, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Clone B
+    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_b).output().unwrap();
+    git(&clone_b, &["config", "user.email", "b@test"]);
+    git(&clone_b, &["config", "user.name", "b"]);
+    git(&clone_b, &["config", "core.autocrlf", "false"]);
+
+    // A allocates and pushes first
+    let (code_a, out_a) = run_tkt(&clone_a, &["new", "alpha", "--title", "Alpha ticket"]);
+    assert_eq!(code_a, 0, "A should succeed: {}", out_a);
+    assert!(out_a.contains("02-alpha.md"), "A should get 02: {}", out_a);
+
+    // B allocates — will try 02, get rejected, rebase, get 03
+    let (code_b, out_b) = run_tkt(&clone_b, &["new", "beta", "--title", "Beta ticket"]);
+    assert_eq!(code_b, 0, "B should succeed after retry: {}", out_b);
+    // B should NOT get 02 (that's taken by A)
+    assert!(!out_b.contains("02-beta.md"), "B should not collide with A's 02: {}", out_b);
+    assert!(out_b.contains("03-beta.md"), "B should get 03: {}", out_b);
+}
+
+#[test]
+fn test_stale_claim_fails_cleanly() {
+    // Clone A closes a ticket, then Clone B (stale) tries to claim it
+    let tmp = TempDir::new().unwrap();
+    let remote = tmp.path().join("remote.git");
+    let clone_a = tmp.path().join("clone-a");
+    let clone_b = tmp.path().join("clone-b");
+
+    Command::new("git").args(["init", "--bare", "-q", "-b", "main"]).arg(&remote).output().unwrap();
+
+    // Clone A: create an open ticket
+    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_a).output().unwrap();
+    git(&clone_a, &["config", "user.email", "a@test"]);
+    git(&clone_a, &["config", "user.name", "a"]);
+    git(&clone_a, &["config", "core.autocrlf", "false"]);
+    std::fs::create_dir_all(clone_a.join(".tickets")).unwrap();
+    std::fs::write(
+        clone_a.join(".tickets/01-target.md"),
+        "---\nid: \"01\"\ntitle: \"Target\"\nstatus: open\nblocked_by: []\n---\n\n# Target\n",
+    ).unwrap();
+    git(&clone_a, &["add", "-A"]);
+    git(&clone_a, &["commit", "-qm", "seed"]);
+    git(&clone_a, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Clone B: from same state
+    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_b).output().unwrap();
+    git(&clone_b, &["config", "user.email", "b@test"]);
+    git(&clone_b, &["config", "user.name", "b"]);
+    git(&clone_b, &["config", "core.autocrlf", "false"]);
+
+    // A closes the ticket and pushes
+    let (code, _) = run_tkt(&clone_a, &["close", "01"]);
+    assert_eq!(code, 0, "A close should succeed");
+
+    // B tries to claim (should fail because preflight fetch reveals ticket is now done)
+    let (code_b, out_b) = run_tkt(&clone_b, &["claim", "01"]);
+    assert_eq!(code_b, 1, "B claim should fail: {}", out_b);
+    assert!(out_b.contains("not open") || out_b.contains("done"), "should say not open: {}", out_b);
+}
