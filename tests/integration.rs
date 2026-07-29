@@ -501,3 +501,86 @@ fn test_stale_claim_fails_cleanly() {
     assert_eq!(code_b, 1, "B claim should fail: {}", out_b);
     assert!(out_b.contains("not open") || out_b.contains("done"), "should say not open: {}", out_b);
 }
+
+
+#[test]
+fn test_no_remote_works_locally() {
+    // A repo with no remote should allow all local operations
+    let tmp = TempDir::new().unwrap();
+    let dir = tmp.path().join("local-only");
+
+    Command::new("git").args(["init", "-q", "-b", "main"]).arg(&dir).output().unwrap();
+    git(&dir, &["config", "user.email", "test@test"]);
+    git(&dir, &["config", "user.name", "test"]);
+    git(&dir, &["config", "core.autocrlf", "false"]);
+    std::fs::create_dir_all(dir.join(".tickets")).unwrap();
+    std::fs::write(
+        dir.join(".tickets/01-local.md"),
+        "---\nid: \"01\"\ntitle: \"Local ticket\"\nstatus: open\nblocked_by: []\n---\n\n# Local\n",
+    ).unwrap();
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-qm", "init"]);
+
+    // New should work with "no remote" messaging
+    let (code, out) = run_tkt(&dir, &["new", "feature", "--title", "A feature"]);
+    assert_eq!(code, 0, "new should succeed locally: {}", out);
+    assert!(out.contains("no remote"), "should mention no remote: {}", out);
+
+    // Claim should work
+    let (code, out) = run_tkt(&dir, &["claim", "01"]);
+    assert_eq!(code, 0, "claim should succeed locally: {}", out);
+
+    // Ready should work
+    let (code, _) = run_tkt(&dir, &["ready"]);
+    assert_eq!(code, 0, "ready should succeed locally");
+}
+
+#[test]
+fn test_argument_boundary_safety() {
+    let (_tmp, clone) = setup_repo();
+
+    // Title with quotes and special chars
+    let (code, out) = run_tkt(&clone, &["new", "special", "--title", "Fix \"ready\" & stuff"]);
+    assert_eq!(code, 0, "new with special title should succeed: {}", out);
+
+    // Verify the file content is valid
+    let files: Vec<_> = std::fs::read_dir(clone.join(".tickets"))
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_name().to_string_lossy().contains("special"))
+        .collect();
+    assert_eq!(files.len(), 1, "should create one file");
+    let content = std::fs::read_to_string(files[0].path()).unwrap();
+    assert!(content.contains("---"), "should have valid frontmatter");
+    assert!(content.contains("title:"), "should have title field");
+
+    // Title with backslash
+    let (code, _) = run_tkt(&clone, &["new", "backslash", "--title", "path\\to\\thing"]);
+    assert_eq!(code, 0, "backslash title should succeed");
+}
+
+#[test]
+fn test_push_failure_no_rebase_on_unreachable() {
+    // Configure a remote that doesn't exist — push failure should not trigger rebase
+    let tmp = TempDir::new().unwrap();
+    let dir = tmp.path().join("bad-remote");
+
+    Command::new("git").args(["init", "-q", "-b", "main"]).arg(&dir).output().unwrap();
+    git(&dir, &["config", "user.email", "test@test"]);
+    git(&dir, &["config", "user.name", "test"]);
+    git(&dir, &["config", "core.autocrlf", "false"]);
+    git(&dir, &["remote", "add", "origin", "https://nonexistent.invalid/repo.git"]);
+    std::fs::create_dir_all(dir.join(".tickets")).unwrap();
+    std::fs::write(
+        dir.join(".tickets/01-test.md"),
+        "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n",
+    ).unwrap();
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-qm", "init"]);
+
+    // Edit should fail because push to unreachable remote fails
+    let (code, out) = run_tkt(&dir, &["edit", "01", "--priority", "high"]);
+    assert_ne!(code, 0, "should fail with unreachable remote: {}", out);
+    // Should NOT silently succeed
+    assert!(!out.contains("edited 01"), "should not report success: {}", out);
+}
