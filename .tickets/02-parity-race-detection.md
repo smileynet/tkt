@@ -1,7 +1,7 @@
 ---
 id: "02"
 title: "preflight race check + remote ticket scanning"
-status: open
+status: done
 blocked_by: ["07"]
 ---
 
