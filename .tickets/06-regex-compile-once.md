@@ -1,7 +1,7 @@
 ---
 id: "06"
 title: "compile regex patterns once instead of per-call"
-status: open
+status: done
 blocked_by: ["03"]
 ---
 
