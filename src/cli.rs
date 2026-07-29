@@ -365,23 +365,31 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
 // --- Utilities ---
 
 fn chrono_date() -> String {
-    // Simple date without pulling in chrono crate
-    let output = std::process::Command::new("date")
-        .args(["+%Y-%m-%d"])
-        .output();
-    match output {
-        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).trim().to_string(),
-        _ => {
-            // Fallback for Windows
-            let output = std::process::Command::new("cmd")
-                .args(["/C", "echo %date:~6,4%-%date:~3,2%-%date:~0,2%"])
-                .output();
-            match output {
-                Ok(o) => String::from_utf8_lossy(&o.stdout).trim().to_string(),
-                Err(_) => "UNDATED".to_string(),
-            }
-        }
-    }
+    // Pure-Rust ISO 8601 date (YYYY-MM-DD) without external dependencies.
+    // Uses SystemTime → days since Unix epoch → civil date conversion.
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+
+    // Civil date from Unix timestamp (days since 1970-01-01)
+    let days = secs.div_euclid(86400) as i32;
+
+    // Algorithm from http://howardhinnant.github.io/date_algorithms.html
+    let z = days + 719468;
+    let era = z.div_euclid(146097);
+    let doe = z.rem_euclid(146097) as u32;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = (yoe as i32) + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+
+    format!("{:04}-{:02}-{:02}", y, m, d)
 }
 
 fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
