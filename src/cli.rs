@@ -121,6 +121,8 @@ enum Commands {
         #[arg(long)]
         brief: bool,
     },
+    /// Dump all tickets as JSON Lines (one object per line)
+    Query,
 }
 
 pub fn run() -> i32 {
@@ -143,6 +145,7 @@ pub fn run() -> i32 {
             cmd_sync_plan(check, fix, strict, brief, plan.as_deref())
         }
         Commands::Validate { strict, brief } => cmd_validate(strict, brief),
+        Commands::Query => cmd_query(),
     };
     match result {
         Ok(code) => code,
@@ -813,6 +816,43 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
         print_findings(&findings, brief, status);
     }
     Ok(if status == "fail" { 1 } else { 0 })
+}
+
+// --- cmd_query ---
+
+fn cmd_query() -> Result<i32> {
+    let dir = tickets_dir()?;
+    let corpus = core::load_corpus(&dir)?;
+
+    for t in &corpus {
+        let blocked_by: Vec<String> = t.blocked_by().iter()
+            .map(|d| format!("\"{}\"", core::json_string_escape(d)))
+            .collect();
+
+        let mut fields = vec![
+            format!("\"id\":\"{}\"", core::json_string_escape(t.id())),
+            format!("\"title\":\"{}\"", core::json_string_escape(t.title())),
+            format!("\"status\":\"{}\"", core::json_string_escape(t.status())),
+            format!("\"blocked_by\":[{}]", blocked_by.join(",")),
+        ];
+
+        // Optional fields — include only when present
+        if let Some(env) = t.get("env") {
+            let env = env.trim_matches('"');
+            fields.push(format!("\"env\":\"{}\"", core::json_string_escape(env)));
+        }
+        if let Some(priority) = t.get("priority") {
+            let priority = priority.trim_matches('"');
+            fields.push(format!("\"priority\":\"{}\"", core::json_string_escape(priority)));
+        }
+        if let Some(spec) = t.get("spec") {
+            let spec = spec.trim_matches('"');
+            fields.push(format!("\"spec\":\"{}\"", core::json_string_escape(spec)));
+        }
+
+        println!("{{{}}}", fields.join(","));
+    }
+    Ok(0)
 }
 
 // --- cmd_batch ---

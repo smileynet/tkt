@@ -380,3 +380,39 @@ fn test_exit_code_1_on_domain_error() {
     assert_eq!(code, 1, "domain error should exit 1: {}", out);
     assert!(!out.contains("crash"), "domain error should not say crash: {}", out);
 }
+
+
+#[test]
+fn test_query_outputs_json_lines() {
+    let (_tmp, clone) = setup_repo();
+
+    // Add a second ticket with optional fields
+    std::fs::write(
+        clone.join(".tickets/02-feature.md"),
+        "---\nid: \"02\"\ntitle: \"A feature\"\nstatus: open\nblocked_by: [\"01\"]\nenv: corp\npriority: high\nspec: \"my-spec\"\n---\n\n# Feature\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add feature"]);
+
+    let (code, out) = run_tkt(&clone, &["query"]);
+    assert_eq!(code, 0, "query should succeed: {}", out);
+
+    // Should have 2 lines (one per ticket)
+    let lines: Vec<&str> = out.trim().lines().collect();
+    assert_eq!(lines.len(), 2, "should have 2 tickets: {}", out);
+
+    // Each line should be valid JSON (parseable with basic checks)
+    for line in &lines {
+        assert!(line.starts_with('{') && line.ends_with('}'), "should be JSON object: {}", line);
+        assert!(line.contains("\"id\""), "should have id: {}", line);
+        assert!(line.contains("\"title\""), "should have title: {}", line);
+        assert!(line.contains("\"status\""), "should have status: {}", line);
+        assert!(line.contains("\"blocked_by\""), "should have blocked_by: {}", line);
+    }
+
+    // Second ticket should have optional fields
+    let line2 = lines[1];
+    assert!(line2.contains("\"env\""), "should have env: {}", line2);
+    assert!(line2.contains("\"priority\""), "should have priority: {}", line2);
+    assert!(line2.contains("\"spec\""), "should have spec: {}", line2);
+}
