@@ -1,7 +1,7 @@
 ---
 id: "13"
 title: "failure-path and race integration tests"
-status: open
+status: done
 blocked_by: ["07"]
 ---
 
