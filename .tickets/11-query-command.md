@@ -1,7 +1,7 @@
 ---
 id: "11"
 title: "implement query command for full corpus JSON dump"
-status: open
+status: done
 blocked_by: ["08"]
 ---
 
