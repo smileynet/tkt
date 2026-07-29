@@ -1,11 +1,32 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 use regex::Regex;
 
 use crate::core::{self, Ticket};
 use crate::git;
+
+/// Domain-level failure: expected conditions like "ticket not found", "status conflict",
+/// "validation drift". These exit with code 1.
+/// Operational failures (I/O, git crash, parse errors) use anyhow directly and exit with code 2.
+#[derive(Debug)]
+struct DomainError(String);
+
+impl std::fmt::Display for DomainError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for DomainError {}
+
+/// Bail with a domain error (exit code 1).
+macro_rules! domain_bail {
+    ($($arg:tt)*) => {
+        return Err(DomainError(format!($($arg)*)).into())
+    };
+}
 
 #[derive(Parser)]
 #[command(name = "tkt", about = "Git-native ticket CLI (.tickets/ contract)")]
@@ -126,8 +147,13 @@ pub fn run() -> i32 {
     match result {
         Ok(code) => code,
         Err(e) => {
-            eprintln!("tkt: {}", e);
-            1
+            if e.downcast_ref::<DomainError>().is_some() {
+                eprintln!("tkt: {}", e);
+                1
+            } else {
+                eprintln!("tkt: crash: {}", e);
+                2
+            }
         }
     }
 }
@@ -139,7 +165,7 @@ fn tickets_dir() -> Result<PathBuf> {
     let root = git::repo_root(&cwd)?;
     let dir = root.join(".tickets");
     if !dir.is_dir() {
-        bail!("no .tickets/ directory in {}", root.display());
+        domain_bail!("no .tickets/ directory in {}", root.display());
     }
     Ok(dir)
 }
@@ -194,7 +220,7 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
     // Validate slug
     let slug_re = Regex::new(r"^[a-z0-9][a-z0-9-]*$").unwrap();
     if !slug_re.is_match(slug) {
-        bail!("invalid slug {:?} — allowed: lowercase letters, digits, dashes", slug);
+        domain_bail!("invalid slug {:?} — allowed: lowercase letters, digits, dashes", slug);
     }
 
     let title_owned = slug.replace('-', " ");
@@ -234,7 +260,7 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
             Ok(0)
         }
         git::PushResult::Failed(stderr) => {
-            bail!("push failed: {}", stderr);
+            domain_bail!("push failed: {}", stderr);
         }
         git::PushResult::Rejected => {
             // Lost race: undo commit, pull, re-scan for next id
@@ -262,10 +288,10 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
                     Ok(0)
                 }
                 git::PushResult::Failed(stderr) => {
-                    bail!("push failed on retry: {}", stderr);
+                    domain_bail!("push failed on retry: {}", stderr);
                 }
                 git::PushResult::Rejected => {
-                    bail!("allocation failed after 2 attempts (push repeatedly rejected)");
+                    domain_bail!("allocation failed after 2 attempts (push repeatedly rejected)");
                 }
             }
         }
@@ -275,10 +301,13 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
 fn cmd_claim(id: &str) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
-    let t = core::find_ticket(&corpus, id)?;
+    let t = match core::find_ticket(&corpus, id) {
+        Ok(t) => t,
+        Err(_) => domain_bail!("no ticket with id {:?}", id),
+    };
 
     if t.status() != "open" {
-        bail!("{} is {}, not open", t.id(), t.status());
+        domain_bail!("{} is {}, not open", t.id(), t.status());
     }
 
     let repo = git::repo_root(&dir)?;
@@ -309,10 +338,13 @@ fn cmd_claim(id: &str) -> Result<i32> {
 fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
-    let t = core::find_ticket(&corpus, id)?;
+    let t = match core::find_ticket(&corpus, id) {
+        Ok(t) => t,
+        Err(_) => domain_bail!("no ticket with id {:?}", id),
+    };
 
     if t.status() == "done" {
-        bail!("{} is already done", t.id());
+        domain_bail!("{} is already done", t.id());
     }
 
     let repo = git::repo_root(&dir)?;
@@ -413,13 +445,16 @@ fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
 fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option<&str>, spec: Option<&str>, priority: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
-    let t = core::find_ticket(&corpus, id)?;
+    let t = match core::find_ticket(&corpus, id) {
+        Ok(t) => t,
+        Err(_) => domain_bail!("no ticket with id {:?}", id),
+    };
     let mut t = t.clone();
     let mut changed: Vec<&str> = Vec::new();
 
     if let Some(title_val) = title {
         if title_val.is_empty() {
-            bail!("title is required and cannot be cleared");
+            domain_bail!("title is required and cannot be cleared");
         }
         t.set_field("title", &format!("\"{}\"", core::yaml_scalar_escape(title_val)));
         changed.push("title");
@@ -435,7 +470,7 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
             t.remove_field("env");
         } else {
             if !core::ENV_VALUES.contains(&env_val) {
-                bail!("env must be one of {} (or '' to clear)", core::ENV_VALUES.join("/"));
+                domain_bail!("env must be one of {} (or '' to clear)", core::ENV_VALUES.join("/"));
             }
             t.set_field("env", env_val);
         }
@@ -454,7 +489,7 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
             t.remove_field("priority");
         } else {
             if prio_val != "high" {
-                bail!("priority must be 'high' (or '' to clear)");
+                domain_bail!("priority must be 'high' (or '' to clear)");
             }
             t.set_field("priority", prio_val);
         }
@@ -466,7 +501,7 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
     }
 
     if changed.is_empty() {
-        bail!("nothing to edit — pass at least one field option");
+        domain_bail!("nothing to edit — pass at least one field option");
     }
 
     t.write()?;
@@ -670,7 +705,7 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
         None => repo.join("docs").join("plan.md"),
     };
     if !plan.is_file() {
-        bail!("no plan file at {}", plan.display());
+        domain_bail!("no plan file at {}", plan.display());
     }
 
     let corpus = core::load_corpus(&dir)?;
@@ -756,7 +791,7 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
         };
         let slug_re = Regex::new(r"^[a-z0-9][a-z0-9-]*$").unwrap();
         if !slug_re.is_match(slug) {
-            bail!("invalid slug {:?}", slug);
+            domain_bail!("invalid slug {:?}", slug);
         }
         parsed.push((slug, title));
     }
@@ -807,7 +842,7 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
 fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
     let id_re = Regex::new(r"^\d+$").unwrap();
     if !id_re.is_match(new_id) {
-        bail!("new id must be digits, got {:?}", new_id);
+        domain_bail!("new id must be digits, got {:?}", new_id);
     }
 
     let dir = tickets_dir()?;
@@ -816,11 +851,11 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
 
     let holders: Vec<&Ticket> = corpus.iter().filter(|t| t.id() == old_id).collect();
     if holders.is_empty() {
-        bail!("no ticket with id {:?}", old_id);
+        domain_bail!("no ticket with id {:?}", old_id);
     }
     if holders.len() > 1 && file_hint.is_none() {
         let names: Vec<_> = holders.iter().map(|t| t.path.file_name().unwrap().to_string_lossy().to_string()).collect();
-        bail!("id {:?} is held by {} files ({}) — pass --file", old_id, holders.len(), names.join(", "));
+        domain_bail!("id {:?} is held by {} files ({}) — pass --file", old_id, holders.len(), names.join(", "));
     }
 
     let src = if holders.len() == 1 {
@@ -831,7 +866,7 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     };
 
     if corpus.iter().any(|t| t.id() == new_id) {
-        bail!("id {:?} already exists locally", new_id);
+        domain_bail!("id {:?} already exists locally", new_id);
     }
 
     // Rename file

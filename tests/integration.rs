@@ -353,3 +353,30 @@ fn test_validate_no_false_positive_on_acyclic() {
     assert_eq!(code, 0, "acyclic chain should pass: {}", out);
     assert!(!out.contains("cycle"), "should not mention cycle: {}", out);
 }
+
+#[test]
+fn test_exit_code_2_on_crash() {
+    // Running tkt in a directory with no git repo should exit 2 (operational crash)
+    let tmp = TempDir::new().unwrap();
+    let dir = tmp.path().to_path_buf();
+    std::fs::create_dir_all(dir.join(".tickets")).unwrap();
+    std::fs::write(
+        dir.join(".tickets/01-test.md"),
+        "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n",
+    ).unwrap();
+
+    // No git init — so git commands will fail (operational crash)
+    let (code, out) = run_tkt(&dir, &["ready"]);
+    assert_eq!(code, 2, "should exit 2 on git crash: {}", out);
+    assert!(out.contains("crash"), "error should say crash: {}", out);
+}
+
+#[test]
+fn test_exit_code_1_on_domain_error() {
+    let (_tmp, clone) = setup_repo();
+
+    // Claim a ticket that is already done → domain error → exit 1
+    let (code, out) = run_tkt(&clone, &["claim", "01"]);
+    assert_eq!(code, 1, "domain error should exit 1: {}", out);
+    assert!(!out.contains("crash"), "domain error should not say crash: {}", out);
+}
