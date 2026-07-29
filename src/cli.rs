@@ -222,14 +222,41 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
         return Ok(0);
     }
 
-    // Push (single attempt for now — race handling is v2)
-    match git::push(&repo) {
-        Ok(()) => {
+    // Push (with retry on rejection — race detection)
+    match git::push(&repo)? {
+        true => {
             println!("allocated {} (pushed — id claimed, status: open)", filename);
             Ok(0)
         }
-        Err(e) => {
-            bail!("push failed (race?): {}. Pull and retry manually.", e);
+        false => {
+            // Lost race: undo commit, pull, re-scan for next id
+            git::undo_commit_keep_file(&repo)?;
+            std::fs::remove_file(&path)?;
+            git::pull_rebase(&repo)?;
+
+            // Re-scan and retry with new id
+            let names = ticket_filenames(&dir);
+            let next_id = core::max_id(&names) + 1;
+            let width = core::id_width(&names);
+            let tid2 = format!("{:0>width$}", next_id, width = width);
+            let filename2 = format!("{}-{}.md", tid2, slug);
+            let path2 = dir.join(&filename2);
+            let content2 = core::new_ticket_text(&tid2, title, blocked_by, env, spec, priority);
+            std::fs::write(&path2, &content2)?;
+            let rel_path2 = format!(".tickets/{}", filename2);
+            git::add(&repo, &[&rel_path2])?;
+            git::commit(&repo, &format!("chore(tickets): new {} {}", tid2, slug))?;
+
+            match git::push(&repo)? {
+                true => {
+                    let note = format!(" (renumbered {}→{})", tid, tid2);
+                    println!("allocated {}{} (pushed — id claimed, status: open)", filename2, note);
+                    Ok(0)
+                }
+                false => {
+                    bail!("allocation failed after 2 attempts (push repeatedly rejected)");
+                }
+            }
         }
     }
 }
@@ -261,7 +288,7 @@ fn cmd_claim(id: &str) -> Result<i32> {
     git::commit(&repo, &format!("chore(tickets): claim {}", id))?;
 
     if remote {
-        git::push(&repo)?;
+        git::push_with_retry(&repo)?;
     }
 
     println!("claimed {} (in_progress pushed)", t.path.file_name().unwrap().to_string_lossy());
@@ -316,7 +343,7 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     git::commit(&repo, &format!("chore(tickets): close {}", id))?;
 
     if remote {
-        git::push(&repo)?;
+        git::push_with_retry(&repo)?;
     }
 
     let verb = if note.is_some() { "written" } else { "stub appended" };
@@ -429,7 +456,7 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
     git::add(&repo, &[&rel_path])?;
     git::commit(&repo, &format!("chore(tickets): edit {} ({})", id, changed.join(", ")))?;
     if has_remote(&repo) {
-        let _ = git::push(&repo);
+        let _ = git::push_with_retry(&repo);
     }
     println!("edited {}: {}", t.path.file_name().unwrap().to_string_lossy(), changed.join(", "));
     Ok(0)
@@ -661,10 +688,7 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
     git::commit(&repo, &format!("chore(tickets): batch {} ({})", tids.join(","), parsed.iter().map(|(s,_)| *s).collect::<Vec<_>>().join(", ")))?;
 
     if remote {
-        match git::push(&repo) {
-            Ok(()) => {}
-            Err(e) => bail!("push failed: {}. Pull and retry.", e),
-        }
+        git::push_with_retry(&repo)?;
     }
 
     for (i, (slug, _)) in parsed.iter().enumerate() {
@@ -751,7 +775,7 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     }
     git::commit(&repo, &format!("chore(tickets): renumber {} -> {}", old_id, new_id))?;
     if has_remote(&repo) {
-        let _ = git::push(&repo);
+        let _ = git::push_with_retry(&repo);
     }
 
     println!("renumbered {} -> {} ({} inbound ref(s) updated)", old_id, new_path.file_name().unwrap().to_string_lossy(), refs_updated);
