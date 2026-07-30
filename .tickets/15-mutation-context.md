@@ -1,7 +1,7 @@
 ---
 id: "15"
 title: "consolidate preflight+publish across claim/close/edit"
-status: open
+status: done
 blocked_by: ["14"]
 ---
 
