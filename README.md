@@ -151,10 +151,14 @@ Files are the database. Hand-edit any time — tkt reads what's there.
 
 ```bash
 cargo build            # debug build
-cargo test             # 39 tests (17 unit + 22 integration)
+cargo test             # 44 tests (22 unit + 22 integration)
 cargo clippy           # must be 0 warnings
 cargo fmt --check      # must produce no diff
 ```
+
+## Contributing
+
+Found a bug? [File a bug report](https://github.com/smileynet/tkt/issues/new?template=bug_report.md). Want a feature? [Request it](https://github.com/smileynet/tkt/issues/new?template=feature_request.md).
 
 ## Inspired By
 
