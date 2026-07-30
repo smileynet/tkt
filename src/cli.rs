@@ -1136,6 +1136,9 @@ fn cmd_telemetry(
 fn cmd_telemetry_status() -> Result<i32> {
     use crate::telemetry;
 
+    // Run cleanup before reporting (enforces retention)
+    telemetry::cleanup_telemetry_dir();
+
     let (consent, reason) = telemetry::check_consent();
     let state_str = match consent {
         telemetry::Consent::Enabled => "enabled",

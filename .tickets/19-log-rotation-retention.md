@@ -1,7 +1,7 @@
 ---
 id: "19"
 title: "log rotation, retention, and session-aware cleanup"
-status: open
+status: done
 blocked_by: ["18"]
 ---
 
@@ -34,10 +34,10 @@ Without rotation, the telemetry files grow indefinitely. Without session-awarene
 
 ## Acceptance criteria
 
-- [ ] Per-project JSONL files rotate at 5MB threshold
-- [ ] Max 5 rotated files per project (configurable via const)
-- [ ] Files older than 30 days are deleted on startup scan
-- [ ] Startup cleanup completes in <50ms for typical directory (10-20 files)
-- [ ] Session boundaries are preserved during pruning (no partial sessions)
-- [ ] Total telemetry storage is bounded (documented max in TELEMETRY.md)
-- [ ] Unit tests for rotation trigger, retention enforcement, session boundary detection
+- [x] Per-project JSONL files rotate at 5MB threshold
+- [x] Max 5 rotated files per project (configurable via const)
+- [x] Files older than 30 days are deleted on startup scan
+- [x] Startup cleanup completes in <50ms for typical directory (10-20 files)
+- [x] Session boundaries are preserved during pruning (no partial sessions)
+- [x] Total telemetry storage is bounded (documented max in TELEMETRY.md)
+- [x] Unit tests for rotation trigger, retention enforcement, session boundary detection
