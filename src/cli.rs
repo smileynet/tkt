@@ -232,6 +232,46 @@ fn has_remote(repo: &Path) -> bool {
     git::has_remote(repo).unwrap_or(false)
 }
 
+/// Preflight for mutation commands: resolves context, fetches, loads corpus, finds ticket.
+/// Returns (repo, remote, ticket) ready for mutation.
+fn preflight_mutation() -> Result<(PathBuf, bool, Vec<Ticket>)> {
+    let dir = tickets_dir()?;
+    let repo = git::repo_root(&dir)?;
+    let remote = has_remote(&repo);
+    if remote {
+        git::fetch(&repo)?;
+    }
+    let corpus = core::load_corpus(&dir)?;
+    Ok((repo, remote, corpus))
+}
+
+/// Check the remote state of a ticket. Returns the remote ticket's status if available.
+fn check_remote_status(repo: &Path, remote: bool, ticket: &Ticket) -> Option<String> {
+    if !remote {
+        return None;
+    }
+    let remote_path = format!(
+        ".tickets/{}",
+        ticket.path.file_name().unwrap().to_string_lossy()
+    );
+    if let Ok(content) = git::git(repo, &["show", &format!("origin/main:{}", remote_path)]) {
+        if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &ticket.path) {
+            return Some(remote_ticket.status().to_string());
+        }
+    }
+    None
+}
+
+/// Commit and push a mutation. Handles local-only messaging.
+fn commit_and_publish(repo: &Path, remote: bool, paths: &[&str], message: &str) -> Result<()> {
+    git::add(repo, paths)?;
+    git::commit(repo, message)?;
+    if remote {
+        git::push_with_retry(repo)?;
+    }
+    Ok(())
+}
+
 // --- Commands ---
 
 fn cmd_ready(json: bool) -> Result<i32> {
@@ -386,39 +426,18 @@ fn cmd_new(
 }
 
 fn cmd_claim(id: &str) -> Result<i32> {
-    let dir = tickets_dir()?;
-    let repo = git::repo_root(&dir)?;
-    let remote = has_remote(&repo);
-
-    // Preflight: fetch and check current remote state of the ticket
-    if remote {
-        git::fetch(&repo)?;
-    }
-
-    // Load from working tree (post-fetch, working tree reflects local state)
-    // For correctness, also check remote state if we have a remote
-    let corpus = core::load_corpus(&dir)?;
+    let (repo, remote, corpus) = preflight_mutation()?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
         Err(_) => domain_bail!("no ticket with id {:?}", id),
     };
 
-    // If remote exists, verify the ticket is still open on the remote
-    if remote {
-        let remote_path = format!(".tickets/{}", t.path.file_name().unwrap().to_string_lossy());
-        if let Ok(content) = git::git(&repo, &["show", &format!("origin/main:{}", remote_path)]) {
-            if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &t.path) {
-                if remote_ticket.status() != "open" {
-                    domain_bail!(
-                        "{} is {}, not open (updated on remote)",
-                        id,
-                        remote_ticket.status()
-                    );
-                }
-            }
+    // Check remote state
+    if let Some(remote_status) = check_remote_status(&repo, remote, t) {
+        if remote_status != "open" {
+            domain_bail!("{} is {}, not open (updated on remote)", id, remote_status);
         }
     }
-
     if t.status() != "open" {
         domain_bail!("{} is {}, not open", t.id(), t.status());
     }
@@ -433,12 +452,12 @@ fn cmd_claim(id: &str) -> Result<i32> {
         .unwrap_or(&t.path)
         .to_string_lossy()
         .replace('\\', "/");
-    git::add(&repo, &[&rel_path])?;
-    git::commit(&repo, &format!("chore(tickets): claim {}", id))?;
-
-    if remote {
-        git::push_with_retry(&repo)?;
-    }
+    commit_and_publish(
+        &repo,
+        remote,
+        &[&rel_path],
+        &format!("chore(tickets): claim {}", id),
+    )?;
 
     println!(
         "claimed {} (in_progress pushed)",
@@ -448,33 +467,18 @@ fn cmd_claim(id: &str) -> Result<i32> {
 }
 
 fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
-    let dir = tickets_dir()?;
-    let repo = git::repo_root(&dir)?;
-    let remote = has_remote(&repo);
-
-    // Preflight: fetch to check remote state
-    if remote {
-        git::fetch(&repo)?;
-    }
-
-    let corpus = core::load_corpus(&dir)?;
+    let (repo, remote, corpus) = preflight_mutation()?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
         Err(_) => domain_bail!("no ticket with id {:?}", id),
     };
 
-    // Check remote state if available
-    if remote {
-        let remote_path = format!(".tickets/{}", t.path.file_name().unwrap().to_string_lossy());
-        if let Ok(content) = git::git(&repo, &["show", &format!("origin/main:{}", remote_path)]) {
-            if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &t.path) {
-                if remote_ticket.status() == "done" {
-                    domain_bail!("{} is already done (updated on remote)", id);
-                }
-            }
+    // Check remote state
+    if let Some(remote_status) = check_remote_status(&repo, remote, t) {
+        if remote_status == "done" {
+            domain_bail!("{} is already done (updated on remote)", id);
         }
     }
-
     if t.status() == "done" {
         domain_bail!("{} is already done", t.id());
     }
@@ -516,12 +520,12 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
         .unwrap_or(&t.path)
         .to_string_lossy()
         .replace('\\', "/");
-    git::add(&repo, &[&rel_path])?;
-    git::commit(&repo, &format!("chore(tickets): close {}", id))?;
-
-    if remote {
-        git::push_with_retry(&repo)?;
-    }
+    commit_and_publish(
+        &repo,
+        remote,
+        &[&rel_path],
+        &format!("chore(tickets): close {}", id),
+    )?;
 
     let verb = if note.is_some() {
         "written"
@@ -592,31 +596,16 @@ fn cmd_edit(
     priority: Option<&str>,
     ac_indices: &[u32],
 ) -> Result<i32> {
-    let dir = tickets_dir()?;
-    let repo = git::repo_root(&dir)?;
-    let remote = has_remote(&repo);
-
-    // Preflight: fetch to check remote state
-    if remote {
-        git::fetch(&repo)?;
-    }
-
-    let corpus = core::load_corpus(&dir)?;
+    let (repo, remote, corpus) = preflight_mutation()?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
         Err(_) => domain_bail!("no ticket with id {:?}", id),
     };
 
-    // Verify ticket still exists on remote (only check, don't block — ticket may be new/local-only)
-    if remote {
-        let remote_path = format!(".tickets/{}", t.path.file_name().unwrap().to_string_lossy());
-        // Check if remote has the ticket and it was deleted — but don't block local-only tickets
-        if let Ok(content) = git::git(&repo, &["show", &format!("origin/main:{}", remote_path)]) {
-            if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &t.path) {
-                if remote_ticket.status() == "done" {
-                    domain_bail!("ticket {} was closed on remote", id);
-                }
-            }
+    // Check remote state (don't block local-only tickets)
+    if let Some(remote_status) = check_remote_status(&repo, remote, t) {
+        if remote_status == "done" {
+            domain_bail!("ticket {} was closed on remote", id);
         }
     }
 
@@ -713,16 +702,12 @@ fn cmd_edit(
         .unwrap_or(&t.path)
         .to_string_lossy()
         .replace('\\', "/");
-    git::add(&repo, &[&rel_path])?;
-    git::commit(
+    commit_and_publish(
         &repo,
+        remote,
+        &[&rel_path],
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
     )?;
-    if remote {
-        git::push_with_retry(&repo)?;
-    } else {
-        eprintln!("committed locally, no remote configured");
-    }
     println!(
         "edited {}: {}",
         t.path.file_name().unwrap().to_string_lossy(),
