@@ -6,6 +6,7 @@ use clap::{Parser, Subcommand};
 use regex::Regex;
 
 use crate::core::{self, Ticket};
+use crate::findings::{self, Finding};
 use crate::git;
 
 // --- Compiled regex patterns ---
@@ -784,14 +785,15 @@ fn cmd_edit(
 
 fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
     let dir = tickets_dir()?;
-    let mut findings: Vec<Finding> = Vec::new();
+    let mut all_findings: Vec<Finding> = Vec::new();
 
+    // Load corpus, collecting parse errors
     let mut corpus: Vec<Ticket> = Vec::new();
     for entry in std::fs::read_dir(&dir)?.filter_map(|e| e.ok()) {
         if entry.path().extension().is_some_and(|ext| ext == "md") {
             match Ticket::parse(&entry.path()) {
                 Ok(t) => corpus.push(t),
-                Err(e) => findings.push(Finding {
+                Err(e) => all_findings.push(Finding {
                     file: entry.file_name().to_string_lossy().to_string(),
                     rule: "unparseable".to_string(),
                     message: e.to_string(),
@@ -801,207 +803,17 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
         }
     }
 
-    let mut ids: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    for t in &corpus {
-        let name = t.path.file_name().unwrap().to_string_lossy().to_string();
-        let tid = t.id();
-        if !core::STATUS_VALUES.contains(&t.status()) {
-            findings.push(Finding {
-                file: name.clone(),
-                rule: "bad-status".into(),
-                message: format!(
-                    "status {:?} not in {}",
-                    t.status(),
-                    core::STATUS_VALUES.join("/")
-                ),
-                severity: "error".into(),
-            });
-        }
-        let env = t.env();
-        if env != "either" && !core::ENV_VALUES.contains(&env) {
-            findings.push(Finding {
-                file: name.clone(),
-                rule: "bad-env".into(),
-                message: format!("env {:?} not in {}", env, core::ENV_VALUES.join("/")),
-                severity: "error".into(),
-            });
-        }
-        if !name.starts_with(&format!("{}-", tid)) {
-            findings.push(Finding {
-                file: name.clone(),
-                rule: "id-filename-mismatch".into(),
-                message: format!("id {:?} vs filename", tid),
-                severity: "error".into(),
-            });
-        }
-        if let Some(existing) = ids.get(&tid) {
-            findings.push(Finding {
-                file: name.clone(),
-                rule: "duplicate-id".into(),
-                message: format!("id {:?} also in {}", tid, existing),
-                severity: "error".into(),
-            });
-        }
-        ids.entry(tid).or_insert(name.clone());
-    }
+    // Run all validation rules
+    all_findings.extend(findings::check_status(&corpus));
+    all_findings.extend(findings::check_env(&corpus));
+    all_findings.extend(findings::check_id_filename(&corpus));
+    all_findings.extend(findings::check_duplicate_ids(&corpus));
+    all_findings.extend(findings::check_dangling_deps(&corpus));
+    all_findings.extend(findings::check_cycles(&corpus));
+    all_findings.extend(findings::check_unchecked_acs(&corpus));
 
-    // Dangling blocked_by
-    let known: std::collections::HashSet<String> = corpus.iter().map(|t| t.id()).collect();
-    for t in &corpus {
-        for dep in t.blocked_by() {
-            if !known.contains(&dep) {
-                findings.push(Finding {
-                    file: t.path.file_name().unwrap().to_string_lossy().to_string(),
-                    rule: "dangling-blocked-by".into(),
-                    message: format!("ref {:?} has no ticket", dep),
-                    severity: "error".into(),
-                });
-            }
-        }
-    }
-
-    // Cycle detection via DFS
-    {
-        use std::collections::HashMap;
-
-        // Build adjacency: id -> list of blocked_by ids (only known ones)
-        let adj: HashMap<String, Vec<String>> = corpus
-            .iter()
-            .map(|t| {
-                let deps: Vec<String> = t
-                    .blocked_by()
-                    .into_iter()
-                    .filter(|d| known.contains(d))
-                    .collect();
-                (t.id(), deps)
-            })
-            .collect();
-
-        // DFS states: 0=unvisited, 1=visiting (in current path), 2=visited (complete)
-        let mut state: HashMap<&str, u8> = adj.keys().map(|k| (k.as_str(), 0u8)).collect();
-        let mut path: Vec<&str> = Vec::new();
-        let mut cycles: Vec<Vec<String>> = Vec::new();
-
-        fn dfs<'a>(
-            node: &'a str,
-            adj: &'a HashMap<String, Vec<String>>,
-            state: &mut HashMap<&'a str, u8>,
-            path: &mut Vec<&'a str>,
-            cycles: &mut Vec<Vec<String>>,
-        ) {
-            state.insert(node, 1);
-            path.push(node);
-
-            if let Some(deps) = adj.get(node) {
-                for dep in deps {
-                    match state.get(dep.as_str()) {
-                        Some(&1) => {
-                            // Found cycle — extract from where dep first appears in path
-                            if let Some(pos) = path.iter().position(|&n| n == dep.as_str()) {
-                                let mut cycle: Vec<String> =
-                                    path[pos..].iter().map(|s| s.to_string()).collect();
-                                cycle.push(dep.to_string()); // close the cycle
-                                cycles.push(cycle);
-                            }
-                        }
-                        Some(&0) => {
-                            dfs(dep.as_str(), adj, state, path, cycles);
-                        }
-                        _ => {} // already visited (2) or unknown, skip
-                    }
-                }
-            }
-
-            path.pop();
-            state.insert(node, 2);
-        }
-
-        // Sort keys for deterministic output
-        let mut nodes: Vec<&str> = adj.keys().map(|s| s.as_str()).collect();
-        nodes.sort();
-        for node in nodes {
-            if state.get(node) == Some(&0) {
-                dfs(node, &adj, &mut state, &mut path, &mut cycles);
-            }
-        }
-
-        // Deduplicate cycles: normalize by rotating to start at the smallest id
-        let mut unique_cycles: Vec<String> = Vec::new();
-        let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
-        for cycle in &cycles {
-            // cycle is [a, b, c, a] — the path portion is [a, b, c]
-            let path_part = &cycle[..cycle.len() - 1];
-            // Rotate to start at minimum
-            if let Some(min_pos) = path_part
-                .iter()
-                .enumerate()
-                .min_by_key(|(_, v)| *v)
-                .map(|(i, _)| i)
-            {
-                let mut normalized: Vec<&str> =
-                    path_part[min_pos..].iter().map(|s| s.as_str()).collect();
-                normalized.extend(path_part[..min_pos].iter().map(|s| s.as_str()));
-                let key = normalized.join(" -> ");
-                if seen.insert(key.clone()) {
-                    unique_cycles.push(format!("{} -> {}", key, normalized[0]));
-                }
-            }
-        }
-
-        // Map cycle back to file for reporting
-        let id_to_file: HashMap<String, String> = corpus
-            .iter()
-            .map(|t| {
-                (
-                    t.id(),
-                    t.path.file_name().unwrap().to_string_lossy().to_string(),
-                )
-            })
-            .collect();
-
-        for cycle_desc in &unique_cycles {
-            // Attribute to the first ticket in the cycle
-            let first_id = cycle_desc.split(" -> ").next().unwrap_or("");
-            let file = id_to_file
-                .get(first_id)
-                .cloned()
-                .unwrap_or_else(|| "unknown".to_string());
-            findings.push(Finding {
-                file,
-                rule: "cycle".into(),
-                message: format!("dependency cycle: {}", cycle_desc),
-                severity: "error".into(),
-            });
-        }
-    }
-
-    // Unchecked ACs on done tickets
-    for t in &corpus {
-        if t.status() == "done" {
-            let count = RE_UNCHECKED_AC.find_iter(&t.body).count();
-            if count > 0 {
-                findings.push(Finding {
-                    file: t.path.file_name().unwrap().to_string_lossy().to_string(),
-                    rule: "unchecked-acs-on-done".into(),
-                    message: format!("{} unchecked box(es)", count),
-                    severity: "warning".into(),
-                });
-            }
-        }
-    }
-
-    let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();
-    let warnings: Vec<&Finding> = findings
-        .iter()
-        .filter(|f| f.severity == "warning")
-        .collect();
-    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) {
-        "fail"
-    } else {
-        "pass"
-    };
-
-    print_findings(&findings, brief, status);
+    let status = findings::status_from_findings(&all_findings, strict);
+    findings::print_findings(&all_findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
 }
 
@@ -1100,7 +912,7 @@ fn cmd_sync_plan(
 
     if _fix {
         if !findings.is_empty() {
-            print_findings(&findings, brief, status);
+            findings::print_findings(&findings, brief, status);
         } else if brief {
             println!("pass (fixed {}, 0 remaining)", fixed_count);
         } else {
@@ -1110,7 +922,7 @@ fn cmd_sync_plan(
             );
         }
     } else {
-        print_findings(&findings, brief, status);
+        findings::print_findings(&findings, brief, status);
     }
     Ok(if status == "fail" { 1 } else { 0 })
 }
@@ -1469,36 +1281,3 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
 }
 
 // --- Helpers ---
-
-#[derive(Debug)]
-struct Finding {
-    file: String,
-    rule: String,
-    message: String,
-    severity: String,
-}
-
-fn print_findings(findings: &[Finding], brief: bool, status: &str) {
-    if brief {
-        for f in findings {
-            println!("{}: {} [{}] {}", f.severity, f.file, f.rule, f.message);
-        }
-        println!("{} ({} finding(s))", status, findings.len());
-    } else {
-        println!(
-            "{{\"status\":\"{}\",\"findings\":[{}]}}",
-            status,
-            findings
-                .iter()
-                .map(|f| format!(
-                    "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
-                    core::json_string_escape(&f.file),
-                    core::json_string_escape(&f.rule),
-                    core::json_string_escape(&f.message),
-                    core::json_string_escape(&f.severity),
-                ))
-                .collect::<Vec<_>>()
-                .join(",")
-        );
-    }
-}

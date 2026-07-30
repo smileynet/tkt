@@ -1,5 +1,6 @@
 mod cli;
 mod core;
+mod findings;
 mod git;
 
 use std::process::ExitCode;
