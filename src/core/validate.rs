@@ -2,9 +2,8 @@
 
 /// Windows reserved device names (case-insensitive, with or without extensions).
 const RESERVED_NAMES: &[&str] = &[
-    "con", "prn", "aux", "nul",
-    "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9",
-    "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
+    "con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8",
+    "com9", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
 ];
 
 /// Validate a ticket slug for use in filenames.
@@ -19,9 +18,14 @@ pub fn validate_slug(slug: &str) -> Result<(), String> {
     }
     // Must match pattern
     if !slug.chars().next().unwrap().is_ascii_alphanumeric()
-        || !slug.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        || !slug
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
     {
-        return Err("slug must be lowercase letters, digits, and dashes, starting with alphanumeric".to_string());
+        return Err(
+            "slug must be lowercase letters, digits, and dashes, starting with alphanumeric"
+                .to_string(),
+        );
     }
     // Check Windows reserved names (case-insensitive, strip any extension)
     let base = slug.split('.').next().unwrap_or(slug);
@@ -35,7 +39,12 @@ pub fn validate_slug(slug: &str) -> Result<(), String> {
 /// Rules: no literal newlines, no carriage returns, no null bytes. Max length enforced.
 pub fn validate_free_text(value: &str, field_name: &str, max_len: usize) -> Result<(), String> {
     if value.len() > max_len {
-        return Err(format!("{} too long ({} chars, max {})", field_name, value.len(), max_len));
+        return Err(format!(
+            "{} too long ({} chars, max {})",
+            field_name,
+            value.len(),
+            max_len
+        ));
     }
     if value.contains('\n') {
         return Err(format!("{} must not contain newlines", field_name));
@@ -73,7 +82,11 @@ pub fn validate_no_self_dep(own_id: &str, blocked_by: &[&str]) -> Result<(), Str
 pub fn validate_env(env: &str) -> Result<(), String> {
     const VALID: &[&str] = &["corp", "personal", "either"];
     if !VALID.contains(&env) {
-        return Err(format!("env must be one of {} (got {:?})", VALID.join("/"), env));
+        return Err(format!(
+            "env must be one of {} (got {:?})",
+            VALID.join("/"),
+            env
+        ));
     }
     Ok(())
 }

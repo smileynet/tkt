@@ -11,18 +11,10 @@ pub const ENV_VALUES: &[&str] = &["corp", "personal", "either"];
 
 // --- Compiled regex patterns ---
 
-static RE_FM_KEY: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*):(.*)$").unwrap()
-});
-static RE_BRACKET_LIST: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"\[(.*)\]"#).unwrap()
-});
-static RE_NUMERIC_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^(\d+)(.*)$").unwrap()
-});
-static RE_FILENAME_ID: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"^(\d+)-").unwrap()
-});
+static RE_FM_KEY: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*):(.*)$").unwrap());
+static RE_NUMERIC_PREFIX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)(.*)$").unwrap());
+static RE_FILENAME_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)-").unwrap());
 
 // --- Ticket ---
 
@@ -39,8 +31,8 @@ pub struct Ticket {
 impl Ticket {
     /// Parse a ticket from a .md file with YAML frontmatter.
     pub fn parse(path: &Path) -> Result<Self> {
-        let content = std::fs::read_to_string(path)
-            .with_context(|| format!("reading {}", path.display()))?;
+        let content =
+            std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
         Self::parse_str(&content, path)
     }
 
@@ -73,7 +65,12 @@ impl Ticket {
             } else if line.trim().is_empty() {
                 fm.push((String::new(), (*line).to_string()));
             } else {
-                bail!("{}: unparseable frontmatter line {}: {:?}", path.display(), i + 1, line);
+                bail!(
+                    "{}: unparseable frontmatter line {}: {:?}",
+                    path.display(),
+                    i + 1,
+                    line
+                );
             }
         }
 
@@ -98,23 +95,22 @@ impl Ticket {
 
     /// Get a field's trimmed value.
     pub fn get(&self, key: &str) -> Option<&str> {
-        self.fm.iter()
+        self.fm
+            .iter()
             .find(|(k, _)| k == key)
             .map(|(_, v)| v.trim())
     }
 
-    pub fn id(&self) -> &str {
-        self.get("id")
-            .unwrap_or("")
-            .trim_matches('"')
-            .trim_matches('\'')
+    pub fn id(&self) -> String {
+        let raw = self.get("id").unwrap_or("");
+        let stripped = raw.trim_matches('"').trim_matches('\'');
+        yaml_scalar_unescape(stripped)
     }
 
-    pub fn title(&self) -> &str {
-        self.get("title")
-            .unwrap_or("")
-            .trim_matches('"')
-            .trim_matches('\'')
+    pub fn title(&self) -> String {
+        let raw = self.get("title").unwrap_or("");
+        let stripped = raw.trim_matches('"').trim_matches('\'');
+        yaml_scalar_unescape(stripped)
     }
 
     pub fn status(&self) -> &str {
@@ -123,15 +119,17 @@ impl Ticket {
 
     pub fn blocked_by(&self) -> Vec<String> {
         let raw = self.get("blocked_by").unwrap_or("");
-        let re = &*RE_BRACKET_LIST;
-        match re.captures(raw) {
-            Some(caps) => caps[1]
-                .split(',')
-                .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
-                .filter(|s| !s.is_empty())
-                .collect(),
-            None => Vec::new(),
+        // Require the value to be a bracketed list (anchored match)
+        let trimmed = raw.trim();
+        if !trimmed.starts_with('[') || !trimmed.ends_with(']') {
+            return Vec::new();
         }
+        let inner = &trimmed[1..trimmed.len() - 1];
+        inner
+            .split(',')
+            .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
     }
 
     pub fn env(&self) -> &str {
@@ -151,9 +149,9 @@ impl Ticket {
     pub fn numeric_key(&self) -> (u64, String) {
         let id = self.id();
         let re = &*RE_NUMERIC_PREFIX;
-        match re.captures(id) {
+        match re.captures(&id) {
             Some(caps) => (caps[1].parse().unwrap_or(u64::MAX), caps[2].to_string()),
-            None => (u64::MAX, id.to_string()),
+            None => (u64::MAX, id),
         }
     }
 
@@ -226,17 +224,19 @@ pub fn load_corpus(dir: &Path) -> Result<Vec<Ticket>> {
 /// Compute the frontier: open tickets with all deps done, env-filtered, priority-sorted.
 pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
     let crew_env = std::env::var("CREW_ENV").unwrap_or_default();
-    let done: std::collections::HashSet<&str> = corpus.iter()
+    let done: std::collections::HashSet<String> = corpus
+        .iter()
         .filter(|t| t.status() == "done")
         .map(|t| t.id())
         .collect();
 
-    let mut pool: Vec<&Ticket> = corpus.iter()
+    let mut pool: Vec<&Ticket> = corpus
+        .iter()
         .filter(|t| {
             if t.status() != "open" {
                 return false;
             }
-            if !t.blocked_by().iter().all(|dep| done.contains(dep.as_str())) {
+            if !t.blocked_by().iter().all(|dep| done.contains(dep)) {
                 return false;
             }
             if !crew_env.is_empty() && t.env() != "either" && t.env() != crew_env {
@@ -252,15 +252,21 @@ pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
 
 /// Find the maximum numeric id in a list of filenames.
 pub fn max_id(names: &[String]) -> u64 {
-    names.iter()
-        .filter_map(|n| RE_FILENAME_ID.captures(n).map(|c| c[1].parse::<u64>().unwrap_or(0)))
+    names
+        .iter()
+        .filter_map(|n| {
+            RE_FILENAME_ID
+                .captures(n)
+                .map(|c| c[1].parse::<u64>().unwrap_or(0))
+        })
         .max()
         .unwrap_or(0)
 }
 
 /// Determine the id zero-padding width from existing filenames.
 pub fn id_width(names: &[String]) -> usize {
-    names.iter()
+    names
+        .iter()
         .filter_map(|n| RE_FILENAME_ID.captures(n).map(|c| c[1].len()))
         .max()
         .unwrap_or(2)
@@ -268,7 +274,8 @@ pub fn id_width(names: &[String]) -> usize {
 
 /// Find a ticket by id in the corpus.
 pub fn find_ticket<'a>(corpus: &'a [Ticket], id: &str) -> Result<&'a Ticket> {
-    corpus.iter()
+    corpus
+        .iter()
         .find(|t| t.id() == id)
         .ok_or_else(|| anyhow::anyhow!("no ticket with id {}", id))
 }
@@ -286,10 +293,45 @@ pub fn yaml_scalar_escape(s: &str) -> String {
             '\t' => out.push_str("\\t"),
             '\0' => out.push_str("\\0"),
             c if c.is_control() => {
-                // YAML unicode escape: \xNN for ASCII control chars
                 out.push_str(&format!("\\x{:02X}", c as u32));
             }
             _ => out.push(c),
+        }
+    }
+    out
+}
+
+/// Decode YAML double-quoted scalar escapes when reading values.
+/// Handles: \\, \", \n, \r, \t, \0, \xNN.
+pub fn yaml_scalar_unescape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('\\') => out.push('\\'),
+                Some('"') => out.push('"'),
+                Some('n') => out.push('\n'),
+                Some('r') => out.push('\r'),
+                Some('t') => out.push('\t'),
+                Some('0') => out.push('\0'),
+                Some('x') => {
+                    let hex: String = chars.by_ref().take(2).collect();
+                    if let Ok(byte) = u8::from_str_radix(&hex, 16) {
+                        out.push(byte as char);
+                    } else {
+                        out.push_str("\\x");
+                        out.push_str(&hex);
+                    }
+                }
+                Some(other) => {
+                    out.push('\\');
+                    out.push(other);
+                }
+                None => out.push('\\'),
+            }
+        } else {
+            out.push(c);
         }
     }
     out
@@ -316,13 +358,21 @@ pub fn json_string_escape(s: &str) -> String {
 }
 
 /// Generate the text for a new ticket file.
-pub fn new_ticket_text(id: &str, title: &str, blocked_by: &[String], env: Option<&str>, spec: Option<&str>, priority: Option<&str>) -> String {
+pub fn new_ticket_text(
+    id: &str,
+    title: &str,
+    blocked_by: &[String],
+    env: Option<&str>,
+    spec: Option<&str>,
+    priority: Option<&str>,
+) -> String {
     let mut fm_lines = vec![
         format!("id: \"{}\"", yaml_scalar_escape(id)),
         format!("title: \"{}\"", yaml_scalar_escape(title)),
         "status: open".to_string(),
     ];
-    let deps = blocked_by.iter()
+    let deps = blocked_by
+        .iter()
         .map(|d| format!("\"{}\"", yaml_scalar_escape(d)))
         .collect::<Vec<_>>()
         .join(", ");
@@ -336,7 +386,10 @@ pub fn new_ticket_text(id: &str, title: &str, blocked_by: &[String], env: Option
     if let Some(p) = priority {
         fm_lines.push(format!("priority: {}", p));
     }
-    let body = format!("\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n", title);
+    let body = format!(
+        "\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
+        title
+    );
     format!("---\n{}\n---\n{}", fm_lines.join("\n"), body)
 }
 
@@ -370,8 +423,10 @@ mod tests {
     #[test]
     fn frontier_filters_correctly() {
         let content_done = "---\nid: \"01\"\ntitle: \"Done\"\nstatus: done\nblocked_by: []\n---\n";
-        let content_open = "---\nid: \"02\"\ntitle: \"Open\"\nstatus: open\nblocked_by: [\"01\"]\n---\n";
-        let content_blocked = "---\nid: \"03\"\ntitle: \"Blocked\"\nstatus: open\nblocked_by: [\"99\"]\n---\n";
+        let content_open =
+            "---\nid: \"02\"\ntitle: \"Open\"\nstatus: open\nblocked_by: [\"01\"]\n---\n";
+        let content_blocked =
+            "---\nid: \"03\"\ntitle: \"Blocked\"\nstatus: open\nblocked_by: [\"99\"]\n---\n";
 
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join("01-done.md"), content_done).unwrap();

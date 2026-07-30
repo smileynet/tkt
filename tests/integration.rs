@@ -98,7 +98,11 @@ fn test_ready_shows_frontier() {
 
     let (code, out) = run_tkt(&clone, &["ready"]);
     assert_eq!(code, 0, "ready should succeed: {}", out);
-    assert!(out.contains("02"), "should show ticket 02 on frontier: {}", out);
+    assert!(
+        out.contains("02"),
+        "should show ticket 02 on frontier: {}",
+        out
+    );
     assert!(out.contains("Feature"), "should show title: {}", out);
 }
 
@@ -116,7 +120,11 @@ fn test_ready_excludes_blocked() {
 
     let (code, out) = run_tkt(&clone, &["ready"]);
     assert_eq!(code, 0);
-    assert!(!out.contains("02"), "blocked ticket should not be on frontier: {}", out);
+    assert!(
+        !out.contains("02"),
+        "blocked ticket should not be on frontier: {}",
+        out
+    );
 }
 
 #[test]
@@ -126,14 +134,22 @@ fn test_new_creates_and_pushes() {
     let (code, out) = run_tkt(&clone, &["new", "my-feature", "--title", "My Feature"]);
     assert_eq!(code, 0, "new should succeed: {}", out);
     assert!(out.contains("allocated"), "should say allocated: {}", out);
-    assert!(out.contains("02-my-feature.md"), "should create 02: {}", out);
+    assert!(
+        out.contains("02-my-feature.md"),
+        "should create 02: {}",
+        out
+    );
 
     // Verify file exists
     assert!(clone.join(".tickets/02-my-feature.md").exists());
 
     // Verify it was pushed (commit is on remote)
     let log = git(&clone, &["log", "--oneline", "origin/main"]);
-    assert!(log.contains("new 02 my-feature"), "should be pushed: {}", log);
+    assert!(
+        log.contains("new 02 my-feature"),
+        "should be pushed: {}",
+        log
+    );
 }
 
 #[test]
@@ -172,7 +188,11 @@ fn test_claim_rejects_non_open() {
     // Trying to claim the seed ticket (already done)
     let (code, out) = run_tkt(&clone, &["claim", "01"]);
     assert_ne!(code, 0, "claim of done ticket should fail");
-    assert!(out.contains("done") || out.contains("not open"), "should explain why: {}", out);
+    assert!(
+        out.contains("done") || out.contains("not open"),
+        "should explain why: {}",
+        out
+    );
 }
 
 #[test]
@@ -181,7 +201,11 @@ fn test_close_rejects_already_done() {
 
     let (code, out) = run_tkt(&clone, &["close", "01"]);
     assert_ne!(code, 0, "close of done ticket should fail");
-    assert!(out.contains("already done"), "should say already done: {}", out);
+    assert!(
+        out.contains("already done"),
+        "should say already done: {}",
+        out
+    );
 }
 
 #[test]
@@ -198,7 +222,11 @@ fn test_validate_finds_issues() {
 
     let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
     assert_eq!(code, 1, "validate should fail with dangling ref: {}", out);
-    assert!(out.contains("dangling-blocked-by"), "should report dangling ref: {}", out);
+    assert!(
+        out.contains("dangling-blocked-by"),
+        "should report dangling ref: {}",
+        out
+    );
 }
 
 #[test]
@@ -218,18 +246,24 @@ fn test_sync_plan_detects_drift() {
     std::fs::write(
         clone.join(".tickets/02-drifted.md"),
         "---\nid: \"02\"\ntitle: \"Drifted\"\nstatus: open\nblocked_by: []\n---\n\n# Drifted\n",
-    ).unwrap();
+    )
+    .unwrap();
     std::fs::create_dir_all(clone.join("docs")).unwrap();
     std::fs::write(
         clone.join("docs/plan.md"),
         "| 01 | Seed | ✅ done |\n| 02 | Drifted | ✅ done |\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&clone, &["add", "-A"]);
     git(&clone, &["commit", "-qm", "add drifted"]);
 
     let (code, out) = run_tkt(&clone, &["sync-plan", "--check", "--brief"]);
     assert_eq!(code, 1, "should detect drift: {}", out);
-    assert!(out.contains("plan-status-drift"), "should report drift: {}", out);
+    assert!(
+        out.contains("plan-status-drift"),
+        "should report drift: {}",
+        out
+    );
 }
 
 #[test]
@@ -240,12 +274,14 @@ fn test_sync_plan_fix_corrects_status() {
     std::fs::write(
         clone.join(".tickets/02-fixable.md"),
         "---\nid: \"02\"\ntitle: \"Fixable\"\nstatus: done\nblocked_by: []\n---\n\n# Fixable\n",
-    ).unwrap();
+    )
+    .unwrap();
     std::fs::create_dir_all(clone.join("docs")).unwrap();
     std::fs::write(
         clone.join("docs/plan.md"),
         "| 01 | Seed | ✅ done |\n| 02 | Fixable | open |\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&clone, &["add", "-A"]);
     git(&clone, &["commit", "-qm", "add fixable"]);
 
@@ -254,7 +290,11 @@ fn test_sync_plan_fix_corrects_status() {
 
     // Verify the plan was updated
     let plan = std::fs::read_to_string(clone.join("docs/plan.md")).unwrap();
-    assert!(plan.contains("✅ done"), "plan should now say done for ticket 02: {}", plan);
+    assert!(
+        plan.contains("✅ done"),
+        "plan should now say done for ticket 02: {}",
+        plan
+    );
 }
 
 #[test]
@@ -273,13 +313,20 @@ fn test_edit_changes_field() {
     assert_eq!(code, 0, "edit should succeed: {}", out);
 
     let content = std::fs::read_to_string(clone.join(".tickets/02-editable.md")).unwrap();
-    assert!(content.contains("priority: high"), "should have priority: {}", content);
+    assert!(
+        content.contains("priority: high"),
+        "should have priority: {}",
+        content
+    );
 
     // Ready should show it with HIGH flag
     let (_, out) = run_tkt(&clone, &["ready"]);
-    assert!(out.contains("[HIGH]") || out.contains("02"), "should show on frontier: {}", out);
+    assert!(
+        out.contains("[HIGH]") || out.contains("02"),
+        "should show on frontier: {}",
+        out
+    );
 }
-
 
 #[test]
 fn test_validate_detects_self_cycle() {
@@ -312,18 +359,24 @@ fn test_validate_detects_two_node_cycle() {
     std::fs::write(
         clone.join(".tickets/01-alpha.md"),
         "---\nid: \"01\"\ntitle: \"Alpha\"\nstatus: open\nblocked_by: [\"02\"]\n---\n\n# A\n",
-    ).unwrap();
+    )
+    .unwrap();
     std::fs::write(
         clone.join(".tickets/02-beta.md"),
         "---\nid: \"02\"\ntitle: \"Beta\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# B\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&clone, &["add", "-A"]);
     git(&clone, &["commit", "-qm", "add cycle pair"]);
 
     let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
     assert_eq!(code, 1, "should fail with cycle: {}", out);
     assert!(out.contains("cycle"), "should mention cycle: {}", out);
-    assert!(out.contains("01") && out.contains("02"), "should mention both ids: {}", out);
+    assert!(
+        out.contains("01") && out.contains("02"),
+        "should mention both ids: {}",
+        out
+    );
 }
 
 #[test]
@@ -337,15 +390,18 @@ fn test_validate_no_false_positive_on_acyclic() {
     std::fs::write(
         clone.join(".tickets/01-first.md"),
         "---\nid: \"01\"\ntitle: \"First\"\nstatus: done\nblocked_by: []\n---\n\n# F\n",
-    ).unwrap();
+    )
+    .unwrap();
     std::fs::write(
         clone.join(".tickets/02-second.md"),
         "---\nid: \"02\"\ntitle: \"Second\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# S\n",
-    ).unwrap();
+    )
+    .unwrap();
     std::fs::write(
         clone.join(".tickets/03-third.md"),
         "---\nid: \"03\"\ntitle: \"Third\"\nstatus: open\nblocked_by: [\"02\"]\n---\n\n# T\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&clone, &["add", "-A"]);
     git(&clone, &["commit", "-qm", "add chain"]);
 
@@ -363,7 +419,8 @@ fn test_exit_code_2_on_crash() {
     std::fs::write(
         dir.join(".tickets/01-test.md"),
         "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n",
-    ).unwrap();
+    )
+    .unwrap();
 
     // No git init — so git commands will fail (operational crash)
     let (code, out) = run_tkt(&dir, &["ready"]);
@@ -378,9 +435,12 @@ fn test_exit_code_1_on_domain_error() {
     // Claim a ticket that is already done → domain error → exit 1
     let (code, out) = run_tkt(&clone, &["claim", "01"]);
     assert_eq!(code, 1, "domain error should exit 1: {}", out);
-    assert!(!out.contains("crash"), "domain error should not say crash: {}", out);
+    assert!(
+        !out.contains("crash"),
+        "domain error should not say crash: {}",
+        out
+    );
 }
-
 
 #[test]
 fn test_query_outputs_json_lines() {
@@ -403,20 +463,31 @@ fn test_query_outputs_json_lines() {
 
     // Each line should be valid JSON (parseable with basic checks)
     for line in &lines {
-        assert!(line.starts_with('{') && line.ends_with('}'), "should be JSON object: {}", line);
+        assert!(
+            line.starts_with('{') && line.ends_with('}'),
+            "should be JSON object: {}",
+            line
+        );
         assert!(line.contains("\"id\""), "should have id: {}", line);
         assert!(line.contains("\"title\""), "should have title: {}", line);
         assert!(line.contains("\"status\""), "should have status: {}", line);
-        assert!(line.contains("\"blocked_by\""), "should have blocked_by: {}", line);
+        assert!(
+            line.contains("\"blocked_by\""),
+            "should have blocked_by: {}",
+            line
+        );
     }
 
     // Second ticket should have optional fields
     let line2 = lines[1];
     assert!(line2.contains("\"env\""), "should have env: {}", line2);
-    assert!(line2.contains("\"priority\""), "should have priority: {}", line2);
+    assert!(
+        line2.contains("\"priority\""),
+        "should have priority: {}",
+        line2
+    );
     assert!(line2.contains("\"spec\""), "should have spec: {}", line2);
 }
-
 
 #[test]
 fn test_competing_allocation_no_collision() {
@@ -427,10 +498,19 @@ fn test_competing_allocation_no_collision() {
     let clone_b = tmp.path().join("clone-b");
 
     // Create bare remote
-    Command::new("git").args(["init", "--bare", "-q", "-b", "main"]).arg(&remote).output().unwrap();
+    Command::new("git")
+        .args(["init", "--bare", "-q", "-b", "main"])
+        .arg(&remote)
+        .output()
+        .unwrap();
 
     // Clone A
-    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_a).output().unwrap();
+    Command::new("git")
+        .args(["clone", "-q"])
+        .arg(&remote)
+        .arg(&clone_a)
+        .output()
+        .unwrap();
     git(&clone_a, &["config", "user.email", "a@test"]);
     git(&clone_a, &["config", "user.name", "a"]);
     git(&clone_a, &["config", "core.autocrlf", "false"]);
@@ -438,13 +518,19 @@ fn test_competing_allocation_no_collision() {
     std::fs::write(
         clone_a.join(".tickets/01-seed.md"),
         "---\nid: \"01\"\ntitle: \"Seed\"\nstatus: done\nblocked_by: []\n---\n\n# Seed\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&clone_a, &["add", "-A"]);
     git(&clone_a, &["commit", "-qm", "seed"]);
     git(&clone_a, &["push", "-q", "origin", "HEAD:main"]);
 
     // Clone B
-    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_b).output().unwrap();
+    Command::new("git")
+        .args(["clone", "-q"])
+        .arg(&remote)
+        .arg(&clone_b)
+        .output()
+        .unwrap();
     git(&clone_b, &["config", "user.email", "b@test"]);
     git(&clone_b, &["config", "user.name", "b"]);
     git(&clone_b, &["config", "core.autocrlf", "false"]);
@@ -458,7 +544,11 @@ fn test_competing_allocation_no_collision() {
     let (code_b, out_b) = run_tkt(&clone_b, &["new", "beta", "--title", "Beta ticket"]);
     assert_eq!(code_b, 0, "B should succeed after retry: {}", out_b);
     // B should NOT get 02 (that's taken by A)
-    assert!(!out_b.contains("02-beta.md"), "B should not collide with A's 02: {}", out_b);
+    assert!(
+        !out_b.contains("02-beta.md"),
+        "B should not collide with A's 02: {}",
+        out_b
+    );
     assert!(out_b.contains("03-beta.md"), "B should get 03: {}", out_b);
 }
 
@@ -470,10 +560,19 @@ fn test_stale_claim_fails_cleanly() {
     let clone_a = tmp.path().join("clone-a");
     let clone_b = tmp.path().join("clone-b");
 
-    Command::new("git").args(["init", "--bare", "-q", "-b", "main"]).arg(&remote).output().unwrap();
+    Command::new("git")
+        .args(["init", "--bare", "-q", "-b", "main"])
+        .arg(&remote)
+        .output()
+        .unwrap();
 
     // Clone A: create an open ticket
-    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_a).output().unwrap();
+    Command::new("git")
+        .args(["clone", "-q"])
+        .arg(&remote)
+        .arg(&clone_a)
+        .output()
+        .unwrap();
     git(&clone_a, &["config", "user.email", "a@test"]);
     git(&clone_a, &["config", "user.name", "a"]);
     git(&clone_a, &["config", "core.autocrlf", "false"]);
@@ -481,13 +580,19 @@ fn test_stale_claim_fails_cleanly() {
     std::fs::write(
         clone_a.join(".tickets/01-target.md"),
         "---\nid: \"01\"\ntitle: \"Target\"\nstatus: open\nblocked_by: []\n---\n\n# Target\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&clone_a, &["add", "-A"]);
     git(&clone_a, &["commit", "-qm", "seed"]);
     git(&clone_a, &["push", "-q", "origin", "HEAD:main"]);
 
     // Clone B: from same state
-    Command::new("git").args(["clone", "-q"]).arg(&remote).arg(&clone_b).output().unwrap();
+    Command::new("git")
+        .args(["clone", "-q"])
+        .arg(&remote)
+        .arg(&clone_b)
+        .output()
+        .unwrap();
     git(&clone_b, &["config", "user.email", "b@test"]);
     git(&clone_b, &["config", "user.name", "b"]);
     git(&clone_b, &["config", "core.autocrlf", "false"]);
@@ -499,9 +604,12 @@ fn test_stale_claim_fails_cleanly() {
     // B tries to claim (should fail because preflight fetch reveals ticket is now done)
     let (code_b, out_b) = run_tkt(&clone_b, &["claim", "01"]);
     assert_eq!(code_b, 1, "B claim should fail: {}", out_b);
-    assert!(out_b.contains("not open") || out_b.contains("done"), "should say not open: {}", out_b);
+    assert!(
+        out_b.contains("not open") || out_b.contains("done"),
+        "should say not open: {}",
+        out_b
+    );
 }
-
 
 #[test]
 fn test_no_remote_works_locally() {
@@ -509,7 +617,11 @@ fn test_no_remote_works_locally() {
     let tmp = TempDir::new().unwrap();
     let dir = tmp.path().join("local-only");
 
-    Command::new("git").args(["init", "-q", "-b", "main"]).arg(&dir).output().unwrap();
+    Command::new("git")
+        .args(["init", "-q", "-b", "main"])
+        .arg(&dir)
+        .output()
+        .unwrap();
     git(&dir, &["config", "user.email", "test@test"]);
     git(&dir, &["config", "user.name", "test"]);
     git(&dir, &["config", "core.autocrlf", "false"]);
@@ -517,14 +629,19 @@ fn test_no_remote_works_locally() {
     std::fs::write(
         dir.join(".tickets/01-local.md"),
         "---\nid: \"01\"\ntitle: \"Local ticket\"\nstatus: open\nblocked_by: []\n---\n\n# Local\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&dir, &["add", "-A"]);
     git(&dir, &["commit", "-qm", "init"]);
 
     // New should work with "no remote" messaging
     let (code, out) = run_tkt(&dir, &["new", "feature", "--title", "A feature"]);
     assert_eq!(code, 0, "new should succeed locally: {}", out);
-    assert!(out.contains("no remote"), "should mention no remote: {}", out);
+    assert!(
+        out.contains("no remote"),
+        "should mention no remote: {}",
+        out
+    );
 
     // Claim should work
     let (code, out) = run_tkt(&dir, &["claim", "01"]);
@@ -540,7 +657,10 @@ fn test_argument_boundary_safety() {
     let (_tmp, clone) = setup_repo();
 
     // Title with quotes and special chars
-    let (code, out) = run_tkt(&clone, &["new", "special", "--title", "Fix \"ready\" & stuff"]);
+    let (code, out) = run_tkt(
+        &clone,
+        &["new", "special", "--title", "Fix \"ready\" & stuff"],
+    );
     assert_eq!(code, 0, "new with special title should succeed: {}", out);
 
     // Verify the file content is valid
@@ -565,16 +685,29 @@ fn test_push_failure_no_rebase_on_unreachable() {
     let tmp = TempDir::new().unwrap();
     let dir = tmp.path().join("bad-remote");
 
-    Command::new("git").args(["init", "-q", "-b", "main"]).arg(&dir).output().unwrap();
+    Command::new("git")
+        .args(["init", "-q", "-b", "main"])
+        .arg(&dir)
+        .output()
+        .unwrap();
     git(&dir, &["config", "user.email", "test@test"]);
     git(&dir, &["config", "user.name", "test"]);
     git(&dir, &["config", "core.autocrlf", "false"]);
-    git(&dir, &["remote", "add", "origin", "https://nonexistent.invalid/repo.git"]);
+    git(
+        &dir,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://nonexistent.invalid/repo.git",
+        ],
+    );
     std::fs::create_dir_all(dir.join(".tickets")).unwrap();
     std::fs::write(
         dir.join(".tickets/01-test.md"),
         "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n",
-    ).unwrap();
+    )
+    .unwrap();
     git(&dir, &["add", "-A"]);
     git(&dir, &["commit", "-qm", "init"]);
 
@@ -582,5 +715,9 @@ fn test_push_failure_no_rebase_on_unreachable() {
     let (code, out) = run_tkt(&dir, &["edit", "01", "--priority", "high"]);
     assert_ne!(code, 0, "should fail with unreachable remote: {}", out);
     // Should NOT silently succeed
-    assert!(!out.contains("edited 01"), "should not report success: {}", out);
+    assert!(
+        !out.contains("edited 01"),
+        "should not report success: {}",
+        out
+    );
 }

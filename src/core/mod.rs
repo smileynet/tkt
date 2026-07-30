@@ -2,7 +2,6 @@ pub mod ticket;
 pub mod validate;
 
 pub use ticket::{
-    Ticket, load_corpus, frontier, find_ticket, max_id, id_width, new_ticket_text,
-    yaml_scalar_escape, json_string_escape,
-    STATUS_VALUES, ENV_VALUES,
+    find_ticket, frontier, id_width, json_string_escape, load_corpus, max_id, new_ticket_text,
+    yaml_scalar_escape, Ticket, ENV_VALUES, STATUS_VALUES,
 };

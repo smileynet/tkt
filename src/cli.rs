@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use regex::Regex;
 
@@ -10,12 +10,9 @@ use crate::git;
 
 // --- Compiled regex patterns ---
 
-static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"- \[ \]").unwrap()
-});
-static RE_PLAN_ROW: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap()
-});
+static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
+static RE_PLAN_ROW: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap());
 
 /// Domain-level failure: expected conditions like "ticket not found", "status conflict",
 /// "validation drift". These exit with code 1.
@@ -139,21 +136,67 @@ pub fn run() -> i32 {
     let cli = Cli::parse();
     let result = match cli.command {
         Commands::Ready { json } => cmd_ready(json),
-        Commands::New { slug, title, spec, env, priority, blocked_by } => {
-            cmd_new(&slug, title.as_deref(), spec.as_deref(), env.as_deref(), priority.as_deref(), &blocked_by.unwrap_or_default())
-        }
-        Commands::Batch { items, spec, env, priority, blocked_by } => {
-            cmd_batch(&items, spec.as_deref(), env.as_deref(), priority.as_deref(), &blocked_by.unwrap_or_default())
-        }
+        Commands::New {
+            slug,
+            title,
+            spec,
+            env,
+            priority,
+            blocked_by,
+        } => cmd_new(
+            &slug,
+            title.as_deref(),
+            spec.as_deref(),
+            env.as_deref(),
+            priority.as_deref(),
+            &blocked_by.unwrap_or_default(),
+        ),
+        Commands::Batch {
+            items,
+            spec,
+            env,
+            priority,
+            blocked_by,
+        } => cmd_batch(
+            &items,
+            spec.as_deref(),
+            env.as_deref(),
+            priority.as_deref(),
+            &blocked_by.unwrap_or_default(),
+        ),
         Commands::Claim { id } => cmd_claim(&id),
-        Commands::Close { id, note, ac } => cmd_close(&id, note.as_deref(), &ac.unwrap_or_default()),
-        Commands::Edit { id, title, blocked_by, env, spec, priority, ac } => {
-            cmd_edit(&id, title.as_deref(), blocked_by.as_deref(), env.as_deref(), spec.as_deref(), priority.as_deref(), &ac.unwrap_or_default())
+        Commands::Close { id, note, ac } => {
+            cmd_close(&id, note.as_deref(), &ac.unwrap_or_default())
         }
-        Commands::Renumber { old_id, new_id, file } => cmd_renumber(&old_id, &new_id, file.as_deref()),
-        Commands::SyncPlan { check, fix, strict, brief, plan } => {
-            cmd_sync_plan(check, fix, strict, brief, plan.as_deref())
-        }
+        Commands::Edit {
+            id,
+            title,
+            blocked_by,
+            env,
+            spec,
+            priority,
+            ac,
+        } => cmd_edit(
+            &id,
+            title.as_deref(),
+            blocked_by.as_deref(),
+            env.as_deref(),
+            spec.as_deref(),
+            priority.as_deref(),
+            &ac.unwrap_or_default(),
+        ),
+        Commands::Renumber {
+            old_id,
+            new_id,
+            file,
+        } => cmd_renumber(&old_id, &new_id, file.as_deref()),
+        Commands::SyncPlan {
+            check,
+            fix,
+            strict,
+            brief,
+            plan,
+        } => cmd_sync_plan(check, fix, strict, brief, plan.as_deref()),
         Commands::Validate { strict, brief } => cmd_validate(strict, brief),
         Commands::Query => cmd_query(),
     };
@@ -184,7 +227,7 @@ fn tickets_dir() -> Result<PathBuf> {
 }
 
 fn has_remote(repo: &Path) -> bool {
-    git::git(repo, &["remote"]).map(|s| !s.is_empty()).unwrap_or(false)
+    git::has_remote(repo).unwrap_or(false)
 }
 
 fn ticket_filenames(dir: &Path) -> Vec<String> {
@@ -206,30 +249,62 @@ fn cmd_ready(json: bool) -> Result<i32> {
 
     if json {
         for t in &front {
-            println!(
-                "{{\"id\":\"{}\",\"title\":\"{}\",\"status\":\"{}\"}}",
-                core::json_string_escape(t.id()),
-                core::json_string_escape(t.title()),
-                core::json_string_escape(t.status()),
-            );
+            let blocked_by: Vec<String> = t
+                .blocked_by()
+                .iter()
+                .map(|d| format!("\"{}\"", core::json_string_escape(d)))
+                .collect();
+            let mut fields = vec![
+                format!("\"id\":\"{}\"", core::json_string_escape(&t.id())),
+                format!("\"title\":\"{}\"", core::json_string_escape(&t.title())),
+                format!("\"status\":\"{}\"", core::json_string_escape(t.status())),
+                format!("\"blocked_by\":[{}]", blocked_by.join(",")),
+            ];
+            if let Some(env) = t.get("env") {
+                fields.push(format!(
+                    "\"env\":\"{}\"",
+                    core::json_string_escape(env.trim_matches('"'))
+                ));
+            }
+            if let Some(priority) = t.get("priority") {
+                fields.push(format!(
+                    "\"priority\":\"{}\"",
+                    core::json_string_escape(priority.trim_matches('"'))
+                ));
+            }
+            if let Some(spec) = t.get("spec") {
+                fields.push(format!(
+                    "\"spec\":\"{}\"",
+                    core::json_string_escape(spec.trim_matches('"'))
+                ));
+            }
+            println!("{{{}}}", fields.join(","));
         }
     } else {
         for t in &front {
             let flag = if t.is_high_priority() { "  [HIGH]" } else { "" };
             println!("{}  {}{}", t.id(), t.title(), flag);
         }
-        let wip: Vec<&Ticket> = corpus.iter()
+        let wip: Vec<&Ticket> = corpus
+            .iter()
             .filter(|t| t.status() == "in_progress")
             .collect();
         if !wip.is_empty() {
-            let ids: Vec<&str> = wip.iter().map(|t| t.id()).collect();
+            let ids: Vec<String> = wip.iter().map(|t| t.id()).collect();
             println!("\nin progress (claimed elsewhere): {}", ids.join(", "));
         }
     }
     Ok(0)
 }
 
-fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str>, priority: Option<&str>, blocked_by: &[String]) -> Result<i32> {
+fn cmd_new(
+    slug: &str,
+    title: Option<&str>,
+    spec: Option<&str>,
+    env: Option<&str>,
+    priority: Option<&str>,
+    blocked_by: &[String],
+) -> Result<i32> {
     // Validate inputs
     if let Err(e) = core::validate::validate_slug(slug) {
         domain_bail!("{}", e);
@@ -282,6 +357,12 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
     let width = core::id_width(&names);
     let tid = format!("{:0>width$}", next_id, width = width);
 
+    // Check for self-dependency with the allocated ID
+    let dep_strs: Vec<&str> = blocked_by.iter().map(|s| s.as_str()).collect();
+    if let Err(e) = core::validate::validate_no_self_dep(&tid, &dep_strs) {
+        domain_bail!("{}", e);
+    }
+
     let filename = format!("{}-{}.md", tid, slug);
     let path = dir.join(&filename);
     let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
@@ -293,7 +374,10 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
     git::commit(&repo, &format!("chore(tickets): new {} {}", tid, slug))?;
 
     if !remote {
-        println!("created {} (no remote — id claim is local only, status: open)", filename);
+        println!(
+            "created {} (no remote — id claim is local only, status: open)",
+            filename
+        );
         return Ok(0);
     }
 
@@ -304,12 +388,11 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
             Ok(0)
         }
         git::PushResult::Failed(stderr) => {
-            domain_bail!("push failed: {}", stderr);
+            bail!("push failed: {}", stderr);
         }
         git::PushResult::Rejected => {
             // Lost race: undo commit, pull, re-scan for next id
-            git::undo_commit_keep_file(&repo)?;
-            std::fs::remove_file(&path)?;
+            git::undo_commit_hard(&repo)?;
             git::pull_rebase(&repo)?;
 
             // Re-scan with local + remote union and retry with new id
@@ -334,11 +417,14 @@ fn cmd_new(slug: &str, title: Option<&str>, spec: Option<&str>, env: Option<&str
             match git::push(&repo)? {
                 git::PushResult::Success => {
                     let note = format!(" (renumbered {}→{})", tid, tid2);
-                    println!("allocated {}{} (pushed — id claimed, status: open)", filename2, note);
+                    println!(
+                        "allocated {}{} (pushed — id claimed, status: open)",
+                        filename2, note
+                    );
                     Ok(0)
                 }
                 git::PushResult::Failed(stderr) => {
-                    domain_bail!("push failed on retry: {}", stderr);
+                    bail!("push failed on retry: {}", stderr);
                 }
                 git::PushResult::Rejected => {
                     domain_bail!("allocation failed after 2 attempts (push repeatedly rejected)");
@@ -372,7 +458,11 @@ fn cmd_claim(id: &str) -> Result<i32> {
         if let Ok(content) = git::git(&repo, &["show", &format!("origin/main:{}", remote_path)]) {
             if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &t.path) {
                 if remote_ticket.status() != "open" {
-                    domain_bail!("{} is {}, not open (updated on remote)", id, remote_ticket.status());
+                    domain_bail!(
+                        "{} is {}, not open (updated on remote)",
+                        id,
+                        remote_ticket.status()
+                    );
                 }
             }
         }
@@ -386,7 +476,9 @@ fn cmd_claim(id: &str) -> Result<i32> {
     t.set_field("status", "in_progress");
     t.write()?;
 
-    let rel_path = t.path.strip_prefix(&repo)
+    let rel_path = t
+        .path
+        .strip_prefix(&repo)
         .unwrap_or(&t.path)
         .to_string_lossy()
         .replace('\\', "/");
@@ -397,7 +489,10 @@ fn cmd_claim(id: &str) -> Result<i32> {
         git::push_with_retry(&repo)?;
     }
 
-    println!("claimed {} (in_progress pushed)", t.path.file_name().unwrap().to_string_lossy());
+    println!(
+        "claimed {} (in_progress pushed)",
+        t.path.file_name().unwrap().to_string_lossy()
+    );
     Ok(0)
 }
 
@@ -440,8 +535,12 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     if !t.body.contains("## Resolution") {
         let date = chrono_date();
         let resolution = note.unwrap_or("TBD");
-        t.body = format!("{}\n\n## Resolution ({})\n\n{}\n",
-            t.body.trim_end(), date, resolution);
+        t.body = format!(
+            "{}\n\n## Resolution ({})\n\n{}\n",
+            t.body.trim_end(),
+            date,
+            resolution
+        );
     }
 
     // Flip AC boxes if specified
@@ -454,10 +553,15 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     // Warn about unchecked ACs
     let unchecked = RE_UNCHECKED_AC.find_iter(&t.body).count();
     if unchecked > 0 {
-        eprintln!("warning: {} unchecked acceptance box(es) — fill in before trusting history", unchecked);
+        eprintln!(
+            "warning: {} unchecked acceptance box(es) — fill in before trusting history",
+            unchecked
+        );
     }
 
-    let rel_path = t.path.strip_prefix(&repo)
+    let rel_path = t
+        .path
+        .strip_prefix(&repo)
         .unwrap_or(&t.path)
         .to_string_lossy()
         .replace('\\', "/");
@@ -468,8 +572,16 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
         git::push_with_retry(&repo)?;
     }
 
-    let verb = if note.is_some() { "written" } else { "stub appended" };
-    println!("closed {} (dated Resolution {})", t.path.file_name().unwrap().to_string_lossy(), verb);
+    let verb = if note.is_some() {
+        "written"
+    } else {
+        "stub appended"
+    };
+    println!(
+        "closed {} (dated Resolution {})",
+        t.path.file_name().unwrap().to_string_lossy(),
+        verb
+    );
     Ok(0)
 }
 
@@ -520,7 +632,15 @@ fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
 
 // --- cmd_edit ---
 
-fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option<&str>, spec: Option<&str>, priority: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
+fn cmd_edit(
+    id: &str,
+    title: Option<&str>,
+    blocked_by: Option<&str>,
+    env: Option<&str>,
+    spec: Option<&str>,
+    priority: Option<&str>,
+    ac_indices: &[u32],
+) -> Result<i32> {
     let dir = tickets_dir()?;
     let repo = git::repo_root(&dir)?;
     let remote = has_remote(&repo);
@@ -559,11 +679,18 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
         if let Err(e) = core::validate::validate_free_text(title_val, "title", 200) {
             domain_bail!("{}", e);
         }
-        t.set_field("title", &format!("\"{}\"", core::yaml_scalar_escape(title_val)));
+        t.set_field(
+            "title",
+            &format!("\"{}\"", core::yaml_scalar_escape(title_val)),
+        );
         changed.push("title");
     }
     if let Some(deps_str) = blocked_by {
-        let deps: Vec<&str> = deps_str.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+        let deps: Vec<&str> = deps_str
+            .split(',')
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .collect();
         for dep in &deps {
             if let Err(e) = core::validate::validate_id(dep) {
                 domain_bail!("--blocked-by: {}", e);
@@ -572,7 +699,11 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
         if let Err(e) = core::validate::validate_no_self_dep(id, &deps) {
             domain_bail!("{}", e);
         }
-        let formatted = deps.iter().map(|d| format!("\"{}\"", core::yaml_scalar_escape(d))).collect::<Vec<_>>().join(", ");
+        let formatted = deps
+            .iter()
+            .map(|d| format!("\"{}\"", core::yaml_scalar_escape(d)))
+            .collect::<Vec<_>>()
+            .join(", ");
         t.set_field("blocked_by", &format!("[{}]", formatted));
         changed.push("blocked_by");
     }
@@ -581,7 +712,10 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
             t.remove_field("env");
         } else {
             if !core::ENV_VALUES.contains(&env_val) {
-                domain_bail!("env must be one of {} (or '' to clear)", core::ENV_VALUES.join("/"));
+                domain_bail!(
+                    "env must be one of {} (or '' to clear)",
+                    core::ENV_VALUES.join("/")
+                );
             }
             t.set_field("env", env_val);
         }
@@ -594,7 +728,10 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
             if let Err(e) = core::validate::validate_free_text(spec_val, "spec", 100) {
                 domain_bail!("{}", e);
             }
-            t.set_field("spec", &format!("\"{}\"", core::yaml_scalar_escape(spec_val)));
+            t.set_field(
+                "spec",
+                &format!("\"{}\"", core::yaml_scalar_escape(spec_val)),
+            );
         }
         changed.push("spec");
     }
@@ -619,15 +756,27 @@ fn cmd_edit(id: &str, title: Option<&str>, blocked_by: Option<&str>, env: Option
     }
 
     t.write()?;
-    let rel_path = t.path.strip_prefix(&repo).unwrap_or(&t.path).to_string_lossy().replace('\\', "/");
+    let rel_path = t
+        .path
+        .strip_prefix(&repo)
+        .unwrap_or(&t.path)
+        .to_string_lossy()
+        .replace('\\', "/");
     git::add(&repo, &[&rel_path])?;
-    git::commit(&repo, &format!("chore(tickets): edit {} ({})", id, changed.join(", ")))?;
+    git::commit(
+        &repo,
+        &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
+    )?;
     if remote {
         git::push_with_retry(&repo)?;
     } else {
         eprintln!("committed locally, no remote configured");
     }
-    println!("edited {}: {}", t.path.file_name().unwrap().to_string_lossy(), changed.join(", "));
+    println!(
+        "edited {}: {}",
+        t.path.file_name().unwrap().to_string_lossy(),
+        changed.join(", ")
+    );
     Ok(0)
 }
 
@@ -655,35 +804,57 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
     let mut ids: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     for t in &corpus {
         let name = t.path.file_name().unwrap().to_string_lossy().to_string();
+        let tid = t.id();
         if !core::STATUS_VALUES.contains(&t.status()) {
-            findings.push(Finding { file: name.clone(), rule: "bad-status".into(),
-                message: format!("status {:?} not in {}", t.status(), core::STATUS_VALUES.join("/")), severity: "error".into() });
+            findings.push(Finding {
+                file: name.clone(),
+                rule: "bad-status".into(),
+                message: format!(
+                    "status {:?} not in {}",
+                    t.status(),
+                    core::STATUS_VALUES.join("/")
+                ),
+                severity: "error".into(),
+            });
         }
         let env = t.env();
         if env != "either" && !core::ENV_VALUES.contains(&env) {
-            findings.push(Finding { file: name.clone(), rule: "bad-env".into(),
-                message: format!("env {:?} not in {}", env, core::ENV_VALUES.join("/")), severity: "error".into() });
+            findings.push(Finding {
+                file: name.clone(),
+                rule: "bad-env".into(),
+                message: format!("env {:?} not in {}", env, core::ENV_VALUES.join("/")),
+                severity: "error".into(),
+            });
         }
-        if !name.starts_with(&format!("{}-", t.id())) {
-            findings.push(Finding { file: name.clone(), rule: "id-filename-mismatch".into(),
-                message: format!("id {:?} vs filename", t.id()), severity: "error".into() });
+        if !name.starts_with(&format!("{}-", tid)) {
+            findings.push(Finding {
+                file: name.clone(),
+                rule: "id-filename-mismatch".into(),
+                message: format!("id {:?} vs filename", tid),
+                severity: "error".into(),
+            });
         }
-        if let Some(existing) = ids.get(t.id()) {
-            findings.push(Finding { file: name.clone(), rule: "duplicate-id".into(),
-                message: format!("id {:?} also in {}", t.id(), existing), severity: "error".into() });
+        if let Some(existing) = ids.get(&tid) {
+            findings.push(Finding {
+                file: name.clone(),
+                rule: "duplicate-id".into(),
+                message: format!("id {:?} also in {}", tid, existing),
+                severity: "error".into(),
+            });
         }
-        ids.entry(t.id().to_string()).or_insert(name.clone());
+        ids.entry(tid).or_insert(name.clone());
     }
 
     // Dangling blocked_by
-    let known: std::collections::HashSet<&str> = corpus.iter().map(|t| t.id()).collect();
+    let known: std::collections::HashSet<String> = corpus.iter().map(|t| t.id()).collect();
     for t in &corpus {
         for dep in t.blocked_by() {
-            if !known.contains(dep.as_str()) {
+            if !known.contains(&dep) {
                 findings.push(Finding {
                     file: t.path.file_name().unwrap().to_string_lossy().to_string(),
                     rule: "dangling-blocked-by".into(),
-                    message: format!("ref {:?} has no ticket", dep), severity: "error".into(),
+                    message: format!("ref {:?} has no ticket", dep),
+                    severity: "error".into(),
                 });
             }
         }
@@ -694,12 +865,15 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
         use std::collections::HashMap;
 
         // Build adjacency: id -> list of blocked_by ids (only known ones)
-        let adj: HashMap<String, Vec<String>> = corpus.iter()
+        let adj: HashMap<String, Vec<String>> = corpus
+            .iter()
             .map(|t| {
-                let deps: Vec<String> = t.blocked_by().into_iter()
-                    .filter(|d| known.contains(d.as_str()))
+                let deps: Vec<String> = t
+                    .blocked_by()
+                    .into_iter()
+                    .filter(|d| known.contains(d))
                     .collect();
-                (t.id().to_string(), deps)
+                (t.id(), deps)
             })
             .collect();
 
@@ -724,7 +898,8 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
                         Some(&1) => {
                             // Found cycle — extract from where dep first appears in path
                             if let Some(pos) = path.iter().position(|&n| n == dep.as_str()) {
-                                let mut cycle: Vec<String> = path[pos..].iter().map(|s| s.to_string()).collect();
+                                let mut cycle: Vec<String> =
+                                    path[pos..].iter().map(|s| s.to_string()).collect();
                                 cycle.push(dep.to_string()); // close the cycle
                                 cycles.push(cycle);
                             }
@@ -757,8 +932,14 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
             // cycle is [a, b, c, a] — the path portion is [a, b, c]
             let path_part = &cycle[..cycle.len() - 1];
             // Rotate to start at minimum
-            if let Some(min_pos) = path_part.iter().enumerate().min_by_key(|(_, v)| *v).map(|(i, _)| i) {
-                let mut normalized: Vec<&str> = path_part[min_pos..].iter().map(|s| s.as_str()).collect();
+            if let Some(min_pos) = path_part
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, v)| *v)
+                .map(|(i, _)| i)
+            {
+                let mut normalized: Vec<&str> =
+                    path_part[min_pos..].iter().map(|s| s.as_str()).collect();
                 normalized.extend(path_part[..min_pos].iter().map(|s| s.as_str()));
                 let key = normalized.join(" -> ");
                 if seen.insert(key.clone()) {
@@ -768,14 +949,23 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
         }
 
         // Map cycle back to file for reporting
-        let id_to_file: HashMap<&str, String> = corpus.iter()
-            .map(|t| (t.id(), t.path.file_name().unwrap().to_string_lossy().to_string()))
+        let id_to_file: HashMap<String, String> = corpus
+            .iter()
+            .map(|t| {
+                (
+                    t.id(),
+                    t.path.file_name().unwrap().to_string_lossy().to_string(),
+                )
+            })
             .collect();
 
         for cycle_desc in &unique_cycles {
             // Attribute to the first ticket in the cycle
             let first_id = cycle_desc.split(" -> ").next().unwrap_or("");
-            let file = id_to_file.get(first_id).cloned().unwrap_or_else(|| "unknown".to_string());
+            let file = id_to_file
+                .get(first_id)
+                .cloned()
+                .unwrap_or_else(|| "unknown".to_string());
             findings.push(Finding {
                 file,
                 rule: "cycle".into(),
@@ -793,15 +983,23 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
                 findings.push(Finding {
                     file: t.path.file_name().unwrap().to_string_lossy().to_string(),
                     rule: "unchecked-acs-on-done".into(),
-                    message: format!("{} unchecked box(es)", count), severity: "warning".into(),
+                    message: format!("{} unchecked box(es)", count),
+                    severity: "warning".into(),
                 });
             }
         }
     }
 
     let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();
-    let warnings: Vec<&Finding> = findings.iter().filter(|f| f.severity == "warning").collect();
-    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) { "fail" } else { "pass" };
+    let warnings: Vec<&Finding> = findings
+        .iter()
+        .filter(|f| f.severity == "warning")
+        .collect();
+    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) {
+        "fail"
+    } else {
+        "pass"
+    };
 
     print_findings(&findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
@@ -809,7 +1007,13 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
 
 // --- cmd_sync_plan ---
 
-fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: Option<&str>) -> Result<i32> {
+fn cmd_sync_plan(
+    _check: bool,
+    _fix: bool,
+    strict: bool,
+    brief: bool,
+    plan_path: Option<&str>,
+) -> Result<i32> {
     let dir = tickets_dir()?;
     let repo = git::repo_root(&dir)?;
     let plan = match plan_path {
@@ -821,7 +1025,8 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
     }
 
     let corpus = core::load_corpus(&dir)?;
-    let corpus_map: std::collections::HashMap<&str, &Ticket> = corpus.iter().map(|t| (t.id(), t)).collect();
+    let corpus_map: std::collections::HashMap<String, &Ticket> =
+        corpus.iter().map(|t| (t.id(), t)).collect();
     let mut plan_text = std::fs::read_to_string(&plan)?;
 
     let mut findings: Vec<Finding> = Vec::new();
@@ -837,15 +1042,24 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
             if plan_done != ticket_done {
                 if _fix {
                     let new_status = if ticket_done { " ✅ done " } else { " open " };
-                    let row_re = Regex::new(&format!(r"(?m)^(\|\s*{}\s*\|[^|]*\|)[^|]*(\|\s*)$", regex::escape(tid))).unwrap();
-                    plan_text = row_re.replace(&plan_text, format!("${{1}}{}${{2}}", new_status)).to_string();
+                    let row_re = Regex::new(&format!(
+                        r"(?m)^(\|\s*{}\s*\|[^|]*\|)[^|]*(\|\s*)$",
+                        regex::escape(tid)
+                    ))
+                    .unwrap();
+                    plan_text = row_re
+                        .replace(&plan_text, format!("${{1}}{}${{2}}", new_status))
+                        .to_string();
                     fixed_count += 1;
                 } else {
                     findings.push(Finding {
                         file: t.path.file_name().unwrap().to_string_lossy().to_string(),
                         rule: "plan-status-drift".into(),
-                        message: format!("plan says {}, ticket is {}",
-                            if plan_done { "done" } else { "not done" }, t.status()),
+                        message: format!(
+                            "plan says {}, ticket is {}",
+                            if plan_done { "done" } else { "not done" },
+                            t.status()
+                        ),
                         severity: "error".into(),
                     });
                 }
@@ -854,11 +1068,12 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
     }
 
     // Missing plan rows
-    let plan_ids: std::collections::HashSet<String> = RE_PLAN_ROW.captures_iter(&plan_text)
+    let plan_ids: std::collections::HashSet<String> = RE_PLAN_ROW
+        .captures_iter(&plan_text)
         .map(|c| c[1].trim().to_string())
         .collect();
     for t in &corpus {
-        if t.status() != "done" && !plan_ids.contains(t.id()) {
+        if t.status() != "done" && !plan_ids.contains(&t.id()) {
             findings.push(Finding {
                 file: t.path.file_name().unwrap().to_string_lossy().to_string(),
                 rule: "missing-plan-row".into(),
@@ -873,8 +1088,15 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
     }
 
     let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();
-    let warnings: Vec<&Finding> = findings.iter().filter(|f| f.severity == "warning").collect();
-    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) { "fail" } else { "pass" };
+    let warnings: Vec<&Finding> = findings
+        .iter()
+        .filter(|f| f.severity == "warning")
+        .collect();
+    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) {
+        "fail"
+    } else {
+        "pass"
+    };
 
     if _fix {
         if !findings.is_empty() {
@@ -882,7 +1104,10 @@ fn cmd_sync_plan(check: bool, _fix: bool, strict: bool, brief: bool, plan_path: 
         } else if brief {
             println!("pass (fixed {}, 0 remaining)", fixed_count);
         } else {
-            println!("{{\"status\":\"pass\",\"findings\":[],\"fixed\":{}}}", fixed_count);
+            println!(
+                "{{\"status\":\"pass\",\"findings\":[],\"fixed\":{}}}",
+                fixed_count
+            );
         }
     } else {
         print_findings(&findings, brief, status);
@@ -897,13 +1122,15 @@ fn cmd_query() -> Result<i32> {
     let corpus = core::load_corpus(&dir)?;
 
     for t in &corpus {
-        let blocked_by: Vec<String> = t.blocked_by().iter()
+        let blocked_by: Vec<String> = t
+            .blocked_by()
+            .iter()
             .map(|d| format!("\"{}\"", core::json_string_escape(d)))
             .collect();
 
         let mut fields = vec![
-            format!("\"id\":\"{}\"", core::json_string_escape(t.id())),
-            format!("\"title\":\"{}\"", core::json_string_escape(t.title())),
+            format!("\"id\":\"{}\"", core::json_string_escape(&t.id())),
+            format!("\"title\":\"{}\"", core::json_string_escape(&t.title())),
             format!("\"status\":\"{}\"", core::json_string_escape(t.status())),
             format!("\"blocked_by\":[{}]", blocked_by.join(",")),
         ];
@@ -915,7 +1142,10 @@ fn cmd_query() -> Result<i32> {
         }
         if let Some(priority) = t.get("priority") {
             let priority = priority.trim_matches('"');
-            fields.push(format!("\"priority\":\"{}\"", core::json_string_escape(priority)));
+            fields.push(format!(
+                "\"priority\":\"{}\"",
+                core::json_string_escape(priority)
+            ));
         }
         if let Some(spec) = t.get("spec") {
             let spec = spec.trim_matches('"');
@@ -929,7 +1159,13 @@ fn cmd_query() -> Result<i32> {
 
 // --- cmd_batch ---
 
-fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: Option<&str>, blocked_by: &[String]) -> Result<i32> {
+fn cmd_batch(
+    items: &[String],
+    spec: Option<&str>,
+    env: Option<&str>,
+    priority: Option<&str>,
+    blocked_by: &[String],
+) -> Result<i32> {
     // Validate shared options
     if let Some(s) = spec {
         if let Err(e) = core::validate::validate_free_text(s, "spec", 100) {
@@ -992,7 +1228,11 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
         }
     }
 
-    let allocate_and_commit = |dir: &Path, repo: &Path, names: &[String], parsed: &[(&str, String)]| -> Result<(u64, usize, Vec<String>)> {
+    let allocate_and_commit = |dir: &Path,
+                               repo: &Path,
+                               names: &[String],
+                               parsed: &[(&str, String)]|
+     -> Result<(u64, usize, Vec<String>)> {
         let base = core::max_id(names) + 1;
         let width = core::id_width(names);
         let mut files: Vec<String> = Vec::new();
@@ -1010,26 +1250,32 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
         let tids: Vec<String> = (0..parsed.len())
             .map(|i| format!("{:0>width$}", base + i as u64, width = width))
             .collect();
-        git::commit(repo, &format!("chore(tickets): batch {} ({})", tids.join(","), parsed.iter().map(|(s,_)| *s).collect::<Vec<_>>().join(", ")))?;
+        git::commit(
+            repo,
+            &format!(
+                "chore(tickets): batch {} ({})",
+                tids.join(","),
+                parsed
+                    .iter()
+                    .map(|(s, _)| *s)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        )?;
         Ok((base, width, files))
     };
 
-    let (mut base, mut width, files) = allocate_and_commit(&dir, &repo, &names, &parsed)?;
+    let (mut base, mut width, _files) = allocate_and_commit(&dir, &repo, &names, &parsed)?;
 
     if remote {
         match git::push(&repo)? {
             git::PushResult::Success => {}
             git::PushResult::Failed(stderr) => {
-                domain_bail!("push failed: {}", stderr);
+                bail!("push failed: {}", stderr);
             }
             git::PushResult::Rejected => {
-                // Collision: undo commit, clean up files, re-fetch, rescan, reallocate
-                git::undo_commit_keep_file(&repo)?;
-                for f in &files {
-                    let path = repo.join(f);
-                    let _ = std::fs::remove_file(&path);
-                }
-                git::git(&repo, &["checkout", "--", ".tickets/"])?;
+                // Collision: hard reset undoes the commit and cleans up created files
+                git::undo_commit_hard(&repo)?;
                 git::pull_rebase(&repo)?;
 
                 // Rescan with remote names
@@ -1049,10 +1295,12 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
                 match git::push(&repo)? {
                     git::PushResult::Success => {}
                     git::PushResult::Failed(stderr) => {
-                        domain_bail!("push failed on retry: {}", stderr);
+                        bail!("push failed on retry: {}", stderr);
                     }
                     git::PushResult::Rejected => {
-                        domain_bail!("batch allocation failed after 2 attempts (push repeatedly rejected)");
+                        domain_bail!(
+                            "batch allocation failed after 2 attempts (push repeatedly rejected)"
+                        );
                     }
                 }
             }
@@ -1061,7 +1309,10 @@ fn cmd_batch(items: &[String], spec: Option<&str>, env: Option<&str>, priority: 
 
     for (i, (slug, _)) in parsed.iter().enumerate() {
         let tid = format!("{:0>width$}", base + i as u64, width = width);
-        println!("allocated {}-{}.md (pushed — id claimed, status: open)", tid, slug);
+        println!(
+            "allocated {}-{}.md (pushed — id claimed, status: open)",
+            tid, slug
+        );
     }
     Ok(0)
 }
@@ -1082,15 +1333,31 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
         domain_bail!("no ticket with id {:?}", old_id);
     }
     if holders.len() > 1 && file_hint.is_none() {
-        let names: Vec<_> = holders.iter().map(|t| t.path.file_name().unwrap().to_string_lossy().to_string()).collect();
-        domain_bail!("id {:?} is held by {} files ({}) — pass --file", old_id, holders.len(), names.join(", "));
+        let names: Vec<_> = holders
+            .iter()
+            .map(|t| t.path.file_name().unwrap().to_string_lossy().to_string())
+            .collect();
+        domain_bail!(
+            "id {:?} is held by {} files ({}) — pass --file",
+            old_id,
+            holders.len(),
+            names.join(", ")
+        );
     }
 
     let src = if holders.len() == 1 {
         holders[0]
     } else {
-        holders.iter().find(|t| t.path.file_name().unwrap().to_string_lossy() == file_hint.unwrap())
-            .ok_or_else(|| anyhow::anyhow!("--file {:?} does not hold id {:?}", file_hint.unwrap(), old_id))?
+        holders
+            .iter()
+            .find(|t| t.path.file_name().unwrap().to_string_lossy() == file_hint.unwrap())
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "--file {:?} does not hold id {:?}",
+                    file_hint.unwrap(),
+                    old_id
+                )
+            })?
     };
 
     if corpus.iter().any(|t| t.id() == new_id) {
@@ -1099,14 +1366,24 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
 
     // Rename file
     let old_path = src.path.clone();
-    let slug = old_path.file_name().unwrap().to_string_lossy()
-        .splitn(2, '-').nth(1).unwrap_or("unknown.md").to_string();
+    let slug = old_path
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .split_once('-')
+        .map(|x| x.1)
+        .unwrap_or("unknown.md")
+        .to_string();
     let new_path = dir.join(format!("{}-{}", new_id, slug));
 
     let mut t = src.clone();
     // Preserve quoting style for id field
     let old_raw = t.get("id").unwrap_or("");
-    let new_val = if old_raw.starts_with('"') { format!("\"{}\"", new_id) } else { new_id.to_string() };
+    let new_val = if old_raw.starts_with('"') {
+        format!("\"{}\"", new_id)
+    } else {
+        new_id.to_string()
+    };
     t.set_field("id", &new_val);
     t.path = new_path.clone();
     t.write()?;
@@ -1116,12 +1393,29 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     let mut refs_updated = 0;
     if holders.len() == 1 {
         for other in &corpus {
-            if other.path == old_path { continue; }
+            if other.path == old_path {
+                continue;
+            }
             if other.blocked_by().contains(&old_id.to_string()) {
                 let mut other = other.clone();
-                let raw = other.get("blocked_by").unwrap_or("").to_string();
-                let updated = raw.replace(old_id, new_id);
-                other.set_field("blocked_by", &updated);
+                // Parse the dependency list and replace exact ID matches
+                let deps = other.blocked_by();
+                let new_deps: Vec<String> = deps
+                    .iter()
+                    .map(|d| {
+                        if d == old_id {
+                            new_id.to_string()
+                        } else {
+                            d.clone()
+                        }
+                    })
+                    .collect();
+                let formatted = new_deps
+                    .iter()
+                    .map(|d| format!("\"{}\"", core::yaml_scalar_escape(d)))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                other.set_field("blocked_by", &format!("[{}]", formatted));
                 other.write()?;
                 refs_updated += 1;
             }
@@ -1129,25 +1423,48 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     }
 
     // Commit (stage old removal + new file + any updated refs)
-    let old_rel = old_path.strip_prefix(&repo).unwrap_or(&old_path).to_string_lossy().replace('\\', "/");
-    let new_rel = new_path.strip_prefix(&repo).unwrap_or(&new_path).to_string_lossy().replace('\\', "/");
+    let old_rel = old_path
+        .strip_prefix(&repo)
+        .unwrap_or(&old_path)
+        .to_string_lossy()
+        .replace('\\', "/");
+    let new_rel = new_path
+        .strip_prefix(&repo)
+        .unwrap_or(&new_path)
+        .to_string_lossy()
+        .replace('\\', "/");
     git::git(&repo, &["add", &old_rel, &new_rel])?;
     // Stage any modified ref files
     for other in &corpus {
-        if other.path == old_path { continue; }
+        if other.path == old_path {
+            continue;
+        }
         if other.blocked_by().contains(&old_id.to_string()) {
-            let rel = other.path.strip_prefix(&repo).unwrap_or(&other.path).to_string_lossy().replace('\\', "/");
+            let rel = other
+                .path
+                .strip_prefix(&repo)
+                .unwrap_or(&other.path)
+                .to_string_lossy()
+                .replace('\\', "/");
             git::add(&repo, &[&rel])?;
         }
     }
-    git::commit(&repo, &format!("chore(tickets): renumber {} -> {}", old_id, new_id))?;
+    git::commit(
+        &repo,
+        &format!("chore(tickets): renumber {} -> {}", old_id, new_id),
+    )?;
     if has_remote(&repo) {
         git::push_with_retry(&repo)?;
     } else {
         eprintln!("committed locally, no remote configured");
     }
 
-    println!("renumbered {} -> {} ({} inbound ref(s) updated)", old_id, new_path.file_name().unwrap().to_string_lossy(), refs_updated);
+    println!(
+        "renumbered {} -> {} ({} inbound ref(s) updated)",
+        old_id,
+        new_path.file_name().unwrap().to_string_lossy(),
+        refs_updated
+    );
     Ok(0)
 }
 
@@ -1168,15 +1485,20 @@ fn print_findings(findings: &[Finding], brief: bool, status: &str) {
         }
         println!("{} ({} finding(s))", status, findings.len());
     } else {
-        println!("{{\"status\":\"{}\",\"findings\":[{}]}}",
+        println!(
+            "{{\"status\":\"{}\",\"findings\":[{}]}}",
             status,
-            findings.iter().map(|f| format!(
-                "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
-                core::json_string_escape(&f.file),
-                core::json_string_escape(&f.rule),
-                core::json_string_escape(&f.message),
-                core::json_string_escape(&f.severity),
-            )).collect::<Vec<_>>().join(",")
+            findings
+                .iter()
+                .map(|f| format!(
+                    "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
+                    core::json_string_escape(&f.file),
+                    core::json_string_escape(&f.rule),
+                    core::json_string_escape(&f.message),
+                    core::json_string_escape(&f.severity),
+                ))
+                .collect::<Vec<_>>()
+                .join(",")
         );
     }
 }

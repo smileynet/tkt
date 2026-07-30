@@ -25,6 +25,12 @@ pub fn repo_root(from: &Path) -> Result<std::path::PathBuf> {
     Ok(std::path::PathBuf::from(root))
 }
 
+/// Check if a remote named "origin" is configured. Returns Result to propagate git failures.
+pub fn has_remote(repo: &Path) -> Result<bool> {
+    let remotes = git(repo, &["remote"])?;
+    Ok(!remotes.is_empty())
+}
+
 /// Fetch from origin (quiet).
 pub fn fetch(repo: &Path) -> Result<()> {
     git(repo, &["fetch", "-q"])?;
@@ -69,13 +75,10 @@ pub fn push(repo: &Path) -> Result<PushResult> {
 
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
 
-    // Non-fast-forward rejection indicates a race condition (upstream has new commits).
-    // These are the only failures safe to retry with pull --rebase.
-    if stderr.contains("non-fast-forward")
-        || stderr.contains("fetch first")
-        || stderr.contains("rejected")
-        || stderr.contains("failed to push some refs")
-    {
+    // Only classify as a retryable race rejection when stderr specifically
+    // mentions non-fast-forward. Other rejections (hooks, policies) use
+    // different phrasing and should NOT trigger a rebase retry.
+    if stderr.contains("non-fast-forward") || stderr.contains("fetch first") {
         Ok(PushResult::Rejected)
     } else {
         Ok(PushResult::Failed(stderr.trim().to_string()))
@@ -114,29 +117,41 @@ pub fn pull_rebase(repo: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Undo the last commit, keeping the file changes.
-pub fn undo_commit_keep_file(repo: &Path) -> Result<()> {
-    git(repo, &["reset", "--soft", "HEAD~1"])?;
+/// Undo the last commit AND discard its changes from index and worktree.
+/// This is safe for allocation recovery where the commit contains only
+/// files created by this transaction.
+pub fn undo_commit_hard(repo: &Path) -> Result<()> {
+    git(repo, &["reset", "--hard", "HEAD~1"])?;
     Ok(())
 }
 
-
 /// List ticket filenames from the remote (origin/main) without modifying the working tree.
-/// Returns filenames like ["01-auth.md", "02-feature.md"].
+/// Returns basenames like ["01-auth.md", "02-feature.md"].
+/// Strips the .tickets/ prefix from ls-tree output.
 /// Returns an empty vec if origin/main doesn't exist or has no .tickets/ directory.
 pub fn remote_ticket_names(repo: &Path) -> Vec<String> {
-    // Try to list from origin/main (or origin/HEAD as fallback)
     let output = Command::new("git")
-        .args(["-C", &repo.to_string_lossy(), "ls-tree", "--name-only", "origin/main", ".tickets/"])
+        .args([
+            "-C",
+            &repo.to_string_lossy(),
+            "ls-tree",
+            "--name-only",
+            "origin/main",
+            ".tickets/",
+        ])
         .output();
 
     match output {
-        Ok(o) if o.status.success() => {
-            String::from_utf8_lossy(&o.stdout)
-                .lines()
-                .map(|l| l.to_string())
-                .collect()
-        }
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout)
+            .lines()
+            .filter_map(|l| {
+                // ls-tree returns ".tickets/01-foo.md" — strip the prefix
+                l.strip_prefix(".tickets/")
+                    .or(Some(l)) // fallback if no prefix (shouldn't happen)
+                    .filter(|name| name.ends_with(".md"))
+                    .map(|s| s.to_string())
+            })
+            .collect(),
         _ => Vec::new(),
     }
 }

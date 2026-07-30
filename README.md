@@ -17,12 +17,10 @@ tkt computes the frontier (what's unblocked), claims work atomically (git push =
 
 ```bash
 # From source
-cargo install tkt
+cargo install --path .
 
-# Pre-built binary
-cargo binstall tkt
-
-# Or download from GitHub Releases
+# Or build locally
+cargo build --release
 ```
 
 ## Quick Start
@@ -40,6 +38,9 @@ tkt claim 01
 # Close it when done
 tkt close 01 --note "JWT + refresh tokens implemented"
 
+# Dump all tickets as JSON
+tkt query
+
 # Check if plan.md drifted from ticket state
 tkt sync-plan --check
 ```
@@ -48,16 +49,26 @@ tkt sync-plan --check
 
 | Command | What it does |
 |---------|-------------|
-| `tkt ready` | Show frontier (open tickets with all deps done) |
+| `tkt ready [--json]` | Show frontier (open tickets with all deps done) |
 | `tkt new <slug>` | Allocate next id, commit, push (id is yours) |
 | `tkt batch <slugs...>` | Create N tickets in one commit |
 | `tkt claim <id>` | Mark in_progress, push |
 | `tkt close <id>` | Mark done, append resolution |
-| `tkt edit <id>` | Change fields (blocked_by, priority, env) |
+| `tkt edit <id>` | Change fields (title, blocked_by, priority, env, spec, ac) |
 | `tkt renumber <old> <new>` | Move to a new id (birth-window only) |
+| `tkt query` | Dump full corpus as JSON Lines |
 | `tkt sync-plan --check` | Report drift between tickets and plan.md |
 | `tkt sync-plan --fix` | Fix derivable columns (status) in plan.md |
-| `tkt validate` | Check contract health (dangling refs, cycles) |
+| `tkt validate` | Check contract health (dangling refs, cycles, decay) |
+
+### Common flags
+
+- `--title`, `--spec`, `--env`, `--priority`, `--blocked-by` — metadata for new/batch/edit
+- `--json` — machine-readable output (ready)
+- `--strict` — promote warnings to errors (validate, sync-plan)
+- `--brief` — human-readable output instead of JSON (validate, sync-plan)
+- `--note` — resolution note (close)
+- `--ac N,N` — mark acceptance criteria checked (close, edit)
 
 ## Ticket Format
 
@@ -84,12 +95,21 @@ Describe the work...
 - [ ] Refresh token rotation
 ```
 
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Domain failure (not found, conflict, validation drift) |
+| 2 | Operational crash (I/O, git, parse error) |
+
 ## Design
 
 - **Files are the database** — `.tickets/` is git-native, hand-editable, tool-optional
 - **Push-to-claim** — a pushed commit is a claim; race detection on push rejection
-- **Frontier computation** — topological sort of the dependency graph
+- **Frontier computation** — filters open tickets whose dependencies are all done, sorted by priority then id
 - **Surgical edits** — changes one field without disturbing the rest of the file
+- **Remote-aware allocation** — scans both local and remote filenames to prevent ID collisions
 - **Single binary** — no runtime dependencies beyond `git` on PATH
 
 ## Inspired By
