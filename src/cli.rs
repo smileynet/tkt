@@ -1,13 +1,14 @@
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 use regex::Regex;
 
 use crate::core::{self, Ticket};
 use crate::findings::{self, Finding};
 use crate::git;
+use crate::transaction::{GitTransaction, PublishResult};
 
 // --- Compiled regex patterns ---
 
@@ -231,16 +232,6 @@ fn has_remote(repo: &Path) -> bool {
     git::has_remote(repo).unwrap_or(false)
 }
 
-fn ticket_filenames(dir: &Path) -> Vec<String> {
-    std::fs::read_dir(dir)
-        .into_iter()
-        .flatten()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
-        .map(|e| e.file_name().to_string_lossy().to_string())
-        .collect()
-}
-
 // --- Commands ---
 
 fn cmd_ready(json: bool) -> Result<i32> {
@@ -337,26 +328,11 @@ fn cmd_new(
         }
     }
     let dir = tickets_dir()?;
-    let repo = git::repo_root(&dir)?;
-    let remote = has_remote(&repo);
+    let txn = GitTransaction::new(&dir)?;
 
-    if remote {
-        git::fetch(&repo)?;
-    }
-
-    // Union local + remote filenames for allocation
-    let mut names = ticket_filenames(&dir);
-    if remote {
-        let remote_names = git::remote_ticket_names(&repo);
-        for rn in remote_names {
-            if !names.contains(&rn) {
-                names.push(rn);
-            }
-        }
-    }
-    let next_id = core::max_id(&names) + 1;
-    let width = core::id_width(&names);
-    let tid = format!("{:0>width$}", next_id, width = width);
+    // Scan and allocate
+    let names = txn.scan_names();
+    let (tid, _width) = GitTransaction::next_id(&names);
 
     // Check for self-dependency with the allocated ID
     let dep_strs: Vec<&str> = blocked_by.iter().map(|s| s.as_str()).collect();
@@ -369,68 +345,42 @@ fn cmd_new(
     let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
     std::fs::write(&path, &content)?;
 
-    // Commit
     let rel_path = format!(".tickets/{}", filename);
-    git::add(&repo, &[&rel_path])?;
-    git::commit(&repo, &format!("chore(tickets): new {} {}", tid, slug))?;
+    git::add(&txn.repo, &[&rel_path])?;
+    git::commit(&txn.repo, &format!("chore(tickets): new {} {}", tid, slug))?;
 
-    if !remote {
-        println!(
-            "created {} (no remote — id claim is local only, status: open)",
-            filename
-        );
-        return Ok(0);
-    }
-
-    // Push (with retry on rejection — race detection)
-    match git::push(&repo)? {
-        git::PushResult::Success => {
-            println!("allocated {} (pushed — id claimed, status: open)", filename);
+    match txn.try_push()? {
+        PublishResult::Done(outcome) => {
+            let msg = match outcome {
+                crate::transaction::PublishOutcome::LocalOnly => {
+                    format!(
+                        "created {} (no remote — id claim is local only, status: open)",
+                        filename
+                    )
+                }
+                _ => format!("allocated {} (pushed — id claimed, status: open)", filename),
+            };
+            println!("{}", msg);
             Ok(0)
         }
-        git::PushResult::Failed(stderr) => {
-            bail!("push failed: {}", stderr);
-        }
-        git::PushResult::Rejected => {
-            // Lost race: undo commit, pull, re-scan for next id
-            git::undo_commit_hard(&repo)?;
-            git::pull_rebase(&repo)?;
-
-            // Re-scan with local + remote union and retry with new id
-            let mut names = ticket_filenames(&dir);
-            let remote_names = git::remote_ticket_names(&repo);
-            for rn in remote_names {
-                if !names.contains(&rn) {
-                    names.push(rn);
-                }
-            }
-            let next_id = core::max_id(&names) + 1;
-            let width = core::id_width(&names);
-            let tid2 = format!("{:0>width$}", next_id, width = width);
+        PublishResult::NeedsRetry => {
+            // Rescan after rebase and retry with new id
+            let names = txn.scan_names();
+            let (tid2, _width) = GitTransaction::next_id(&names);
             let filename2 = format!("{}-{}.md", tid2, slug);
             let path2 = dir.join(&filename2);
             let content2 = core::new_ticket_text(&tid2, title, blocked_by, env, spec, priority);
             std::fs::write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
-            git::add(&repo, &[&rel_path2])?;
-            git::commit(&repo, &format!("chore(tickets): new {} {}", tid2, slug))?;
+            git::add(&txn.repo, &[&rel_path2])?;
+            git::commit(&txn.repo, &format!("chore(tickets): new {} {}", tid2, slug))?;
 
-            match git::push(&repo)? {
-                git::PushResult::Success => {
-                    let note = format!(" (renumbered {}→{})", tid, tid2);
-                    println!(
-                        "allocated {}{} (pushed — id claimed, status: open)",
-                        filename2, note
-                    );
-                    Ok(0)
-                }
-                git::PushResult::Failed(stderr) => {
-                    bail!("push failed on retry: {}", stderr);
-                }
-                git::PushResult::Rejected => {
-                    domain_bail!("allocation failed after 2 attempts (push repeatedly rejected)");
-                }
-            }
+            txn.push_retry()?;
+            println!(
+                "allocated {} (pushed — id claimed, status: open, renumbered {}→{})",
+                filename2, tid, tid2
+            );
+            Ok(0)
         }
     }
 }
@@ -1023,99 +973,53 @@ fn cmd_batch(
     }
 
     let dir = tickets_dir()?;
-    let repo = git::repo_root(&dir)?;
-    let remote = has_remote(&repo);
-    if remote {
-        git::fetch(&repo)?;
-    }
+    let txn = GitTransaction::new(&dir)?;
+    let names = txn.scan_names();
 
-    // Union local + remote filenames for allocation
-    let mut names = ticket_filenames(&dir);
-    if remote {
-        let remote_names = git::remote_ticket_names(&repo);
-        for rn in remote_names {
-            if !names.contains(&rn) {
-                names.push(rn);
+    let allocate_and_commit =
+        |names: &[String], parsed: &[(&str, String)]| -> Result<(u64, usize)> {
+            let base = core::max_id(names) + 1;
+            let width = core::id_width(names);
+            let mut files: Vec<String> = Vec::new();
+            for (i, (slug, title)) in parsed.iter().enumerate() {
+                let tid = format!("{:0>width$}", base + i as u64, width = width);
+                let filename = format!("{}-{}.md", tid, slug);
+                let path = txn.dir.join(&filename);
+                let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
+                std::fs::write(&path, &content)?;
+                files.push(format!(".tickets/{}", filename));
             }
-        }
-    }
-
-    let allocate_and_commit = |dir: &Path,
-                               repo: &Path,
-                               names: &[String],
-                               parsed: &[(&str, String)]|
-     -> Result<(u64, usize, Vec<String>)> {
-        let base = core::max_id(names) + 1;
-        let width = core::id_width(names);
-        let mut files: Vec<String> = Vec::new();
-        for (i, (slug, title)) in parsed.iter().enumerate() {
-            let tid = format!("{:0>width$}", base + i as u64, width = width);
-            let filename = format!("{}-{}.md", tid, slug);
-            let path = dir.join(&filename);
-            let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
-            std::fs::write(&path, &content)?;
-            files.push(format!(".tickets/{}", filename));
-        }
-        for f in &files {
-            git::add(repo, &[f.as_str()])?;
-        }
-        let tids: Vec<String> = (0..parsed.len())
-            .map(|i| format!("{:0>width$}", base + i as u64, width = width))
-            .collect();
-        git::commit(
-            repo,
-            &format!(
-                "chore(tickets): batch {} ({})",
-                tids.join(","),
-                parsed
-                    .iter()
-                    .map(|(s, _)| *s)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
-        )?;
-        Ok((base, width, files))
-    };
-
-    let (mut base, mut width, _files) = allocate_and_commit(&dir, &repo, &names, &parsed)?;
-
-    if remote {
-        match git::push(&repo)? {
-            git::PushResult::Success => {}
-            git::PushResult::Failed(stderr) => {
-                bail!("push failed: {}", stderr);
+            for f in &files {
+                git::add(&txn.repo, &[f.as_str()])?;
             }
-            git::PushResult::Rejected => {
-                // Collision: hard reset undoes the commit and cleans up created files
-                git::undo_commit_hard(&repo)?;
-                git::pull_rebase(&repo)?;
+            let tids: Vec<String> = (0..parsed.len())
+                .map(|i| format!("{:0>width$}", base + i as u64, width = width))
+                .collect();
+            git::commit(
+                &txn.repo,
+                &format!(
+                    "chore(tickets): batch {} ({})",
+                    tids.join(","),
+                    parsed
+                        .iter()
+                        .map(|(s, _)| *s)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
+            )?;
+            Ok((base, width))
+        };
 
-                // Rescan with remote names
-                let mut names = ticket_filenames(&dir);
-                let remote_names = git::remote_ticket_names(&repo);
-                for rn in remote_names {
-                    if !names.contains(&rn) {
-                        names.push(rn);
-                    }
-                }
+    let (mut base, mut width) = allocate_and_commit(&names, &parsed)?;
 
-                let result = allocate_and_commit(&dir, &repo, &names, &parsed)?;
-                base = result.0;
-                width = result.1;
-                let _ = result.2; // files not needed after re-allocation
-
-                match git::push(&repo)? {
-                    git::PushResult::Success => {}
-                    git::PushResult::Failed(stderr) => {
-                        bail!("push failed on retry: {}", stderr);
-                    }
-                    git::PushResult::Rejected => {
-                        domain_bail!(
-                            "batch allocation failed after 2 attempts (push repeatedly rejected)"
-                        );
-                    }
-                }
-            }
+    match txn.try_push()? {
+        PublishResult::Done(_) => {}
+        PublishResult::NeedsRetry => {
+            let names = txn.scan_names();
+            let result = allocate_and_commit(&names, &parsed)?;
+            base = result.0;
+            width = result.1;
+            txn.push_retry()?;
         }
     }
 
