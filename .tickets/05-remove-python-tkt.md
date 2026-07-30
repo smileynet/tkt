@@ -1,7 +1,7 @@
 ---
 id: "05"
 title: "remove tools/tkt from crew-research after Rust tkt proven stable"
-status: open
+status: done
 blocked_by: ["24"]
 ---
 
@@ -13,6 +13,6 @@ Superseded by ticket #24 which includes proper gating (test runs must pass first
 
 ## Acceptance criteria
 
-- [ ] Ticket #24 completed (which includes removal + verification)
+- [x] Ticket #24 completed (which includes removal + verification)
 
 - [ ] TBD

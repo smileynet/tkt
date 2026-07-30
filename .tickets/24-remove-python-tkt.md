@@ -1,7 +1,7 @@
 ---
 id: "24"
 title: "uninstall Python tkt and clean up crew-research/tools/tkt"
-status: open
+status: done
 blocked_by: ["23", "25"]
 ---
 
@@ -26,8 +26,8 @@ The Python implementation is dead code once the Rust version is validated. Keepi
 
 ## Acceptance criteria
 
-- [ ] `crew-research/tools/tkt/` directory removed (or PR opened)
-- [ ] No remaining references to Python tkt in crew projects
-- [ ] `which tkt` / `where tkt` resolves to Rust binary on all machines
-- [ ] No pip/pipx installation of old tkt remains
-- [ ] Steering/AGENTS.md references updated
+- [x] `crew-research/tools/tkt/` directory removed (or PR opened)
+- [x] No remaining references to Python tkt in crew projects
+- [x] `which tkt` / `where tkt` resolves to Rust binary on all machines
+- [x] No pip/pipx installation of old tkt remains
+- [x] Steering/AGENTS.md references updated
