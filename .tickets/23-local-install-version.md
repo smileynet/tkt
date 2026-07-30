@@ -1,7 +1,7 @@
 ---
 id: "23"
 title: "local install workflow and --version flag"
-status: open
+status: done
 blocked_by: ["17"]
 ---
 
@@ -23,8 +23,8 @@ Without --version, there's no way to confirm which binary is installed. Without 
 
 ## Acceptance criteria
 
-- [ ] `tkt --version` prints version from Cargo.toml
-- [ ] `tkt -V` works (short form)
-- [ ] `cargo install --path .` succeeds and places binary on PATH
-- [ ] Binary installed via cargo install matches `cargo build --release` output
-- [ ] README Install section includes version check step
+- [x] `tkt --version` prints version from Cargo.toml
+- [x] `tkt -V` works (short form)
+- [x] `cargo install --path .` succeeds and places binary on PATH
+- [x] Binary installed via cargo install matches `cargo build --release` output
+- [x] README Install section includes version check step

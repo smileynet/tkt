@@ -1,7 +1,7 @@
 ---
 id: "20"
 title: "tkt telemetry subcommand (enable/disable/status/show)"
-status: open
+status: done
 blocked_by: ["18"]
 ---
 
@@ -57,10 +57,10 @@ Without this subcommand, users have no way to opt in, inspect what's collected, 
 
 ## Acceptance criteria
 
-- [ ] `tkt telemetry --enable` writes consent.toml and confirms
-- [ ] `tkt telemetry --disable` writes consent.toml and confirms
-- [ ] `tkt telemetry --status` shows current state with reason and storage summary
-- [ ] `tkt telemetry --show` prints a human-readable summary of recent events
-- [ ] `tkt telemetry --clear` deletes all telemetry files and confirms
-- [ ] Exit code 0 for all telemetry subcommands
-- [ ] Integration test covering enable → status → disable → status cycle
+- [x] `tkt telemetry --enable` writes consent.toml and confirms
+- [x] `tkt telemetry --disable` writes consent.toml and confirms
+- [x] `tkt telemetry --status` shows current state with reason and storage summary
+- [x] `tkt telemetry --show` prints a human-readable summary of recent events
+- [x] `tkt telemetry --clear` deletes all telemetry files and confirms
+- [x] Exit code 0 for all telemetry subcommands
+- [x] Integration test covering enable → status → disable → status cycle

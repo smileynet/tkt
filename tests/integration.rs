@@ -801,3 +801,41 @@ fn test_debug_mode_json_format() {
             .unwrap_or_else(|e| panic!("invalid JSON in debug output: {} — line: {}", e, line));
     }
 }
+
+#[test]
+fn test_telemetry_enable_disable_cycle() {
+    let (_tmp, clone) = setup_repo();
+
+    // Status: initially disabled
+    let (code, out) = run_tkt(&clone, &["telemetry", "--status"]);
+    assert_eq!(code, 0);
+    assert!(out.contains("disabled"), "should start disabled: {}", out);
+
+    // Enable
+    let (code, out) = run_tkt(&clone, &["telemetry", "--enable"]);
+    assert_eq!(code, 0);
+    assert!(out.contains("enabled"), "should confirm enable: {}", out);
+
+    // Status: now enabled
+    let (code, out) = run_tkt(&clone, &["telemetry", "--status"]);
+    assert_eq!(code, 0);
+    assert!(
+        out.contains("enabled") && out.contains("consent.toml"),
+        "should show enabled via config: {}",
+        out
+    );
+
+    // Disable
+    let (code, out) = run_tkt(&clone, &["telemetry", "--disable"]);
+    assert_eq!(code, 0);
+    assert!(out.contains("disabled"), "should confirm disable: {}", out);
+
+    // Status: disabled again
+    let (code, out) = run_tkt(&clone, &["telemetry", "--status"]);
+    assert_eq!(code, 0);
+    assert!(
+        out.contains("disabled"),
+        "should be disabled again: {}",
+        out
+    );
+}
