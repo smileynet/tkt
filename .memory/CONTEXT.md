@@ -24,3 +24,12 @@ _Avoid_: schema (implies strict validation of all content)
 **Surgical edit**:
 A frontmatter field rewrite that preserves unknown fields, body text, and formatting of untouched areas. The core editing primitive.
 _Avoid_: update (too generic), patch (implies diff format)
+
+
+**GitTransaction**:
+Struct in `src/transaction.rs` encapsulating the allocation transaction: fetch → scan local+remote → compute next ID → commit → push with bounded retry. Used by `new` and `batch`.
+_Avoid_: allocation (too vague), push-retry (only one aspect)
+
+**Finding**:
+A single validation result from `src/findings.rs`. Has file, rule, message, severity. Produced by check functions, consumed by validate and sync-plan.
+_Avoid_: error (ambiguous with exit codes), issue (overloaded)
