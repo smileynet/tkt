@@ -1,8 +1,10 @@
 # tkt
 
-Git-native ticket CLI. Track work in `.tickets/` markdown files with YAML frontmatter, managed by atomic git operations.
+Track work as markdown files in git. Dependency-aware frontier, atomic push-to-claim, race detection — no server required.
 
 ## What It Does
+
+tkt manages `.tickets/` files with YAML frontmatter inside any git repo. It computes what's ready to work on (the "frontier"), claims tickets atomically via git push, and detects when two people grab the same work.
 
 ```
 .tickets/
@@ -11,64 +13,107 @@ Git-native ticket CLI. Track work in `.tickets/` markdown files with YAML frontm
 └── 03-deploy-pipeline.md    # status: open, blocked_by: [02]
 ```
 
-tkt computes the frontier (what's unblocked), claims work atomically (git push = claim), and detects races when two sessions allocate the same id.
+| When I'm... | I want to... | So I can... |
+|---|---|---|
+| Starting a work session | see what's unblocked | pick the highest-priority available task |
+| Claiming a ticket | know nobody else grabbed it | avoid duplicate work across sessions |
+| Finishing a task | mark it done and unblock dependents | keep the pipeline moving |
+| Working on a team repo | allocate IDs without collision | push tickets concurrently |
+| Reviewing project health | check for cycles and dangling refs | catch structural issues early |
+| Syncing a plan document | detect status drift | keep the plan accurate |
+
+## Quick Start
+
+**Prerequisites:** `git` on PATH, inside a git repository.
+
+```bash
+# Build and install
+cargo install --path .
+
+# Create the tickets directory
+mkdir .tickets && git add .tickets && git commit -m "init tickets"
+
+# Create your first ticket
+tkt new auth-system --title "Implement authentication"
+# → allocated 01-auth-system.md (pushed — id claimed, status: open)
+
+# See what's ready to work on
+tkt ready
+# → 01  Implement authentication
+
+# Claim it (marks in_progress, pushes to remote)
+tkt claim 01
+# → claimed 01-auth-system.md (in_progress pushed)
+
+# Close it when done
+tkt close 01 --note "JWT + refresh tokens shipped"
+# → closed 01-auth-system.md (done pushed)
+```
 
 ## Install
 
 ```bash
-# From source
+# From source (requires Rust toolchain)
 cargo install --path .
 
-# Or build locally
+# Or build a release binary directly
 cargo build --release
+# Binary at target/release/tkt
 ```
 
-## Quick Start
+Single binary, no runtime dependencies beyond `git`.
+
+## Usage
+
+### Frontier — what's ready
 
 ```bash
-# Show what's ready to work on
-tkt ready
-
-# Create a ticket
-tkt new auth-system --title "Implement authentication"
-
-# Claim it (marks in_progress, pushes)
-tkt claim 01
-
-# Close it when done
-tkt close 01 --note "JWT + refresh tokens implemented"
-
-# Dump all tickets as JSON
-tkt query
-
-# Check if plan.md drifted from ticket state
-tkt sync-plan --check
+tkt ready              # human output
+tkt ready --json       # JSON Lines (one object per ticket)
 ```
 
-## Commands
+Shows open tickets whose dependencies are all done, filtered by `CREW_ENV` if set, sorted by priority then ID.
 
-| Command | What it does |
-|---------|-------------|
-| `tkt ready [--json]` | Show frontier (open tickets with all deps done) |
-| `tkt new <slug>` | Allocate next id, commit, push (id is yours) |
-| `tkt batch <slugs...>` | Create N tickets in one commit |
-| `tkt claim <id>` | Mark in_progress, push |
-| `tkt close <id>` | Mark done, append resolution |
-| `tkt edit <id>` | Change fields (title, blocked_by, priority, env, spec, ac) |
-| `tkt renumber <old> <new>` | Move to a new id (birth-window only) |
-| `tkt query` | Dump full corpus as JSON Lines |
-| `tkt sync-plan --check` | Report drift between tickets and plan.md |
-| `tkt sync-plan --fix` | Fix derivable columns (status) in plan.md |
-| `tkt validate` | Check contract health (dangling refs, cycles, decay) |
+### Create tickets
+
+```bash
+tkt new fix-login --title "Fix login timeout" --priority high
+tkt new deploy --title "Deploy to staging" --blocked-by 01,02
+tkt batch "api:Build API" "docs:Write docs" --blocked-by 01
+```
+
+IDs are allocated atomically — tkt scans local and remote filenames, pushes immediately, and retries on collision.
+
+### Lifecycle
+
+```bash
+tkt claim 03           # open → in_progress (pushed)
+tkt close 03 --note "Deployed" --ac 1,2   # → done, checks AC boxes 1 and 2
+```
+
+### Edit and maintain
+
+```bash
+tkt edit 02 --title "New title" --blocked-by 01,03 --priority high
+tkt renumber 05 02     # reassign ID (birth-window only)
+tkt validate           # check for cycles, dangling deps, contract violations
+tkt validate --strict  # promote warnings to errors
+tkt sync-plan --check  # compare ticket status vs docs/plan.md table
+tkt query              # dump full corpus as JSON Lines
+```
 
 ### Common flags
 
-- `--title`, `--spec`, `--env`, `--priority`, `--blocked-by` — metadata for new/batch/edit
-- `--json` — machine-readable output (ready)
-- `--strict` — promote warnings to errors (validate, sync-plan)
-- `--brief` — human-readable output instead of JSON (validate, sync-plan)
-- `--note` — resolution note (close)
-- `--ac N,N` — mark acceptance criteria checked (close, edit)
+| Flag | Used by | Effect |
+|------|---------|--------|
+| `--json` | ready | machine-readable output |
+| `--strict` | validate, sync-plan | warnings become errors |
+| `--brief` | validate, sync-plan | human output instead of JSON |
+| `--blocked-by N,N` | new, batch, edit | set dependencies |
+| `--priority high` | new, batch, edit | jump frontier order |
+| `--env E` | new, batch, edit | corp / personal / either |
+| `--note "..."` | close | resolution text |
+| `--ac N,N` | close, edit | check acceptance criteria boxes |
 
 ## Ticket Format
 
@@ -86,35 +131,34 @@ spec: auth-spec       # optional: links to a spec name
 # Implement authentication
 
 ## What to build
-
-Describe the work...
+...
 
 ## Acceptance criteria
-
 - [ ] JWT tokens issued on login
 - [ ] Refresh token rotation
 ```
 
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | Domain failure (not found, conflict, validation drift) |
-| 2 | Operational crash (I/O, git, parse error) |
+Files are the database. Hand-edit any time — tkt reads what's there.
 
 ## Design
 
-- **Files are the database** — `.tickets/` is git-native, hand-editable, tool-optional
 - **Push-to-claim** — a pushed commit is a claim; race detection on push rejection
-- **Frontier computation** — filters open tickets whose dependencies are all done, sorted by priority then id
+- **Remote-aware** — scans `origin/main` via `git ls-tree` before allocating IDs
 - **Surgical edits** — changes one field without disturbing the rest of the file
-- **Remote-aware allocation** — scans both local and remote filenames to prevent ID collisions
-- **Single binary** — no runtime dependencies beyond `git` on PATH
+- **Single binary** — shells out to `git` for full SSH/HTTPS auth compatibility
+
+## Development
+
+```bash
+cargo build            # debug build
+cargo test             # 39 tests (17 unit + 22 integration)
+cargo clippy           # must be 0 warnings
+cargo fmt --check      # must produce no diff
+```
 
 ## Inspired By
 
-**[tk](https://github.com/nicholasgasior/tk)** — The original git-native ticket tool that proved markdown files + frontmatter is the right model for lightweight work tracking. tkt builds on tk's insight that files are the database, adding dependency-graph frontier computation, atomic push-to-claim race detection, and surgical frontmatter edits that preserve unknown fields.
+**[tk](https://github.com/nicholasgasior/tk)** — proved markdown files + frontmatter is the right model for lightweight work tracking. tkt adds dependency-graph frontier computation, push-to-claim race detection, and surgical frontmatter edits.
 
 ## License
 
