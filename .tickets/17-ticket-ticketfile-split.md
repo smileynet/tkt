@@ -1,7 +1,7 @@
 ---
 id: "17"
 title: "separate Ticket (domain) from TicketFile (raw editor)"
-status: open
+status: done
 blocked_by: ["14", "15", "16"]
 ---
 
@@ -34,11 +34,11 @@ If the Ticket/TicketFile split were deleted, every caller of id()/title() pays a
 
 ## Acceptance criteria
 
-- [ ] `TicketFile` struct handles raw preservation + surgical edits
-- [ ] `Ticket` struct has owned, validated, typed fields
-- [ ] `id` and `title` access is &str (no allocation)
-- [ ] `status` is an enum with exhaustive match
-- [ ] Invalid status/env rejected at parse time (not scattered in accessors)
-- [ ] All 39+ tests pass
-- [ ] Frontier computation uses typed fields directly
-- [ ] cargo clippy clean, cargo fmt clean
+- [x] `TicketFile` struct handles raw preservation + surgical edits
+- [x] `Ticket` struct has owned, validated, typed fields
+- [x] `id` and `title` access is &str (no allocation)
+- [x] `status` is an enum with exhaustive match
+- [x] Invalid status/env rejected at parse time (not scattered in accessors)
+- [x] All 39+ tests pass
+- [x] Frontier computation uses typed fields directly
+- [x] cargo clippy clean, cargo fmt clean

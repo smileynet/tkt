@@ -16,11 +16,109 @@ static RE_FM_KEY: LazyLock<Regex> =
 static RE_NUMERIC_PREFIX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)(.*)$").unwrap());
 static RE_FILENAME_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)-").unwrap());
 
-// --- Ticket ---
+// --- Enums ---
 
-/// A parsed ticket preserving raw frontmatter for surgical edits.
+/// Ticket lifecycle status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Status {
+    Open,
+    InProgress,
+    Done,
+}
+
+impl Status {
+    pub fn parse(s: &str) -> Result<Self> {
+        match s {
+            "open" => Ok(Status::Open),
+            "in_progress" => Ok(Status::InProgress),
+            "done" => Ok(Status::Done),
+            other => bail!(
+                "invalid status {:?} (expected open/in_progress/done)",
+                other
+            ),
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Status::Open => "open",
+            Status::InProgress => "in_progress",
+            Status::Done => "done",
+        }
+    }
+}
+
+impl std::fmt::Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// Environment filter for tickets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Env {
+    Corp,
+    Personal,
+    Either,
+}
+
+impl Env {
+    pub fn parse(s: &str) -> Result<Self> {
+        match s {
+            "corp" => Ok(Env::Corp),
+            "personal" => Ok(Env::Personal),
+            "either" => Ok(Env::Either),
+            other => bail!("invalid env {:?} (expected corp/personal/either)", other),
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Env::Corp => "corp",
+            Env::Personal => "personal",
+            Env::Either => "either",
+        }
+    }
+}
+
+impl std::fmt::Display for Env {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// Ticket priority (currently only "high" is valid).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Priority {
+    High,
+}
+
+impl Priority {
+    pub fn parse(s: &str) -> Result<Self> {
+        match s {
+            "high" => Ok(Priority::High),
+            other => bail!("invalid priority {:?} (expected high)", other),
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Priority::High => "high",
+        }
+    }
+}
+
+impl std::fmt::Display for Priority {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+// --- TicketFile ---
+
+/// Raw frontmatter editor. Preserves field ordering and unknown fields for surgical edits.
 #[derive(Debug, Clone)]
-pub struct Ticket {
+pub struct TicketFile {
     pub path: PathBuf,
     /// Ordered frontmatter entries: (key, raw_value) — key="" for blank lines.
     pub fm: Vec<(String, String)>,
@@ -28,8 +126,8 @@ pub struct Ticket {
     pub body: String,
 }
 
-impl Ticket {
-    /// Parse a ticket from a .md file with YAML frontmatter.
+impl TicketFile {
+    /// Parse a ticket file from disk.
     pub fn parse(path: &Path) -> Result<Self> {
         let content =
             std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
@@ -40,12 +138,10 @@ impl Ticket {
     pub fn parse_str(content: &str, path: &Path) -> Result<Self> {
         let lines: Vec<&str> = content.split('\n').collect();
 
-        // Opening fence
         if lines.is_empty() || !is_fence(lines[0]) {
             bail!("{}: no opening frontmatter fence on line 1", path.display());
         }
 
-        // Parse frontmatter lines
         let key_re = &*RE_FM_KEY;
         let mut fm: Vec<(String, String)> = Vec::new();
         let mut close_idx = None;
@@ -58,7 +154,6 @@ impl Ticket {
             if let Some(caps) = key_re.captures(line) {
                 fm.push((caps[1].to_string(), caps[2].to_string()));
             } else if (line.starts_with(' ') || line.starts_with('\t')) && !fm.is_empty() {
-                // Continuation line
                 let last = fm.last_mut().unwrap();
                 last.1.push('\n');
                 last.1.push_str(line);
@@ -77,7 +172,6 @@ impl Ticket {
         let close_idx = close_idx
             .ok_or_else(|| anyhow::anyhow!("{}: no closing frontmatter fence", path.display()))?;
 
-        // Check required fields
         for req in &["id", "title", "status", "blocked_by"] {
             if !fm.iter().any(|(k, _)| k == req) {
                 bail!("{}: missing required field: {}", path.display(), req);
@@ -86,7 +180,7 @@ impl Ticket {
 
         let body = lines[close_idx + 1..].join("\n");
 
-        Ok(Ticket {
+        Ok(TicketFile {
             path: path.to_owned(),
             fm,
             body,
@@ -100,62 +194,6 @@ impl Ticket {
             .find(|(k, _)| k == key)
             .map(|(_, v)| v.trim())
     }
-
-    pub fn id(&self) -> String {
-        let raw = self.get("id").unwrap_or("");
-        let stripped = raw.trim_matches('"').trim_matches('\'');
-        yaml_scalar_unescape(stripped)
-    }
-
-    pub fn title(&self) -> String {
-        let raw = self.get("title").unwrap_or("");
-        let stripped = raw.trim_matches('"').trim_matches('\'');
-        yaml_scalar_unescape(stripped)
-    }
-
-    pub fn status(&self) -> &str {
-        self.get("status").unwrap_or("")
-    }
-
-    pub fn blocked_by(&self) -> Vec<String> {
-        let raw = self.get("blocked_by").unwrap_or("");
-        // Require the value to be a bracketed list (anchored match)
-        let trimmed = raw.trim();
-        if !trimmed.starts_with('[') || !trimmed.ends_with(']') {
-            return Vec::new();
-        }
-        let inner = &trimmed[1..trimmed.len() - 1];
-        inner
-            .split(',')
-            .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
-            .filter(|s| !s.is_empty())
-            .collect()
-    }
-
-    pub fn env(&self) -> &str {
-        self.get("env")
-            .map(|v| v.trim_matches('"'))
-            .unwrap_or("either")
-    }
-
-    pub fn priority(&self) -> Option<&str> {
-        self.get("priority").map(|v| v.trim_matches('"'))
-    }
-
-    pub fn is_high_priority(&self) -> bool {
-        self.priority() == Some("high")
-    }
-
-    pub fn numeric_key(&self) -> (u64, String) {
-        let id = self.id();
-        let re = &*RE_NUMERIC_PREFIX;
-        match re.captures(&id) {
-            Some(caps) => (caps[1].parse().unwrap_or(u64::MAX), caps[2].to_string()),
-            None => (u64::MAX, id),
-        }
-    }
-
-    // --- Mutation ---
 
     /// Set a field value (raw text). Replaces if exists, appends if not.
     pub fn set_field(&mut self, key: &str, value: &str) {
@@ -173,8 +211,6 @@ impl Ticket {
         self.fm.retain(|(k, _)| k != key);
     }
 
-    // --- Serialization ---
-
     /// Serialize preserving raw frontmatter (surgical writes).
     pub fn serialize(&self) -> String {
         let mut parts = vec!["---".to_string()];
@@ -190,16 +226,106 @@ impl Ticket {
         format!("{}\n{}", header, self.body)
     }
 
-    /// Write the ticket back to disk.
+    /// Write the ticket file back to disk.
     pub fn write(&self) -> Result<()> {
         std::fs::write(&self.path, self.serialize())
             .with_context(|| format!("writing {}", self.path.display()))
     }
 }
 
-fn is_fence(line: &str) -> bool {
-    let trimmed = line.trim();
-    trimmed == "---"
+// --- Ticket ---
+
+/// A parsed, validated ticket with typed fields. Constructed from a TicketFile.
+/// Field access is zero-cost (&str borrows on owned Strings).
+#[derive(Debug, Clone)]
+pub struct Ticket {
+    pub id: String,
+    pub title: String,
+    pub status: Status,
+    pub blocked_by: Vec<String>,
+    pub env: Env,
+    pub priority: Option<Priority>,
+    pub spec: Option<String>,
+    pub path: PathBuf,
+    pub body: String,
+    /// The underlying raw file for mutations.
+    pub file: TicketFile,
+}
+
+impl Ticket {
+    /// Parse and validate a ticket from disk.
+    pub fn parse(path: &Path) -> Result<Self> {
+        let file = TicketFile::parse(path)?;
+        Self::from_file(file)
+    }
+
+    /// Parse and validate from a string (for testing).
+    #[allow(dead_code)]
+    pub fn parse_str(content: &str, path: &Path) -> Result<Self> {
+        let file = TicketFile::parse_str(content, path)?;
+        Self::from_file(file)
+    }
+
+    /// Construct a validated Ticket from a TicketFile.
+    fn from_file(file: TicketFile) -> Result<Self> {
+        let path_display = file.path.display().to_string();
+
+        let raw_id = file.get("id").unwrap_or("");
+        let id = yaml_scalar_unescape(raw_id.trim_matches('"').trim_matches('\''));
+
+        let raw_title = file.get("title").unwrap_or("");
+        let title = yaml_scalar_unescape(raw_title.trim_matches('"').trim_matches('\''));
+
+        let raw_status = file.get("status").unwrap_or("");
+        let status =
+            Status::parse(raw_status).with_context(|| format!("{}: bad status", path_display))?;
+
+        let blocked_by = parse_blocked_by(file.get("blocked_by").unwrap_or(""));
+
+        let raw_env = file
+            .get("env")
+            .map(|v| v.trim_matches('"'))
+            .unwrap_or("either");
+        let env = Env::parse(raw_env).with_context(|| format!("{}: bad env", path_display))?;
+
+        let priority = match file.get("priority").map(|v| v.trim_matches('"')) {
+            Some(p) if !p.is_empty() => Some(
+                Priority::parse(p).with_context(|| format!("{}: bad priority", path_display))?,
+            ),
+            _ => None,
+        };
+
+        let spec = file
+            .get("spec")
+            .map(|v| yaml_scalar_unescape(v.trim_matches('"').trim_matches('\'')));
+
+        Ok(Ticket {
+            id,
+            title,
+            status,
+            blocked_by,
+            env,
+            priority,
+            spec,
+            path: file.path.clone(),
+            body: file.body.clone(),
+            file,
+        })
+    }
+
+    /// Numeric sort key: (numeric prefix, remainder).
+    pub fn numeric_key(&self) -> (u64, String) {
+        let re = &*RE_NUMERIC_PREFIX;
+        match re.captures(&self.id) {
+            Some(caps) => (caps[1].parse().unwrap_or(u64::MAX), caps[2].to_string()),
+            None => (u64::MAX, self.id.clone()),
+        }
+    }
+
+    /// Whether this ticket has high priority.
+    pub fn is_high_priority(&self) -> bool {
+        self.priority == Some(Priority::High)
+    }
 }
 
 // --- Corpus ---
@@ -224,22 +350,22 @@ pub fn load_corpus(dir: &Path) -> Result<Vec<Ticket>> {
 /// Compute the frontier: open tickets with all deps done, env-filtered, priority-sorted.
 pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
     let crew_env = std::env::var("CREW_ENV").unwrap_or_default();
-    let done: std::collections::HashSet<String> = corpus
+    let done: std::collections::HashSet<&str> = corpus
         .iter()
-        .filter(|t| t.status() == "done")
-        .map(|t| t.id())
+        .filter(|t| t.status == Status::Done)
+        .map(|t| t.id.as_str())
         .collect();
 
     let mut pool: Vec<&Ticket> = corpus
         .iter()
         .filter(|t| {
-            if t.status() != "open" {
+            if t.status != Status::Open {
                 return false;
             }
-            if !t.blocked_by().iter().all(|dep| done.contains(dep)) {
+            if !t.blocked_by.iter().all(|dep| done.contains(dep.as_str())) {
                 return false;
             }
-            if !crew_env.is_empty() && t.env() != "either" && t.env() != crew_env {
+            if !crew_env.is_empty() && t.env != Env::Either && t.env.as_str() != crew_env {
                 return false;
             }
             true
@@ -276,12 +402,34 @@ pub fn id_width(names: &[String]) -> usize {
 pub fn find_ticket<'a>(corpus: &'a [Ticket], id: &str) -> Result<&'a Ticket> {
     corpus
         .iter()
-        .find(|t| t.id() == id)
+        .find(|t| t.id == id)
         .ok_or_else(|| anyhow::anyhow!("no ticket with id {}", id))
 }
 
+// --- Helpers ---
+
+fn is_fence(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed == "---"
+}
+
+/// Parse a blocked_by field value into a Vec of IDs.
+fn parse_blocked_by(raw: &str) -> Vec<String> {
+    let trimmed = raw.trim();
+    if !trimmed.starts_with('[') || !trimmed.ends_with(']') {
+        return Vec::new();
+    }
+    let inner = &trimmed[1..trimmed.len() - 1];
+    inner
+        .split(',')
+        .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
+// --- YAML/JSON escaping ---
+
 /// Escape a string for use inside YAML double-quoted scalars.
-/// Handles: backslash, double-quote, newline, carriage return, tab, null, and other control chars.
 pub fn yaml_scalar_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for c in s.chars() {
@@ -302,7 +450,6 @@ pub fn yaml_scalar_escape(s: &str) -> String {
 }
 
 /// Decode YAML double-quoted scalar escapes when reading values.
-/// Handles: \\, \", \n, \r, \t, \0, \xNN.
 pub fn yaml_scalar_unescape(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     let mut chars = s.chars();
@@ -338,7 +485,6 @@ pub fn yaml_scalar_unescape(s: &str) -> String {
 }
 
 /// Escape a string for use inside a JSON string value (between quotes).
-/// Handles: backslash, double-quote, newline, carriage return, tab, and control chars.
 pub fn json_string_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for c in s.chars() {
@@ -404,10 +550,10 @@ mod tests {
         let mut f = NamedTempFile::new().unwrap();
         write!(f, "---\nid: \"01\"\ntitle: \"Test ticket\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n- [ ] AC1\n").unwrap();
         let t = Ticket::parse(f.path()).unwrap();
-        assert_eq!(t.id(), "01");
-        assert_eq!(t.title(), "Test ticket");
-        assert_eq!(t.status(), "open");
-        assert!(t.blocked_by().is_empty());
+        assert_eq!(t.id, "01");
+        assert_eq!(t.title, "Test ticket");
+        assert_eq!(t.status, Status::Open);
+        assert!(t.blocked_by.is_empty());
     }
 
     #[test]
@@ -415,9 +561,10 @@ mod tests {
         let mut f = NamedTempFile::new().unwrap();
         write!(f, "---\nid: \"05\"\ntitle: \"Depends on others\"\nstatus: open\nblocked_by: [\"01\", \"03\"]\npriority: high\nenv: corp\nspec: \"my-spec\"\n---\n\n# Body\n").unwrap();
         let t = Ticket::parse(f.path()).unwrap();
-        assert_eq!(t.blocked_by(), vec!["01", "03"]);
+        assert_eq!(t.blocked_by, vec!["01", "03"]);
         assert!(t.is_high_priority());
-        assert_eq!(t.env(), "corp");
+        assert_eq!(t.env, Env::Corp);
+        assert_eq!(t.spec.as_deref(), Some("my-spec"));
     }
 
     #[test]
@@ -436,15 +583,15 @@ mod tests {
         let corpus = load_corpus(dir.path()).unwrap();
         let front = frontier(&corpus);
         assert_eq!(front.len(), 1);
-        assert_eq!(front[0].id(), "02");
+        assert_eq!(front[0].id, "02");
     }
 
     #[test]
     fn surgical_edit_preserves_unknown_fields() {
         let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\ncustom_field: hello\n---\n\n# Body\n";
         let mut t = Ticket::parse_str(content, Path::new("test.md")).unwrap();
-        t.set_field("status", "done");
-        let out = t.serialize();
+        t.file.set_field("status", "done");
+        let out = t.file.serialize();
         assert!(out.contains("status: done"));
         assert!(out.contains("custom_field: hello"));
     }
@@ -460,7 +607,6 @@ mod tests {
         assert_eq!(yaml_scalar_escape("cr\rhere"), "cr\\rhere");
         assert_eq!(yaml_scalar_escape("null\0byte"), "null\\0byte");
         assert_eq!(yaml_scalar_escape("unicode: café"), "unicode: café");
-        // Combined adversarial
         assert_eq!(yaml_scalar_escape("a\"b\\c\nd"), "a\\\"b\\\\c\\nd");
     }
 
@@ -474,10 +620,8 @@ mod tests {
         assert_eq!(json_string_escape("tab\there"), "tab\\there");
         assert_eq!(json_string_escape("cr\rhere"), "cr\\rhere");
         assert_eq!(json_string_escape("unicode: café"), "unicode: café");
-        // Control char gets \u escape
         let with_ctrl = format!("ctrl{}here", '\x01');
         assert_eq!(json_string_escape(&with_ctrl), "ctrl\\u0001here");
-        // Combined adversarial
         assert_eq!(json_string_escape("a\"b\\c\nd"), "a\\\"b\\\\c\\nd");
     }
 
@@ -485,9 +629,43 @@ mod tests {
     fn new_ticket_text_escapes_title() {
         let text = new_ticket_text("01", "Fix \"ready\" command", &[], None, None, None);
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
-        // Should be valid frontmatter (parseable)
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();
-        // The title accessor trims quotes, so escaped quotes appear as-is in raw value
-        assert!(t.get("title").unwrap().contains("ready"));
+        assert!(t.title.contains("ready"));
+    }
+
+    #[test]
+    fn status_enum_parse() {
+        assert_eq!(Status::parse("open").unwrap(), Status::Open);
+        assert_eq!(Status::parse("in_progress").unwrap(), Status::InProgress);
+        assert_eq!(Status::parse("done").unwrap(), Status::Done);
+        assert!(Status::parse("invalid").is_err());
+    }
+
+    #[test]
+    fn env_enum_parse() {
+        assert_eq!(Env::parse("corp").unwrap(), Env::Corp);
+        assert_eq!(Env::parse("personal").unwrap(), Env::Personal);
+        assert_eq!(Env::parse("either").unwrap(), Env::Either);
+        assert!(Env::parse("invalid").is_err());
+    }
+
+    #[test]
+    fn invalid_status_rejected_at_parse() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Bad\"\nstatus: invalid\nblocked_by: []\n---\n\n# Bad\n";
+        let result = Ticket::parse_str(content, Path::new("test.md"));
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("status") || msg.contains("invalid"));
+    }
+
+    #[test]
+    fn invalid_env_rejected_at_parse() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Bad\"\nstatus: open\nblocked_by: []\nenv: bogus\n---\n\n# Bad\n";
+        let result = Ticket::parse_str(content, Path::new("test.md"));
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("env") || msg.contains("bogus"));
     }
 }

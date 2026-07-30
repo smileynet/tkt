@@ -5,7 +5,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::core::{self, Ticket};
+use crate::core::{self, Env, Status, Ticket};
 
 /// A single validation finding.
 #[derive(Debug, Clone)]
@@ -58,16 +58,21 @@ pub fn status_from_findings(findings: &[Finding], strict: bool) -> &'static str 
 // --- Rules ---
 
 /// Check that all ticket statuses are valid.
+/// Note: with the new Ticket type, invalid statuses are rejected at parse time.
+/// This check is retained for TicketFile-based validation where we want findings
+/// instead of hard errors.
 pub fn check_status(corpus: &[Ticket]) -> Vec<Finding> {
+    // Status is validated at parse time now — tickets with invalid status
+    // won't make it into the corpus. This returns empty for well-parsed tickets.
     corpus
         .iter()
-        .filter(|t| !core::STATUS_VALUES.contains(&t.status()))
+        .filter(|t| !core::STATUS_VALUES.contains(&t.status.as_str()))
         .map(|t| Finding {
             file: filename(t),
             rule: "bad-status".into(),
             message: format!(
                 "status {:?} not in {}",
-                t.status(),
+                t.status.as_str(),
                 core::STATUS_VALUES.join("/")
             ),
             severity: "error".into(),
@@ -76,17 +81,19 @@ pub fn check_status(corpus: &[Ticket]) -> Vec<Finding> {
 }
 
 /// Check that all ticket env values are valid.
+/// Note: with the new Ticket type, invalid env values are rejected at parse time.
 pub fn check_env(corpus: &[Ticket]) -> Vec<Finding> {
     corpus
         .iter()
-        .filter(|t| {
-            let env = t.env();
-            env != "either" && !core::ENV_VALUES.contains(&env)
-        })
+        .filter(|t| t.env != Env::Either && !core::ENV_VALUES.contains(&t.env.as_str()))
         .map(|t| Finding {
             file: filename(t),
             rule: "bad-env".into(),
-            message: format!("env {:?} not in {}", t.env(), core::ENV_VALUES.join("/")),
+            message: format!(
+                "env {:?} not in {}",
+                t.env.as_str(),
+                core::ENV_VALUES.join("/")
+            ),
             severity: "error".into(),
         })
         .collect()
@@ -98,12 +105,12 @@ pub fn check_id_filename(corpus: &[Ticket]) -> Vec<Finding> {
         .iter()
         .filter(|t| {
             let name = filename(t);
-            !name.starts_with(&format!("{}-", t.id()))
+            !name.starts_with(&format!("{}-", t.id))
         })
         .map(|t| Finding {
             file: filename(t),
             rule: "id-filename-mismatch".into(),
-            message: format!("id {:?} vs filename", t.id()),
+            message: format!("id {:?} vs filename", t.id),
             severity: "error".into(),
         })
         .collect()
@@ -111,20 +118,19 @@ pub fn check_id_filename(corpus: &[Ticket]) -> Vec<Finding> {
 
 /// Check for duplicate ticket IDs.
 pub fn check_duplicate_ids(corpus: &[Ticket]) -> Vec<Finding> {
-    let mut seen: HashMap<String, String> = HashMap::new();
+    let mut seen: HashMap<&str, String> = HashMap::new();
     let mut findings = Vec::new();
     for t in corpus {
-        let tid = t.id();
         let name = filename(t);
-        if let Some(existing) = seen.get(&tid) {
+        if let Some(existing) = seen.get(t.id.as_str()) {
             findings.push(Finding {
                 file: name,
                 rule: "duplicate-id".into(),
-                message: format!("id {:?} also in {}", tid, existing),
+                message: format!("id {:?} also in {}", t.id, existing),
                 severity: "error".into(),
             });
         } else {
-            seen.insert(tid, name);
+            seen.insert(&t.id, name);
         }
     }
     findings
@@ -132,11 +138,11 @@ pub fn check_duplicate_ids(corpus: &[Ticket]) -> Vec<Finding> {
 
 /// Check for dangling blocked_by references.
 pub fn check_dangling_deps(corpus: &[Ticket]) -> Vec<Finding> {
-    let known: HashSet<String> = corpus.iter().map(|t| t.id()).collect();
+    let known: HashSet<&str> = corpus.iter().map(|t| t.id.as_str()).collect();
     let mut findings = Vec::new();
     for t in corpus {
-        for dep in t.blocked_by() {
-            if !known.contains(&dep) {
+        for dep in &t.blocked_by {
+            if !known.contains(dep.as_str()) {
                 findings.push(Finding {
                     file: filename(t),
                     rule: "dangling-blocked-by".into(),
@@ -151,49 +157,49 @@ pub fn check_dangling_deps(corpus: &[Ticket]) -> Vec<Finding> {
 
 /// Detect dependency cycles via DFS.
 pub fn check_cycles(corpus: &[Ticket]) -> Vec<Finding> {
-    let known: HashSet<String> = corpus.iter().map(|t| t.id()).collect();
+    let known: HashSet<&str> = corpus.iter().map(|t| t.id.as_str()).collect();
 
     // Build adjacency: id -> list of blocked_by ids (only known ones)
-    let adj: HashMap<String, Vec<String>> = corpus
+    let adj: HashMap<&str, Vec<&str>> = corpus
         .iter()
         .map(|t| {
-            let deps: Vec<String> = t
-                .blocked_by()
-                .into_iter()
+            let deps: Vec<&str> = t
+                .blocked_by
+                .iter()
+                .map(|d| d.as_str())
                 .filter(|d| known.contains(d))
                 .collect();
-            (t.id(), deps)
+            (t.id.as_str(), deps)
         })
         .collect();
 
     // DFS states: 0=unvisited, 1=visiting (in current path), 2=visited (complete)
-    let mut state: HashMap<&str, u8> = adj.keys().map(|k| (k.as_str(), 0u8)).collect();
+    let mut state: HashMap<&str, u8> = adj.keys().map(|&k| (k, 0u8)).collect();
     let mut path: Vec<&str> = Vec::new();
-    let mut cycles: Vec<Vec<String>> = Vec::new();
+    let mut cycles: Vec<Vec<&str>> = Vec::new();
 
     fn dfs<'a>(
         node: &'a str,
-        adj: &'a HashMap<String, Vec<String>>,
+        adj: &HashMap<&'a str, Vec<&'a str>>,
         state: &mut HashMap<&'a str, u8>,
         path: &mut Vec<&'a str>,
-        cycles: &mut Vec<Vec<String>>,
+        cycles: &mut Vec<Vec<&'a str>>,
     ) {
         state.insert(node, 1);
         path.push(node);
 
         if let Some(deps) = adj.get(node) {
-            for dep in deps {
-                match state.get(dep.as_str()) {
+            for &dep in deps {
+                match state.get(dep) {
                     Some(&1) => {
-                        if let Some(pos) = path.iter().position(|&n| n == dep.as_str()) {
-                            let mut cycle: Vec<String> =
-                                path[pos..].iter().map(|s| s.to_string()).collect();
-                            cycle.push(dep.to_string());
+                        if let Some(pos) = path.iter().position(|&n| n == dep) {
+                            let mut cycle: Vec<&str> = path[pos..].to_vec();
+                            cycle.push(dep);
                             cycles.push(cycle);
                         }
                     }
                     Some(&0) => {
-                        dfs(dep.as_str(), adj, state, path, cycles);
+                        dfs(dep, adj, state, path, cycles);
                     }
                     _ => {}
                 }
@@ -205,7 +211,7 @@ pub fn check_cycles(corpus: &[Ticket]) -> Vec<Finding> {
     }
 
     // Sort keys for deterministic output
-    let mut nodes: Vec<&str> = adj.keys().map(|s| s.as_str()).collect();
+    let mut nodes: Vec<&str> = adj.keys().copied().collect();
     nodes.sort();
     for node in nodes {
         if state.get(node) == Some(&0) {
@@ -224,9 +230,8 @@ pub fn check_cycles(corpus: &[Ticket]) -> Vec<Finding> {
             .min_by_key(|(_, v)| *v)
             .map(|(i, _)| i)
         {
-            let mut normalized: Vec<&str> =
-                path_part[min_pos..].iter().map(|s| s.as_str()).collect();
-            normalized.extend(path_part[..min_pos].iter().map(|s| s.as_str()));
+            let mut normalized: Vec<&str> = path_part[min_pos..].to_vec();
+            normalized.extend_from_slice(&path_part[..min_pos]);
             let key = normalized.join(" -> ");
             if seen.insert(key.clone()) {
                 unique_cycles.push(format!("{} -> {}", key, normalized[0]));
@@ -235,8 +240,10 @@ pub fn check_cycles(corpus: &[Ticket]) -> Vec<Finding> {
     }
 
     // Map cycle to file for reporting
-    let id_to_file: HashMap<String, String> =
-        corpus.iter().map(|t| (t.id(), filename(t))).collect();
+    let id_to_file: HashMap<&str, String> = corpus
+        .iter()
+        .map(|t| (t.id.as_str(), filename(t)))
+        .collect();
 
     unique_cycles
         .iter()
@@ -264,7 +271,7 @@ pub fn check_unchecked_acs(corpus: &[Ticket]) -> Vec<Finding> {
 
     corpus
         .iter()
-        .filter(|t| t.status() == "done")
+        .filter(|t| t.status == Status::Done)
         .filter_map(|t| {
             let count = RE.find_iter(&t.body).count();
             if count > 0 {
@@ -347,11 +354,11 @@ mod tests {
 
     #[test]
     fn bad_status_detected() {
-        let t = make_ticket(
-            "---\nid: \"01\"\ntitle: \"A\"\nstatus: invalid\nblocked_by: []\n---\n\n# A\n",
-        );
-        let findings = check_status(&[t]);
-        assert_eq!(findings.len(), 1);
-        assert_eq!(findings[0].rule, "bad-status");
+        // With the new type system, invalid status is rejected at parse time.
+        // This test verifies that by showing parse fails.
+        let content =
+            "---\nid: \"01\"\ntitle: \"A\"\nstatus: invalid\nblocked_by: []\n---\n\n# A\n";
+        let result = Ticket::parse_str(content, Path::new("test.md"));
+        assert!(result.is_err());
     }
 }

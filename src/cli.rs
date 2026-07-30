@@ -5,7 +5,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use regex::Regex;
 
-use crate::core::{self, Ticket};
+use crate::core::{self, Status, Ticket};
 use crate::findings::{self, Finding};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
@@ -255,8 +255,8 @@ fn check_remote_status(repo: &Path, remote: bool, ticket: &Ticket) -> Option<Str
         ticket.path.file_name().unwrap().to_string_lossy()
     );
     if let Ok(content) = git::git(repo, &["show", &format!("origin/main:{}", remote_path)]) {
-        if let Ok(remote_ticket) = core::Ticket::parse_str(&content, &ticket.path) {
-            return Some(remote_ticket.status().to_string());
+        if let Ok(remote_file) = core::TicketFile::parse_str(&content, &ticket.path) {
+            return remote_file.get("status").map(|s| s.to_string());
         }
     }
     None
@@ -282,47 +282,47 @@ fn cmd_ready(json: bool) -> Result<i32> {
     if json {
         for t in &front {
             let blocked_by: Vec<String> = t
-                .blocked_by()
+                .blocked_by
                 .iter()
                 .map(|d| format!("\"{}\"", core::json_string_escape(d)))
                 .collect();
             let mut fields = vec![
-                format!("\"id\":\"{}\"", core::json_string_escape(&t.id())),
-                format!("\"title\":\"{}\"", core::json_string_escape(&t.title())),
-                format!("\"status\":\"{}\"", core::json_string_escape(t.status())),
+                format!("\"id\":\"{}\"", core::json_string_escape(&t.id)),
+                format!("\"title\":\"{}\"", core::json_string_escape(&t.title)),
+                format!(
+                    "\"status\":\"{}\"",
+                    core::json_string_escape(t.status.as_str())
+                ),
                 format!("\"blocked_by\":[{}]", blocked_by.join(",")),
             ];
-            if let Some(env) = t.get("env") {
+            if t.env != core::Env::Either {
                 fields.push(format!(
                     "\"env\":\"{}\"",
-                    core::json_string_escape(env.trim_matches('"'))
+                    core::json_string_escape(t.env.as_str())
                 ));
             }
-            if let Some(priority) = t.get("priority") {
+            if let Some(priority) = t.priority {
                 fields.push(format!(
                     "\"priority\":\"{}\"",
-                    core::json_string_escape(priority.trim_matches('"'))
+                    core::json_string_escape(priority.as_str())
                 ));
             }
-            if let Some(spec) = t.get("spec") {
-                fields.push(format!(
-                    "\"spec\":\"{}\"",
-                    core::json_string_escape(spec.trim_matches('"'))
-                ));
+            if let Some(ref spec) = t.spec {
+                fields.push(format!("\"spec\":\"{}\"", core::json_string_escape(spec)));
             }
             println!("{{{}}}", fields.join(","));
         }
     } else {
         for t in &front {
             let flag = if t.is_high_priority() { "  [HIGH]" } else { "" };
-            println!("{}  {}{}", t.id(), t.title(), flag);
+            println!("{}  {}{}", t.id, t.title, flag);
         }
         let wip: Vec<&Ticket> = corpus
             .iter()
-            .filter(|t| t.status() == "in_progress")
+            .filter(|t| t.status == Status::InProgress)
             .collect();
         if !wip.is_empty() {
-            let ids: Vec<String> = wip.iter().map(|t| t.id()).collect();
+            let ids: Vec<&str> = wip.iter().map(|t| t.id.as_str()).collect();
             println!("\nin progress (claimed elsewhere): {}", ids.join(", "));
         }
     }
@@ -438,18 +438,18 @@ fn cmd_claim(id: &str) -> Result<i32> {
             domain_bail!("{} is {}, not open (updated on remote)", id, remote_status);
         }
     }
-    if t.status() != "open" {
-        domain_bail!("{} is {}, not open", t.id(), t.status());
+    if t.status != Status::Open {
+        domain_bail!("{} is {}, not open", t.id, t.status.as_str());
     }
 
-    let mut t = t.clone();
-    t.set_field("status", "in_progress");
-    t.write()?;
+    let mut file = t.file.clone();
+    file.set_field("status", "in_progress");
+    file.write()?;
 
-    let rel_path = t
+    let rel_path = file
         .path
         .strip_prefix(&repo)
-        .unwrap_or(&t.path)
+        .unwrap_or(&file.path)
         .to_string_lossy()
         .replace('\\', "/");
     commit_and_publish(
@@ -461,7 +461,7 @@ fn cmd_claim(id: &str) -> Result<i32> {
 
     println!(
         "claimed {} (in_progress pushed)",
-        t.path.file_name().unwrap().to_string_lossy()
+        file.path.file_name().unwrap().to_string_lossy()
     );
     Ok(0)
 }
@@ -479,20 +479,20 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
             domain_bail!("{} is already done (updated on remote)", id);
         }
     }
-    if t.status() == "done" {
-        domain_bail!("{} is already done", t.id());
+    if t.status == Status::Done {
+        domain_bail!("{} is already done", t.id);
     }
 
-    let mut t = t.clone();
-    t.set_field("status", "done");
+    let mut file = t.file.clone();
+    file.set_field("status", "done");
 
     // Append Resolution section if not present
-    if !t.body.contains("## Resolution") {
+    if !file.body.contains("## Resolution") {
         let date = chrono_date();
         let resolution = note.unwrap_or("TBD");
-        t.body = format!(
+        file.body = format!(
             "{}\n\n## Resolution ({})\n\n{}\n",
-            t.body.trim_end(),
+            file.body.trim_end(),
             date,
             resolution
         );
@@ -500,13 +500,13 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
 
     // Flip AC boxes if specified
     if !ac_indices.is_empty() {
-        t.body = flip_ac_boxes(&t.body, ac_indices);
+        file.body = flip_ac_boxes(&file.body, ac_indices);
     }
 
-    t.write()?;
+    file.write()?;
 
     // Warn about unchecked ACs
-    let unchecked = RE_UNCHECKED_AC.find_iter(&t.body).count();
+    let unchecked = RE_UNCHECKED_AC.find_iter(&file.body).count();
     if unchecked > 0 {
         eprintln!(
             "warning: {} unchecked acceptance box(es) — fill in before trusting history",
@@ -514,10 +514,10 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
         );
     }
 
-    let rel_path = t
+    let rel_path = file
         .path
         .strip_prefix(&repo)
-        .unwrap_or(&t.path)
+        .unwrap_or(&file.path)
         .to_string_lossy()
         .replace('\\', "/");
     commit_and_publish(
@@ -534,7 +534,7 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     };
     println!(
         "closed {} (dated Resolution {})",
-        t.path.file_name().unwrap().to_string_lossy(),
+        file.path.file_name().unwrap().to_string_lossy(),
         verb
     );
     Ok(0)
@@ -609,7 +609,7 @@ fn cmd_edit(
         }
     }
 
-    let mut t = t.clone();
+    let mut file = t.file.clone();
     let mut changed: Vec<&str> = Vec::new();
 
     if let Some(title_val) = title {
@@ -619,7 +619,7 @@ fn cmd_edit(
         if let Err(e) = core::validate::validate_free_text(title_val, "title", 200) {
             domain_bail!("{}", e);
         }
-        t.set_field(
+        file.set_field(
             "title",
             &format!("\"{}\"", core::yaml_scalar_escape(title_val)),
         );
@@ -644,12 +644,12 @@ fn cmd_edit(
             .map(|d| format!("\"{}\"", core::yaml_scalar_escape(d)))
             .collect::<Vec<_>>()
             .join(", ");
-        t.set_field("blocked_by", &format!("[{}]", formatted));
+        file.set_field("blocked_by", &format!("[{}]", formatted));
         changed.push("blocked_by");
     }
     if let Some(env_val) = env {
         if env_val.is_empty() {
-            t.remove_field("env");
+            file.remove_field("env");
         } else {
             if !core::ENV_VALUES.contains(&env_val) {
                 domain_bail!(
@@ -657,18 +657,18 @@ fn cmd_edit(
                     core::ENV_VALUES.join("/")
                 );
             }
-            t.set_field("env", env_val);
+            file.set_field("env", env_val);
         }
         changed.push("env");
     }
     if let Some(spec_val) = spec {
         if spec_val.is_empty() {
-            t.remove_field("spec");
+            file.remove_field("spec");
         } else {
             if let Err(e) = core::validate::validate_free_text(spec_val, "spec", 100) {
                 domain_bail!("{}", e);
             }
-            t.set_field(
+            file.set_field(
                 "spec",
                 &format!("\"{}\"", core::yaml_scalar_escape(spec_val)),
             );
@@ -677,17 +677,17 @@ fn cmd_edit(
     }
     if let Some(prio_val) = priority {
         if prio_val.is_empty() {
-            t.remove_field("priority");
+            file.remove_field("priority");
         } else {
             if prio_val != "high" {
                 domain_bail!("priority must be 'high' (or '' to clear)");
             }
-            t.set_field("priority", prio_val);
+            file.set_field("priority", prio_val);
         }
         changed.push("priority");
     }
     if !ac_indices.is_empty() {
-        t.body = flip_ac_boxes(&t.body, ac_indices);
+        file.body = flip_ac_boxes(&file.body, ac_indices);
         changed.push("ac");
     }
 
@@ -695,11 +695,11 @@ fn cmd_edit(
         domain_bail!("nothing to edit — pass at least one field option");
     }
 
-    t.write()?;
-    let rel_path = t
+    file.write()?;
+    let rel_path = file
         .path
         .strip_prefix(&repo)
-        .unwrap_or(&t.path)
+        .unwrap_or(&file.path)
         .to_string_lossy()
         .replace('\\', "/");
     commit_and_publish(
@@ -710,7 +710,7 @@ fn cmd_edit(
     )?;
     println!(
         "edited {}: {}",
-        t.path.file_name().unwrap().to_string_lossy(),
+        file.path.file_name().unwrap().to_string_lossy(),
         changed.join(", ")
     );
     Ok(0)
@@ -772,8 +772,8 @@ fn cmd_sync_plan(
     }
 
     let corpus = core::load_corpus(&dir)?;
-    let corpus_map: std::collections::HashMap<String, &Ticket> =
-        corpus.iter().map(|t| (t.id(), t)).collect();
+    let corpus_map: std::collections::HashMap<&str, &Ticket> =
+        corpus.iter().map(|t| (t.id.as_str(), t)).collect();
     let mut plan_text = std::fs::read_to_string(&plan)?;
 
     let mut findings: Vec<Finding> = Vec::new();
@@ -785,7 +785,7 @@ fn cmd_sync_plan(
         let plan_done = status_cell.contains("✅");
 
         if let Some(t) = corpus_map.get(tid) {
-            let ticket_done = t.status() == "done";
+            let ticket_done = t.status == Status::Done;
             if plan_done != ticket_done {
                 if _fix {
                     let new_status = if ticket_done { " ✅ done " } else { " open " };
@@ -805,7 +805,7 @@ fn cmd_sync_plan(
                         message: format!(
                             "plan says {}, ticket is {}",
                             if plan_done { "done" } else { "not done" },
-                            t.status()
+                            t.status.as_str()
                         ),
                         severity: "error".into(),
                     });
@@ -820,11 +820,11 @@ fn cmd_sync_plan(
         .map(|c| c[1].trim().to_string())
         .collect();
     for t in &corpus {
-        if t.status() != "done" && !plan_ids.contains(&t.id()) {
+        if t.status != Status::Done && !plan_ids.contains(&*t.id) {
             findings.push(Finding {
                 file: t.path.file_name().unwrap().to_string_lossy().to_string(),
                 rule: "missing-plan-row".into(),
-                message: format!("{} ticket has no plan row", t.status()),
+                message: format!("{} ticket has no plan row", t.status.as_str()),
                 severity: "warning".into(),
             });
         }
@@ -870,32 +870,35 @@ fn cmd_query() -> Result<i32> {
 
     for t in &corpus {
         let blocked_by: Vec<String> = t
-            .blocked_by()
+            .blocked_by
             .iter()
             .map(|d| format!("\"{}\"", core::json_string_escape(d)))
             .collect();
 
         let mut fields = vec![
-            format!("\"id\":\"{}\"", core::json_string_escape(&t.id())),
-            format!("\"title\":\"{}\"", core::json_string_escape(&t.title())),
-            format!("\"status\":\"{}\"", core::json_string_escape(t.status())),
+            format!("\"id\":\"{}\"", core::json_string_escape(&t.id)),
+            format!("\"title\":\"{}\"", core::json_string_escape(&t.title)),
+            format!(
+                "\"status\":\"{}\"",
+                core::json_string_escape(t.status.as_str())
+            ),
             format!("\"blocked_by\":[{}]", blocked_by.join(",")),
         ];
 
         // Optional fields — include only when present
-        if let Some(env) = t.get("env") {
-            let env = env.trim_matches('"');
-            fields.push(format!("\"env\":\"{}\"", core::json_string_escape(env)));
-        }
-        if let Some(priority) = t.get("priority") {
-            let priority = priority.trim_matches('"');
+        if t.env != core::Env::Either {
             fields.push(format!(
-                "\"priority\":\"{}\"",
-                core::json_string_escape(priority)
+                "\"env\":\"{}\"",
+                core::json_string_escape(t.env.as_str())
             ));
         }
-        if let Some(spec) = t.get("spec") {
-            let spec = spec.trim_matches('"');
+        if let Some(priority) = t.priority {
+            fields.push(format!(
+                "\"priority\":\"{}\"",
+                core::json_string_escape(priority.as_str())
+            ));
+        }
+        if let Some(ref spec) = t.spec {
             fields.push(format!("\"spec\":\"{}\"", core::json_string_escape(spec)));
         }
 
@@ -1029,7 +1032,7 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     let repo = git::repo_root(&dir)?;
     let corpus = core::load_corpus(&dir)?;
 
-    let holders: Vec<&Ticket> = corpus.iter().filter(|t| t.id() == old_id).collect();
+    let holders: Vec<&Ticket> = corpus.iter().filter(|t| t.id == old_id).collect();
     if holders.is_empty() {
         domain_bail!("no ticket with id {:?}", old_id);
     }
@@ -1061,7 +1064,7 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
             })?
     };
 
-    if corpus.iter().any(|t| t.id() == new_id) {
+    if corpus.iter().any(|t| t.id == new_id) {
         domain_bail!("id {:?} already exists locally", new_id);
     }
 
@@ -1077,17 +1080,17 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
         .to_string();
     let new_path = dir.join(format!("{}-{}", new_id, slug));
 
-    let mut t = src.clone();
+    let mut file = src.file.clone();
     // Preserve quoting style for id field
-    let old_raw = t.get("id").unwrap_or("");
+    let old_raw = file.get("id").unwrap_or("");
     let new_val = if old_raw.starts_with('"') {
         format!("\"{}\"", new_id)
     } else {
         new_id.to_string()
     };
-    t.set_field("id", &new_val);
-    t.path = new_path.clone();
-    t.write()?;
+    file.set_field("id", &new_val);
+    file.path = new_path.clone();
+    file.write()?;
     std::fs::remove_file(&old_path)?;
 
     // Update inbound refs
@@ -1097,11 +1100,10 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
             if other.path == old_path {
                 continue;
             }
-            if other.blocked_by().contains(&old_id.to_string()) {
-                let mut other = other.clone();
-                // Parse the dependency list and replace exact ID matches
-                let deps = other.blocked_by();
-                let new_deps: Vec<String> = deps
+            if other.blocked_by.contains(&old_id.to_string()) {
+                let mut other_file = other.file.clone();
+                let new_deps: Vec<String> = other
+                    .blocked_by
                     .iter()
                     .map(|d| {
                         if d == old_id {
@@ -1116,8 +1118,8 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
                     .map(|d| format!("\"{}\"", core::yaml_scalar_escape(d)))
                     .collect::<Vec<_>>()
                     .join(", ");
-                other.set_field("blocked_by", &format!("[{}]", formatted));
-                other.write()?;
+                other_file.set_field("blocked_by", &format!("[{}]", formatted));
+                other_file.write()?;
                 refs_updated += 1;
             }
         }
@@ -1140,7 +1142,7 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
         if other.path == old_path {
             continue;
         }
-        if other.blocked_by().contains(&old_id.to_string()) {
+        if other.blocked_by.contains(&old_id.to_string()) {
             let rel = other
                 .path
                 .strip_prefix(&repo)
