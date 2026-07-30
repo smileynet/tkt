@@ -35,6 +35,14 @@ cargo clippy                   # lint (must be 0 warnings)
 cargo fmt                      # format (must produce no diff)
 ```
 
+### Verification gate (run before every commit)
+
+```bash
+cargo fmt && cargo clippy --all-targets && cargo test
+```
+
+All three must pass with zero warnings before presenting work as done.
+
 ## tkt CLI (the product)
 
 ```bash
