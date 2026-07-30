@@ -1,7 +1,7 @@
 ---
 id: "21"
 title: "debug mode: TKT_DEBUG=1 prints structured trace to stderr"
-status: open
+status: done
 blocked_by: ["18"]
 ---
 
@@ -50,10 +50,10 @@ Without debug mode, diagnosing tkt issues requires adding println! statements, r
 
 ## Acceptance criteria
 
-- [ ] `TKT_DEBUG=1` prints human-readable trace to stderr
-- [ ] `TKT_DEBUG=json` prints JSONL to stderr
-- [ ] Normal stdout output is unchanged
-- [ ] Debug output includes: session ID, project, command, git calls, corpus stats, exit code, duration
-- [ ] Debug mode works without telemetry consent
-- [ ] No performance impact when TKT_DEBUG is unset (zero-cost when disabled)
-- [ ] Integration test: run with TKT_DEBUG=1, verify stderr contains expected trace lines
+- [x] `TKT_DEBUG=1` prints human-readable trace to stderr
+- [x] `TKT_DEBUG=json` prints JSONL to stderr
+- [x] Normal stdout output is unchanged
+- [x] Debug output includes: session ID, project, command, git calls, corpus stats, exit code, duration
+- [x] Debug mode works without telemetry consent
+- [x] No performance impact when TKT_DEBUG is unset (zero-cost when disabled)
+- [x] Integration test: run with TKT_DEBUG=1, verify stderr contains expected trace lines

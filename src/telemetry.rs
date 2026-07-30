@@ -7,6 +7,51 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+// --- Debug mode ---
+
+/// Debug output format.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DebugMode {
+    /// Human-readable lines to stderr
+    Human,
+    /// JSONL to stderr
+    Json,
+    /// Debug mode disabled
+    Off,
+}
+
+/// Check TKT_DEBUG environment variable.
+/// - "1" or "true" → Human
+/// - "json" → Json
+/// - unset or anything else → Off
+pub fn debug_mode() -> DebugMode {
+    match std::env::var("TKT_DEBUG").as_deref() {
+        Ok("1") | Ok("true") => DebugMode::Human,
+        Ok("json") => DebugMode::Json,
+        _ => DebugMode::Off,
+    }
+}
+
+/// Emit a debug event to stderr. No-op if debug mode is Off.
+pub fn debug_event(mode: DebugMode, session: &str, project: &str, msg: &str) {
+    match mode {
+        DebugMode::Off => {}
+        DebugMode::Human => {
+            eprintln!("[tkt:debug] {}", msg);
+        }
+        DebugMode::Json => {
+            let json = serde_json::json!({
+                "ts": iso_timestamp(),
+                "session": session,
+                "project": project,
+                "level": "debug",
+                "msg": msg,
+            });
+            eprintln!("{}", json);
+        }
+    }
+}
+
 // --- Session ID ---
 
 /// Generate a session ID: timestamp (ms) + PID, hex-encoded.

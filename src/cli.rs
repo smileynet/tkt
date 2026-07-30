@@ -138,6 +138,22 @@ pub fn run() -> i32 {
     let start = std::time::Instant::now();
     let cli = Cli::parse();
     let cmd_name = command_name(&cli.command);
+
+    // Debug mode setup
+    let dbg = crate::telemetry::debug_mode();
+    let session = crate::telemetry::generate_session_id();
+    let project = std::env::current_dir()
+        .ok()
+        .and_then(|cwd| crate::git::repo_root(&cwd).ok())
+        .map(|root| crate::telemetry::project_slug(&root))
+        .unwrap_or_else(|| "unknown".to_string());
+    crate::telemetry::debug_event(
+        dbg,
+        &session,
+        &project,
+        &format!("session={} project={} cmd={}", session, project, cmd_name),
+    );
+
     let result = match cli.command {
         Commands::Ready { json } => cmd_ready(json),
         Commands::New {
@@ -220,6 +236,17 @@ pub fn run() -> i32 {
     // Record telemetry event (silently — never affects CLI behavior)
     record_telemetry(&cmd_name, exit_code, start.elapsed().as_millis() as u64);
 
+    crate::telemetry::debug_event(
+        dbg,
+        &session,
+        &project,
+        &format!(
+            "exit={} duration={:.1}s",
+            exit_code,
+            start.elapsed().as_secs_f64()
+        ),
+    );
+
     exit_code
 }
 
@@ -297,10 +324,40 @@ fn preflight_mutation() -> Result<(PathBuf, bool, Vec<Ticket>)> {
     let dir = tickets_dir()?;
     let repo = git::repo_root(&dir)?;
     let remote = has_remote(&repo);
+
+    let dbg = crate::telemetry::debug_mode();
     if remote {
+        let fetch_start = std::time::Instant::now();
         git::fetch(&repo)?;
+        crate::telemetry::debug_event(
+            dbg,
+            "",
+            "",
+            &format!(
+                "git fetch origin ({:.1}s)",
+                fetch_start.elapsed().as_secs_f64()
+            ),
+        );
     }
     let corpus = core::load_corpus(&dir)?;
+    let open = corpus.iter().filter(|t| t.status == Status::Open).count();
+    let wip = corpus
+        .iter()
+        .filter(|t| t.status == Status::InProgress)
+        .count();
+    let done = corpus.iter().filter(|t| t.status == Status::Done).count();
+    crate::telemetry::debug_event(
+        dbg,
+        "",
+        "",
+        &format!(
+            "corpus loaded: {} tickets ({} open, {} in_progress, {} done)",
+            corpus.len(),
+            open,
+            wip,
+            done
+        ),
+    );
     Ok((repo, remote, corpus))
 }
 
@@ -323,10 +380,20 @@ fn check_remote_status(repo: &Path, remote: bool, ticket: &Ticket) -> Option<Str
 
 /// Commit and push a mutation. Handles local-only messaging.
 fn commit_and_publish(repo: &Path, remote: bool, paths: &[&str], message: &str) -> Result<()> {
+    let dbg = crate::telemetry::debug_mode();
     git::add(repo, paths)?;
+    crate::telemetry::debug_event(dbg, "", "", &format!("git add {:?}", paths));
     git::commit(repo, message)?;
+    crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
     if remote {
+        let push_start = std::time::Instant::now();
         git::push_with_retry(repo)?;
+        crate::telemetry::debug_event(
+            dbg,
+            "",
+            "",
+            &format!("git push ({:.1}s)", push_start.elapsed().as_secs_f64()),
+        );
     }
     Ok(())
 }
@@ -337,6 +404,27 @@ fn cmd_ready(json: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
     let front = core::frontier(&corpus);
+
+    let dbg = crate::telemetry::debug_mode();
+    let open = corpus.iter().filter(|t| t.status == Status::Open).count();
+    let wip = corpus
+        .iter()
+        .filter(|t| t.status == Status::InProgress)
+        .count();
+    let done = corpus.iter().filter(|t| t.status == Status::Done).count();
+    crate::telemetry::debug_event(
+        dbg,
+        "",
+        "",
+        &format!(
+            "corpus loaded: {} tickets ({} open, {} in_progress, {} done), frontier: {}",
+            corpus.len(),
+            open,
+            wip,
+            done,
+            front.len()
+        ),
+    );
 
     if json {
         for t in &front {

@@ -721,3 +721,83 @@ fn test_push_failure_no_rebase_on_unreachable() {
         out
     );
 }
+
+/// Run tkt with extra environment variables, capturing stdout and stderr separately.
+fn run_tkt_env(dir: &Path, args: &[&str], env: &[(&str, &str)]) -> (i32, String, String) {
+    let mut cmd = Command::new(tkt_bin());
+    cmd.args(args).current_dir(dir);
+    for (k, v) in env {
+        cmd.env(k, v);
+    }
+    let output = cmd.output().expect("failed to execute tkt");
+    let code = output.status.code().unwrap_or(1);
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    (code, stdout, stderr)
+}
+
+#[test]
+fn test_debug_mode_emits_to_stderr() {
+    let (_tmp, clone) = setup_repo();
+    // Add an open ticket so ready has something to show
+    std::fs::write(
+        clone.join(".tickets/02-open.md"),
+        "---\nid: \"02\"\ntitle: \"Open task\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Open\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-m", "add open ticket"]);
+    git(&clone, &["push"]);
+
+    let (code, stdout, stderr) = run_tkt_env(&clone, &["ready"], &[("TKT_DEBUG", "1")]);
+    assert_eq!(code, 0);
+    // Stdout has normal output
+    assert!(
+        stdout.contains("02"),
+        "stdout should list ticket: {}",
+        stdout
+    );
+    // Stderr has debug trace
+    assert!(
+        stderr.contains("[tkt:debug]"),
+        "stderr should have debug prefix: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("cmd=ready"),
+        "stderr should show command: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("exit=0"),
+        "stderr should show exit code: {}",
+        stderr
+    );
+    assert!(
+        stderr.contains("corpus loaded"),
+        "stderr should show corpus stats: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_debug_mode_json_format() {
+    let (_tmp, clone) = setup_repo();
+    let (code, _stdout, stderr) = run_tkt_env(&clone, &["ready"], &[("TKT_DEBUG", "json")]);
+    assert_eq!(code, 0);
+    // Stderr should have JSON lines
+    let debug_lines: Vec<&str> = stderr
+        .lines()
+        .filter(|l| l.starts_with('{') && l.contains("\"level\":\"debug\""))
+        .collect();
+    assert!(
+        !debug_lines.is_empty(),
+        "should have JSON debug lines in stderr: {}",
+        stderr
+    );
+    // Each line should be valid JSON
+    for line in &debug_lines {
+        let _: serde_json::Value = serde_json::from_str(line)
+            .unwrap_or_else(|e| panic!("invalid JSON in debug output: {} — line: {}", e, line));
+    }
+}
