@@ -1,7 +1,7 @@
 ---
 id: "18"
 title: "telemetry infrastructure: consent, session tracking, JSONL sink"
-status: open
+status: done
 blocked_by: ["17"]
 priority: high
 ---
@@ -34,11 +34,11 @@ Without this, there's no local audit trail and no foundation for the debug mode,
 
 ## Acceptance criteria
 
-- [ ] Consent check function respects the full hierarchy (env vars > config file > default off)
-- [ ] Session ULID generated once per process, included in all events
-- [ ] Project slug derived from repo root dirname
-- [ ] Events appended as JSONL to platform-appropriate data directory
-- [ ] Event schema includes: ts, session, project, cmd, level, msg, version, os, arch
-- [ ] Write failures are swallowed silently (never surface to user)
-- [ ] No new runtime dependencies beyond `dirs` (for platform paths) and `ulid` or equivalent
-- [ ] Unit tests for consent hierarchy, event serialization, project slug derivation
+- [x] Consent check function respects the full hierarchy (env vars > config file > default off)
+- [x] Session ULID generated once per process, included in all events
+- [x] Project slug derived from repo root dirname
+- [x] Events appended as JSONL to platform-appropriate data directory
+- [x] Event schema includes: ts, session, project, cmd, level, msg, version, os, arch
+- [x] Write failures are swallowed silently (never surface to user)
+- [x] No new runtime dependencies beyond `dirs` (for platform paths) and `ulid` or equivalent
+- [x] Unit tests for consent hierarchy, event serialization, project slug derivation

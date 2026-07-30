@@ -2,6 +2,7 @@ mod cli;
 mod core;
 mod findings;
 mod git;
+mod telemetry;
 mod transaction;
 
 use std::process::ExitCode;

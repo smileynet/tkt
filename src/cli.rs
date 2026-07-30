@@ -135,7 +135,9 @@ enum Commands {
 }
 
 pub fn run() -> i32 {
+    let start = std::time::Instant::now();
     let cli = Cli::parse();
+    let cmd_name = command_name(&cli.command);
     let result = match cli.command {
         Commands::Ready { json } => cmd_ready(json),
         Commands::New {
@@ -202,7 +204,7 @@ pub fn run() -> i32 {
         Commands::Validate { strict, brief } => cmd_validate(strict, brief),
         Commands::Query => cmd_query(),
     };
-    match result {
+    let exit_code = match result {
         Ok(code) => code,
         Err(e) => {
             if e.downcast_ref::<DomainError>().is_some() {
@@ -213,7 +215,64 @@ pub fn run() -> i32 {
                 2
             }
         }
+    };
+
+    // Record telemetry event (silently — never affects CLI behavior)
+    record_telemetry(&cmd_name, exit_code, start.elapsed().as_millis() as u64);
+
+    exit_code
+}
+
+// --- Telemetry helpers ---
+
+fn command_name(cmd: &Commands) -> String {
+    match cmd {
+        Commands::Ready { .. } => "ready",
+        Commands::New { .. } => "new",
+        Commands::Batch { .. } => "batch",
+        Commands::Claim { .. } => "claim",
+        Commands::Close { .. } => "close",
+        Commands::Edit { .. } => "edit",
+        Commands::Renumber { .. } => "renumber",
+        Commands::SyncPlan { .. } => "sync-plan",
+        Commands::Validate { .. } => "validate",
+        Commands::Query => "query",
     }
+    .to_string()
+}
+
+fn record_telemetry(cmd: &str, exit_code: i32, duration_ms: u64) {
+    use crate::telemetry;
+
+    let (consent, _) = telemetry::check_consent();
+    if consent != telemetry::Consent::Enabled {
+        return;
+    }
+
+    // Derive project slug from current repo (best effort)
+    let project = std::env::current_dir()
+        .ok()
+        .and_then(|cwd| crate::git::repo_root(&cwd).ok())
+        .map(|root| telemetry::project_slug(&root))
+        .unwrap_or_else(|| "unknown".to_string());
+
+    // Use a process-stable session ID (generated once per invocation via LazyLock)
+    static SESSION: std::sync::LazyLock<String> =
+        std::sync::LazyLock::new(telemetry::generate_session_id);
+
+    let event = telemetry::Event {
+        ts: telemetry::iso_timestamp(),
+        session: SESSION.clone(),
+        project,
+        cmd: cmd.to_string(),
+        exit_code,
+        duration_ms,
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        os: telemetry::os_string().to_string(),
+        arch: telemetry::arch_string().to_string(),
+    };
+
+    telemetry::record_event(&event);
 }
 
 // --- Helpers ---
