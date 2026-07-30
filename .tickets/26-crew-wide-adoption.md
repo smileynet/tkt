@@ -1,7 +1,7 @@
 ---
 id: "26"
 title: "crew-wide adoption: install in all projects, add to steering"
-status: open
+status: done
 blocked_by: ["24", "25"]
 ---
 
@@ -26,9 +26,9 @@ Without formal adoption, tkt remains a single-project tool instead of crew infra
 
 ## Acceptance criteria
 
-- [ ] tool-installation.md lists tkt with install command
-- [ ] All active crew projects have .tickets/ initialized
-- [ ] `tkt validate` runs in CI or pre-commit for projects with tickets
-- [ ] Telemetry enabled in crew shell profiles
-- [ ] Frontier-work steering references tkt correctly
-- [ ] Agent sessions can discover and use tkt without manual setup
+- [x] tool-installation.md lists tkt with install command
+- [x] All active crew projects have .tickets/ initialized
+- [x] `tkt validate` runs in CI or pre-commit for projects with tickets
+- [x] Telemetry enabled in crew shell profiles
+- [x] Frontier-work steering references tkt correctly
+- [x] Agent sessions can discover and use tkt without manual setup
