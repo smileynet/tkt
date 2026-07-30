@@ -1,7 +1,7 @@
 ---
 id: "14"
 title: "extract GitTransaction from duplicated allocation logic"
-status: open
+status: done
 blocked_by: ["16"]
 ---
 
