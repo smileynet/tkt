@@ -1,7 +1,7 @@
 ---
 id: "16"
 title: "move Finding + validation rules into findings module"
-status: open
+status: done
 blocked_by: []
 ---
 
