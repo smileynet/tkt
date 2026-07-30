@@ -1,7 +1,7 @@
 ---
 id: "22"
 title: "TELEMETRY.md transparency document"
-status: open
+status: done
 blocked_by: ["18", "19", "20", "21"]
 ---
 
@@ -28,11 +28,11 @@ Without this document, users can't make an informed consent decision. Trust requ
 
 ## Acceptance criteria
 
-- [ ] TELEMETRY.md exists in repo root
-- [ ] Documents all collected fields with example values
-- [ ] Documents all excluded data categories
-- [ ] Documents storage paths for Linux, macOS, Windows
-- [ ] Documents all opt-in/out mechanisms
-- [ ] Documents storage limits and rotation policy
-- [ ] States clearly that v1 is local-only (no upload)
-- [ ] Referenced from README.md
+- [x] TELEMETRY.md exists in repo root
+- [x] Documents all collected fields with example values
+- [x] Documents all excluded data categories
+- [x] Documents storage paths for Linux, macOS, Windows
+- [x] Documents all opt-in/out mechanisms
+- [x] Documents storage limits and rotation policy
+- [x] States clearly that v1 is local-only (no upload)
+- [x] Referenced from README.md

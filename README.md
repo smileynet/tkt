@@ -156,6 +156,16 @@ cargo clippy           # must be 0 warnings
 cargo fmt --check      # must produce no diff
 ```
 
+## Telemetry
+
+tkt includes optional, **local-only** telemetry (disabled by default). No data leaves your machine. See [TELEMETRY.md](TELEMETRY.md) for full details on what's collected, where it's stored, and how to opt in/out.
+
+```bash
+tkt telemetry --enable   # opt in
+tkt telemetry --status   # see what's stored
+tkt telemetry --disable  # opt out
+```
+
 ## Contributing
 
 Found a bug? [File a bug report](https://github.com/smileynet/tkt/issues/new?template=bug_report.md). Want a feature? [Request it](https://github.com/smileynet/tkt/issues/new?template=feature_request.md).
