@@ -1,7 +1,7 @@
 ---
 id: "25"
 title: "test-run tkt in crew projects to confirm drop-in replacement"
-status: open
+status: done
 blocked_by: ["22", "23"]
 ---
 
@@ -40,11 +40,11 @@ Without real-world validation, we can't safely remove the Python version or adop
 
 ## Acceptance criteria
 
-- [ ] tkt installed via `cargo install --path .` on test machine
-- [ ] `tkt ready` works correctly in 3+ projects
-- [ ] `tkt validate` produces correct findings in projects with known issues
-- [ ] `tkt query` JSON output matches documented schema
-- [ ] Telemetry records events with correct project slug and session ID
-- [ ] Debug mode (`TKT_DEBUG=1`) produces useful trace in real projects
-- [ ] No regressions in exit codes (0=success, 1=domain, 2=crash)
-- [ ] Log files appear in expected platform directory with correct segmentation
+- [x] tkt installed via `cargo install --path .` on test machine
+- [x] `tkt ready` works correctly in 3+ projects
+- [x] `tkt validate` produces correct findings in projects with known issues
+- [x] `tkt query` JSON output matches documented schema
+- [x] Telemetry records events with correct project slug and session ID
+- [x] Debug mode (`TKT_DEBUG=1`) produces useful trace in real projects
+- [x] No regressions in exit codes (0=success, 1=domain, 2=crash)
+- [x] Log files appear in expected platform directory with correct segmentation
