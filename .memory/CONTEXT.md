@@ -33,3 +33,19 @@ _Avoid_: allocation (too vague), push-retry (only one aspect)
 **Finding**:
 A single validation result from `src/findings.rs`. Has file, rule, message, severity. Produced by check functions, consumed by validate and sync-plan.
 _Avoid_: error (ambiguous with exit codes), issue (overloaded)
+
+**TicketFile**:
+Raw frontmatter editor in `src/core/ticket.rs`. Owns the `Vec<(String, String)>` field map + body. Provides `set_field`, `remove_field`, `serialize`, `write`. Used for mutations; `Ticket` composes it as `ticket.file`.
+_Avoid_: RawTicket (not raw — it parses), FileHandle (it's not a handle)
+
+**Status**:
+Enum (`Open | InProgress | Done`) in `src/core/ticket.rs`. Parsed at construction time — invalid values rejected before entering the corpus. Exhaustive matching ensures no status is unhandled.
+_Avoid_: state (too generic), lifecycle (the enum is one snapshot, not the lifecycle itself)
+
+**Consent**:
+The telemetry opt-in state, checked via a priority hierarchy: `DO_NOT_TRACK=1` > `TKT_TELEMETRY` env > `CI=true` > config file > default (off). Persisted in `~/.config/tkt/consent.toml`.
+_Avoid_: permission (implies access control), opt-in (describes the mechanism, not the state)
+
+**Session ID**:
+A hex string (`{timestamp_ms:012x}-{pid:04x}`) generated once per CLI invocation. Included in every telemetry event and debug trace. Enables grouping all log lines from one command run.
+_Avoid_: trace ID (implies distributed tracing), correlation ID (overloaded)

@@ -4,7 +4,7 @@
 
 tkt — Git-native ticket CLI. Manages `.tickets/` frontmatter-driven work tracking with atomic git operations, race detection, and dependency-graph frontier computation.
 
-Rebuilt in Rust from the original Python implementation (crew-research/tools/tkt). Same interface, same contract, single binary distribution.
+Single Rust binary. Originally ported from a Python implementation (now removed). Same interface, same contract.
 
 ## Workspace Layout
 
@@ -12,16 +12,20 @@ Rebuilt in Rust from the original Python implementation (crew-research/tools/tkt
 src/
 ├── main.rs          — entry point
 ├── cli.rs           — clap derive commands + dispatch
+├── telemetry.rs     — consent, session tracking, JSONL sink, rotation
 ├── core/
 │   ├── mod.rs       — re-exports
-│   ├── ticket.rs    — Ticket struct, frontmatter parser, validation, escape helpers
+│   ├── ticket.rs    — TicketFile (raw editor) + Ticket (typed domain), Status/Env/Priority enums
 │   └── validate.rs  — input validation (slugs, free text, IDs, enums)
+├── findings.rs      — validation rules, Finding struct, output formatting
+├── transaction.rs   — GitTransaction (allocation: fetch→scan→commit→push→retry)
 └── git.rs           — git subprocess wrapper (fetch, commit, push, remote scanning)
 tests/
-├── integration.rs   — integration tests (tempdir repos, race scenarios)
-└── parity/          — Python parity comparison harness
+├── integration.rs   — integration tests (tempdir repos, race scenarios, telemetry, debug)
+└── parity/          — historical Python parity comparison harness
 .memory/CONTEXT.md   — project glossary
 .tickets/            — tkt's own tickets (dogfooding)
+TELEMETRY.md         — transparency document for telemetry collection
 ```
 
 ## Commands
@@ -29,7 +33,7 @@ tests/
 ```bash
 cargo build                    # debug build
 cargo build --release          # release build (stripped, LTO)
-cargo test                     # all tests
+cargo test                     # all tests (40 unit + 25 integration)
 cargo test -- --nocapture      # with output
 cargo clippy                   # lint (must be 0 warnings)
 cargo fmt                      # format (must produce no diff)
@@ -46,6 +50,7 @@ All three must pass with zero warnings before presenting work as done.
 ## tkt CLI (the product)
 
 ```bash
+tkt --version                                     # print version
 tkt ready [--json]                                # frontier: open + deps done + env match
 tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority high] [--env E]
 tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E]
@@ -57,17 +62,19 @@ tkt query                                         # full corpus as JSON Lines
 tkt sync-plan --check [--strict] [--brief] [plan] # report drift
 tkt sync-plan --fix [--strict] [--brief] [plan]   # fix derivable columns
 tkt validate [--strict] [--brief]                 # contract + cycle + decay findings
+tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telemetry
 ```
 
 ## Architecture Decisions
 
 - **Shell out to git** (not libgit2): full SSH/HTTPS auth compat, matches gh CLI pattern, simplest v1
-- **Custom frontmatter parser**: line-based key:value parsing with raw preservation for surgical edits. Supports YAML double-quoted scalar escaping (encode on write, decode on read). Not a full YAML parser — deliberately supports a narrow, round-trip-safe subset.
+- **TicketFile + Ticket split**: TicketFile owns raw frontmatter for surgical edits; Ticket provides typed, validated fields (Status enum, zero-cost &str access). Mutations go through `.file`, reads use typed fields directly.
+- **Custom frontmatter parser**: line-based key:value parsing with raw preservation. Supports YAML double-quoted scalar escaping (encode on write, decode on read). Not a full YAML parser — deliberately supports a narrow, round-trip-safe subset.
 - **No async**: all operations are sequential (fetch → scan → write → commit → push)
-- **Integration tests over unit tests**: the value is in the git interaction, not pure logic
+- **Local-only telemetry**: opt-in JSONL file sink, per-project segmentation, session-aware rotation, never blocks CLI
 - **LazyLock regex statics**: fixed patterns compiled once via `std::sync::LazyLock`
 
-## Contract (from crew-research spec)
+## Contract
 
 - Files are the database: `.tickets/{NN}-{slug}.md` with YAML frontmatter
 - Tool never manages specification prose (body is user-owned; close appends a Resolution section)
@@ -77,8 +84,8 @@ tkt validate [--strict] [--brief]                 # contract + cycle + decay fin
 
 ## Constraints
 
-- Do NOT change the frontmatter contract without updating crew-research's frontier-work steering
+- Do NOT change the frontmatter contract without updating frontier-work steering
 - Do NOT add dependencies beyond what's in Cargo.toml without justification
 - Do NOT use libgit2/gix for v1 — shell out to git binary
-- Maintain CLI compatibility with the Python tkt (same commands, flags, output)
+- Maintain CLI compatibility (same commands, flags, output)
 - `cargo clippy` must produce 0 warnings; `cargo fmt --check` must produce no diff
