@@ -723,11 +723,16 @@ fn test_push_failure_no_rebase_on_unreachable() {
 }
 
 /// Run tkt with extra environment variables, capturing stdout and stderr separately.
+/// Pass empty string as value to remove the variable from the child's environment.
 fn run_tkt_env(dir: &Path, args: &[&str], env: &[(&str, &str)]) -> (i32, String, String) {
     let mut cmd = Command::new(tkt_bin());
     cmd.args(args).current_dir(dir);
     for (k, v) in env {
-        cmd.env(k, v);
+        if v.is_empty() {
+            cmd.env_remove(k);
+        } else {
+            cmd.env(k, v);
+        }
     }
     let output = cmd.output().expect("failed to execute tkt");
     let code = output.status.code().unwrap_or(1);
@@ -806,18 +811,25 @@ fn test_debug_mode_json_format() {
 fn test_telemetry_enable_disable_cycle() {
     let (_tmp, clone) = setup_repo();
 
-    // Status: initially disabled
-    let (code, out) = run_tkt(&clone, &["telemetry", "--status"]);
+    // Clear any inherited telemetry env vars for a clean test
+    let clean_env: &[(&str, &str)] = &[("TKT_TELEMETRY", ""), ("DO_NOT_TRACK", "")];
+
+    // First disable to reset any persisted state from prior runs
+    let (code, _, _) = run_tkt_env(&clone, &["telemetry", "--disable"], clean_env);
     assert_eq!(code, 0);
-    assert!(out.contains("disabled"), "should start disabled: {}", out);
+
+    // Status: should now show disabled
+    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--status"], clean_env);
+    assert_eq!(code, 0);
+    assert!(out.contains("disabled"), "should be disabled: {}", out);
 
     // Enable
-    let (code, out) = run_tkt(&clone, &["telemetry", "--enable"]);
+    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--enable"], clean_env);
     assert_eq!(code, 0);
     assert!(out.contains("enabled"), "should confirm enable: {}", out);
 
     // Status: now enabled
-    let (code, out) = run_tkt(&clone, &["telemetry", "--status"]);
+    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--status"], clean_env);
     assert_eq!(code, 0);
     assert!(
         out.contains("enabled") && out.contains("consent.toml"),
@@ -825,13 +837,13 @@ fn test_telemetry_enable_disable_cycle() {
         out
     );
 
-    // Disable
-    let (code, out) = run_tkt(&clone, &["telemetry", "--disable"]);
+    // Disable again
+    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--disable"], clean_env);
     assert_eq!(code, 0);
     assert!(out.contains("disabled"), "should confirm disable: {}", out);
 
-    // Status: disabled again
-    let (code, out) = run_tkt(&clone, &["telemetry", "--status"]);
+    // Status: disabled
+    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--status"], clean_env);
     assert_eq!(code, 0);
     assert!(
         out.contains("disabled"),
