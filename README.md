@@ -59,6 +59,10 @@ cargo install --path .
 # Or build a release binary directly
 cargo build --release
 # Binary at target/release/tkt
+
+# Verify
+tkt --version
+# → tkt 0.1.0
 ```
 
 Single binary, no runtime dependencies beyond `git`.
@@ -151,7 +155,7 @@ Files are the database. Hand-edit any time — tkt reads what's there.
 
 ```bash
 cargo build            # debug build
-cargo test             # 44 tests (22 unit + 22 integration)
+cargo test             # 65 tests (40 unit + 25 integration)
 cargo clippy           # must be 0 warnings
 cargo fmt --check      # must produce no diff
 ```
@@ -163,7 +167,18 @@ tkt includes optional, **local-only** telemetry (disabled by default). No data l
 ```bash
 tkt telemetry --enable   # opt in
 tkt telemetry --status   # see what's stored
+tkt telemetry --show     # print recent events
 tkt telemetry --disable  # opt out
+tkt telemetry --clear    # delete all local data
+```
+
+### Debug mode
+
+For real-time diagnostics without persisting anything:
+
+```bash
+TKT_DEBUG=1 tkt ready        # human-readable trace to stderr
+TKT_DEBUG=json tkt ready     # JSONL trace to stderr
 ```
 
 ## Contributing
