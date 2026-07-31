@@ -249,8 +249,11 @@ fn try_record_event(event: &Event) -> std::io::Result<()> {
         .append(true)
         .open(&path)?;
 
-    let line = event.to_json();
-    writeln!(file, "{}", line)?;
+    // Write as a single write_all call: newline + JSON + newline.
+    // This ensures each record starts on its own line even if concurrent
+    // processes interleave appends (the leading \n guarantees separation).
+    let line = format!("\n{}\n", event.to_json());
+    file.write_all(line.as_bytes())?;
     drop(file);
 
     // Check if rotation is needed (fast: just a stat call)

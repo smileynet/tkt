@@ -25,6 +25,7 @@ fn run_tkt(dir: &Path, args: &[&str]) -> (i32, String) {
     let output = Command::new(tkt_bin())
         .args(args)
         .current_dir(dir)
+        .env("DO_NOT_TRACK", "1")
         .output()
         .expect("failed to execute tkt");
     let code = output.status.code().unwrap_or(1);

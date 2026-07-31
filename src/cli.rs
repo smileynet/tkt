@@ -1247,6 +1247,9 @@ fn cmd_telemetry_show() -> Result<i32> {
         return Ok(0);
     }
 
+    // Sort by timestamp (ISO 8601 — lexicographic sort works)
+    all_lines.sort_by(|a, b| extract_ts(a.as_str()).cmp(extract_ts(b.as_str())));
+
     // Show last 20 events
     let start = all_lines.len().saturating_sub(20);
     println!(
@@ -1271,6 +1274,18 @@ fn cmd_telemetry_show() -> Result<i32> {
         }
     }
     Ok(0)
+}
+
+/// Extract "ts" value from a JSONL line for sorting (best-effort).
+fn extract_ts(line: &str) -> &str {
+    // Quick extraction: find "ts":"<value>"
+    if let Some(start) = line.find("\"ts\":\"") {
+        let rest = &line[start + 6..];
+        if let Some(end) = rest.find('"') {
+            return &rest[..end];
+        }
+    }
+    ""
 }
 
 fn format_bytes(bytes: u64) -> String {
