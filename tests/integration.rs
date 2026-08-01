@@ -134,10 +134,10 @@ fn test_new_creates_and_pushes() {
 
     let (code, out) = run_tkt(&clone, &["new", "my-feature", "--title", "My Feature"]);
     assert_eq!(code, 0, "new should succeed: {}", out);
-    assert!(out.contains("allocated"), "should say allocated: {}", out);
+    assert!(out.contains("created"), "should say created: {}", out);
     assert!(
-        out.contains("02-my-feature.md"),
-        "should create 02: {}",
+        out.contains("02") && out.contains("my-feature"),
+        "should create 02 my-feature: {}",
         out
     );
 
@@ -539,18 +539,21 @@ fn test_competing_allocation_no_collision() {
     // A allocates and pushes first
     let (code_a, out_a) = run_tkt(&clone_a, &["new", "alpha", "--title", "Alpha ticket"]);
     assert_eq!(code_a, 0, "A should succeed: {}", out_a);
-    assert!(out_a.contains("02-alpha.md"), "A should get 02: {}", out_a);
+    assert!(
+        out_a.contains("02") && out_a.contains("alpha"),
+        "A should get 02 alpha: {}",
+        out_a
+    );
 
     // B allocates — will try 02, get rejected, rebase, get 03
     let (code_b, out_b) = run_tkt(&clone_b, &["new", "beta", "--title", "Beta ticket"]);
     assert_eq!(code_b, 0, "B should succeed after retry: {}", out_b);
     // B should NOT get 02 (that's taken by A)
     assert!(
-        !out_b.contains("02-beta.md"),
-        "B should not collide with A's 02: {}",
+        out_b.contains("03") && out_b.contains("beta"),
+        "B should get 03 beta: {}",
         out_b
     );
-    assert!(out_b.contains("03-beta.md"), "B should get 03: {}", out_b);
 }
 
 #[test]
@@ -639,8 +642,8 @@ fn test_no_remote_works_locally() {
     let (code, out) = run_tkt(&dir, &["new", "feature", "--title", "A feature"]);
     assert_eq!(code, 0, "new should succeed locally: {}", out);
     assert!(
-        out.contains("no remote"),
-        "should mention no remote: {}",
+        out.contains("local only"),
+        "should mention local only: {}",
         out
     );
 
@@ -717,7 +720,7 @@ fn test_push_failure_no_rebase_on_unreachable() {
     assert_ne!(code, 0, "should fail with unreachable remote: {}", out);
     // Should NOT silently succeed
     assert!(
-        !out.contains("edited 01"),
+        !out.contains("✓ edited"),
         "should not report success: {}",
         out
     );

@@ -146,6 +146,13 @@ enum Commands {
     },
     /// Dump all tickets as JSON Lines (one object per line)
     Query,
+    /// Batch closure quality check (unchecked ACs, TBD resolutions, stale WIP)
+    Audit {
+        #[arg(long)]
+        strict: bool,
+        #[arg(long)]
+        brief: bool,
+    },
     /// Manage telemetry consent and inspect collected data
     Telemetry {
         /// Enable telemetry (opt in to local recording)
@@ -258,6 +265,7 @@ pub fn run() -> i32 {
         } => cmd_sync_plan(check, fix, strict, brief, plan.as_deref()),
         Commands::Validate { strict, brief } => cmd_validate(strict, brief),
         Commands::Query => cmd_query(),
+        Commands::Audit { strict, brief } => cmd_audit(strict, brief),
         Commands::Telemetry {
             enable,
             disable,
@@ -270,10 +278,10 @@ pub fn run() -> i32 {
         Ok(code) => code,
         Err(e) => {
             if e.downcast_ref::<DomainError>().is_some() {
-                eprintln!("tkt: {}", e);
+                eprintln!("✗ {}", e);
                 1
             } else {
-                eprintln!("tkt: crash: {}", e);
+                eprintln!("✗ crash: {}", e);
                 2
             }
         }
@@ -310,6 +318,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::SyncPlan { .. } => "sync-plan",
         Commands::Validate { .. } => "validate",
         Commands::Query => "query",
+        Commands::Audit { .. } => "audit",
         Commands::Telemetry { .. } => "telemetry",
     }
     .to_string()
@@ -585,16 +594,11 @@ fn cmd_new(
 
     match txn.try_push()? {
         PublishResult::Done(outcome) => {
-            let msg = match outcome {
-                crate::transaction::PublishOutcome::LocalOnly => {
-                    format!(
-                        "created {} (no remote — id claim is local only, status: open)",
-                        filename
-                    )
-                }
-                _ => format!("allocated {} (pushed — id claimed, status: open)", filename),
+            let detail = match outcome {
+                crate::transaction::PublishOutcome::LocalOnly => "local only",
+                _ => "pushed",
             };
-            println!("{}", msg);
+            println!("{}", success_msg("created", &tid, slug, detail));
             Ok(0)
         }
         PublishResult::NeedsRetry => {
@@ -611,8 +615,13 @@ fn cmd_new(
 
             txn.push_retry()?;
             println!(
-                "allocated {} (pushed — id claimed, status: open, renumbered {}→{})",
-                filename2, tid, tid2
+                "{}",
+                success_msg(
+                    "created",
+                    &tid2,
+                    slug,
+                    &format!("pushed, renumbered {}→{}", tid, tid2)
+                )
             );
             Ok(0)
         }
@@ -654,8 +663,13 @@ fn cmd_claim(id: &str) -> Result<i32> {
     )?;
 
     println!(
-        "claimed {} (in_progress pushed)",
-        file.path.file_name().unwrap().to_string_lossy()
+        "{}",
+        success_msg(
+            "claimed",
+            &t.id,
+            &slug_from_filename(&file.path),
+            "→ in_progress"
+        )
     );
     Ok(0)
 }
@@ -731,14 +745,13 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32], force: bool) -> R
 
     // Prominent output with AC status
     let verb = if note.is_some() {
-        "written"
+        "Resolution written"
     } else {
-        "stub appended"
+        "Resolution stub appended"
     };
     println!(
-        "closed {} (dated Resolution {})",
-        file.path.file_name().unwrap().to_string_lossy(),
-        verb
+        "{}",
+        success_msg("closed", &t.id, &slug_from_filename(&file.path), verb)
     );
     if total_acs > 0 {
         println!(
@@ -752,7 +765,49 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32], force: bool) -> R
             }
         );
     }
+
+    // Show newly unblocked tickets
+    let pre_frontier: std::collections::HashSet<String> = core::frontier(&corpus)
+        .iter()
+        .map(|t| t.id.clone())
+        .collect();
+    let dir = tickets_dir()?;
+    if let Ok(new_corpus) = core::load_corpus(&dir) {
+        let post_frontier: Vec<&core::Ticket> = core::frontier(&new_corpus)
+            .into_iter()
+            .filter(|t| !pre_frontier.contains(&t.id))
+            .collect();
+        if !post_frontier.is_empty() {
+            let items: Vec<String> = post_frontier
+                .iter()
+                .map(|t| format!("{} {}", t.id, t.title))
+                .collect();
+            println!("  → unblocked: {}", items.join(", "));
+        }
+    }
+
     Ok(0)
+}
+
+// --- Output formatting ---
+
+/// Format a success message in the action-result pattern.
+fn success_msg(verb: &str, id: &str, slug: &str, detail: &str) -> String {
+    if detail.is_empty() {
+        format!("✓ {} {} {}", verb, id, slug)
+    } else {
+        format!("✓ {} {} {} ({})", verb, id, slug, detail)
+    }
+}
+
+/// Extract slug from a ticket filename: "01-auth-system.md" → "auth-system"
+fn slug_from_filename(path: &std::path::Path) -> String {
+    path.file_stem()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .split_once('-')
+        .map(|(_, s)| s.to_string())
+        .unwrap_or_default()
 }
 
 // --- Utilities ---
@@ -924,9 +979,13 @@ fn cmd_edit(
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
     )?;
     println!(
-        "edited {}: {}",
-        file.path.file_name().unwrap().to_string_lossy(),
-        changed.join(", ")
+        "{}",
+        success_msg(
+            "edited",
+            id,
+            &slug_from_filename(&file.path),
+            &changed.join(", ")
+        )
     );
     Ok(0)
 }
@@ -964,6 +1023,85 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
 
     let status = findings::status_from_findings(&all_findings, strict);
     findings::print_findings(&all_findings, brief, status);
+    Ok(if status == "fail" { 1 } else { 0 })
+}
+
+// --- cmd_audit ---
+
+fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
+    let dir = tickets_dir()?;
+    let corpus = core::load_corpus(&dir)?;
+    let mut audit_findings: Vec<Finding> = Vec::new();
+
+    for t in &corpus {
+        let fname = t.path.file_name().unwrap().to_string_lossy().to_string();
+
+        if t.status == Status::Done {
+            // Check: all ACs unchecked on a done ticket
+            let unchecked = RE_UNCHECKED_AC.find_iter(&t.body).count();
+            let checked = RE_CHECKED_AC.find_iter(&t.body).count();
+            if unchecked > 0 && checked == 0 {
+                audit_findings.push(Finding {
+                    file: fname.clone(),
+                    rule: "unchecked-acs-on-done".into(),
+                    message: format!("{} unchecked box(es), none checked", unchecked),
+                    severity: "warning".into(),
+                });
+            }
+
+            // Check: TBD resolution stub
+            if t.body.contains("## Resolution") && t.body.contains("\nTBD\n") {
+                audit_findings.push(Finding {
+                    file: fname.clone(),
+                    rule: "tbd-resolution".into(),
+                    message: "resolution is still TBD".into(),
+                    severity: "warning".into(),
+                });
+            }
+
+            // Check: no Resolution section at all
+            if !t.body.contains("## Resolution") {
+                audit_findings.push(Finding {
+                    file: fname.clone(),
+                    rule: "missing-resolution".into(),
+                    message: "done ticket has no Resolution section".into(),
+                    severity: "warning".into(),
+                });
+            }
+        }
+
+        // Check: stale WIP (in_progress with old mtime)
+        if t.status == Status::InProgress {
+            if let Ok(meta) = std::fs::metadata(&t.path) {
+                if let Ok(modified) = meta.modified() {
+                    if let Ok(age) = std::time::SystemTime::now().duration_since(modified) {
+                        if age.as_secs() > 7 * 24 * 60 * 60 {
+                            let days = age.as_secs() / (24 * 60 * 60);
+                            audit_findings.push(Finding {
+                                file: fname.clone(),
+                                rule: "stale-wip".into(),
+                                message: format!("in_progress for {} days", days),
+                                severity: "info".into(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check: high-priority still open
+        if t.status == Status::Open && t.is_high_priority() {
+            audit_findings.push(Finding {
+                file: fname,
+                rule: "high-priority-open".into(),
+                message: "high-priority ticket still open".into(),
+                severity: "info".into(),
+            });
+        }
+    }
+
+    let status = findings::status_from_findings(&audit_findings, strict);
+    findings::print_findings(&audit_findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
 }
 
@@ -1442,10 +1580,7 @@ fn cmd_batch(
 
     for (i, (slug, _)) in parsed.iter().enumerate() {
         let tid = format!("{:0>width$}", base + i as u64, width = width);
-        println!(
-            "allocated {}-{}.md (pushed — id claimed, status: open)",
-            tid, slug
-        );
+        println!("{}", success_msg("created", &tid, slug, "pushed"));
     }
     Ok(0)
 }
@@ -1591,11 +1726,14 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
         eprintln!("committed locally, no remote configured");
     }
 
+    let detail = if refs_updated > 0 {
+        format!("{} refs updated", refs_updated)
+    } else {
+        String::new()
+    };
     println!(
-        "renumbered {} -> {} ({} inbound ref(s) updated)",
-        old_id,
-        new_path.file_name().unwrap().to_string_lossy(),
-        refs_updated
+        "{}",
+        success_msg("renumbered", old_id, &format!("→ {}", new_id), &detail)
     );
     Ok(0)
 }

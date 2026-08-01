@@ -1,7 +1,7 @@
 ---
 id: "34"
 title: "tkt audit command: batch closure quality check"
-status: open
+status: done
 blocked_by: ["27"]
 ---
 

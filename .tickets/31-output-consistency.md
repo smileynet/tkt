@@ -1,7 +1,7 @@
 ---
 id: "31"
 title: "output consistency: action-result pattern with symbol prefixes"
-status: open
+status: done
 blocked_by: ["27"]
 ---
 

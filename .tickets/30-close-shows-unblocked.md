@@ -1,7 +1,7 @@
 ---
 id: "30"
 title: "tkt close shows newly unblocked tickets"
-status: open
+status: done
 blocked_by: ["27"]
 ---
 
