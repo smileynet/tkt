@@ -11,7 +11,7 @@ Parent ticket for the UX improvement pass. Closes when all children are done.
 
 ## Children
 
-- **#29** — `tkt audit` command (batch closure quality check)
+- **#34** — `tkt audit` command (batch closure quality check)
 - **#30** — `tkt close` shows newly unblocked tickets
 - **#31** — Output consistency (action-result pattern with symbols)
 - **#32** — `tkt ready` information hierarchy (blocked by #31)
@@ -20,7 +20,7 @@ Parent ticket for the UX improvement pass. Closes when all children are done.
 ## Dependency graph
 
 ```
-#27 (done) ──┬──→ #29 audit command
+#27 (done) ──┬──→ #34 audit command
              ├──→ #30 close shows unblocked
              └──→ #31 output consistency ──┬──→ #32 ready hierarchy
                                            └──→ #33 quiet flag
@@ -37,4 +37,4 @@ Research files in `.scratch/research/`:
 
 ## Acceptance criteria
 
-- [ ] All children (#29–#33) are done
+- [ ] All children (#30–#34) are done
