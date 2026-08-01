@@ -13,6 +13,7 @@ use crate::transaction::{GitTransaction, PublishResult};
 // --- Compiled regex patterns ---
 
 static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
+static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[x\]").unwrap());
 static RE_PLAN_ROW: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap());
 
@@ -85,12 +86,21 @@ enum Commands {
     /// Mark open ticket in_progress (pushed = visible WIP)
     Claim { id: String },
     /// Mark done, append dated Resolution stub, warn unchecked ACs
+    /// Mark done, append dated Resolution, warn unchecked ACs
     Close {
         id: String,
+        /// Resolution text (what was done)
         #[arg(long)]
         note: Option<String>,
+        /// Resolution text (alias for --note, clearer naming)
+        #[arg(long, conflicts_with = "note")]
+        resolution: Option<String>,
+        /// Check specific AC boxes (1-based indices)
         #[arg(long, value_delimiter = ',')]
         ac: Option<Vec<u32>>,
+        /// Force close even if all ACs are unchecked
+        #[arg(long)]
+        force: bool,
     },
     /// Surgical field corrections
     Edit {
@@ -207,8 +217,15 @@ pub fn run() -> i32 {
             &blocked_by.unwrap_or_default(),
         ),
         Commands::Claim { id } => cmd_claim(&id),
-        Commands::Close { id, note, ac } => {
-            cmd_close(&id, note.as_deref(), &ac.unwrap_or_default())
+        Commands::Close {
+            id,
+            note,
+            resolution,
+            ac,
+            force,
+        } => {
+            let text = resolution.or(note);
+            cmd_close(&id, text.as_deref(), &ac.unwrap_or_default(), force)
         }
         Commands::Edit {
             id,
@@ -643,7 +660,7 @@ fn cmd_claim(id: &str) -> Result<i32> {
     Ok(0)
 }
 
-fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
+fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32], force: bool) -> Result<i32> {
     let (repo, remote, corpus) = preflight_mutation()?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
@@ -658,6 +675,19 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
     }
     if t.status == Status::Done {
         domain_bail!("{} is already done", t.id);
+    }
+
+    // Count ACs BEFORE mutation to decide if we should block
+    let total_acs =
+        RE_UNCHECKED_AC.find_iter(&t.body).count() + RE_CHECKED_AC.find_iter(&t.body).count();
+    let unchecked_before = RE_UNCHECKED_AC.find_iter(&t.body).count();
+
+    // Error if ALL ACs are unchecked (unless --force or --ac will check some)
+    if total_acs > 0 && unchecked_before == total_acs && ac_indices.is_empty() && !force {
+        domain_bail!(
+            "all {} acceptance criteria are unchecked — check at least one with --ac, or use --force to close anyway",
+            total_acs
+        );
     }
 
     let mut file = t.file.clone();
@@ -682,14 +712,9 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
 
     file.write()?;
 
-    // Warn about unchecked ACs
-    let unchecked = RE_UNCHECKED_AC.find_iter(&file.body).count();
-    if unchecked > 0 {
-        eprintln!(
-            "warning: {} unchecked acceptance box(es) — fill in before trusting history",
-            unchecked
-        );
-    }
+    // Count unchecked ACs after mutation (for reporting)
+    let unchecked_after = RE_UNCHECKED_AC.find_iter(&file.body).count();
+    let checked_after = total_acs.saturating_sub(unchecked_after);
 
     let rel_path = file
         .path
@@ -704,6 +729,7 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
         &format!("chore(tickets): close {}", id),
     )?;
 
+    // Prominent output with AC status
     let verb = if note.is_some() {
         "written"
     } else {
@@ -714,6 +740,18 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32]) -> Result<i32> {
         file.path.file_name().unwrap().to_string_lossy(),
         verb
     );
+    if total_acs > 0 {
+        println!(
+            "  acceptance criteria: {}/{} checked{}",
+            checked_after,
+            total_acs,
+            if unchecked_after > 0 {
+                format!(" ⚠ {} unchecked", unchecked_after)
+            } else {
+                " ✓".to_string()
+            }
+        );
+    }
     Ok(0)
 }
 

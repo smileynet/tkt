@@ -171,7 +171,7 @@ fn test_lifecycle_new_claim_close() {
     assert!(content.contains("status: in_progress"));
 
     // Close
-    let (code, out) = run_tkt(&clone, &["close", "02", "--note", "All done"]);
+    let (code, out) = run_tkt(&clone, &["close", "02", "--note", "All done", "--force"]);
     assert_eq!(code, 0, "close should succeed: {}", out);
     assert!(out.contains("closed"), "should say closed: {}", out);
 
@@ -851,4 +851,101 @@ fn test_telemetry_enable_disable_cycle() {
         "should be disabled again: {}",
         out
     );
+}
+
+#[test]
+fn test_close_errors_on_all_unchecked_acs() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create a ticket with unchecked ACs
+    std::fs::write(
+        clone.join(".tickets/02-testclose.md"),
+        "---\nid: \"02\"\ntitle: \"Test close\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Test\n\n## Acceptance criteria\n\n- [ ] First AC\n- [ ] Second AC\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-m", "add ticket"]);
+    git(&clone, &["push"]);
+
+    // Close without --force should fail
+    let (code, out) = run_tkt(&clone, &["close", "02", "--note", "Done"]);
+    assert_eq!(code, 1, "should fail with all unchecked: {}", out);
+    assert!(
+        out.contains("unchecked") || out.contains("acceptance"),
+        "should mention unchecked ACs: {}",
+        out
+    );
+
+    // Close with --force should succeed
+    let (code, out) = run_tkt(&clone, &["close", "02", "--note", "Done", "--force"]);
+    assert_eq!(code, 0, "should succeed with --force: {}", out);
+    assert!(out.contains("closed"), "should say closed: {}", out);
+}
+
+#[test]
+fn test_close_allows_partially_checked_acs() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create a ticket with mixed ACs (one checked, one not)
+    std::fs::write(
+        clone.join(".tickets/02-partial.md"),
+        "---\nid: \"02\"\ntitle: \"Partial\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Test\n\n## Acceptance criteria\n\n- [x] Done AC\n- [ ] Pending AC\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-m", "add ticket"]);
+    git(&clone, &["push"]);
+
+    // Close should succeed (not all unchecked)
+    let (code, out) = run_tkt(&clone, &["close", "02", "--note", "Shipped"]);
+    assert_eq!(code, 0, "should succeed with partial ACs: {}", out);
+    assert!(out.contains("closed"), "should say closed: {}", out);
+    assert!(out.contains("1/2 checked"), "should show AC count: {}", out);
+}
+
+#[test]
+fn test_close_resolution_flag_works() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create a ticket with no ACs (body without checkboxes)
+    std::fs::write(
+        clone.join(".tickets/02-noacflag.md"),
+        "---\nid: \"02\"\ntitle: \"No AC\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# No AC ticket\n\nJust a description.\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-m", "add ticket"]);
+    git(&clone, &["push"]);
+
+    // Close with --resolution flag
+    let (code, out) = run_tkt(
+        &clone,
+        &["close", "02", "--resolution", "Implemented the feature"],
+    );
+    assert_eq!(code, 0, "should succeed: {}", out);
+    assert!(out.contains("closed"), "should say closed: {}", out);
+
+    // Verify resolution text in file
+    let content = std::fs::read_to_string(clone.join(".tickets/02-noacflag.md")).unwrap();
+    assert!(content.contains("Implemented the feature"));
+}
+
+#[test]
+fn test_close_ac_flag_bypasses_all_unchecked_error() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create a ticket with all unchecked ACs
+    std::fs::write(
+        clone.join(".tickets/02-acbypass.md"),
+        "---\nid: \"02\"\ntitle: \"AC bypass\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Test\n\n## Acceptance criteria\n\n- [ ] First\n- [ ] Second\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-m", "add ticket"]);
+    git(&clone, &["push"]);
+
+    // Close with --ac 1 should succeed (checks one, so not all-unchecked after)
+    let (code, out) = run_tkt(&clone, &["close", "02", "--note", "Done", "--ac", "1"]);
+    assert_eq!(code, 0, "should succeed with --ac: {}", out);
+    assert!(out.contains("1/2 checked"), "should show AC count: {}", out);
 }
