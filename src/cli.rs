@@ -803,45 +803,47 @@ fn cmd_close(
     )?;
 
     // Prominent output with AC status
-    let verb = if note.is_some() {
-        "Resolution written"
-    } else {
-        "Resolution stub appended"
-    };
-    println!(
-        "{}",
-        success_msg("closed", &t.id, &slug_from_filename(&file.path), verb)
-    );
-    if total_acs > 0 {
+    if !is_quiet() {
+        let verb = if note.is_some() {
+            "Resolution written"
+        } else {
+            "Resolution stub appended"
+        };
         println!(
-            "  acceptance criteria: {}/{} checked{}",
-            checked_after,
-            total_acs,
-            if unchecked_after > 0 {
-                format!(" ⚠ {} unchecked", unchecked_after)
-            } else {
-                " ✓".to_string()
-            }
+            "{}",
+            success_msg("closed", &t.id, &slug_from_filename(&file.path), verb)
         );
-    }
+        if total_acs > 0 {
+            println!(
+                "  acceptance criteria: {}/{} checked{}",
+                checked_after,
+                total_acs,
+                if unchecked_after > 0 {
+                    format!(" ⚠ {} unchecked", unchecked_after)
+                } else {
+                    " ✓".to_string()
+                }
+            );
+        }
 
-    // Show newly unblocked tickets
-    let pre_frontier: std::collections::HashSet<String> = core::frontier(&corpus)
-        .iter()
-        .map(|t| t.id.clone())
-        .collect();
-    let dir = tickets_dir()?;
-    if let Ok(new_corpus) = core::load_corpus(&dir) {
-        let post_frontier: Vec<&core::Ticket> = core::frontier(&new_corpus)
-            .into_iter()
-            .filter(|t| !pre_frontier.contains(&t.id))
+        // Show newly unblocked tickets
+        let pre_frontier: std::collections::HashSet<String> = core::frontier(&corpus)
+            .iter()
+            .map(|t| t.id.clone())
             .collect();
-        if !post_frontier.is_empty() {
-            let items: Vec<String> = post_frontier
-                .iter()
-                .map(|t| format!("{} {}", t.id, t.title))
+        let dir = tickets_dir()?;
+        if let Ok(new_corpus) = core::load_corpus(&dir) {
+            let post_frontier: Vec<&core::Ticket> = core::frontier(&new_corpus)
+                .into_iter()
+                .filter(|t| !pre_frontier.contains(&t.id))
                 .collect();
-            println!("  → unblocked: {}", items.join(", "));
+            if !post_frontier.is_empty() {
+                let items: Vec<String> = post_frontier
+                    .iter()
+                    .map(|t| format!("{} {}", t.id, t.title))
+                    .collect();
+                println!("  → unblocked: {}", items.join(", "));
+            }
         }
     }
 
@@ -1097,6 +1099,12 @@ fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
     let corpus = core::load_corpus(&dir)?;
     let mut audit_findings: Vec<Finding> = Vec::new();
 
+    // Compute frontier for high-priority check (only report if actually ready to work)
+    let frontier_ids: std::collections::HashSet<&str> = core::frontier(&corpus)
+        .iter()
+        .map(|t| t.id.as_str())
+        .collect();
+
     for t in &corpus {
         let fname = t.path.file_name().unwrap().to_string_lossy().to_string();
 
@@ -1113,14 +1121,27 @@ fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
                 });
             }
 
-            // Check: TBD resolution stub
-            if t.body.contains("## Resolution") && t.body.contains("\nTBD\n") {
-                audit_findings.push(Finding {
-                    file: fname.clone(),
-                    rule: "tbd-resolution".into(),
-                    message: "resolution is still TBD".into(),
-                    severity: "warning".into(),
-                });
+            // Check: TBD resolution stub or empty resolution
+            if t.body.contains("## Resolution") {
+                // Extract text after the Resolution heading
+                let has_content = t
+                    .body
+                    .split_once("## Resolution")
+                    .map(|(_, after)| {
+                        // Skip the heading line (may have a date suffix)
+                        let text = after.lines().skip(1).collect::<Vec<_>>().join("\n");
+                        let trimmed = text.trim();
+                        !trimmed.is_empty() && trimmed != "TBD"
+                    })
+                    .unwrap_or(false);
+                if !has_content {
+                    audit_findings.push(Finding {
+                        file: fname.clone(),
+                        rule: "tbd-resolution".into(),
+                        message: "resolution is empty or still TBD".into(),
+                        severity: "warning".into(),
+                    });
+                }
             }
 
             // Check: no Resolution section at all
@@ -1153,8 +1174,9 @@ fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
             }
         }
 
-        // Check: high-priority still open
-        if t.status == Status::Open && t.is_high_priority() {
+        // Check: high-priority still open (only if on the frontier — blocked tickets don't count)
+        if t.status == Status::Open && t.is_high_priority() && frontier_ids.contains(t.id.as_str())
+        {
             audit_findings.push(Finding {
                 file: fname,
                 rule: "high-priority-open".into(),
@@ -1644,7 +1666,11 @@ fn cmd_batch(
 
     for (i, (slug, _)) in parsed.iter().enumerate() {
         let tid = format!("{:0>width$}", base + i as u64, width = width);
-        println!("{}", success_msg("created", &tid, slug, "pushed"));
+        if is_quiet() {
+            println!("{}", tid);
+        } else {
+            println!("{}", success_msg("created", &tid, slug, "pushed"));
+        }
     }
     Ok(0)
 }
