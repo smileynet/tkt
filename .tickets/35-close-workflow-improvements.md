@@ -1,7 +1,7 @@
 ---
 id: "35"
 title: "Streamline tkt close workflow (--resolution, --check-all flags)"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -69,8 +69,8 @@ One command, one commit, one push. No file editing needed.
 
 ## Acceptance criteria
 
-- [ ] `tkt close N --resolution "text"` fills resolution instead of TBD
-- [ ] `tkt close N --check-all` checks all AC boxes
-- [ ] Both flags work together
-- [ ] Existing behavior (no flags) unchanged
-- [ ] Warning still fires when boxes unchecked and `--check-all` not passed
+- [x] `tkt close N --resolution "text"` fills resolution instead of TBD
+- [x] `tkt close N --check-all` checks all AC boxes
+- [x] Both flags work together
+- [x] Existing behavior (no flags) unchanged
+- [x] Warning still fires when boxes unchecked and `--check-all` not passed

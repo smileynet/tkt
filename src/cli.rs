@@ -105,6 +105,9 @@ enum Commands {
         /// Check specific AC boxes (1-based indices)
         #[arg(long, value_delimiter = ',')]
         ac: Option<Vec<u32>>,
+        /// Check all AC boxes at once
+        #[arg(long)]
+        check_all: bool,
         /// Force close even if all ACs are unchecked
         #[arg(long)]
         force: bool,
@@ -240,10 +243,17 @@ pub fn run() -> i32 {
             note,
             resolution,
             ac,
+            check_all,
             force,
         } => {
             let text = resolution.or(note);
-            cmd_close(&id, text.as_deref(), &ac.unwrap_or_default(), force)
+            cmd_close(
+                &id,
+                text.as_deref(),
+                &ac.unwrap_or_default(),
+                check_all,
+                force,
+            )
         }
         Commands::Edit {
             id,
@@ -709,7 +719,13 @@ fn cmd_claim(id: &str) -> Result<i32> {
     Ok(0)
 }
 
-fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32], force: bool) -> Result<i32> {
+fn cmd_close(
+    id: &str,
+    note: Option<&str>,
+    ac_indices: &[u32],
+    check_all: bool,
+    force: bool,
+) -> Result<i32> {
     let (repo, remote, corpus) = preflight_mutation()?;
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
@@ -731,10 +747,15 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32], force: bool) -> R
         RE_UNCHECKED_AC.find_iter(&t.body).count() + RE_CHECKED_AC.find_iter(&t.body).count();
     let unchecked_before = RE_UNCHECKED_AC.find_iter(&t.body).count();
 
-    // Error if ALL ACs are unchecked (unless --force or --ac will check some)
-    if total_acs > 0 && unchecked_before == total_acs && ac_indices.is_empty() && !force {
+    // Error if ALL ACs are unchecked (unless --force, --ac, or --check-all will handle it)
+    if total_acs > 0
+        && unchecked_before == total_acs
+        && ac_indices.is_empty()
+        && !check_all
+        && !force
+    {
         domain_bail!(
-            "all {} acceptance criteria are unchecked — check at least one with --ac, or use --force to close anyway",
+            "all {} acceptance criteria are unchecked — check at least one with --ac, use --check-all, or use --force to close anyway",
             total_acs
         );
     }
@@ -755,7 +776,10 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32], force: bool) -> R
     }
 
     // Flip AC boxes if specified
-    if !ac_indices.is_empty() {
+    if check_all {
+        // Check all unchecked boxes
+        file.body = file.body.replace("- [ ]", "- [x]");
+    } else if !ac_indices.is_empty() {
         file.body = flip_ac_boxes(&file.body, ac_indices);
     }
 
