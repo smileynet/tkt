@@ -1,7 +1,7 @@
 ---
 id: "28"
 title: "UX improvements: audit command, close flow polish, output consistency"
-status: open
+status: done
 blocked_by: ["34", "30", "31", "32", "33"]
 ---
 
