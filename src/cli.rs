@@ -17,6 +17,9 @@ static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[x\]").
 static RE_PLAN_ROW: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap());
 
+/// Global quiet flag — set once at startup, read by command functions.
+static QUIET: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
 /// Domain-level failure: expected conditions like "ticket not found", "status conflict",
 /// "validation drift". These exit with code 1.
 /// Operational failures (I/O, git crash, parse errors) use anyhow directly and exit with code 2.
@@ -45,6 +48,10 @@ macro_rules! domain_bail {
     version
 )]
 struct Cli {
+    /// Suppress confirmations, emit only essential data
+    #[arg(short, long, global = true)]
+    quiet: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -193,8 +200,12 @@ pub fn run() -> i32 {
         &format!("session={} project={} cmd={}", session, project, cmd_name),
     );
 
+    let quiet = cli.quiet;
+    // Store quiet flag for access by command functions
+    QUIET.store(quiet, std::sync::atomic::Ordering::Relaxed);
+
     let result = match cli.command {
-        Commands::Ready { json } => cmd_ready(json),
+        Commands::Ready { json } => cmd_ready(json, quiet),
         Commands::New {
             slug,
             title,
@@ -456,14 +467,14 @@ fn commit_and_publish(repo: &Path, remote: bool, paths: &[&str], message: &str) 
 
 // --- Commands ---
 
-fn cmd_ready(json: bool) -> Result<i32> {
+fn cmd_ready(json: bool, quiet: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
     let front = core::frontier(&corpus);
 
     let dbg = crate::telemetry::debug_mode();
     let open = corpus.iter().filter(|t| t.status == Status::Open).count();
-    let wip = corpus
+    let wip_count = corpus
         .iter()
         .filter(|t| t.status == Status::InProgress)
         .count();
@@ -476,7 +487,7 @@ fn cmd_ready(json: bool) -> Result<i32> {
             "corpus loaded: {} tickets ({} open, {} in_progress, {} done), frontier: {}",
             corpus.len(),
             open,
-            wip,
+            wip_count,
             done,
             front.len()
         ),
@@ -515,18 +526,32 @@ fn cmd_ready(json: bool) -> Result<i32> {
             }
             println!("{{{}}}", fields.join(","));
         }
-    } else {
+    } else if quiet {
+        // Quiet mode: one ID per line, no headers
         for t in &front {
-            let flag = if t.is_high_priority() { "  [HIGH]" } else { "" };
-            println!("{}  {}{}", t.id, t.title, flag);
+            println!("{}", t.id);
         }
+    } else {
+        // Human mode with hierarchy
+        if front.is_empty() {
+            println!("No tickets ready.");
+        } else {
+            println!("Ready ({}):", front.len());
+            for t in &front {
+                let flag = if t.is_high_priority() { "  [HIGH]" } else { "" };
+                println!("  {}  {}{}", t.id, t.title, flag);
+            }
+        }
+
         let wip: Vec<&Ticket> = corpus
             .iter()
             .filter(|t| t.status == Status::InProgress)
             .collect();
         if !wip.is_empty() {
-            let ids: Vec<&str> = wip.iter().map(|t| t.id.as_str()).collect();
-            println!("\nin progress (claimed elsewhere): {}", ids.join(", "));
+            println!("\nIn progress ({}):", wip.len());
+            for t in &wip {
+                println!("  {}  {}", t.id, t.title);
+            }
         }
     }
     Ok(0)
@@ -594,11 +619,15 @@ fn cmd_new(
 
     match txn.try_push()? {
         PublishResult::Done(outcome) => {
-            let detail = match outcome {
-                crate::transaction::PublishOutcome::LocalOnly => "local only",
-                _ => "pushed",
-            };
-            println!("{}", success_msg("created", &tid, slug, detail));
+            if is_quiet() {
+                println!("{}", tid);
+            } else {
+                let detail = match outcome {
+                    crate::transaction::PublishOutcome::LocalOnly => "local only",
+                    _ => "pushed",
+                };
+                println!("{}", success_msg("created", &tid, slug, detail));
+            }
             Ok(0)
         }
         PublishResult::NeedsRetry => {
@@ -614,15 +643,19 @@ fn cmd_new(
             git::commit(&txn.repo, &format!("chore(tickets): new {} {}", tid2, slug))?;
 
             txn.push_retry()?;
-            println!(
-                "{}",
-                success_msg(
-                    "created",
-                    &tid2,
-                    slug,
-                    &format!("pushed, renumbered {}→{}", tid, tid2)
-                )
-            );
+            if is_quiet() {
+                println!("{}", tid2);
+            } else {
+                println!(
+                    "{}",
+                    success_msg(
+                        "created",
+                        &tid2,
+                        slug,
+                        &format!("pushed, renumbered {}→{}", tid, tid2)
+                    )
+                );
+            }
             Ok(0)
         }
     }
@@ -662,15 +695,17 @@ fn cmd_claim(id: &str) -> Result<i32> {
         &format!("chore(tickets): claim {}", id),
     )?;
 
-    println!(
-        "{}",
-        success_msg(
-            "claimed",
-            &t.id,
-            &slug_from_filename(&file.path),
-            "→ in_progress"
-        )
-    );
+    if !is_quiet() {
+        println!(
+            "{}",
+            success_msg(
+                "claimed",
+                &t.id,
+                &slug_from_filename(&file.path),
+                "→ in_progress"
+            )
+        );
+    }
     Ok(0)
 }
 
@@ -790,6 +825,11 @@ fn cmd_close(id: &str, note: Option<&str>, ac_indices: &[u32], force: bool) -> R
 }
 
 // --- Output formatting ---
+
+/// Check if quiet mode is active.
+fn is_quiet() -> bool {
+    QUIET.load(std::sync::atomic::Ordering::Relaxed)
+}
 
 /// Format a success message in the action-result pattern.
 fn success_msg(verb: &str, id: &str, slug: &str, detail: &str) -> String {

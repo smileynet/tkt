@@ -1,7 +1,7 @@
 ---
 id: "32"
 title: "tkt ready: improved information hierarchy with grouped sections"
-status: open
+status: done
 blocked_by: ["31"]
 ---
 

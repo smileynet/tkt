@@ -1,7 +1,7 @@
 ---
 id: "33"
 title: "--quiet/-q flag: suppress confirmations, emit only essential data"
-status: open
+status: done
 blocked_by: ["31"]
 ---
 
