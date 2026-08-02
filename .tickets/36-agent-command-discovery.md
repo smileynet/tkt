@@ -3,6 +3,7 @@ id: "36"
 title: "agent command discovery: guidance for projects adopting tkt"
 status: open
 blocked_by: []
+priority: high
 ---
 
 # Agent command discovery: guidance for projects adopting tkt
