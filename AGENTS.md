@@ -89,3 +89,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 - Do NOT use libgit2/gix for v1 — shell out to git binary
 - Maintain CLI compatibility (same commands, flags, output)
 - `cargo clippy` must produce 0 warnings; `cargo fmt --check` must produce no diff
+- Integration tests MUST set `DO_NOT_TRACK=1` on child processes (prevents ambient env pollution)
+- Unit tests must NOT assert specific consent state (result depends on ambient env vars)
+- Windows: `std::fs::rename` cannot overwrite — always delete destination before rename
+- Codex review dispatch: `codex review --base <SHA>` (cannot combine --base with custom prompt)
