@@ -273,19 +273,19 @@ fn try_record_event(event: &Event) -> std::io::Result<()> {
 
 /// Rotate a project's JSONL file: current → .1 → .2 → ... → .N (delete beyond max).
 fn rotate_file(dir: &Path, slug: &str) -> std::io::Result<()> {
-    // Shift existing rotated files up
+    // Delete the oldest rotated file first (so rename chain has room)
+    let oldest = dir.join(format!("{}.{}.jsonl", slug, MAX_ROTATED_FILES));
+    if oldest.exists() {
+        std::fs::remove_file(&oldest)?;
+    }
+
+    // Shift existing rotated files up: .4→.5, .3→.4, .2→.3, .1→.2
     for i in (1..MAX_ROTATED_FILES).rev() {
         let from = dir.join(format!("{}.{}.jsonl", slug, i));
         let to = dir.join(format!("{}.{}.jsonl", slug, i + 1));
         if from.exists() {
             std::fs::rename(&from, &to)?;
         }
-    }
-
-    // Delete the oldest if it exists (file beyond max)
-    let oldest = dir.join(format!("{}.{}.jsonl", slug, MAX_ROTATED_FILES + 1));
-    if oldest.exists() {
-        std::fs::remove_file(&oldest)?;
     }
 
     // Move current to .1
@@ -394,7 +394,11 @@ fn enforce_max_files(dir: &Path) -> std::io::Result<()> {
 /// Prune the oldest complete sessions from a JSONL file to bring it under size.
 /// A session boundary is detected by a change in the "session" field.
 /// Removes whole sessions (oldest first) until file is under MAX_FILE_SIZE.
-#[allow(dead_code)] // Called from rotation path and tests; wired fully in future
+///
+/// NOTE: This is tested and functional but not wired into the automatic retention
+/// path (v1 uses whole-file rotation instead). Available for manual use or future
+/// integration when finer-grained pruning is needed.
+#[allow(dead_code)]
 pub fn prune_oldest_sessions(path: &Path) -> std::io::Result<()> {
     let content = std::fs::read_to_string(path)?;
     let lines: Vec<&str> = content.lines().filter(|l| !l.is_empty()).collect();

@@ -1,7 +1,7 @@
 ---
 id: "29"
 title: "Confirm and address Codex review findings through 208b38b"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -64,9 +64,9 @@ before changing it.
 
 ## Acceptance criteria
 
-- [ ] Every finding is independently marked confirmed, rejected, or obsolete
-- [ ] Rejected or obsolete findings include evidence and rationale
-- [ ] Confirmed findings are corrected
-- [ ] Regression tests cover confirmed defects where practical
-- [ ] Relevant build, test, and lint checks pass
+- [x] Every finding is independently marked confirmed, rejected, or obsolete
+- [x] Rejected or obsolete findings include evidence and rationale
+- [x] Confirmed findings are corrected
+- [x] Regression tests cover confirmed defects where practical
+- [x] Relevant build, test, and lint checks pass
 - [ ] Corrected changes receive a fresh review

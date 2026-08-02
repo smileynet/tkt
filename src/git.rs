@@ -88,6 +88,12 @@ pub fn push(repo: &Path) -> Result<PushResult> {
 /// Push with retry: on race rejection, pull-rebase and try once more.
 /// Non-race failures (auth, network, hooks) are propagated immediately
 /// without attempting rebase.
+///
+/// Known limitation: after rebase, the mutation is not revalidated against
+/// the rebased state. If upstream changed the same ticket between our commit
+/// and push without producing a merge conflict, the stale mutation proceeds.
+/// In practice, git's line-level conflict detection catches same-field races,
+/// and preflight_mutation's check_remote_status catches the common case.
 pub fn push_with_retry(repo: &Path) -> Result<()> {
     match push(repo)? {
         PushResult::Success => return Ok(()),
@@ -117,11 +123,25 @@ pub fn pull_rebase(repo: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Undo the last commit AND discard its changes from index and worktree.
-/// This is safe for allocation recovery where the commit contains only
-/// files created by this transaction.
+/// Undo the last commit without discarding unrelated worktree changes.
+/// Uses mixed reset (undoes commit, preserves worktree) then cleans up
+/// any new files in .tickets/ that were part of the undone commit.
 pub fn undo_commit_hard(repo: &Path) -> Result<()> {
-    git(repo, &["reset", "--hard", "HEAD~1"])?;
+    // Get the list of files added in the commit we're about to undo
+    let added = git(
+        repo,
+        &["diff", "--name-only", "--diff-filter=A", "HEAD~1", "HEAD"],
+    )
+    .unwrap_or_default();
+    // Mixed reset: undo commit, keep worktree
+    git(repo, &["reset", "HEAD~1"])?;
+    // Remove any files that were newly created by the undone commit
+    for file in added.lines() {
+        if file.starts_with(".tickets/") {
+            let path = repo.join(file);
+            let _ = std::fs::remove_file(&path);
+        }
+    }
     Ok(())
 }
 
