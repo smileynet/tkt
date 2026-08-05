@@ -74,7 +74,7 @@ pub fn generate_session_id() -> String {
 /// Falls back to "unknown" if the path has no final component.
 pub fn project_slug(repo_root: &Path) -> String {
     let s = repo_root.to_string_lossy();
-    s.rsplit(|c| c == '/' || c == '\\')
+    s.rsplit(['/', '\\'])
         .find(|seg| !seg.is_empty())
         .map(|seg| seg.to_string())
         .unwrap_or_else(|| "unknown".to_string())

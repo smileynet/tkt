@@ -273,7 +273,11 @@ pub fn check_unchecked_acs(corpus: &[Ticket]) -> Vec<Finding> {
         .iter()
         .filter(|t| t.status == Status::Done)
         .filter_map(|t| {
-            let count = RE.find_iter(&t.body).count();
+            let section = match crate::core::ac_section_range(&t.body) {
+                Some(range) => &t.body[range],
+                None => return None,
+            };
+            let count = RE.find_iter(section).count();
             if count > 0 {
                 Some(Finding {
                     file: filename(t),

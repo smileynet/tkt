@@ -743,9 +743,8 @@ fn cmd_close(
     }
 
     // Count ACs BEFORE mutation to decide if we should block
-    let total_acs =
-        RE_UNCHECKED_AC.find_iter(&t.body).count() + RE_CHECKED_AC.find_iter(&t.body).count();
-    let unchecked_before = RE_UNCHECKED_AC.find_iter(&t.body).count();
+    let (unchecked_before, checked_before) = count_ac_boxes(&t.body);
+    let total_acs = unchecked_before + checked_before;
 
     // Error if ALL ACs are unchecked (unless --force, --ac, or --check-all will handle it)
     if total_acs > 0
@@ -777,8 +776,11 @@ fn cmd_close(
 
     // Flip AC boxes if specified
     if check_all {
-        // Check all unchecked boxes
-        file.body = file.body.replace("- [ ]", "- [x]");
+        // Check all unchecked boxes in the AC section only
+        if let Some(range) = core::ac_section_range(&file.body) {
+            let section = file.body[range.clone()].replace("- [ ]", "- [x]");
+            file.body.replace_range(range, &section);
+        }
     } else if !ac_indices.is_empty() {
         file.body = flip_ac_boxes(&file.body, ac_indices);
     }
@@ -786,7 +788,7 @@ fn cmd_close(
     file.write()?;
 
     // Count unchecked ACs after mutation (for reporting)
-    let unchecked_after = RE_UNCHECKED_AC.find_iter(&file.body).count();
+    let (unchecked_after, _) = count_ac_boxes(&file.body);
     let checked_after = total_acs.saturating_sub(unchecked_after);
 
     let rel_path = file
@@ -906,16 +908,34 @@ fn chrono_date() -> String {
     format!("{:04}-{:02}-{:02}", y, m, d)
 }
 
+/// Count unchecked and checked AC boxes within the acceptance criteria section only.
+fn count_ac_boxes(body: &str) -> (usize, usize) {
+    let section = match core::ac_section_range(body) {
+        Some(range) => &body[range],
+        None => return (0, 0),
+    };
+    let unchecked = RE_UNCHECKED_AC.find_iter(section).count();
+    let checked = RE_CHECKED_AC.find_iter(section).count();
+    (unchecked, checked)
+}
+
 fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
     let mut result = body.to_string();
-    let matches: Vec<_> = RE_UNCHECKED_AC.find_iter(body).collect();
+    let range = match core::ac_section_range(body) {
+        Some(r) => r,
+        None => return result,
+    };
+    let section = &body[range.clone()];
+    let matches: Vec<_> = RE_UNCHECKED_AC.find_iter(section).collect();
 
-    // Work backwards to preserve indices
+    // Work backwards to preserve indices (offsets are relative to section start)
     for &idx in indices.iter().rev() {
         let i = (idx as usize).saturating_sub(1); // 1-based to 0-based
         if i < matches.len() {
             let m = &matches[i];
-            result.replace_range(m.start()..m.end(), "- [x]");
+            let abs_start = range.start + m.start();
+            let abs_end = range.start + m.end();
+            result.replace_range(abs_start..abs_end, "- [x]");
         }
     }
     result
@@ -1110,8 +1130,7 @@ fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
 
         if t.status == Status::Done {
             // Check: all ACs unchecked on a done ticket
-            let unchecked = RE_UNCHECKED_AC.find_iter(&t.body).count();
-            let checked = RE_CHECKED_AC.find_iter(&t.body).count();
+            let (unchecked, checked) = count_ac_boxes(&t.body);
             if unchecked > 0 && checked == 0 {
                 audit_findings.push(Finding {
                     file: fname.clone(),
