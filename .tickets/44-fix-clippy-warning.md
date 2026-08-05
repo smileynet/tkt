@@ -1,7 +1,7 @@
 ---
 id: "44"
 title: "Fix clippy unnecessary_sort_by warning (F6)"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -23,5 +23,9 @@ Replace with `projects.sort_by_key(|p| std::cmp::Reverse(p.1))`.
 
 ## Acceptance criteria
 
-- [ ] `cargo clippy --all-targets` produces 0 warnings
-- [ ] Sort behavior unchanged (descending by line count)
+- [x] `cargo clippy --all-targets` produces 0 warnings
+- [x] Sort behavior unchanged (descending by line count)
+
+## Resolution (2026-08-05)
+
+Replaced `projects.sort_by(|a, b| b.1.cmp(&a.1))` with `projects.sort_by_key(|p| std::cmp::Reverse(p.1))`. Zero clippy warnings on `--all-targets`.

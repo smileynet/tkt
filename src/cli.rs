@@ -203,12 +203,11 @@ pub fn run() -> i32 {
         &format!("session={} project={} cmd={}", session, project, cmd_name),
     );
 
-    let quiet = cli.quiet;
     // Store quiet flag for access by command functions
-    QUIET.store(quiet, std::sync::atomic::Ordering::Relaxed);
+    QUIET.store(cli.quiet, std::sync::atomic::Ordering::Relaxed);
 
     let result = match cli.command {
-        Commands::Ready { json } => cmd_ready(json, quiet),
+        Commands::Ready { json } => cmd_ready(json),
         Commands::New {
             slug,
             title,
@@ -477,7 +476,7 @@ fn commit_and_publish(repo: &Path, remote: bool, paths: &[&str], message: &str) 
 
 // --- Commands ---
 
-fn cmd_ready(json: bool, quiet: bool) -> Result<i32> {
+fn cmd_ready(json: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
     let front = core::frontier(&corpus);
@@ -536,7 +535,7 @@ fn cmd_ready(json: bool, quiet: bool) -> Result<i32> {
             }
             println!("{{{}}}", fields.join(","));
         }
-    } else if quiet {
+    } else if is_quiet() {
         // Quiet mode: one ID per line, no headers
         for t in &front {
             println!("{}", t.id);
