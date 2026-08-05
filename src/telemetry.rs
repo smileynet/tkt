@@ -69,11 +69,14 @@ pub fn generate_session_id() -> String {
 // --- Project slug ---
 
 /// Derive a project slug from the git repo root directory name.
+/// Splits on both `/` and `\` so Windows paths are handled correctly
+/// even when running on Linux (e.g. in cross-platform tests).
 /// Falls back to "unknown" if the path has no final component.
 pub fn project_slug(repo_root: &Path) -> String {
-    repo_root
-        .file_name()
-        .map(|n| n.to_string_lossy().to_string())
+    let s = repo_root.to_string_lossy();
+    s.rsplit(|c| c == '/' || c == '\\')
+        .find(|seg| !seg.is_empty())
+        .map(|seg| seg.to_string())
         .unwrap_or_else(|| "unknown".to_string())
 }
 
