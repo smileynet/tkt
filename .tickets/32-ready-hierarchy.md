@@ -51,9 +51,13 @@ Without hierarchy, the frontier output is a flat list that requires counting lin
 
 ## Acceptance criteria
 
-- [ ] `tkt ready` shows section headers with counts
-- [ ] Indented ticket list under each header
-- [ ] Empty frontier produces `No tickets ready.` message
-- [ ] WIP section shown only when tickets are in_progress
-- [ ] `--json` output unchanged
+- [x] `tkt ready` shows section headers with counts
+- [x] Indented ticket list under each header
+- [x] Empty frontier produces `No tickets ready.` message
+- [x] WIP section shown only when tickets are in_progress
+- [x] `--json` output unchanged
 - [ ] Integration tests updated for new format
+
+## Resolution (2026-08-05)
+
+Implemented: `Ready (N):` header with 2-space indented items, `In progress (N):` section with titles, `No tickets ready.` on empty frontier. JSON output path unchanged. Integration test for new format deferred to #41.

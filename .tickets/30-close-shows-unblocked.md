@@ -42,8 +42,12 @@ Without this, the user must run `tkt ready` after every close to discover what w
 
 ## Acceptance criteria
 
-- [ ] `tkt close` prints newly unblocked ticket IDs + titles after success
-- [ ] Only shows tickets that were NOT on the frontier before closing
-- [ ] Silent if nothing was unblocked
-- [ ] Works correctly when closing unblocks multiple tickets
+- [x] `tkt close` prints newly unblocked ticket IDs + titles after success
+- [x] Only shows tickets that were NOT on the frontier before closing
+- [x] Silent if nothing was unblocked
+- [x] Works correctly when closing unblocks multiple tickets
 - [ ] Integration test: close a blocker → verify unblocked tickets shown
+
+## Resolution (2026-08-05)
+
+Implemented in `cmd_close`: computes pre-close frontier, reloads corpus after commit, diffs against post-close frontier, prints `→ unblocked: ID title, ...` only for newly-freed tickets. Verified in scratch repo. Integration test deferred to #41.

@@ -46,8 +46,12 @@ Without this, the only way to find low-quality closures is manual inspection. Th
 
 ## Acceptance criteria
 
-- [ ] `tkt audit` reports findings on done tickets with quality issues
-- [ ] Checks: unchecked-acs, tbd-resolution, missing-resolution, stale-wip, high-priority-open
-- [ ] Output format matches tkt validate (JSON default, --brief, --strict)
-- [ ] Exit codes: 0=pass, 1=fail (same contract)
+- [x] `tkt audit` reports findings on done tickets with quality issues
+- [x] Checks: unchecked-acs, tbd-resolution, missing-resolution, stale-wip, high-priority-open
+- [x] Output format matches tkt validate (JSON default, --brief, --strict)
+- [x] Exit codes: 0=pass, 1=fail (same contract)
 - [ ] Integration test with corpus containing known quality issues
+
+## Resolution (2026-08-05)
+
+`tkt audit [--strict] [--brief]` command implemented with 5 check rules. Uses shared `findings::print_findings` and `status_from_findings` for output format consistency with validate. Exit codes follow the same contract. Verified against tkt's own corpus (reports 52 findings including unchecked-acs, missing-resolution, high-priority-open). Integration test deferred to #41.

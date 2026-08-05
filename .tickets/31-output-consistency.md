@@ -40,8 +40,12 @@ Without consistency, each command has its own ad-hoc format (some show filenames
 
 ## Acceptance criteria
 
-- [ ] new/batch/claim/close/edit/renumber use `✓ verb ID slug (detail)` format
-- [ ] Domain errors use `✗ message` format
+- [x] new/batch/claim/close/edit/renumber use `✓ verb ID slug (detail)` format
+- [x] Domain errors use `✗ message` format
 - [ ] Symbols degrade gracefully when NO_COLOR=1 is set
-- [ ] No breaking changes to --json output
-- [ ] Existing integration tests updated to match new format
+- [x] No breaking changes to --json output
+- [x] Existing integration tests updated to match new format
+
+## Resolution (2026-08-05)
+
+All mutation commands use `success_msg()` with `✓ verb ID slug (detail)` pattern. Domain errors emit `✗ message` to stderr. Tests updated for new output strings. NO_COLOR handling deferred — #47 tracks the color/symbol spec decision (plain UTF-8 glyphs are emitted with no ANSI codes, so NO_COLOR is vacuously respected but the colored behavior from the spec was never implemented).

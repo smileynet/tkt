@@ -37,4 +37,8 @@ Research files in `.scratch/research/`:
 
 ## Acceptance criteria
 
-- [ ] All children (#30–#34) are done
+- [x] All children (#30–#34) are done
+
+## Resolution (2026-08-05)
+
+All children completed: #30 (close shows unblocked), #31 (output consistency), #32 (ready hierarchy), #33 (quiet flag), #34 (audit command). Each has implementation verified; remaining integration tests tracked by #41.

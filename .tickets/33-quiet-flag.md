@@ -51,8 +51,12 @@ Without this, scripting with tkt requires parsing human-readable output (fragile
 
 ## Acceptance criteria
 
-- [ ] `-q` / `--quiet` suppresses confirmation output
-- [ ] `tkt new -q` prints only the allocated ID
-- [ ] `tkt ready -q` prints one ID per line (no headers, no flags)
-- [ ] Errors still print to stderr in quiet mode
+- [x] `-q` / `--quiet` suppresses confirmation output
+- [x] `tkt new -q` prints only the allocated ID
+- [x] `tkt ready -q` prints one ID per line (no headers, no flags)
+- [x] Errors still print to stderr in quiet mode
 - [ ] Integration test: `tkt new ... -q` output is a bare ID
+
+## Resolution (2026-08-05)
+
+Global `-q`/`--quiet` flag implemented via `AtomicBool` + `is_quiet()`. `new -q` emits bare ID, `ready -q` emits one ID per line, `claim -q`/`close -q` silent, errors always to stderr. Verified in scratch repo. Integration test deferred to #41. Note: `edit -q` still prints — tracked by #43.
