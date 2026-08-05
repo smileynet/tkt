@@ -1,7 +1,7 @@
 ---
 id: "46"
 title: "Consolidate quiet flag mechanisms (F8)"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -25,7 +25,11 @@ Keep one mechanism. Since the arg is `global = true`, the `AtomicBool` + `is_qui
 
 ## Acceptance criteria
 
-- [ ] `cmd_ready` uses `is_quiet()` instead of a parameter
-- [ ] No function takes `quiet: bool` as a parameter
-- [ ] `tkt ready -q` still works correctly
-- [ ] All tests pass
+- [x] `cmd_ready` uses `is_quiet()` instead of a parameter
+- [x] No function takes `quiet: bool` as a parameter
+- [x] `tkt ready -q` still works correctly
+- [x] All tests pass
+
+## Resolution (2026-08-05)
+
+Removed `quiet` parameter from `cmd_ready`, inlined `cli.quiet` store into the global AtomicBool, changed the one remaining bare `quiet` reference to `is_quiet()`. All 69 tests pass.

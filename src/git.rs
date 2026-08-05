@@ -124,13 +124,20 @@ pub fn pull_rebase(repo: &Path) -> Result<()> {
 }
 
 /// Undo the last commit without discarding unrelated worktree changes.
-/// Uses mixed reset (undoes commit, preserves worktree) then cleans up
-/// any new files in .tickets/ that were part of the undone commit.
-pub fn undo_commit_hard(repo: &Path) -> Result<()> {
+/// Uses mixed reset (undoes commit, preserves worktree) then:
+/// - Removes any files in .tickets/ that the commit ADDED
+/// - Restores any files in .tickets/ that the commit MODIFIED to their pre-commit state
+pub fn undo_commit(repo: &Path) -> Result<()> {
     // Get the list of files added in the commit we're about to undo
     let added = git(
         repo,
         &["diff", "--name-only", "--diff-filter=A", "HEAD~1", "HEAD"],
+    )
+    .unwrap_or_default();
+    // Get the list of files modified in the commit we're about to undo
+    let modified = git(
+        repo,
+        &["diff", "--name-only", "--diff-filter=M", "HEAD~1", "HEAD"],
     )
     .unwrap_or_default();
     // Mixed reset: undo commit, keep worktree
@@ -140,6 +147,12 @@ pub fn undo_commit_hard(repo: &Path) -> Result<()> {
         if file.starts_with(".tickets/") {
             let path = repo.join(file);
             let _ = std::fs::remove_file(&path);
+        }
+    }
+    // Restore modified files to their pre-commit state
+    for file in modified.lines() {
+        if file.starts_with(".tickets/") {
+            let _ = git(repo, &["checkout", "HEAD", "--", file]);
         }
     }
     Ok(())

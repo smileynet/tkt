@@ -86,7 +86,7 @@ impl GitTransaction {
             }
             git::PushResult::Rejected => {
                 // Undo and rebase for retry
-                git::undo_commit_hard(&self.repo)?;
+                git::undo_commit(&self.repo)?;
                 git::pull_rebase(&self.repo)?;
                 Ok(PublishResult::NeedsRetry)
             }
