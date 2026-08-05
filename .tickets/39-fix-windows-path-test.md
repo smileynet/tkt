@@ -1,7 +1,7 @@
 ---
 id: "39"
 title: "Fix Windows path unit test (F1)"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -26,6 +26,10 @@ Either:
 
 ## Acceptance criteria
 
-- [ ] `cargo test --bin tkt telemetry::tests::project_slug_from_path` passes on Linux
-- [ ] Windows path input still produces the correct slug
-- [ ] Full `cargo test` passes (0 failures)
+- [x] `cargo test --bin tkt telemetry::tests::project_slug_from_path` passes on Linux
+- [x] Windows path input still produces the correct slug
+- [x] Full `cargo test` passes (0 failures)
+
+## Resolution (2026-08-05)
+
+Made `project_slug` split on both `/` and `\` using `rsplit(|c| c == '/' || c == '\\')` instead of `Path::file_name()`. The existing test assertion now passes on Linux. All 40 unit tests green.
