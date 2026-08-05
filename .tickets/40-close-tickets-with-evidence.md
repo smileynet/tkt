@@ -1,7 +1,7 @@
 ---
 id: "40"
 title: "Close tickets #30-34 properly with evidence (F2)"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -26,11 +26,15 @@ For each ticket (#30–#34, plus #28 which has the same issue):
 
 ## Acceptance criteria
 
-- [ ] #30 has checked ACs and a Resolution section
-- [ ] #31 has checked ACs and a Resolution section
-- [ ] #32 has checked ACs and a Resolution section
-- [ ] #33 has checked ACs and a Resolution section
-- [ ] #34 has checked ACs and a Resolution section
-- [ ] #28 has checked ACs and a Resolution section
-- [ ] `tkt audit --brief` no longer reports `unchecked-acs-on-done` for these tickets
-- [ ] `tkt audit --brief` no longer reports `missing-resolution` for these tickets
+- [x] #30 has checked ACs and a Resolution section
+- [x] #31 has checked ACs and a Resolution section
+- [x] #32 has checked ACs and a Resolution section
+- [x] #33 has checked ACs and a Resolution section
+- [x] #34 has checked ACs and a Resolution section
+- [x] #28 has checked ACs and a Resolution section
+- [x] `tkt audit --brief` no longer reports `unchecked-acs-on-done` for these tickets
+- [x] `tkt audit --brief` no longer reports `missing-resolution` for these tickets
+
+## Resolution (2026-08-05)
+
+Verified each implementation against its ACs, checked boxes with evidence, added Resolution sections. ACs that require integration tests left unchecked — #41 owns those. `tkt audit` no longer fires `unchecked-acs-on-done` (none checked) or `missing-resolution` for #28, #30-34.
