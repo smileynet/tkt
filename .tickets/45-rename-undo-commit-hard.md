@@ -1,7 +1,7 @@
 ---
 id: "45"
 title: "Rename undo_commit_hard and handle modified files (F7)"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -27,8 +27,12 @@ Example: a failed `renumber` that rewrites `blocked_by` in another ticket leaves
 
 ## Acceptance criteria
 
-- [ ] Function renamed to remove `_hard` misnomer
-- [ ] Modified-only files in `.tickets/` are restored after undo
-- [ ] Added files are still deleted (existing behavior preserved)
-- [ ] Files outside `.tickets/` are not touched
+- [x] Function renamed to remove `_hard` misnomer
+- [x] Modified-only files in `.tickets/` are restored after undo
+- [x] Added files are still deleted (existing behavior preserved)
+- [x] Files outside `.tickets/` are not touched
 - [ ] Unit or integration test: modify+add commit, undo, verify clean state
+
+## Resolution (2026-08-05)
+
+Renamed to `undo_commit`. Added a second pass that restores `.tickets/` files the commit modified (via `git checkout HEAD -- <path>` after mixed reset). Added files are still removed. Files outside `.tickets/` untouched by both passes. Integration test deferred to #41 scope.
