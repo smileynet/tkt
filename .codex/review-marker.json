@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
-  "reviewer": "codex",
-  "reviewed_at": "2026-08-01T15:47:25Z",
+  "reviewer": "kiro-cli",
+  "reviewed_at": "2026-08-05T15:14:35Z",
   "verdict": "changes_requested",
   "commits": {
     "scope": "all ancestors through reviewed_through, inclusive",
-    "reviewed_through": "208b38b82b56e1bc72ae69a13969aa793ff89845"
+    "reviewed_through": "b4df8eae7b0d01c5be28dddac03678b7ea5534d5"
   },
   "ticket_source": {
     "type": "tkt",
@@ -13,34 +13,154 @@
     "observed_version": "0.1.0"
   },
   "tickets": [
-    { "path": ".tickets/01-cargo-dist-release.md", "blob": "bcee1e7a020823380bdebd3561e255eba647c324" },
-    { "path": ".tickets/02-parity-race-detection.md", "blob": "c30c3f0fdd8fa218a1b12685e2b7c56127c403f5" },
-    { "path": ".tickets/03-parity-input-validation.md", "blob": "d25f51154966128f702ac27752544c5244f7ce72" },
-    { "path": ".tickets/04-parity-cycle-detection.md", "blob": "610f65028a3dfd4a9c1c884cbefcba45f166bc8c" },
-    { "path": ".tickets/05-remove-python-tkt.md", "blob": "d2c3d984816807a984597d0a79b8d5f57ee06783" },
-    { "path": ".tickets/06-regex-compile-once.md", "blob": "d91d219802424fefde17ea8cf1743072e0b4264c" },
-    { "path": ".tickets/07-fix-push-propagation.md", "blob": "2af8b83aa1226608ac662dfeb7cdd1b91a39b728" },
-    { "path": ".tickets/08-yaml-json-escaping.md", "blob": "935c76629784d5e74e7a1c91e60edf1187faaab8" },
-    { "path": ".tickets/09-exit-code-contract.md", "blob": "bd2a7949ad250039c2670e0a3ca08852e5ef58ed" },
-    { "path": ".tickets/10-cross-platform-dates.md", "blob": "86c42f42b6e573fd0ca0905044c412b8c9e5dc3d" },
-    { "path": ".tickets/11-query-command.md", "blob": "c56b858bfbe4e4e776df789b390cba29c64f5275" },
-    { "path": ".tickets/12-parity-test-harness.md", "blob": "9658daeaf22953fc366f9730a207fe1930578cde" },
-    { "path": ".tickets/13-failure-path-tests.md", "blob": "e5edf976ef41323cdc86d238cd9f2526407444ba" },
-    { "path": ".tickets/14-git-transaction.md", "blob": "4dacfe2c84ba72e314bf96ba47238b89a7c7a5f5" },
-    { "path": ".tickets/15-mutation-context.md", "blob": "0411a0f8ac1daeb491c094aad08dcb079220dd73" },
-    { "path": ".tickets/16-findings-module.md", "blob": "78aa3bac5a295ee2a215a459e13796dac2bb789e" },
-    { "path": ".tickets/17-ticket-ticketfile-split.md", "blob": "5d572827c4f19b34722c7da423b8c3afc8bef55f" },
-    { "path": ".tickets/18-telemetry-infrastructure.md", "blob": "9c8ab796de22601220f4dc05e98e21798ed73486" },
-    { "path": ".tickets/19-log-rotation-retention.md", "blob": "8d00d4f3da90f313766e1121c4f16f6448246486" },
-    { "path": ".tickets/20-telemetry-subcommand.md", "blob": "a1310c7d081817509ab1fa05ecbd8c30b0083623" },
-    { "path": ".tickets/21-debug-mode.md", "blob": "77e9db90ec1b1a91c2cf0c0f7880266f2032c680" },
-    { "path": ".tickets/22-telemetry-docs.md", "blob": "2b18c5aef68e121825f18ce04e3be58a3ca0f956" },
-    { "path": ".tickets/23-local-install-version.md", "blob": "537937b5dd1fbe8022da882139089d220dc178ef" },
-    { "path": ".tickets/24-remove-python-tkt.md", "blob": "2a37521cc3dc22554f43b8106b3be8516597567b" },
-    { "path": ".tickets/25-test-run-crew-projects.md", "blob": "4ee68c4e5b65ffa93a5c40d6275920a8e47d7d3e" },
-    { "path": ".tickets/26-crew-wide-adoption.md", "blob": "fcd1cca72184673ba6a214631c11d3590a57e1a8" },
-    { "path": ".tickets/27-close-workflow-improvements.md", "blob": "ef65c08fa7131eff57c35a1fffe7f9c4a6a4eacb" },
-    { "path": ".tickets/28-ux-improvements-audit.md", "blob": "546e78ba9147fe92291b9ff5bed121730f978418" }
+    {
+      "path": ".tickets/01-cargo-dist-release.md",
+      "blob": "bcee1e7a020823380bdebd3561e255eba647c324"
+    },
+    {
+      "path": ".tickets/02-parity-race-detection.md",
+      "blob": "c30c3f0fdd8fa218a1b12685e2b7c56127c403f5"
+    },
+    {
+      "path": ".tickets/03-parity-input-validation.md",
+      "blob": "d25f51154966128f702ac27752544c5244f7ce72"
+    },
+    {
+      "path": ".tickets/04-parity-cycle-detection.md",
+      "blob": "610f65028a3dfd4a9c1c884cbefcba45f166bc8c"
+    },
+    {
+      "path": ".tickets/05-remove-python-tkt.md",
+      "blob": "d2c3d984816807a984597d0a79b8d5f57ee06783"
+    },
+    {
+      "path": ".tickets/06-regex-compile-once.md",
+      "blob": "d91d219802424fefde17ea8cf1743072e0b4264c"
+    },
+    {
+      "path": ".tickets/07-fix-push-propagation.md",
+      "blob": "2af8b83aa1226608ac662dfeb7cdd1b91a39b728"
+    },
+    {
+      "path": ".tickets/08-yaml-json-escaping.md",
+      "blob": "935c76629784d5e74e7a1c91e60edf1187faaab8"
+    },
+    {
+      "path": ".tickets/09-exit-code-contract.md",
+      "blob": "bd2a7949ad250039c2670e0a3ca08852e5ef58ed"
+    },
+    {
+      "path": ".tickets/10-cross-platform-dates.md",
+      "blob": "86c42f42b6e573fd0ca0905044c412b8c9e5dc3d"
+    },
+    {
+      "path": ".tickets/11-query-command.md",
+      "blob": "c56b858bfbe4e4e776df789b390cba29c64f5275"
+    },
+    {
+      "path": ".tickets/12-parity-test-harness.md",
+      "blob": "9658daeaf22953fc366f9730a207fe1930578cde"
+    },
+    {
+      "path": ".tickets/13-failure-path-tests.md",
+      "blob": "e5edf976ef41323cdc86d238cd9f2526407444ba"
+    },
+    {
+      "path": ".tickets/14-git-transaction.md",
+      "blob": "4dacfe2c84ba72e314bf96ba47238b89a7c7a5f5"
+    },
+    {
+      "path": ".tickets/15-mutation-context.md",
+      "blob": "0411a0f8ac1daeb491c094aad08dcb079220dd73"
+    },
+    {
+      "path": ".tickets/16-findings-module.md",
+      "blob": "78aa3bac5a295ee2a215a459e13796dac2bb789e"
+    },
+    {
+      "path": ".tickets/17-ticket-ticketfile-split.md",
+      "blob": "5d572827c4f19b34722c7da423b8c3afc8bef55f"
+    },
+    {
+      "path": ".tickets/18-telemetry-infrastructure.md",
+      "blob": "9c8ab796de22601220f4dc05e98e21798ed73486"
+    },
+    {
+      "path": ".tickets/19-log-rotation-retention.md",
+      "blob": "8d00d4f3da90f313766e1121c4f16f6448246486"
+    },
+    {
+      "path": ".tickets/20-telemetry-subcommand.md",
+      "blob": "a1310c7d081817509ab1fa05ecbd8c30b0083623"
+    },
+    {
+      "path": ".tickets/21-debug-mode.md",
+      "blob": "77e9db90ec1b1a91c2cf0c0f7880266f2032c680"
+    },
+    {
+      "path": ".tickets/22-telemetry-docs.md",
+      "blob": "2b18c5aef68e121825f18ce04e3be58a3ca0f956"
+    },
+    {
+      "path": ".tickets/23-local-install-version.md",
+      "blob": "537937b5dd1fbe8022da882139089d220dc178ef"
+    },
+    {
+      "path": ".tickets/24-remove-python-tkt.md",
+      "blob": "2a37521cc3dc22554f43b8106b3be8516597567b"
+    },
+    {
+      "path": ".tickets/25-test-run-crew-projects.md",
+      "blob": "4ee68c4e5b65ffa93a5c40d6275920a8e47d7d3e"
+    },
+    {
+      "path": ".tickets/26-crew-wide-adoption.md",
+      "blob": "fcd1cca72184673ba6a214631c11d3590a57e1a8"
+    },
+    {
+      "path": ".tickets/27-close-workflow-improvements.md",
+      "blob": "ef65c08fa7131eff57c35a1fffe7f9c4a6a4eacb"
+    },
+    {
+      "path": ".tickets/28-ux-improvements-audit.md",
+      "blob": "1477159e97de9bb8c2cce39ae9a797b03fc8a3fd"
+    },
+    {
+      "path": ".tickets/29-codex-review-findings-208b38b.md",
+      "blob": "1a483ca9083cade91f843d0dc164f39d4e74184d"
+    },
+    {
+      "path": ".tickets/30-close-shows-unblocked.md",
+      "blob": "14504995f8c16c245a065639843755eb2d86b376"
+    },
+    {
+      "path": ".tickets/31-output-consistency.md",
+      "blob": "18fbd20517eb3cff315dd1382975b60c0fb77c89"
+    },
+    {
+      "path": ".tickets/32-ready-hierarchy.md",
+      "blob": "065acad57ab8863df6a661f01e7992da2e494d93"
+    },
+    {
+      "path": ".tickets/33-quiet-flag.md",
+      "blob": "8fec28ac3a52e3ed0d4b76442ecae42e4474620e"
+    },
+    {
+      "path": ".tickets/34-audit-command.md",
+      "blob": "9362bd1884c1e48a6c0f68848b98a51bf4827f27"
+    },
+    {
+      "path": ".tickets/35-close-workflow-improvements.md",
+      "blob": "650313b2d64ba954cef184d8a451a5e4fb563940"
+    },
+    {
+      "path": ".tickets/36-agent-command-discovery.md",
+      "blob": "fd77cc68afec4f543582281833bd870130f15439"
+    },
+    {
+      "path": ".tickets/37-skill-distribution-research.md",
+      "blob": "14b437d9aa1acd009ca869b822bea6b93240dabf"
+    }
   ],
   "adoption": {
     "status": "complete",
