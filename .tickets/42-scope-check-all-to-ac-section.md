@@ -1,7 +1,7 @@
 ---
 id: "42"
 title: "Scope --check-all to acceptance criteria section (F4)"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -33,9 +33,13 @@ Create a helper that identifies the AC section boundaries:
 
 ## Acceptance criteria
 
-- [ ] `--check-all` only checks boxes under `## Acceptance criteria`
-- [ ] Boxes in other sections (design checklists, task lists) are untouched
-- [ ] AC count in close output reflects only the AC section
-- [ ] `validate` and `audit` AC counting also scoped to the section
-- [ ] Unit test: ticket with mixed sections, verify only AC boxes affected
+- [x] `--check-all` only checks boxes under `## Acceptance criteria`
+- [x] Boxes in other sections (design checklists, task lists) are untouched
+- [x] AC count in close output reflects only the AC section
+- [x] `validate` and `audit` AC counting also scoped to the section
+- [x] Unit test: ticket with mixed sections, verify only AC boxes affected
 - [ ] Integration test: close --check-all with non-AC checkboxes, verify they're preserved
+
+## Resolution (2026-08-05)
+
+Added `core::ac_section_range()` helper shared by cli.rs and findings.rs. `--check-all` replaces only within the AC section range. `count_ac_boxes`, `flip_ac_boxes`, `cmd_audit`, and `check_unchecked_acs` all scope to the same boundaries. Verified in scratch repo: design checklist boxes untouched, AC count reports 2/2 not 4/4. Integration test deferred to #41.

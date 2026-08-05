@@ -1064,15 +1064,17 @@ fn cmd_edit(
         &[&rel_path],
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
     )?;
-    println!(
-        "{}",
-        success_msg(
-            "edited",
-            id,
-            &slug_from_filename(&file.path),
-            &changed.join(", ")
-        )
-    );
+    if !is_quiet() {
+        println!(
+            "{}",
+            success_msg(
+                "edited",
+                id,
+                &slug_from_filename(&file.path),
+                &changed.join(", ")
+            )
+        );
+    }
     Ok(0)
 }
 
@@ -1840,10 +1842,12 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     } else {
         String::new()
     };
-    println!(
-        "{}",
-        success_msg("renumbered", old_id, &format!("→ {}", new_id), &detail)
-    );
+    if !is_quiet() {
+        println!(
+            "{}",
+            success_msg("renumbered", old_id, &format!("→ {}", new_id), &detail)
+        );
+    }
     Ok(0)
 }
 
