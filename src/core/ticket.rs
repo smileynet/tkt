@@ -94,13 +94,6 @@ pub enum Priority {
 }
 
 impl Priority {
-    pub fn parse(s: &str) -> Result<Self> {
-        match s {
-            "high" => Ok(Priority::High),
-            other => bail!("invalid priority {:?} (expected high)", other),
-        }
-    }
-
     pub fn as_str(&self) -> &'static str {
         match self {
             Priority::High => "high",
@@ -289,10 +282,8 @@ impl Ticket {
         let env = Env::parse(raw_env).with_context(|| format!("{}: bad env", path_display))?;
 
         let priority = match file.get("priority").map(|v| v.trim_matches('"')) {
-            Some(p) if !p.is_empty() => Some(
-                Priority::parse(p).with_context(|| format!("{}: bad priority", path_display))?,
-            ),
-            _ => None,
+            Some("high") => Some(Priority::High),
+            _ => None, // Unknown priority values are ignored (only "high" affects frontier order)
         };
 
         let spec = file
@@ -341,8 +332,12 @@ pub fn load_corpus(dir: &Path) -> Result<Vec<Ticket>> {
     entries.sort_by_key(|e| e.file_name());
 
     for entry in entries {
-        let ticket = Ticket::parse(&entry.path())?;
-        tickets.push(ticket);
+        match Ticket::parse(&entry.path()) {
+            Ok(ticket) => tickets.push(ticket),
+            Err(e) => {
+                eprintln!("⚠ skipping {}: {}", entry.file_name().to_string_lossy(), e);
+            }
+        }
     }
     Ok(tickets)
 }

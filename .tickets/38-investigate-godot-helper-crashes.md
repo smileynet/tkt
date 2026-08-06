@@ -1,7 +1,7 @@
 ---
 id: "38"
 title: "investigate godot-helper crashes (6 exit-2 on read commands)"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---

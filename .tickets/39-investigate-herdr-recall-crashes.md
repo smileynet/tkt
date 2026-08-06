@@ -1,7 +1,7 @@
 ---
 id: "39"
 title: "investigate herdr/recall query crashes (exit 2 on query)"
-status: open
+status: done
 blocked_by: []
 ---
 

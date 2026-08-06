@@ -1,7 +1,7 @@
 ---
 id: "40"
 title: "graceful degradation: read commands skip unparseable files instead of crashing"
-status: open
+status: done
 blocked_by: ["38"]
 ---
 
