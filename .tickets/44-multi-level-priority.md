@@ -1,7 +1,7 @@
 ---
 id: "44"
 title: "implement multi-level priority system (urgent/high/medium/low)"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -63,12 +63,16 @@ Within the ready set: urgent → high → normal (no priority / medium) → low.
 
 ## Acceptance criteria
 
-- [ ] Priority enum supports: urgent, high, medium, low
-- [ ] Unknown values treated as default (no crash, no error)
-- [ ] Frontier sorts: urgent → high → default → low → by ID within each
-- [ ] `tkt ready` shows appropriate flags ([URGENT], [HIGH], [low])
-- [ ] `tkt edit --priority` accepts all valid values + empty to clear
-- [ ] `tkt validate` warns on unknown priority values
-- [ ] `tkt new --priority` accepts all valid values
-- [ ] Backward compatible: existing `priority: high` tickets unchanged
-- [ ] Unit tests for sort ordering with all priority levels
+- [x] Priority enum supports: urgent, high, medium, low
+- [x] Unknown values treated as default (no crash, no error)
+- [x] Frontier sorts: urgent → high → default → low → by ID within each
+- [x] `tkt ready` shows appropriate flags ([URGENT], [HIGH], [low])
+- [x] `tkt edit --priority` accepts all valid values + empty to clear
+- [x] `tkt validate` warns on unknown priority values
+- [x] `tkt new --priority` accepts all valid values
+- [x] Backward compatible: existing `priority: high` tickets unchanged
+- [x] Unit tests for sort ordering with all priority levels
+
+## Resolution (2026-08-07)
+
+Implemented 4-level priority (urgent/high/medium/low) with None as default bucket. Frontier uses `priority_sort_key()` (0-3) as primary sort, ID as secondary. Display: [URGENT], [HIGH], (nothing for medium/default), [low]. All existing `priority: high` tickets work identically. Added `frontier_sorts_by_priority_buckets` unit test verifying full ordering.

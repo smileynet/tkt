@@ -1,7 +1,7 @@
 ---
 id: "62"
 title: "Backlog status for deferred tickets"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -34,10 +34,14 @@ backlog → open → in_progress → done
 
 ## Acceptance criteria
 
-- [ ] `status: backlog` is a valid status value
-- [ ] `tkt ready` excludes backlog tickets
-- [ ] `tkt validate` accepts backlog status without error
-- [ ] `tkt edit <id> --status open` promotes backlog → open
-- [ ] `tkt new --backlog` or `tkt new --status backlog` creates in backlog
-- [ ] `tkt query` includes backlog tickets in output
+- [x] `status: backlog` is a valid status value
+- [x] `tkt ready` excludes backlog tickets
+- [x] `tkt validate` accepts backlog status without error
+- [x] `tkt edit <id> --status open` promotes backlog → open
+- [x] `tkt new --status backlog` creates in backlog
+- [x] `tkt query` includes backlog tickets in output
 - [ ] Documentation updated with lifecycle diagram
+
+## Resolution (2026-08-07)
+
+Added `Status::Backlog` to the enum. Frontier already filters `status == Open`, so backlog is excluded by construction. `--status` flag added to `new`, `batch`, and `edit` commands. Validate accepts `backlog` as valid. Added `frontier_excludes_backlog` unit test. Documentation update deferred.
