@@ -1,7 +1,7 @@
 ---
 id: "60"
 title: "Fix minor correctness nits (F10)"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -32,8 +32,12 @@ Four small issues:
 
 ## Acceptance criteria
 
-- [ ] `slug_from_filename` returns meaningful text for all ticket filenames
-- [ ] `stale-wip` uses a clone-stable date source OR documents the mtime limitation
-- [ ] No two rules share a name with different semantics
-- [ ] Corpus reload failure in close produces a visible warning
-- [ ] Existing tests still pass
+- [x] `slug_from_filename` returns meaningful text for all ticket filenames
+- [x] `stale-wip` uses a clone-stable date source OR documents the mtime limitation
+- [x] No two rules share a name with different semantics
+- [x] Corpus reload failure in close produces a visible warning
+- [x] Existing tests still pass
+
+## Resolution (2026-08-07)
+
+All 4 nits fixed: (1) slug returns full stem on no-dash filenames, (2) stale-wip uses `git log -1 --format=%ct` commit timestamp, (3) audit rule renamed to `all-acs-unchecked-on-done` (validate keeps `unchecked-acs-on-done` for any-unchecked), (4) corpus reload failure in close emits `⚠ could not compute unblocked tickets: ...` to stderr.
