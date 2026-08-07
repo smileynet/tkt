@@ -1,5 +1,5 @@
 ---
-id: "43"
+id: "55"
 title: "Gate edit output on is_quiet() (F5)"
 status: done
 blocked_by: []

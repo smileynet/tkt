@@ -1,5 +1,5 @@
 ---
-id: "47"
+id: "59"
 title: "Resolve color/symbol spec vs implementation (F9)"
 status: open
 blocked_by: []
