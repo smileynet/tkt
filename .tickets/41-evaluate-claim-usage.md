@@ -1,7 +1,7 @@
 ---
 id: "41"
 title: "evaluate claim usage: is the claim step needed for single-agent workflows?"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -43,6 +43,10 @@ Option 3 (document) — the telemetry confirms the tool already supports skippin
 
 ## Acceptance criteria
 
-- [ ] Decision documented (keep/change/document)
-- [ ] If documenting: update AGENTS.md and frontier-work steering
+- [x] Decision documented (keep/change/document)
+- [x] If documenting: update AGENTS.md and frontier-work steering
 - [ ] If changing behavior: implementation + tests
+
+## Resolution (2026-08-07)
+
+Decision: Option 3 — document that claim is optional. Verified: `tkt close` already accepts `open` tickets directly (only rejects `done`). Added note to README Lifecycle section. No code change needed — the behavior was already correct, just undocumented.

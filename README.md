@@ -95,6 +95,8 @@ tkt claim 03           # open → in_progress (pushed)
 tkt close 03 --note "Deployed" --ac 1,2   # → done, checks AC boxes 1 and 2
 ```
 
+**Note:** `claim` is optional. `close` works directly on `open` tickets — useful for single-agent workflows where the push round-trip adds latency without value. Use `claim` in shared repos to signal WIP and detect races.
+
 ### Edit and maintain
 
 ```bash
