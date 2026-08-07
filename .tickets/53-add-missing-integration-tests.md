@@ -1,7 +1,7 @@
 ---
 id: "53"
 title: "Add missing integration tests (F3)"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -29,9 +29,13 @@ Each test should exercise the happy path and verify the output contract.
 
 ## Acceptance criteria
 
-- [ ] Integration test: close blocker → output contains `→ unblocked:` line
-- [ ] Integration test: `tkt ready` shows `Ready (N):` header and indented items
-- [ ] Integration test: `tkt new --title X -q` stdout is exactly the allocated ID
-- [ ] Integration test: `tkt audit --brief` reports findings on a bad corpus
-- [ ] All tests pass: `cargo test --test integration`
-- [ ] Test count increases by at least 4
+- [x] Integration test: close blocker → output contains `→ unblocked:` line
+- [x] Integration test: `tkt ready` shows `Ready (N):` header and indented items
+- [x] Integration test: `tkt new --title X -q` stdout is exactly the allocated ID
+- [x] Integration test: `tkt audit --brief` reports findings on a bad corpus
+- [x] All tests pass: `cargo test --test integration`
+- [x] Test count increases by at least 4
+
+## Resolution (2026-08-07)
+
+Added 4 integration tests: `test_close_shows_unblocked_tickets`, `test_ready_hierarchy_format`, `test_new_quiet_outputs_bare_id`, `test_audit_reports_quality_issues`. Test count went from 29→33 integration (75 total). All pass.
