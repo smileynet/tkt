@@ -6,7 +6,7 @@ use regex::Regex;
 
 // --- Constants ---
 
-pub const STATUS_VALUES: &[&str] = &["open", "in_progress", "done"];
+pub const STATUS_VALUES: &[&str] = &["open", "in_progress", "done", "backlog"];
 pub const ENV_VALUES: &[&str] = &["corp", "personal", "either"];
 
 // --- Compiled regex patterns ---
@@ -21,6 +21,7 @@ static RE_FILENAME_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)-")
 /// Ticket lifecycle status.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
+    Backlog,
     Open,
     InProgress,
     Done,
@@ -29,11 +30,12 @@ pub enum Status {
 impl Status {
     pub fn parse(s: &str) -> Result<Self> {
         match s {
+            "backlog" => Ok(Status::Backlog),
             "open" => Ok(Status::Open),
             "in_progress" => Ok(Status::InProgress),
             "done" => Ok(Status::Done),
             other => bail!(
-                "invalid status {:?} (expected open/in_progress/done)",
+                "invalid status {:?} (expected backlog/open/in_progress/done)",
                 other
             ),
         }
@@ -41,6 +43,7 @@ impl Status {
 
     pub fn as_str(&self) -> &'static str {
         match self {
+            Status::Backlog => "backlog",
             Status::Open => "open",
             Status::InProgress => "in_progress",
             Status::Done => "done",
@@ -87,16 +90,43 @@ impl std::fmt::Display for Env {
     }
 }
 
-/// Ticket priority (currently only "high" is valid).
+/// Ticket priority level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Priority {
+    Urgent,
     High,
+    Medium,
+    Low,
 }
 
 impl Priority {
     pub fn as_str(&self) -> &'static str {
         match self {
+            Priority::Urgent => "urgent",
             Priority::High => "high",
+            Priority::Medium => "medium",
+            Priority::Low => "low",
+        }
+    }
+
+    /// Numeric sort key: lower = higher priority.
+    pub fn sort_key(&self) -> u8 {
+        match self {
+            Priority::Urgent => 0,
+            Priority::High => 1,
+            Priority::Medium => 2,
+            Priority::Low => 3,
+        }
+    }
+
+    /// Parse a priority string. Returns None for unknown values (lenient).
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.trim().trim_matches('"') {
+            "urgent" => Some(Priority::Urgent),
+            "high" => Some(Priority::High),
+            "medium" => Some(Priority::Medium),
+            "low" => Some(Priority::Low),
+            _ => None,
         }
     }
 }
@@ -282,8 +312,8 @@ impl Ticket {
         let env = Env::parse(raw_env).with_context(|| format!("{}: bad env", path_display))?;
 
         let priority = match file.get("priority").map(|v| v.trim_matches('"')) {
-            Some("high") => Some(Priority::High),
-            _ => None, // Unknown priority values are ignored (only "high" affects frontier order)
+            Some(s) => Priority::parse(s),
+            None => None,
         };
 
         let spec = file
@@ -313,9 +343,14 @@ impl Ticket {
         }
     }
 
-    /// Whether this ticket has high priority.
+    /// Whether this ticket has high or urgent priority.
     pub fn is_high_priority(&self) -> bool {
-        self.priority == Some(Priority::High)
+        matches!(self.priority, Some(Priority::Urgent) | Some(Priority::High))
+    }
+
+    /// Sort key for priority: urgent(0) > high(1) > default/medium(2) > low(3).
+    pub fn priority_sort_key(&self) -> u8 {
+        self.priority.map(|p| p.sort_key()).unwrap_or(2) // None = medium/default
     }
 }
 
@@ -367,7 +402,7 @@ pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
         })
         .collect();
 
-    pool.sort_by_key(|t| (!t.is_high_priority(), t.numeric_key()));
+    pool.sort_by_key(|t| (t.priority_sort_key(), t.numeric_key()));
     pool
 }
 
@@ -506,11 +541,13 @@ pub fn new_ticket_text(
     env: Option<&str>,
     spec: Option<&str>,
     priority: Option<&str>,
+    status: Option<&str>,
 ) -> String {
+    let status_val = status.unwrap_or("open");
     let mut fm_lines = vec![
         format!("id: \"{}\"", yaml_scalar_escape(id)),
         format!("title: \"{}\"", yaml_scalar_escape(title)),
-        "status: open".to_string(),
+        format!("status: {}", status_val),
     ];
     let deps = blocked_by
         .iter()
@@ -582,6 +619,62 @@ mod tests {
     }
 
     #[test]
+    fn frontier_excludes_backlog() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("01-open.md"),
+            "---\nid: \"01\"\ntitle: \"Open\"\nstatus: open\nblocked_by: []\n---\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("02-backlog.md"),
+            "---\nid: \"02\"\ntitle: \"Backlog\"\nstatus: backlog\nblocked_by: []\n---\n",
+        )
+        .unwrap();
+
+        let corpus = load_corpus(dir.path()).unwrap();
+        let front = frontier(&corpus);
+        assert_eq!(front.len(), 1);
+        assert_eq!(front[0].id, "01");
+    }
+
+    #[test]
+    fn frontier_sorts_by_priority_buckets() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("01-low.md"),
+            "---\nid: \"01\"\ntitle: \"Low\"\nstatus: open\nblocked_by: []\npriority: low\n---\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("02-none.md"),
+            "---\nid: \"02\"\ntitle: \"Default\"\nstatus: open\nblocked_by: []\n---\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("03-urgent.md"),
+            "---\nid: \"03\"\ntitle: \"Urgent\"\nstatus: open\nblocked_by: []\npriority: urgent\n---\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("04-high.md"),
+            "---\nid: \"04\"\ntitle: \"High\"\nstatus: open\nblocked_by: []\npriority: high\n---\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("05-medium.md"),
+            "---\nid: \"05\"\ntitle: \"Medium\"\nstatus: open\nblocked_by: []\npriority: medium\n---\n",
+        )
+        .unwrap();
+
+        let corpus = load_corpus(dir.path()).unwrap();
+        let front = frontier(&corpus);
+        let ids: Vec<&str> = front.iter().map(|t| t.id.as_str()).collect();
+        // urgent(03) → high(04) → default/medium(02,05) → low(01)
+        assert_eq!(ids, vec!["03", "04", "02", "05", "01"]);
+    }
+
+    #[test]
     fn surgical_edit_preserves_unknown_fields() {
         let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\ncustom_field: hello\n---\n\n# Body\n";
         let mut t = Ticket::parse_str(content, Path::new("test.md")).unwrap();
@@ -622,7 +715,7 @@ mod tests {
 
     #[test]
     fn new_ticket_text_escapes_title() {
-        let text = new_ticket_text("01", "Fix \"ready\" command", &[], None, None, None);
+        let text = new_ticket_text("01", "Fix \"ready\" command", &[], None, None, None, None);
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();
         assert!(t.title.contains("ready"));

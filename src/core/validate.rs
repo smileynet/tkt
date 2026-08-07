@@ -93,10 +93,13 @@ pub fn validate_env(env: &str) -> Result<(), String> {
 
 /// Validate priority value.
 pub fn validate_priority(priority: &str) -> Result<(), String> {
-    if priority != "high" {
-        return Err(format!("priority must be 'high' (got {:?})", priority));
+    match priority {
+        "urgent" | "high" | "medium" | "low" => Ok(()),
+        _ => Err(format!(
+            "priority must be urgent/high/medium/low (got {:?})",
+            priority
+        )),
     }
-    Ok(())
 }
 
 /// Check for duplicate slugs in a batch.

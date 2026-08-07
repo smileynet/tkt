@@ -74,6 +74,8 @@ enum Commands {
         env: Option<String>,
         #[arg(long)]
         priority: Option<String>,
+        #[arg(long)]
+        status: Option<String>,
         #[arg(long, value_delimiter = ',')]
         blocked_by: Option<Vec<String>>,
     },
@@ -87,6 +89,8 @@ enum Commands {
         env: Option<String>,
         #[arg(long)]
         priority: Option<String>,
+        #[arg(long)]
+        status: Option<String>,
         #[arg(long, value_delimiter = ',')]
         blocked_by: Option<Vec<String>>,
     },
@@ -125,6 +129,8 @@ enum Commands {
         spec: Option<String>,
         #[arg(long)]
         priority: Option<String>,
+        #[arg(long)]
+        status: Option<String>,
         #[arg(long, value_delimiter = ',')]
         ac: Option<Vec<u32>>,
     },
@@ -214,6 +220,7 @@ pub fn run() -> i32 {
             spec,
             env,
             priority,
+            status,
             blocked_by,
         } => cmd_new(
             &slug,
@@ -221,6 +228,7 @@ pub fn run() -> i32 {
             spec.as_deref(),
             env.as_deref(),
             priority.as_deref(),
+            status.as_deref(),
             &blocked_by.unwrap_or_default(),
         ),
         Commands::Batch {
@@ -228,12 +236,14 @@ pub fn run() -> i32 {
             spec,
             env,
             priority,
+            status,
             blocked_by,
         } => cmd_batch(
             &items,
             spec.as_deref(),
             env.as_deref(),
             priority.as_deref(),
+            status.as_deref(),
             &blocked_by.unwrap_or_default(),
         ),
         Commands::Claim { id } => cmd_claim(&id),
@@ -261,6 +271,7 @@ pub fn run() -> i32 {
             env,
             spec,
             priority,
+            status,
             ac,
         } => cmd_edit(
             &id,
@@ -269,6 +280,7 @@ pub fn run() -> i32 {
             env.as_deref(),
             spec.as_deref(),
             priority.as_deref(),
+            status.as_deref(),
             &ac.unwrap_or_default(),
         ),
         Commands::Renumber {
@@ -547,7 +559,12 @@ fn cmd_ready(json: bool) -> Result<i32> {
         } else {
             println!("Ready ({}):", front.len());
             for t in &front {
-                let flag = if t.is_high_priority() { "  [HIGH]" } else { "" };
+                let flag = match t.priority {
+                    Some(core::Priority::Urgent) => "  [URGENT]",
+                    Some(core::Priority::High) => "  [HIGH]",
+                    Some(core::Priority::Low) => "  [low]",
+                    _ => "",
+                };
                 println!("  {}  {}{}", t.id, t.title, flag);
             }
         }
@@ -572,6 +589,7 @@ fn cmd_new(
     spec: Option<&str>,
     env: Option<&str>,
     priority: Option<&str>,
+    status: Option<&str>,
     blocked_by: &[String],
 ) -> Result<i32> {
     // Validate inputs
@@ -619,7 +637,7 @@ fn cmd_new(
 
     let filename = format!("{}-{}.md", tid, slug);
     let path = dir.join(&filename);
-    let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
+    let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority, status);
     std::fs::write(&path, &content)?;
 
     let rel_path = format!(".tickets/{}", filename);
@@ -645,7 +663,8 @@ fn cmd_new(
             let (tid2, _width) = GitTransaction::next_id(&names);
             let filename2 = format!("{}-{}.md", tid2, slug);
             let path2 = dir.join(&filename2);
-            let content2 = core::new_ticket_text(&tid2, title, blocked_by, env, spec, priority);
+            let content2 =
+                core::new_ticket_text(&tid2, title, blocked_by, env, spec, priority, status);
             std::fs::write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;
@@ -942,6 +961,7 @@ fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
 
 // --- cmd_edit ---
 
+#[allow(clippy::too_many_arguments)]
 fn cmd_edit(
     id: &str,
     title: Option<&str>,
@@ -949,6 +969,7 @@ fn cmd_edit(
     env: Option<&str>,
     spec: Option<&str>,
     priority: Option<&str>,
+    status: Option<&str>,
     ac_indices: &[u32],
 ) -> Result<i32> {
     let (repo, remote, corpus) = preflight_mutation()?;
@@ -1034,12 +1055,28 @@ fn cmd_edit(
         if prio_val.is_empty() {
             file.remove_field("priority");
         } else {
-            if prio_val != "high" {
-                domain_bail!("priority must be 'high' (or '' to clear)");
+            if let Err(e) = core::validate::validate_priority(prio_val) {
+                domain_bail!("{} (or '' to clear)", e);
             }
             file.set_field("priority", prio_val);
         }
         changed.push("priority");
+    }
+    if let Some(status_val) = status {
+        if status_val.is_empty() {
+            domain_bail!(
+                "status cannot be cleared — use a valid value (backlog/open/in_progress/done)"
+            );
+        }
+        if core::Status::parse(status_val).is_err() {
+            domain_bail!(
+                "status must be one of {} (got {:?})",
+                core::STATUS_VALUES.join("/"),
+                status_val
+            );
+        }
+        file.set_field("status", status_val);
+        changed.push("status");
     }
     if !ac_indices.is_empty() {
         file.body = flip_ac_boxes(&file.body, ac_indices);
@@ -1587,6 +1624,7 @@ fn cmd_batch(
     spec: Option<&str>,
     env: Option<&str>,
     priority: Option<&str>,
+    status: Option<&str>,
     blocked_by: &[String],
 ) -> Result<i32> {
     // Validate shared options
@@ -1646,7 +1684,8 @@ fn cmd_batch(
                 let tid = format!("{:0>width$}", base + i as u64, width = width);
                 let filename = format!("{}-{}.md", tid, slug);
                 let path = txn.dir.join(&filename);
-                let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority);
+                let content =
+                    core::new_ticket_text(&tid, title, blocked_by, env, spec, priority, status);
                 std::fs::write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));
             }
