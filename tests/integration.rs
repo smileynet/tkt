@@ -952,3 +952,131 @@ fn test_close_ac_flag_bypasses_all_unchecked_error() {
     assert_eq!(code, 0, "should succeed with --ac: {}", out);
     assert!(out.contains("1/2 checked"), "should show AC count: {}", out);
 }
+
+#[test]
+fn test_close_shows_unblocked_tickets() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create ticket 02 (open, blocked by 01 which is done) and 03 (blocked by 02)
+    std::fs::write(
+        clone.join(".tickets/02-blocker.md"),
+        "---\nid: \"02\"\ntitle: \"Blocker\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Blocker\n\n## Acceptance criteria\n\n- [ ] Done\n",
+    ).unwrap();
+    std::fs::write(
+        clone.join(".tickets/03-blocked.md"),
+        "---\nid: \"03\"\ntitle: \"Was Blocked\"\nstatus: open\nblocked_by: [\"02\"]\n---\n\n# Was Blocked\n\n## Acceptance criteria\n\n- [ ] Done\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add tickets"]);
+    git(&clone, &["push"]);
+
+    // Close 02 → should unblock 03
+    let (code, out) = run_tkt(
+        &clone,
+        &["close", "02", "--check-all", "--resolution", "Done"],
+    );
+    assert_eq!(code, 0, "close should succeed: {}", out);
+    assert!(
+        out.contains("unblocked"),
+        "should show unblocked tickets: {}",
+        out
+    );
+    assert!(
+        out.contains("03") && out.contains("Was Blocked"),
+        "should name the unblocked ticket: {}",
+        out
+    );
+}
+
+#[test]
+fn test_ready_hierarchy_format() {
+    let (_tmp, clone) = setup_repo();
+
+    // Add two open tickets
+    std::fs::write(
+        clone.join(".tickets/02-alpha.md"),
+        "---\nid: \"02\"\ntitle: \"Alpha\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Alpha\n",
+    )
+    .unwrap();
+    std::fs::write(
+        clone.join(".tickets/03-beta.md"),
+        "---\nid: \"03\"\ntitle: \"Beta\"\nstatus: open\nblocked_by: [\"01\"]\npriority: high\n---\n\n# Beta\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add tickets"]);
+
+    let (code, out) = run_tkt(&clone, &["ready"]);
+    assert_eq!(code, 0, "ready should succeed: {}", out);
+    assert!(
+        out.contains("Ready (2):"),
+        "should show header with count: {}",
+        out
+    );
+    assert!(
+        out.contains("  03") && out.contains("  02"),
+        "should show indented items: {}",
+        out
+    );
+    assert!(out.contains("[HIGH]"), "should show priority flag: {}", out);
+}
+
+#[test]
+fn test_new_quiet_outputs_bare_id() {
+    let (_tmp, clone) = setup_repo();
+
+    let (code, out) = run_tkt(
+        &clone,
+        &["new", "quiet-test", "--title", "Quiet Test", "-q"],
+    );
+    assert_eq!(code, 0, "new -q should succeed: {}", out);
+    let stdout_only = String::from_utf8_lossy(
+        &Command::new(tkt_bin())
+            .args(["new", "another", "--title", "Another", "-q"])
+            .current_dir(&clone)
+            .env("DO_NOT_TRACK", "1")
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .to_string();
+    let trimmed = stdout_only.trim();
+    // Should be exactly a numeric ID with no other text
+    assert!(
+        trimmed.chars().all(|c| c.is_ascii_digit()),
+        "quiet output should be bare ID only, got: {:?}",
+        trimmed
+    );
+    assert!(!trimmed.is_empty(), "quiet output should not be empty");
+}
+
+#[test]
+fn test_audit_reports_quality_issues() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create a done ticket with all ACs unchecked and no resolution
+    std::fs::write(
+        clone.join(".tickets/02-bad.md"),
+        "---\nid: \"02\"\ntitle: \"Badly closed\"\nstatus: done\nblocked_by: []\n---\n\n# Badly closed\n\n## Acceptance criteria\n\n- [ ] Never checked\n- [ ] Also unchecked\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add bad ticket"]);
+
+    // Audit should find issues
+    let (code, out) = run_tkt(&clone, &["audit", "--brief"]);
+    assert_eq!(code, 0, "audit should pass (warnings only): {}", out);
+    assert!(
+        out.contains("unchecked-acs-on-done"),
+        "should report unchecked ACs: {}",
+        out
+    );
+    assert!(
+        out.contains("missing-resolution"),
+        "should report missing resolution: {}",
+        out
+    );
+    assert!(
+        out.contains("02-bad.md"),
+        "should name the offending file: {}",
+        out
+    );
+}
