@@ -1,7 +1,7 @@
 ---
 id: "61"
 title: "Auto-renumber on ID collision with upstream"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -72,11 +72,15 @@ This is a git workflow issue, not a tkt feature — but `tkt rebase` makes the c
 
 ## Acceptance criteria
 
-- [ ] `tkt rebase` detects ID collisions between local and origin
-- [ ] Renumbers local (unpushed) tickets to next available IDs
-- [ ] Updates all `blocked_by` references in the corpus
-- [ ] `--dry-run` shows plan without modifying anything
-- [ ] Commits the renumber atomically
-- [ ] Works when origin has gaps in ID space (picks true next available)
+- [x] `tkt rebase` detects ID collisions between local and origin
+- [x] Renumbers local (unpushed) tickets to next available IDs
+- [x] Updates all `blocked_by` references in the corpus
+- [x] `--dry-run` shows plan without modifying anything
+- [x] Commits the renumber atomically
+- [x] Works when origin has gaps in ID space (picks true next available)
 - [ ] Warns on dangling refs that point to now-ambiguous IDs
 - [ ] Documents branch-and-PR workflow for blocked push scenarios
+
+## Resolution (2026-08-07)
+
+Implemented `tkt rebase [--dry-run]`. Fetches origin, scans remote IDs via `git ls-tree`, identifies local tickets with same numeric ID but different filename, renumbers them to `max(local+remote)+1` onwards. Updates all `blocked_by` references corpus-wide. Commits atomically. Integration test covers the full scenario (two clones, collision, rebase resolves, blocked_by updated). Dangling ref warnings and docs deferred as stretch.
