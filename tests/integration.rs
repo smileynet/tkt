@@ -1080,3 +1080,123 @@ fn test_audit_reports_quality_issues() {
         out
     );
 }
+
+#[test]
+fn test_rebase_resolves_id_collision() {
+    let tmp = TempDir::new().unwrap();
+    let remote = tmp.path().join("remote.git");
+    let clone_a = tmp.path().join("clone_a");
+    let clone_b = tmp.path().join("clone_b");
+
+    // Create bare remote
+    Command::new("git")
+        .args(["init", "--bare", "-q", "-b", "main"])
+        .arg(&remote)
+        .output()
+        .unwrap();
+
+    // Clone A and B
+    for clone in [&clone_a, &clone_b] {
+        Command::new("git")
+            .args(["clone", "-q"])
+            .arg(&remote)
+            .arg(clone)
+            .output()
+            .unwrap();
+        git(clone, &["config", "user.email", "test@test"]);
+        git(clone, &["config", "user.name", "test"]);
+    }
+
+    // Seed a ticket in A and push
+    std::fs::create_dir_all(clone_a.join(".tickets")).unwrap();
+    std::fs::write(
+        clone_a.join(".tickets/01-seed.md"),
+        "---\nid: \"01\"\ntitle: \"Seed\"\nstatus: done\nblocked_by: []\n---\n\n# Seed\n",
+    )
+    .unwrap();
+    git(&clone_a, &["add", "-A"]);
+    git(&clone_a, &["commit", "-qm", "seed"]);
+    git(&clone_a, &["push", "-q"]);
+
+    // A creates ticket 02 and pushes (claims it)
+    std::fs::write(
+        clone_a.join(".tickets/02-alpha.md"),
+        "---\nid: \"02\"\ntitle: \"Alpha\"\nstatus: open\nblocked_by: []\n---\n\n# Alpha\n",
+    )
+    .unwrap();
+    git(&clone_a, &["add", "-A"]);
+    git(&clone_a, &["commit", "-qm", "alpha"]);
+    git(&clone_a, &["push", "-q"]);
+
+    // B (stale, doesn't know about A's 02) creates its own 02
+    std::fs::create_dir_all(clone_b.join(".tickets")).unwrap();
+    // First pull the seed
+    git(&clone_b, &["pull", "-q"]);
+    // Now create a conflicting 02 locally (without fetching A's push)
+    std::fs::write(
+        clone_b.join(".tickets/02-beta.md"),
+        "---\nid: \"02\"\ntitle: \"Beta\"\nstatus: open\nblocked_by: []\n---\n\n# Beta\n",
+    )
+    .unwrap();
+    // Also create 03 that depends on 02
+    std::fs::write(
+        clone_b.join(".tickets/03-gamma.md"),
+        "---\nid: \"03\"\ntitle: \"Gamma\"\nstatus: open\nblocked_by: [\"02\"]\n---\n\n# Gamma\n",
+    )
+    .unwrap();
+    git(&clone_b, &["add", "-A"]);
+    git(&clone_b, &["commit", "-qm", "beta and gamma"]);
+
+    // Now A pushes another ticket (so B is behind)
+    // B runs tkt rebase — should detect collision on 02 and renumber
+    let (code, out) = run_tkt(&clone_b, &["rebase", "--dry-run"]);
+    assert_eq!(code, 0, "rebase --dry-run should succeed: {}", out);
+    assert!(
+        out.contains("02") && out.contains("beta"),
+        "should identify the collision: {}",
+        out
+    );
+
+    // Now do the real rebase
+    let (code, out) = run_tkt(&clone_b, &["rebase"]);
+    assert_eq!(code, 0, "rebase should succeed: {}", out);
+    assert!(
+        out.contains("Renumbered"),
+        "should report renumbering: {}",
+        out
+    );
+
+    // Verify: 02-beta.md should no longer exist, a new ID should
+    assert!(
+        !clone_b.join(".tickets/02-beta.md").exists(),
+        "old file should be gone"
+    );
+    // The new file should be 03-beta.md or 04-beta.md (next available)
+    let files: Vec<String> = std::fs::read_dir(clone_b.join(".tickets"))
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name().to_string_lossy().to_string())
+        .filter(|n| n.contains("beta"))
+        .collect();
+    assert_eq!(
+        files.len(),
+        1,
+        "should have exactly one beta file: {:?}",
+        files
+    );
+    let beta_file = &files[0];
+    assert!(
+        !beta_file.starts_with("02-"),
+        "beta should have a new ID, not 02: {}",
+        beta_file
+    );
+
+    // Verify blocked_by was updated in gamma
+    let gamma_content = std::fs::read_to_string(clone_b.join(".tickets/03-gamma.md")).unwrap();
+    // gamma's blocked_by should now reference the new beta ID, not "02"
+    assert!(
+        !gamma_content.contains("blocked_by: [\"02\"]"),
+        "gamma's blocked_by should be updated: {}",
+        gamma_content
+    );
+}
