@@ -1065,7 +1065,7 @@ fn test_audit_reports_quality_issues() {
     let (code, out) = run_tkt(&clone, &["audit", "--brief"]);
     assert_eq!(code, 0, "audit should pass (warnings only): {}", out);
     assert!(
-        out.contains("unchecked-acs-on-done"),
+        out.contains("all-acs-unchecked-on-done"),
         "should report unchecked ACs: {}",
         out
     );

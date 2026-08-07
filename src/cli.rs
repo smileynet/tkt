@@ -864,17 +864,22 @@ fn cmd_close(
             .map(|t| t.id.clone())
             .collect();
         let dir = tickets_dir()?;
-        if let Ok(new_corpus) = core::load_corpus(&dir) {
-            let post_frontier: Vec<&core::Ticket> = core::frontier(&new_corpus)
-                .into_iter()
-                .filter(|t| !pre_frontier.contains(&t.id))
-                .collect();
-            if !post_frontier.is_empty() {
-                let items: Vec<String> = post_frontier
-                    .iter()
-                    .map(|t| format!("{} {}", t.id, t.title))
+        match core::load_corpus(&dir) {
+            Ok(new_corpus) => {
+                let post_frontier: Vec<&core::Ticket> = core::frontier(&new_corpus)
+                    .into_iter()
+                    .filter(|t| !pre_frontier.contains(&t.id))
                     .collect();
-                println!("  → unblocked: {}", items.join(", "));
+                if !post_frontier.is_empty() {
+                    let items: Vec<String> = post_frontier
+                        .iter()
+                        .map(|t| format!("{} {}", t.id, t.title))
+                        .collect();
+                    println!("  → unblocked: {}", items.join(", "));
+                }
+            }
+            Err(e) => {
+                eprintln!("  ⚠ could not compute unblocked tickets: {}", e);
             }
         }
     }
@@ -900,12 +905,14 @@ fn success_msg(verb: &str, id: &str, slug: &str, detail: &str) -> String {
 
 /// Extract slug from a ticket filename: "01-auth-system.md" → "auth-system"
 fn slug_from_filename(path: &std::path::Path) -> String {
-    path.file_stem()
+    let stem = path
+        .file_stem()
         .unwrap_or_default()
         .to_string_lossy()
-        .split_once('-')
+        .to_string();
+    stem.split_once('-')
         .map(|(_, s)| s.to_string())
-        .unwrap_or_default()
+        .unwrap_or(stem)
 }
 
 // --- Utilities ---
@@ -1347,7 +1354,7 @@ fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
             if unchecked > 0 && checked == 0 {
                 audit_findings.push(Finding {
                     file: fname.clone(),
-                    rule: "unchecked-acs-on-done".into(),
+                    rule: "all-acs-unchecked-on-done".into(),
                     message: format!("{} unchecked box(es), none checked", unchecked),
                     severity: "warning".into(),
                 });
@@ -1387,20 +1394,30 @@ fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
             }
         }
 
-        // Check: stale WIP (in_progress with old mtime)
+        // Check: stale WIP (in_progress with old last-commit date)
         if t.status == Status::InProgress {
-            if let Ok(meta) = std::fs::metadata(&t.path) {
-                if let Ok(modified) = meta.modified() {
-                    if let Ok(age) = std::time::SystemTime::now().duration_since(modified) {
-                        if age.as_secs() > 7 * 24 * 60 * 60 {
-                            let days = age.as_secs() / (24 * 60 * 60);
-                            audit_findings.push(Finding {
-                                file: fname.clone(),
-                                rule: "stale-wip".into(),
-                                message: format!("in_progress for {} days", days),
-                                severity: "info".into(),
-                            });
-                        }
+            let rel_path = t
+                .path
+                .strip_prefix(&dir)
+                .map(|p| format!(".tickets/{}", p.display()))
+                .unwrap_or_default();
+            if let Ok(ts_str) = git::git(
+                dir.parent().unwrap_or(&dir),
+                &["log", "-1", "--format=%ct", "--", &rel_path],
+            ) {
+                if let Ok(ts) = ts_str.trim().parse::<u64>() {
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs();
+                    if now > ts && (now - ts) > 7 * 24 * 60 * 60 {
+                        let days = (now - ts) / (24 * 60 * 60);
+                        audit_findings.push(Finding {
+                            file: fname.clone(),
+                            rule: "stale-wip".into(),
+                            message: format!("in_progress for {} days (last commit)", days),
+                            severity: "info".into(),
+                        });
                     }
                 }
             }
