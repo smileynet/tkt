@@ -20,15 +20,28 @@ pub enum DebugMode {
     Off,
 }
 
-/// Check TKT_DEBUG environment variable.
-/// - "1" or "true" → Human
-/// - "json" → Json
-/// - unset or anything else → Off
+/// Check TKT_DEBUG environment variable, then config file.
+/// - env "1" or "true" → Human
+/// - env "json" → Json
+/// - env unset → check config: debug=true uses debug.format to pick mode
+/// - otherwise → Off
 pub fn debug_mode() -> DebugMode {
     match std::env::var("TKT_DEBUG").as_deref() {
         Ok("1") | Ok("true") => DebugMode::Human,
         Ok("json") => DebugMode::Json,
-        _ => DebugMode::Off,
+        Ok(_) => DebugMode::Off,
+        Err(_) => {
+            // Env not set — check config file
+            let cfg = crate::config::Config::load();
+            if cfg.get_bool("debug") {
+                match cfg.get("debug.format").as_str() {
+                    "json" => DebugMode::Json,
+                    _ => DebugMode::Human,
+                }
+            } else {
+                DebugMode::Off
+            }
+        }
     }
 }
 

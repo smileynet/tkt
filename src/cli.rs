@@ -179,6 +179,21 @@ enum Commands {
         #[arg(long)]
         brief: bool,
     },
+    /// Manage user-level configuration (~/.config/tkt/config.toml)
+    Config {
+        /// Set a config value: tkt config --set key=value
+        #[arg(long)]
+        set: Option<String>,
+        /// Get a config value: tkt config --get key
+        #[arg(long)]
+        get: Option<String>,
+        /// Remove a config value (revert to default): tkt config --unset key
+        #[arg(long)]
+        unset: Option<String>,
+        /// List all config values with sources
+        #[arg(long)]
+        list: bool,
+    },
     /// Manage telemetry consent and inspect collected data
     Telemetry {
         /// Enable telemetry (opt in to local recording)
@@ -309,6 +324,12 @@ pub fn run() -> i32 {
         Commands::Query => cmd_query(),
         Commands::Rebase { dry_run } => cmd_rebase(dry_run),
         Commands::Audit { strict, brief } => cmd_audit(strict, brief),
+        Commands::Config {
+            set,
+            get,
+            unset,
+            list,
+        } => cmd_config(set.as_deref(), get.as_deref(), unset.as_deref(), list),
         Commands::Telemetry {
             enable,
             disable,
@@ -363,6 +384,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Query => "query",
         Commands::Rebase { .. } => "rebase",
         Commands::Audit { .. } => "audit",
+        Commands::Config { .. } => "config",
         Commands::Telemetry { .. } => "telemetry",
     }
     .to_string()
@@ -1591,6 +1613,61 @@ fn cmd_query() -> Result<i32> {
         }
 
         println!("{{{}}}", fields.join(","));
+    }
+    Ok(0)
+}
+
+// --- cmd_config ---
+
+fn cmd_config(
+    set: Option<&str>,
+    get: Option<&str>,
+    unset: Option<&str>,
+    list: bool,
+) -> Result<i32> {
+    if let Some(pair) = set {
+        let (key, value) = pair
+            .split_once('=')
+            .ok_or_else(|| anyhow::anyhow!("expected key=value format, got {:?}", pair))?;
+        let key = key.trim();
+        let value = value.trim();
+        crate::config::Config::set(key, value)?;
+        if !is_quiet() {
+            println!("✓ {} = {:?}", key, value);
+        }
+        return Ok(0);
+    }
+
+    if let Some(key) = get {
+        let cfg = crate::config::Config::load();
+        println!("{}", cfg.get(key));
+        return Ok(0);
+    }
+
+    if let Some(key) = unset {
+        let existed = crate::config::Config::unset(key)?;
+        if !is_quiet() {
+            if existed {
+                println!("✓ unset {:?} (reverted to default)", key);
+            } else {
+                println!("(no value was set for {:?})", key);
+            }
+        }
+        return Ok(0);
+    }
+
+    if list {
+        let cfg = crate::config::Config::load();
+        for entry in cfg.list() {
+            println!("{} = {:?} ({})", entry.key, entry.value, entry.source);
+        }
+        return Ok(0);
+    }
+
+    // No flag provided — show help-like summary
+    let cfg = crate::config::Config::load();
+    for entry in cfg.list() {
+        println!("{} = {:?} ({})", entry.key, entry.value, entry.source);
     }
     Ok(0)
 }

@@ -1,4 +1,5 @@
 mod cli;
+mod config;
 mod core;
 mod findings;
 mod git;

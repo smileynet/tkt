@@ -1201,3 +1201,124 @@ fn test_rebase_resolves_id_collision() {
         gamma_content
     );
 }
+
+// --- Config command tests ---
+
+/// Run tkt with a custom XDG_CONFIG_HOME (isolates config file from real user).
+fn run_tkt_with_config(dir: &Path, args: &[&str], config_home: &Path) -> (i32, String) {
+    let output = Command::new(tkt_bin())
+        .args(args)
+        .current_dir(dir)
+        .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_DEBUG")
+        .env_remove("TKT_DEBUG_FORMAT")
+        .env("XDG_CONFIG_HOME", config_home)
+        .output()
+        .expect("failed to execute tkt");
+    let code = output.status.code().unwrap_or(1);
+    let out = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    (code, out)
+}
+
+#[test]
+fn test_config_set_get_list() {
+    let (_tmp, clone) = setup_repo();
+    let config_dir = _tmp.path().join("config-home");
+
+    // Initially, get returns default
+    let (code, out) = run_tkt_with_config(&clone, &["config", "--get", "debug"], &config_dir);
+    assert_eq!(code, 0);
+    assert_eq!(out.trim(), "false");
+
+    // Set debug = true
+    let (code, out) = run_tkt_with_config(&clone, &["config", "--set", "debug=true"], &config_dir);
+    assert_eq!(code, 0);
+    assert!(out.contains("debug"), "set output: {}", out);
+
+    // Get now returns true
+    let output = Command::new(tkt_bin())
+        .args(["config", "--get", "debug"])
+        .current_dir(&clone)
+        .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_DEBUG")
+        .env_remove("TKT_DEBUG_FORMAT")
+        .env("XDG_CONFIG_HOME", &config_dir)
+        .output()
+        .expect("failed to execute tkt");
+    assert_eq!(output.status.code().unwrap_or(1), 0);
+    assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "true");
+
+    // List shows the config entry
+    let (code, out) = run_tkt_with_config(&clone, &["config", "--list"], &config_dir);
+    assert_eq!(code, 0);
+    assert!(out.contains("debug"), "list output: {}", out);
+    assert!(out.contains("config"), "should show config source: {}", out);
+}
+
+#[test]
+fn test_config_unset_reverts_to_default() {
+    let (_tmp, clone) = setup_repo();
+    let config_dir = _tmp.path().join("config-home");
+
+    // Set then unset
+    run_tkt_with_config(&clone, &["config", "--set", "debug=true"], &config_dir);
+    let (code, out) = run_tkt_with_config(&clone, &["config", "--unset", "debug"], &config_dir);
+    assert_eq!(code, 0);
+    assert!(out.contains("unset"), "unset output: {}", out);
+
+    // Get returns default again
+    let (code, out) = run_tkt_with_config(&clone, &["config", "--get", "debug"], &config_dir);
+    assert_eq!(code, 0);
+    assert_eq!(out.trim(), "false");
+}
+
+#[test]
+fn test_config_env_overrides_config_file() {
+    let (_tmp, clone) = setup_repo();
+    let config_dir = _tmp.path().join("config-home");
+
+    // Set debug=false in config
+    run_tkt_with_config(&clone, &["config", "--set", "debug=false"], &config_dir);
+
+    // But env var should override — run with TKT_DEBUG=1 and check output
+    let output = Command::new(tkt_bin())
+        .args(["config", "--get", "debug"])
+        .current_dir(&clone)
+        .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "1")
+        .env("XDG_CONFIG_HOME", &config_dir)
+        .output()
+        .expect("failed to execute tkt");
+    let out = String::from_utf8_lossy(&output.stdout).to_string();
+    // config --get respects precedence: env TKT_DEBUG=1 → returns "1"
+    assert_eq!(out.trim(), "1");
+}
+
+#[test]
+fn test_config_debug_enables_debug_output() {
+    let (_tmp, clone) = setup_repo();
+    let config_dir = _tmp.path().join("config-home");
+
+    // Enable debug via config
+    run_tkt_with_config(&clone, &["config", "--set", "debug=true"], &config_dir);
+
+    // Run ready — should produce debug output on stderr
+    let output = Command::new(tkt_bin())
+        .args(["ready"])
+        .current_dir(&clone)
+        .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_DEBUG")
+        .env("XDG_CONFIG_HOME", &config_dir)
+        .output()
+        .expect("failed to execute tkt");
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    assert!(
+        stderr.contains("[tkt:debug]"),
+        "debug from config should produce debug output: stderr={:?}",
+        stderr
+    );
+}
