@@ -26,6 +26,7 @@ fn run_tkt(dir: &Path, args: &[&str]) -> (i32, String) {
         .args(args)
         .current_dir(dir)
         .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_DEBUG")
         .output()
         .expect("failed to execute tkt");
     let code = output.status.code().unwrap_or(1);
