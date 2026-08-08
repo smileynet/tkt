@@ -1,7 +1,7 @@
 ---
 id: "48"
 title: "Dotfile config (~/.tkt) for persistent settings"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 ---
