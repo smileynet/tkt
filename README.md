@@ -106,6 +106,8 @@ tkt validate           # check for cycles, dangling deps, contract violations
 tkt validate --strict  # promote warnings to errors
 tkt sync-plan --check  # compare ticket status vs docs/plan.md table
 tkt query              # dump full corpus as JSON Lines
+tkt query --status open --priority high  # filtered view
+tkt blocked            # show tickets with unsatisfied deps
 ```
 
 ### Common flags
@@ -119,7 +121,13 @@ tkt query              # dump full corpus as JSON Lines
 | `--priority high` | new, batch, edit | jump frontier order |
 | `--env E` | new, batch, edit | corp / personal / either |
 | `--note "..."` | close | resolution text |
+| `--resolution "..."` | close | resolution text (alias for --note) |
 | `--ac N,N` | close, edit | check acceptance criteria boxes |
+| `--check-all` | close | check all AC boxes at once |
+| `--force` | close | close even with all ACs unchecked |
+| `--status S` | query, new, edit | filter or set status |
+| `--priority P` | query, new, edit | filter or set priority |
+| `--color` | all | always / never / auto |
 
 ## Ticket Format
 
@@ -127,7 +135,7 @@ tkt query              # dump full corpus as JSON Lines
 ---
 id: "01"
 title: "Implement authentication"
-status: open          # open | in_progress | done
+status: open          # backlog | open | in_progress | done
 blocked_by: []        # ids that must be done first
 priority: high        # optional: jumps frontier order
 env: corp             # optional: corp | personal | either
