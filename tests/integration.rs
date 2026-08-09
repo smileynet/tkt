@@ -732,6 +732,11 @@ fn test_push_failure_no_rebase_on_unreachable() {
 fn run_tkt_env(dir: &Path, args: &[&str], env: &[(&str, &str)]) -> (i32, String, String) {
     let mut cmd = Command::new(tkt_bin());
     cmd.args(args).current_dir(dir);
+    // Default: suppress telemetry unless caller explicitly overrides
+    if !env.iter().any(|(k, _)| *k == "DO_NOT_TRACK") {
+        cmd.env("DO_NOT_TRACK", "1");
+    }
+    cmd.env_remove("TKT_DEBUG");
     for (k, v) in env {
         if v.is_empty() {
             cmd.env_remove(k);
