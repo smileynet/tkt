@@ -10,7 +10,7 @@ A single unit of work stored as `.tickets/{NN}-{slug}.md` with YAML frontmatter 
 _Avoid_: issue (overloaded with GitHub), task (too generic)
 
 **Frontier**:
-The set of tickets where `status: open` and all `blocked_by` are `done`. tkt works the frontier — picks the lowest-numbered available ticket (priority: high jumps the order).
+The set of tickets where `status: open` and all `blocked_by` are `done`. tkt works the frontier — sorted by priority (urgent > high > medium > low) then lowest-numbered.
 _Avoid_: backlog (unordered), next (implies single item)
 
 **Birth window**:
@@ -39,7 +39,7 @@ Raw frontmatter editor in `src/core/ticket.rs`. Owns the `Vec<(String, String)>`
 _Avoid_: RawTicket (not raw — it parses), FileHandle (it's not a handle)
 
 **Status**:
-Enum (`Open | InProgress | Done`) in `src/core/ticket.rs`. Parsed at construction time — invalid values rejected before entering the corpus. Exhaustive matching ensures no status is unhandled.
+Enum (`Backlog | Open | InProgress | Done`) in `src/core/ticket.rs`. Parsed at construction time — invalid values rejected before entering the corpus. `Backlog` tickets are excluded from the frontier. Exhaustive matching ensures no status is unhandled.
 _Avoid_: state (too generic), lifecycle (the enum is one snapshot, not the lifecycle itself)
 
 **Consent**:

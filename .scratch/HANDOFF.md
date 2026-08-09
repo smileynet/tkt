@@ -1,35 +1,34 @@
 ---
-created_at: 2026-07-30T20:38:00-07:00
-base_commit: b9060e1
-handoff_key: tkt-rust-v1-complete
+created_at: 2026-08-09T09:20:00-07:00
+base_commit: bd9f26c
+handoff_key: tkt-pre-release
 ---
 
 # Handoff
 
 ## Objective
-tkt v0.1.0 is feature-complete. Only cargo-dist release (#01) remains before publish.
-
-## Constraints
-- CLI must remain compatible with Python tkt (same commands, flags, output format, exit codes)
-- Single binary, no runtime deps beyond `git` on PATH
-- `cargo fmt && cargo clippy --all-targets && cargo test` must pass with zero warnings before every commit
+tkt v0.1.0 release. All features complete, review findings addressed, release toolchain configured. Only `cargo dist init` + publish remains.
 
 ## Current State
-- 65 tests (40 unit + 25 integration), clippy 0 warnings, fmt clean
-- All features implemented: frontier, new/batch/claim/close/edit/renumber, validate, sync-plan, query, telemetry, debug mode
-- Architecture: `ticket.rs` (TicketFile + Ticket with Status/Env/Priority enums), `findings.rs`, `transaction.rs`, `telemetry.rs`, `cli.rs`, `git.rs`
-- 25/26 tickets done. Only #01 (cargo-dist release) remains open.
-- Crew-wide adoption complete: all projects have .tickets/, steering updated, Python tkt removed
+- 96 tests (48 unit + 48 integration), clippy 0 warnings, fmt clean
+- Release toolchain: CHANGELOG.md, cliff.toml, release.toml, mise.toml with [tools]
+- Self-hosted GitHub Actions runner configured (`randomserver-tkt`, systemd service)
+- All Codex review findings (#65) addressed — 8 fixed, 1 rejected, 1 deferred
 
 ## Next Steps
-1. Ticket #01 — cargo-dist workflow: `cargo dist init`, verify CI config, check crates.io name "tkt" availability, tag v0.1.0, verify cross-platform binaries
-2. After publish: update tool-installation.md with `cargo install tkt` (from crates.io) as primary install method
+1. `cargo install cargo-release git-cliff` (or `mise install`)
+2. `cargo dist init` — generate `.github/workflows/release.yml`
+3. Check crates.io: `curl -s https://crates.io/api/v1/crates/tkt | jq .errors`
+4. `cargo publish --dry-run` then `cargo publish`
+5. `git tag v0.1.0 && git push && git push --tags`
+6. Verify GitHub Releases populated
+
+## Frontier
+```
+tkt ready → 01  Set up cargo-dist and publish v0.1.0
+tkt blocked → 45  self-update check (blocked by 01)
+```
 
 ## Fog
-- Whether crates.io name "tkt" is available
-- Whether cargo-dist works out of the box for a non-workspace single binary
-
-## Evidence
-- Test suite: `cargo test` (65 tests)
-- Binary: `cargo install --path .` → ~/.cargo/bin/tkt.exe (verified working across 4 projects)
-- Telemetry: recording events correctly per-project in %APPDATA%/tkt/telemetry/
+- crates.io name "tkt" availability (fallback: "tkt-cli")
+- Whether self-hosted runner can also handle cargo-dist's cross-compile matrix (likely needs GitHub-hosted for macOS/Windows)

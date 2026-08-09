@@ -27,6 +27,7 @@ tests/
 └── parity/          — historical Python parity comparison harness
 .memory/CONTEXT.md   — project glossary
 .tickets/            — tkt's own tickets (dogfooding)
+.references/         — cloned reference repos (gitignored): cargo-release, git-cliff, release-plz
 TELEMETRY.md         — transparency document for telemetry collection
 ```
 
