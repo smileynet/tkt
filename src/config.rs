@@ -1,13 +1,159 @@
-//! User-level configuration (~/.config/tkt/config.toml).
+//! User-level and project-level configuration.
 //!
-//! Precedence: env var > config file > default.
-//! The config file is created on first `tkt config set`, not on install.
+//! User config: ~/.config/tkt/config.toml (precedence: env > config > default)
+//! Project config: .tickets/config.toml (precedence: CLI flag > config > default)
+//!
+//! The user config is created on first `tkt config set`, not on install.
+//! The project config is optional — missing file means all defaults.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-/// Known configuration keys and their defaults.
+/// Known user configuration keys and their defaults.
 const KNOWN_KEYS: &[(&str, &str)] = &[("debug", "false"), ("debug.format", "human")];
+
+// ============================================================
+// Project-level configuration (.tickets/config.toml)
+// ============================================================
+
+/// Project-level configuration with all fields defaulted.
+#[derive(Debug, Clone)]
+pub struct ProjectConfig {
+    pub close_require_resolution: bool,
+    pub close_require_checked_acs: bool,
+    pub validate_strict: bool,
+    pub ready_default_env: String,
+    pub priority_warn_unknown: bool,
+    pub new_default_priority: String,
+    pub push_enabled: bool,
+    /// Unknown keys found in the config file (for warning).
+    pub unknown_keys: Vec<String>,
+}
+
+impl Default for ProjectConfig {
+    fn default() -> Self {
+        Self {
+            close_require_resolution: false,
+            close_require_checked_acs: true,
+            validate_strict: false,
+            ready_default_env: String::new(),
+            priority_warn_unknown: true,
+            new_default_priority: String::new(),
+            push_enabled: true,
+            unknown_keys: Vec::new(),
+        }
+    }
+}
+
+impl ProjectConfig {
+    /// Load project config from `.tickets/config.toml` relative to the given tickets dir.
+    /// Missing file returns all defaults. Unknown keys are collected for warnings.
+    pub fn load(tickets_dir: &Path) -> Self {
+        let path = tickets_dir.join("config.toml");
+        let values = match read_project_config(&path) {
+            Some(v) => v,
+            None => return Self::default(),
+        };
+
+        let mut cfg = Self::default();
+        let mut unknown = Vec::new();
+
+        for (key, value) in &values {
+            match key.as_str() {
+                "close.require_resolution" => cfg.close_require_resolution = is_truthy(value),
+                "close.require_checked_acs" => cfg.close_require_checked_acs = is_truthy(value),
+                "validate.strict" => cfg.validate_strict = is_truthy(value),
+                "ready.default_env" => cfg.ready_default_env = value.clone(),
+                "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
+                "new.default_priority" => cfg.new_default_priority = value.clone(),
+                "push.enabled" => cfg.push_enabled = is_truthy(value),
+                _ => unknown.push(key.clone()),
+            }
+        }
+        cfg.unknown_keys = unknown;
+        cfg
+    }
+
+    /// List all project settings with their sources.
+    pub fn list(&self) -> Vec<ConfigEntry> {
+        vec![
+            entry(
+                "close.require_resolution",
+                &self.close_require_resolution.to_string(),
+                "false",
+            ),
+            entry(
+                "close.require_checked_acs",
+                &self.close_require_checked_acs.to_string(),
+                "true",
+            ),
+            entry(
+                "validate.strict",
+                &self.validate_strict.to_string(),
+                "false",
+            ),
+            entry("ready.default_env", &self.ready_default_env, ""),
+            entry(
+                "priority.warn_unknown",
+                &self.priority_warn_unknown.to_string(),
+                "true",
+            ),
+            entry("new.default_priority", &self.new_default_priority, ""),
+            entry("push.enabled", &self.push_enabled.to_string(), "true"),
+        ]
+    }
+}
+
+fn entry(key: &str, value: &str, default: &str) -> ConfigEntry {
+    let source = if value == default {
+        Source::Default
+    } else {
+        Source::ProjectConfig
+    };
+    ConfigEntry {
+        key: key.to_string(),
+        value: value.to_string(),
+        source,
+    }
+}
+
+fn is_truthy(s: &str) -> bool {
+    matches!(s, "true" | "1" | "yes")
+}
+
+/// Parse a TOML-like project config with [sections].
+/// Converts `[section]\nkey = value` to `section.key = value` in the map.
+fn read_project_config(path: &Path) -> Option<BTreeMap<String, String>> {
+    let content = std::fs::read_to_string(path).ok()?;
+    let mut map = BTreeMap::new();
+    let mut current_section = String::new();
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if trimmed.starts_with('[') && trimmed.ends_with(']') {
+            current_section = trimmed[1..trimmed.len() - 1].trim().to_string();
+            continue;
+        }
+        if let Some((key, value)) = trimmed.split_once('=') {
+            let key = key.trim();
+            let value = value.trim().trim_matches('"');
+            let full_key = if current_section.is_empty() {
+                key.to_string()
+            } else {
+                format!("{}.{}", current_section, key)
+            };
+            map.insert(full_key, value.to_string());
+        }
+    }
+    Some(map)
+}
+
+// ============================================================
+// User-level configuration (~/.config/tkt/config.toml)
+// ============================================================
 
 /// Resolved configuration state.
 #[derive(Debug)]
@@ -112,6 +258,7 @@ pub struct ConfigEntry {
 pub enum Source {
     Env,
     ConfigFile,
+    ProjectConfig,
     Default,
 }
 
@@ -120,6 +267,7 @@ impl std::fmt::Display for Source {
         match self {
             Source::Env => write!(f, "env"),
             Source::ConfigFile => write!(f, "config"),
+            Source::ProjectConfig => write!(f, "project"),
             Source::Default => write!(f, "default"),
         }
     }
@@ -216,5 +364,43 @@ mod tests {
         assert_eq!(default_for("debug"), "false");
         assert_eq!(default_for("debug.format"), "human");
         assert_eq!(default_for("unknown"), "");
+    }
+
+    #[test]
+    fn test_project_config_defaults() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = ProjectConfig::load(dir.path());
+        assert!(!cfg.close_require_resolution);
+        assert!(cfg.close_require_checked_acs);
+        assert!(!cfg.validate_strict);
+        assert!(cfg.ready_default_env.is_empty());
+        assert!(cfg.priority_warn_unknown);
+        assert!(cfg.new_default_priority.is_empty());
+        assert!(cfg.push_enabled);
+        assert!(cfg.unknown_keys.is_empty());
+    }
+
+    #[test]
+    fn test_project_config_parses_sections() {
+        let dir = tempfile::tempdir().unwrap();
+        let config_content = r#"
+[close]
+require_resolution = true
+
+[push]
+enabled = false
+
+[ready]
+default_env = "corp"
+
+[mystery]
+foo = "bar"
+"#;
+        std::fs::write(dir.path().join("config.toml"), config_content).unwrap();
+        let cfg = ProjectConfig::load(dir.path());
+        assert!(cfg.close_require_resolution);
+        assert!(!cfg.push_enabled);
+        assert_eq!(cfg.ready_default_env, "corp");
+        assert_eq!(cfg.unknown_keys, vec!["mystery.foo"]);
     }
 }

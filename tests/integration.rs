@@ -1327,3 +1327,129 @@ fn test_config_debug_enables_debug_output() {
         stderr
     );
 }
+
+// --- Project config tests ---
+
+#[test]
+fn test_project_config_require_resolution_blocks_bare_close() {
+    let (_tmp, clone) = setup_repo();
+
+    // Add project config requiring resolution
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_resolution = true\n",
+    )
+    .unwrap();
+
+    // Add an open ticket
+    std::fs::write(
+        clone.join(".tickets/02-feature.md"),
+        "---\nid: \"02\"\ntitle: \"Feature\"\nstatus: open\nblocked_by: []\n---\n\n# Feature\n\n## Acceptance criteria\n\n- [x] Done\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add config and ticket"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Try to close without --resolution — should fail
+    let (code, out) = run_tkt(&clone, &["close", "02"]);
+    assert_eq!(code, 1, "bare close should fail: {}", out);
+    assert!(
+        out.contains("requires --resolution"),
+        "should mention resolution requirement: {}",
+        out
+    );
+
+    // Close with --resolution — should succeed
+    let (code, out) = run_tkt(&clone, &["close", "02", "--resolution", "Done"]);
+    assert_eq!(code, 0, "close with resolution should succeed: {}", out);
+}
+
+#[test]
+fn test_project_config_push_disabled_skips_push() {
+    let (_tmp, clone) = setup_repo();
+
+    // Add project config disabling push
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[push]\nenabled = false\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add config"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Add an open ticket
+    std::fs::write(
+        clone.join(".tickets/02-task.md"),
+        "---\nid: \"02\"\ntitle: \"Task\"\nstatus: open\nblocked_by: []\n---\n\n# Task\n\n## Acceptance criteria\n\n- [x] AC\n",
+    ).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add task"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Close the ticket — should succeed locally without pushing
+    let (code, out) = run_tkt(&clone, &["close", "02", "--resolution", "Done"]);
+    assert_eq!(code, 0, "close should succeed: {}", out);
+
+    // Verify the close commit is local but NOT pushed
+    let local_head = git(&clone, &["rev-parse", "HEAD"]);
+    let remote_head = git(&clone, &["rev-parse", "origin/main"]);
+    assert_ne!(
+        local_head, remote_head,
+        "push.enabled=false should skip push (local should be ahead)"
+    );
+}
+
+#[test]
+fn test_project_config_show_dumps_settings() {
+    let (_tmp, clone) = setup_repo();
+
+    // Add project config
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_resolution = true\n\n[push]\nenabled = false\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add config"]);
+
+    let (code, out) = run_tkt(&clone, &["config", "--show"]);
+    assert_eq!(code, 0, "config --show should succeed: {}", out);
+    assert!(
+        out.contains("close.require_resolution"),
+        "should show close.require_resolution: {}",
+        out
+    );
+    assert!(
+        out.contains("push.enabled"),
+        "should show push.enabled: {}",
+        out
+    );
+    assert!(
+        out.contains("project"),
+        "should annotate source as project: {}",
+        out
+    );
+}
+
+#[test]
+fn test_project_config_unknown_key_warns() {
+    let (_tmp, clone) = setup_repo();
+
+    // Add project config with unknown key
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[mystery]\nfoo = true\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add config"]);
+
+    let (code, out) = run_tkt(&clone, &["config", "--show"]);
+    assert_eq!(code, 0, "should succeed with warning: {}", out);
+    assert!(
+        out.contains("unknown config key"),
+        "should warn about unknown key: {}",
+        out
+    );
+}

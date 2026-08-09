@@ -193,6 +193,9 @@ enum Commands {
         /// List all config values with sources
         #[arg(long)]
         list: bool,
+        /// Show effective project config (.tickets/config.toml) with sources
+        #[arg(long)]
+        show: bool,
     },
     /// Manage telemetry consent and inspect collected data
     Telemetry {
@@ -329,7 +332,8 @@ pub fn run() -> i32 {
             get,
             unset,
             list,
-        } => cmd_config(set.as_deref(), get.as_deref(), unset.as_deref(), list),
+            show,
+        } => cmd_config(set.as_deref(), get.as_deref(), unset.as_deref(), list, show),
         Commands::Telemetry {
             enable,
             disable,
@@ -436,6 +440,19 @@ fn tickets_dir() -> Result<PathBuf> {
     Ok(dir)
 }
 
+/// Load project-level config from .tickets/config.toml.
+/// Warns on unknown keys. Returns defaults if file is missing.
+fn project_config(tickets_dir: &Path) -> crate::config::ProjectConfig {
+    let cfg = crate::config::ProjectConfig::load(tickets_dir);
+    for key in &cfg.unknown_keys {
+        eprintln!(
+            "warning: unknown config key {:?} in .tickets/config.toml",
+            key
+        );
+    }
+    cfg
+}
+
 fn has_remote(repo: &Path) -> bool {
     git::has_remote(repo).unwrap_or(false)
 }
@@ -501,13 +518,28 @@ fn check_remote_status(repo: &Path, remote: bool, ticket: &Ticket) -> Option<Str
 }
 
 /// Commit and push a mutation. Handles local-only messaging.
+/// Respects project config push.enabled — if false, skips push even when remote exists.
 fn commit_and_publish(repo: &Path, remote: bool, paths: &[&str], message: &str) -> Result<()> {
     let dbg = crate::telemetry::debug_mode();
     git::add(repo, paths)?;
     crate::telemetry::debug_event(dbg, "", "", &format!("git add {:?}", paths));
     git::commit(repo, message)?;
     crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
-    if remote {
+
+    // Check project config push.enabled
+    let should_push = if remote {
+        let dir = repo.join(".tickets");
+        if dir.is_dir() {
+            let pcfg = crate::config::ProjectConfig::load(&dir);
+            pcfg.push_enabled
+        } else {
+            true
+        }
+    } else {
+        false
+    };
+
+    if should_push {
         let push_start = std::time::Instant::now();
         git::push_with_retry(repo)?;
         crate::telemetry::debug_event(
@@ -516,6 +548,8 @@ fn commit_and_publish(repo: &Path, remote: bool, paths: &[&str], message: &str) 
             "",
             &format!("git push ({:.1}s)", push_start.elapsed().as_secs_f64()),
         );
+    } else if remote {
+        crate::telemetry::debug_event(dbg, "", "", "push skipped (push.enabled=false)");
     }
     Ok(())
 }
@@ -524,8 +558,9 @@ fn commit_and_publish(repo: &Path, remote: bool, paths: &[&str], message: &str) 
 
 fn cmd_ready(json: bool) -> Result<i32> {
     let dir = tickets_dir()?;
+    let pcfg = project_config(&dir);
     let corpus = core::load_corpus(&dir)?;
-    let front = core::frontier(&corpus);
+    let front = core::frontier_with_default_env(&corpus, &pcfg.ready_default_env);
 
     let dbg = crate::telemetry::debug_mode();
     let open = corpus.iter().filter(|t| t.status == Status::Open).count();
@@ -657,6 +692,15 @@ fn cmd_new(
         }
     }
     let dir = tickets_dir()?;
+    let pcfg = project_config(&dir);
+
+    // Apply project config default_priority if user didn't specify one
+    let priority = if priority.is_none() && !pcfg.new_default_priority.is_empty() {
+        Some(pcfg.new_default_priority.as_str())
+    } else {
+        priority
+    };
+
     let txn = GitTransaction::new(&dir)?;
 
     // Scan and allocate
@@ -779,10 +823,18 @@ fn cmd_close(
     force: bool,
 ) -> Result<i32> {
     let (repo, remote, corpus) = preflight_mutation()?;
+    let dir = tickets_dir()?;
+    let pcfg = project_config(&dir);
+
     let t = match core::find_ticket(&corpus, id) {
         Ok(t) => t,
         Err(_) => domain_bail!("no ticket with id {:?}", id),
     };
+
+    // Project config: require_resolution
+    if pcfg.close_require_resolution && note.is_none() && !force {
+        domain_bail!("project config requires --resolution (or --note) to close a ticket");
+    }
 
     // Check remote state
     if let Some(remote_status) = check_remote_status(&repo, remote, t) {
@@ -1159,6 +1211,9 @@ fn cmd_edit(
 
 fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
     let dir = tickets_dir()?;
+    let pcfg = project_config(&dir);
+    // CLI --strict overrides; if not passed, use project config default
+    let effective_strict = strict || pcfg.validate_strict;
     let mut all_findings: Vec<Finding> = Vec::new();
 
     // Load corpus, collecting parse errors
@@ -1186,7 +1241,7 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
     all_findings.extend(findings::check_cycles(&corpus));
     all_findings.extend(findings::check_unchecked_acs(&corpus));
 
-    let status = findings::status_from_findings(&all_findings, strict);
+    let status = findings::status_from_findings(&all_findings, effective_strict);
     findings::print_findings(&all_findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
 }
@@ -1624,6 +1679,7 @@ fn cmd_config(
     get: Option<&str>,
     unset: Option<&str>,
     list: bool,
+    show: bool,
 ) -> Result<i32> {
     if let Some(pair) = set {
         let (key, value) = pair
@@ -1656,6 +1712,26 @@ fn cmd_config(
         return Ok(0);
     }
 
+    if show {
+        // Dump effective project config
+        let dir = tickets_dir()?;
+        let pcfg = project_config(&dir);
+        let config_path = dir.join("config.toml");
+        let has_file = config_path.is_file();
+
+        println!("# Project config: .tickets/config.toml");
+        if has_file {
+            println!("# Source: {}", config_path.display());
+        } else {
+            println!("# (no config file — all defaults)");
+        }
+        println!();
+        for entry in pcfg.list() {
+            println!("{} = {:?} ({})", entry.key, entry.value, entry.source);
+        }
+        return Ok(0);
+    }
+
     if list {
         let cfg = crate::config::Config::load();
         for entry in cfg.list() {
@@ -1664,10 +1740,19 @@ fn cmd_config(
         return Ok(0);
     }
 
-    // No flag provided — show help-like summary
+    // No flag provided — show both user and project config
     let cfg = crate::config::Config::load();
+    println!("# User config (~/.config/tkt/config.toml)");
     for entry in cfg.list() {
         println!("{} = {:?} ({})", entry.key, entry.value, entry.source);
+    }
+    if let Ok(dir) = tickets_dir() {
+        let pcfg = project_config(&dir);
+        println!();
+        println!("# Project config (.tickets/config.toml)");
+        for entry in pcfg.list() {
+            println!("{} = {:?} ({})", entry.key, entry.value, entry.source);
+        }
     }
     Ok(0)
 }

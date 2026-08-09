@@ -2,8 +2,9 @@ pub mod ticket;
 pub mod validate;
 
 pub use ticket::{
-    find_ticket, frontier, id_width, json_string_escape, load_corpus, max_id, new_ticket_text,
-    yaml_scalar_escape, Env, Priority, Status, Ticket, TicketFile, ENV_VALUES, STATUS_VALUES,
+    find_ticket, frontier, frontier_with_default_env, id_width, json_string_escape, load_corpus,
+    max_id, new_ticket_text, yaml_scalar_escape, Env, Priority, Status, Ticket, TicketFile,
+    ENV_VALUES, STATUS_VALUES,
 };
 
 /// Extract the byte range of the acceptance criteria section content from a ticket body.

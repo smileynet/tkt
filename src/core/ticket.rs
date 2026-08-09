@@ -379,7 +379,18 @@ pub fn load_corpus(dir: &Path) -> Result<Vec<Ticket>> {
 
 /// Compute the frontier: open tickets with all deps done, env-filtered, priority-sorted.
 pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
+    frontier_with_default_env(corpus, "")
+}
+
+/// Compute the frontier with a fallback default_env (from project config).
+/// CREW_ENV env var takes priority over the default.
+pub fn frontier_with_default_env<'a>(corpus: &'a [Ticket], default_env: &str) -> Vec<&'a Ticket> {
     let crew_env = std::env::var("CREW_ENV").unwrap_or_default();
+    let effective_env = if crew_env.is_empty() {
+        default_env
+    } else {
+        &crew_env
+    };
     let done: std::collections::HashSet<&str> = corpus
         .iter()
         .filter(|t| t.status == Status::Done)
@@ -395,7 +406,8 @@ pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
             if !t.blocked_by.iter().all(|dep| done.contains(dep.as_str())) {
                 return false;
             }
-            if !crew_env.is_empty() && t.env != Env::Either && t.env.as_str() != crew_env {
+            if !effective_env.is_empty() && t.env != Env::Either && t.env.as_str() != effective_env
+            {
                 return false;
             }
             true
