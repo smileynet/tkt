@@ -54,17 +54,15 @@ pub fn init(cli_color: Option<&str>) {
 }
 
 /// Whether color is currently enabled for stdout.
+/// Auto mode prefers color: enabled unless NO_COLOR is set or stdout is not a tty.
 pub fn is_color_enabled() -> bool {
     match COLOR_MODE.load(Ordering::Relaxed) {
         1 => true,  // always
         2 => false, // never
         _ => {
-            // auto: check NO_COLOR, TKT_COLOR, then tty
+            // auto: color on by default, suppressed only by NO_COLOR or non-tty
             if std::env::var("NO_COLOR").is_ok() {
                 return false;
-            }
-            if std::env::var("TKT_COLOR").is_ok_and(|v| v == "1" || v == "true") {
-                return true;
             }
             stdout_is_tty()
         }
