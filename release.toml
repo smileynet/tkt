@@ -1,0 +1,14 @@
+# cargo-release configuration for tkt
+# Docs: https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md
+
+[workspace]
+allow-branch = ["main"]
+pre-release-hook = ["git", "cliff", "--output", "CHANGELOG.md", "--tag", "{{version}}"]
+pre-release-commit-message = "chore(release): v{{version}}"
+tag-message = "tkt v{{version}}"
+tag-prefix = "v"
+tag-name = "v{{version}}"
+sign-tag = false
+push = true
+publish = true
+verify = true

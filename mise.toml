@@ -1,0 +1,37 @@
+# mise task definitions for tkt
+# Run with: mise run <task>
+
+[tasks.release]
+description = "Cut a release (dry-run by default, pass --execute to ship)"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "=== Pre-release gates ==="
+cargo fmt --check || { echo "❌ fmt check failed"; exit 1; }
+cargo clippy --all-targets -- -D warnings || { echo "❌ clippy failed"; exit 1; }
+cargo test || { echo "❌ tests failed"; exit 1; }
+echo "✓ All gates passed"
+echo ""
+
+echo "=== Running cargo release ==="
+cargo release "${@:-patch}"
+"""
+
+[tasks."release:patch"]
+description = "Release a patch version (dry-run)"
+run = "mise run release -- patch"
+
+[tasks."release:minor"]
+description = "Release a minor version (dry-run)"
+run = "mise run release -- minor"
+
+[tasks."release:major"]
+description = "Release a major version (dry-run)"
+run = "mise run release -- major"
+
+[tasks.check]
+description = "Run the full verification gate (fmt + clippy + test)"
+run = """
+cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+"""
