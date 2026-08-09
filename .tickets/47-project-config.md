@@ -1,7 +1,7 @@
 ---
 id: "47"
 title: "per-project config: .tickets/config.toml for tunable behaviors"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
