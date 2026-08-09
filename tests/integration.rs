@@ -1453,3 +1453,68 @@ fn test_project_config_unknown_key_warns() {
         out
     );
 }
+
+// --- Color/symbol tests ---
+
+#[test]
+fn test_no_color_produces_no_ansi() {
+    let (_tmp, clone) = setup_repo();
+
+    // Run with NO_COLOR=1 — output should contain no ANSI escape codes
+    let (code, _stdout, stderr) = run_tkt_env(&clone, &["close", "01"], &[("NO_COLOR", "1")]);
+    // Ticket 01 is already done, so this will produce an error
+    assert_eq!(code, 1);
+    // Error output should have no ANSI escape sequences
+    assert!(
+        !stderr.contains("\x1b["),
+        "NO_COLOR=1 should suppress ANSI codes in stderr: {:?}",
+        stderr
+    );
+}
+
+#[test]
+fn test_color_always_produces_ansi() {
+    let (_tmp, clone) = setup_repo();
+
+    // Run with --color=always — error output should contain ANSI codes
+    let (code, _stdout, stderr) = run_tkt_env(&clone, &["--color=always", "close", "01"], &[]);
+    assert_eq!(code, 1);
+    // Error output should have ANSI escape sequences (red for ✗)
+    assert!(
+        stderr.contains("\x1b["),
+        "--color=always should produce ANSI codes in stderr: {:?}",
+        stderr
+    );
+}
+
+#[test]
+fn test_ascii_mode_produces_ascii_symbols() {
+    let (_tmp, clone) = setup_repo();
+
+    // Run with TKT_ASCII=1 — should use [err] instead of ✗
+    let (code, _stdout, stderr) = run_tkt_env(&clone, &["close", "01"], &[("TKT_ASCII", "1")]);
+    assert_eq!(code, 1);
+    assert!(
+        stderr.contains("[err]"),
+        "TKT_ASCII=1 should produce [err] instead of ✗: {:?}",
+        stderr
+    );
+    assert!(
+        !stderr.contains("✗"),
+        "TKT_ASCII=1 should NOT contain ✗: {:?}",
+        stderr
+    );
+}
+
+#[test]
+fn test_error_output_includes_program_name() {
+    let (_tmp, clone) = setup_repo();
+
+    let (code, _stdout, stderr) = run_tkt_env(&clone, &["close", "01"], &[]);
+    assert_eq!(code, 1);
+    assert!(
+        stderr.contains("tkt:"),
+        "error output should include program name: {:?}",
+        stderr
+    );
+}

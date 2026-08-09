@@ -56,6 +56,10 @@ struct Cli {
     #[arg(short, long, global = true)]
     quiet: bool,
 
+    /// Color output: always, never, or auto (default: auto)
+    #[arg(long, global = true)]
+    color: Option<String>,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -242,6 +246,9 @@ pub fn run() -> i32 {
     // Store quiet flag for access by command functions
     QUIET.store(cli.quiet, std::sync::atomic::Ordering::Relaxed);
 
+    // Initialize color mode from --color flag and environment
+    crate::color::init(cli.color.as_deref());
+
     let result = match cli.command {
         Commands::Ready { json } => cmd_ready(json),
         Commands::New {
@@ -349,10 +356,10 @@ pub fn run() -> i32 {
         Ok(code) => code,
         Err(e) => {
             if e.downcast_ref::<DomainError>().is_some() {
-                eprintln!("✗ {}", e);
+                eprintln!("tkt: {} {}", crate::color::sym_err(), e);
                 1
             } else {
-                eprintln!("✗ crash: {}", e);
+                eprintln!("tkt: {} crash: {}", crate::color::sym_err(), e);
                 2
             }
         }
@@ -812,7 +819,7 @@ fn cmd_claim(id: &str) -> Result<i32> {
                 "claimed",
                 &t.id,
                 &slug_from_filename(&file.path),
-                "→ in_progress"
+                &format!("{} in_progress", crate::color::sym_arrow())
             )
         );
     }
@@ -929,9 +936,13 @@ fn cmd_close(
                 checked_after,
                 total_acs,
                 if unchecked_after > 0 {
-                    format!(" ⚠ {} unchecked", unchecked_after)
+                    format!(
+                        " {} {} unchecked",
+                        crate::color::sym_warn(),
+                        unchecked_after
+                    )
                 } else {
-                    " ✓".to_string()
+                    format!(" {}", crate::color::sym_ok())
                 }
             );
         }
@@ -953,11 +964,19 @@ fn cmd_close(
                         .iter()
                         .map(|t| format!("{} {}", t.id, t.title))
                         .collect();
-                    println!("  → unblocked: {}", items.join(", "));
+                    println!(
+                        "  {} unblocked: {}",
+                        crate::color::sym_arrow(),
+                        items.join(", ")
+                    );
                 }
             }
             Err(e) => {
-                eprintln!("  ⚠ could not compute unblocked tickets: {}", e);
+                eprintln!(
+                    "  {} could not compute unblocked tickets: {}",
+                    crate::color::sym_warn(),
+                    e
+                );
             }
         }
     }
@@ -974,10 +993,11 @@ fn is_quiet() -> bool {
 
 /// Format a success message in the action-result pattern.
 fn success_msg(verb: &str, id: &str, slug: &str, detail: &str) -> String {
+    let sym = crate::color::sym_ok();
     if detail.is_empty() {
-        format!("✓ {} {} {}", verb, id, slug)
+        format!("{} {} {} {}", sym, verb, id, slug)
     } else {
-        format!("✓ {} {} {} ({})", verb, id, slug, detail)
+        format!("{} {} {} {} ({})", sym, verb, id, slug, detail)
     }
 }
 
@@ -1769,7 +1789,7 @@ fn cmd_config(
         let value = value.trim();
         crate::config::Config::set(key, value)?;
         if !is_quiet() {
-            println!("✓ {} = {:?}", key, value);
+            println!("{} {} = {:?}", crate::color::sym_ok(), key, value);
         }
         return Ok(0);
     }
@@ -1784,7 +1804,11 @@ fn cmd_config(
         let existed = crate::config::Config::unset(key)?;
         if !is_quiet() {
             if existed {
-                println!("✓ unset {:?} (reverted to default)", key);
+                println!(
+                    "{} unset {:?} (reverted to default)",
+                    crate::color::sym_ok(),
+                    key
+                );
             } else {
                 println!("(no value was set for {:?})", key);
             }
