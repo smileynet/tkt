@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
-  "reviewer": "kiro-cli",
-  "reviewed_at": "2026-08-05T15:14:35Z",
+  "reviewer": "codex",
+  "reviewed_at": "2026-08-09T15:41:04Z",
   "verdict": "changes_requested",
   "commits": {
     "scope": "all ancestors through reviewed_through, inclusive",
-    "reviewed_through": "b4df8eae7b0d01c5be28dddac03678b7ea5534d5"
+    "reviewed_through": "260c09e7ac9feffa959a9754b981dcce52c9e004"
   },
   "ticket_source": {
     "type": "tkt",
@@ -15,7 +15,7 @@
   "tickets": [
     {
       "path": ".tickets/01-cargo-dist-release.md",
-      "blob": "bcee1e7a020823380bdebd3561e255eba647c324"
+      "blob": "c37ba1451ffd6c6be8617ce5b6090ec03521b25e"
     },
     {
       "path": ".tickets/02-parity-race-detection.md",
@@ -123,7 +123,7 @@
     },
     {
       "path": ".tickets/28-ux-improvements-audit.md",
-      "blob": "1477159e97de9bb8c2cce39ae9a797b03fc8a3fd"
+      "blob": "13240b50bfa6a7bfff8c012bcd29af2364a7d7a0"
     },
     {
       "path": ".tickets/29-codex-review-findings-208b38b.md",
@@ -131,23 +131,23 @@
     },
     {
       "path": ".tickets/30-close-shows-unblocked.md",
-      "blob": "14504995f8c16c245a065639843755eb2d86b376"
+      "blob": "ce1bcbb2225c86355b7ac52a7559a57c49ac9f44"
     },
     {
       "path": ".tickets/31-output-consistency.md",
-      "blob": "18fbd20517eb3cff315dd1382975b60c0fb77c89"
+      "blob": "6960572d1890aaa6888795f7be602b5dc285ba03"
     },
     {
       "path": ".tickets/32-ready-hierarchy.md",
-      "blob": "065acad57ab8863df6a661f01e7992da2e494d93"
+      "blob": "ea1cf2dc525e5544dbe36496b0f6665972ebddb2"
     },
     {
       "path": ".tickets/33-quiet-flag.md",
-      "blob": "8fec28ac3a52e3ed0d4b76442ecae42e4474620e"
+      "blob": "08e23317245eb7c6efbc522db20aa742397c48b8"
     },
     {
       "path": ".tickets/34-audit-command.md",
-      "blob": "9362bd1884c1e48a6c0f68848b98a51bf4827f27"
+      "blob": "0d4f8c6323a5602f06b9de50fcce47c701ab3b57"
     },
     {
       "path": ".tickets/35-close-workflow-improvements.md",
@@ -155,11 +155,119 @@
     },
     {
       "path": ".tickets/36-agent-command-discovery.md",
-      "blob": "fd77cc68afec4f543582281833bd870130f15439"
+      "blob": "77aa8627f0a04e05b57889c0876eff9bbd4e2226"
     },
     {
       "path": ".tickets/37-skill-distribution-research.md",
-      "blob": "14b437d9aa1acd009ca869b822bea6b93240dabf"
+      "blob": "561c150e384add9398bf44445c9c558391e68a4b"
+    },
+    {
+      "path": ".tickets/38-investigate-godot-helper-crashes.md",
+      "blob": "38264bd0903982d566b53d38a1d0a15bdf2c23e4"
+    },
+    {
+      "path": ".tickets/39-investigate-herdr-recall-crashes.md",
+      "blob": "cb4f161bebf413c4ee9ba8d1d349e8a5cdc4b2cf"
+    },
+    {
+      "path": ".tickets/40-graceful-degradation.md",
+      "blob": "796fb8ffe2803a1c8f9b6caad2c9b8d66e2d5632"
+    },
+    {
+      "path": ".tickets/41-evaluate-claim-usage.md",
+      "blob": "499810d933168189dc38d86c0cd879c54a51ba47"
+    },
+    {
+      "path": ".tickets/42-telemetry-test-noise.md",
+      "blob": "9c9c3067aa1cf84c6ee60d176028261352ad79ec"
+    },
+    {
+      "path": ".tickets/43-mutation-latency.md",
+      "blob": "bcc38315f58ad408a490bbe0ae614b130909d657"
+    },
+    {
+      "path": ".tickets/44-multi-level-priority.md",
+      "blob": "ce5b550e4de737e99a7108d39c131a4d007816d8"
+    },
+    {
+      "path": ".tickets/45-self-update-check.md",
+      "blob": "0cfddb968df5628f955066ec08f15b4e3d03b484"
+    },
+    {
+      "path": ".tickets/46-filters-and-views.md",
+      "blob": "2cfa7d61d302449615d6ea9248b65ce2e25e3b76"
+    },
+    {
+      "path": ".tickets/47-project-config.md",
+      "blob": "4f953105a6bd0b11dc2b939d755970141b1535ea"
+    },
+    {
+      "path": ".tickets/48-dotfile-config.md",
+      "blob": "b4ae870d0ec7e369575f3f4969ee6fc646e53d7b"
+    },
+    {
+      "path": ".tickets/49-dotfile-config.md",
+      "blob": "ec8740b6c6863eb962b80f2050b3f4a7fb8bfbd8"
+    },
+    {
+      "path": ".tickets/50-review-findings-b4df8ea.md",
+      "blob": "a20c99968a3ae549704fcf8b3ce219f80afe70c9"
+    },
+    {
+      "path": ".tickets/51-fix-windows-path-test.md",
+      "blob": "0e9ed19d8ae0e4c4466727ac98fe76f47b690a00"
+    },
+    {
+      "path": ".tickets/52-close-tickets-with-evidence.md",
+      "blob": "64006a43293a24a8062b38ec53301183ef40689d"
+    },
+    {
+      "path": ".tickets/53-add-missing-integration-tests.md",
+      "blob": "165eaabe41f64d8af86e74865b24200e083261b3"
+    },
+    {
+      "path": ".tickets/54-scope-check-all-to-ac-section.md",
+      "blob": "a43ff88adf73f749cc65dc09a7474d4aff74d34c"
+    },
+    {
+      "path": ".tickets/55-gate-edit-on-quiet.md",
+      "blob": "65d275962ddfa6bb39e29c4bb7876269c2fe7b9d"
+    },
+    {
+      "path": ".tickets/56-fix-clippy-warning.md",
+      "blob": "fcfd73fb0a5fac3f3a4d91e3ac06084c91b917b0"
+    },
+    {
+      "path": ".tickets/57-rename-undo-commit-hard.md",
+      "blob": "dc6cdf423b63d66520779c670f8f683b28731acd"
+    },
+    {
+      "path": ".tickets/58-consolidate-quiet-flag.md",
+      "blob": "5aa8e410eb1ab9e9fdf4e6428613451cc045dc32"
+    },
+    {
+      "path": ".tickets/59-resolve-color-symbol-spec.md",
+      "blob": "ac638a355ad32b32b9b72d2563c11484f26d13bb"
+    },
+    {
+      "path": ".tickets/60-minor-correctness-nits.md",
+      "blob": "41ffe354e4581f4479119a9f1b92d91574b4c969"
+    },
+    {
+      "path": ".tickets/61-auto-renumber-on-collision.md",
+      "blob": "47605e639fce55bcece97dd5a7c5ef5a6b3f0f9b"
+    },
+    {
+      "path": ".tickets/62-backlog-status.md",
+      "blob": "1a938b4c07fbd349a20581c41e34e9c6628a8c1f"
+    },
+    {
+      "path": ".tickets/63-spike-worktree-awareness.md",
+      "blob": "74e9cdc5e175f45a85e3fb3fc36227eab71d3b04"
+    },
+    {
+      "path": ".tickets/64-release-automation.md",
+      "blob": "0b5ccc9e9032051d029775015d805fd930baacb6"
     }
   ],
   "adoption": {
