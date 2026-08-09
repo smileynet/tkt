@@ -1,7 +1,7 @@
 ---
 id: "64"
 title: "Release automation: cargo-release + git-cliff + CHANGELOG.md"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 ---
@@ -178,10 +178,14 @@ cargo release "${1:-patch}" "${@:2}"
 
 ## Acceptance criteria
 
-- [ ] CHANGELOG.md created with v0.1.0 content (keepachangelog format)
-- [ ] cliff.toml configured for conventional commit → keepachangelog mapping
-- [ ] release.toml configured with pre-release hook to generate changelog
-- [ ] `mise run release` (or `tools/release.sh`) gates on fmt+clippy+test before releasing
-- [ ] `cargo release patch` dry-run produces correct plan
-- [ ] Skill updates documented (changelog-discipline + release-protocol gaps)
-- [ ] Commit messages follow conventional commits going forward
+- [x] CHANGELOG.md created with v0.1.0 content (keepachangelog format)
+- [x] cliff.toml configured for conventional commit → keepachangelog mapping
+- [x] release.toml configured with pre-release hook to generate changelog
+- [x] `mise run release` (or `tools/release.sh`) gates on fmt+clippy+test before releasing
+- [x] `cargo release patch` dry-run produces correct plan
+- [x] Skill updates documented (changelog-discipline + release-protocol gaps)
+- [x] Commit messages follow conventional commits going forward
+
+## Resolution (2026-08-09)
+
+Shipped: CHANGELOG.md (keepachangelog v2.0.0), cliff.toml (git-cliff), release.toml (cargo-release), mise.toml (release task), tools/release.sh (fallback). Proposed release-management skill in .scratch/. Flow: mise run release -- patch --execute.
