@@ -1,7 +1,7 @@
 ---
 id: "43"
 title: "investigate mutation command latency: 2-2.4s average from git push"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
