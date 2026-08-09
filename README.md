@@ -53,16 +53,17 @@ tkt close 01 --note "JWT + refresh tokens shipped"
 ## Install
 
 ```bash
-# From source (requires Rust toolchain)
+# macOS / Linux
+curl -fsSL https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.sh | sh
+
+# Windows (PowerShell)
+irm https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.ps1 | iex
+
+# From crates.io
+cargo install tkt
+
+# From source
 cargo install --path .
-
-# Or build a release binary directly
-cargo build --release
-# Binary at target/release/tkt
-
-# Verify
-tkt --version
-# → tkt 0.1.0
 ```
 
 Single binary, no runtime dependencies beyond `git`.
@@ -170,6 +171,30 @@ Read commands (`ready`, `query`, `validate`) complete in ~50-100ms. Mutation com
 
 When closing a ticket from a `spike/*` branch, tkt auto-appends "Spike branch: spike/name" to the resolution. This documents which experimental branch validated the work.
 
+## Configuration
+
+Project-level config lives in `.tickets/config.toml` (committed, shared by contributors):
+
+```toml
+[push]
+enabled = true            # set false for local-only repos (skips fetch/push)
+
+[close]
+require_resolution = false  # require --note/--resolution on close
+require_checked_acs = false # require all AC boxes checked on close
+
+[validate]
+strict = false            # treat warnings as errors by default
+
+[ready]
+default_env = ""          # pre-filter frontier (corp/personal)
+
+[new]
+default_priority = "medium"  # default priority for new tickets
+```
+
+User-level config at `~/.config/tkt/config.toml` stores debug preferences. Manage both with `tkt config --list` (show all) or `tkt config --set push.enabled=false`.
+
 ## Agent Integration
 
 For AI coding agents (kiro-cli, codex, etc.), add this to your project's AGENTS.md:
@@ -184,9 +209,31 @@ tkt validate --brief                              # check for issues
 tkt capabilities                                  # machine-readable feature manifest
 ```
 
-For single-agent workflows, `claim` is optional — `close` works directly on open tickets.
+### Single-agent workflow
 
-Machine-readable discovery: `tkt capabilities` outputs a JSON manifest of commands, flags, and workflows.
+When one agent works a repo alone, skip `claim` — it adds a push round-trip with no value:
+
+```
+tkt ready → close <id> --check-all --resolution "..."
+```
+
+### Shared-repo workflow
+
+When multiple agents or humans work the same repo, `claim` signals WIP and detects races:
+
+```
+tkt ready → claim <id> → [work] → close <id> --check-all --resolution "..."
+```
+
+If a claim push is rejected, someone else got there first — pick the next frontier ticket.
+
+### Environment filtering
+
+Set `CREW_ENV=corp` or `CREW_ENV=personal` to filter the frontier by ticket `env` field. Unset means show all.
+
+### Machine-readable discovery
+
+`tkt capabilities` outputs a JSON manifest of commands, flags, and workflows — useful for agents that introspect available tools at session start.
 
 ## Development
 
