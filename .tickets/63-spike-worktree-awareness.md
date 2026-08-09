@@ -1,7 +1,7 @@
 ---
 id: "63"
 title: "Support spike/ branch + worktree pattern in ticket workflows"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -45,6 +45,10 @@ Projects are adopting a pattern where experimental work lives on `spike/<name>` 
 
 ## Acceptance criteria
 
-- [ ] `tkt ready` works correctly when run from a git worktree directory
-- [ ] `tkt close` from a spike worktree includes branch info in resolution (or documents why not)
-- [ ] README or AGENTS.md documents the spike branch + tkt interaction
+- [x] `tkt ready` works correctly when run from a git worktree directory
+- [x] `tkt close` from a spike worktree includes branch info in resolution (or documents why not)
+- [x] README or AGENTS.md documents the spike branch + tkt interaction
+
+## Resolution (2026-08-09)
+
+Verified: tkt works from worktrees (git rev-parse --show-toplevel returns worktree root which contains .tickets/). Added spike branch auto-detection on close. Documented in README.
