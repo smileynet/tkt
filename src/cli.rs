@@ -881,11 +881,20 @@ fn cmd_close(
     if !file.body.contains("## Resolution") {
         let date = chrono_date();
         let resolution = note.unwrap_or("TBD");
+
+        // If on a spike/ branch, note it in the resolution
+        let branch_note = git::current_branch(&repo)
+            .ok()
+            .filter(|b| b.starts_with("spike/"))
+            .map(|b| format!("\n\nSpike branch: {}", b))
+            .unwrap_or_default();
+
         file.body = format!(
-            "{}\n\n## Resolution ({})\n\n{}\n",
+            "{}\n\n## Resolution ({})\n\n{}{}\n",
             file.body.trim_end(),
             date,
-            resolution
+            resolution,
+            branch_note
         );
     }
 

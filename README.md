@@ -152,10 +152,15 @@ Files are the database. Hand-edit any time — tkt reads what's there.
 - **Remote-aware** — scans `origin/main` via `git ls-tree` before allocating IDs
 - **Surgical edits** — changes one field without disturbing the rest of the file
 - **Single binary** — shells out to `git` for full SSH/HTTPS auth compatibility
+- **Worktree-aware** — works from git worktrees (`.tickets/` is part of the checked-out tree)
 
 ### Expected latency
 
 Read commands (`ready`, `query`, `validate`) complete in ~50-100ms. Mutation commands (`new`, `claim`, `close`, `edit`) take ~2s because they include a git fetch + push round-trip — this is the cost of atomic remote operations and push-to-claim semantics. For local-only workflows, set `push.enabled = false` in `.tickets/config.toml` to skip network I/O.
+
+### Spike branches
+
+When closing a ticket from a `spike/*` branch, tkt auto-appends "Spike branch: spike/name" to the resolution. This documents which experimental branch validated the work.
 
 ## Agent Integration
 

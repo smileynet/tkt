@@ -31,6 +31,11 @@ pub fn has_remote(repo: &Path) -> Result<bool> {
     Ok(!remotes.is_empty())
 }
 
+/// Get the current branch name (empty string if detached HEAD).
+pub fn current_branch(repo: &Path) -> Result<String> {
+    git(repo, &["branch", "--show-current"])
+}
+
 /// Fetch from origin (quiet).
 pub fn fetch(repo: &Path) -> Result<()> {
     git(repo, &["fetch", "-q"])?;
