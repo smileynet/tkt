@@ -153,6 +153,10 @@ Files are the database. Hand-edit any time — tkt reads what's there.
 - **Surgical edits** — changes one field without disturbing the rest of the file
 - **Single binary** — shells out to `git` for full SSH/HTTPS auth compatibility
 
+### Expected latency
+
+Read commands (`ready`, `query`, `validate`) complete in ~50-100ms. Mutation commands (`new`, `claim`, `close`, `edit`) take ~2s because they include a git fetch + push round-trip — this is the cost of atomic remote operations and push-to-claim semantics. For local-only workflows, set `push.enabled = false` in `.tickets/config.toml` to skip network I/O.
+
 ## Development
 
 ```bash
