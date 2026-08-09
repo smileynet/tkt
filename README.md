@@ -157,6 +157,24 @@ Files are the database. Hand-edit any time — tkt reads what's there.
 
 Read commands (`ready`, `query`, `validate`) complete in ~50-100ms. Mutation commands (`new`, `claim`, `close`, `edit`) take ~2s because they include a git fetch + push round-trip — this is the cost of atomic remote operations and push-to-claim semantics. For local-only workflows, set `push.enabled = false` in `.tickets/config.toml` to skip network I/O.
 
+## Agent Integration
+
+For AI coding agents (kiro-cli, codex, etc.), add this to your project's AGENTS.md:
+
+```markdown
+## Tickets
+
+tkt ready                                         # what to work on next
+tkt claim <id>                                    # mark as in_progress (shared repos)
+tkt close <id> --check-all --resolution "..."     # mark done
+tkt validate --brief                              # check for issues
+tkt capabilities                                  # machine-readable feature manifest
+```
+
+For single-agent workflows, `claim` is optional — `close` works directly on open tickets.
+
+Machine-readable discovery: `tkt capabilities` outputs a JSON manifest of commands, flags, and workflows.
+
 ## Development
 
 ```bash

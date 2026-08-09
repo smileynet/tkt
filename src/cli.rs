@@ -166,6 +166,8 @@ enum Commands {
     },
     /// Dump all tickets as JSON Lines (one object per line)
     Query,
+    /// Machine-readable feature manifest for agent/automation discovery
+    Capabilities,
     /// Resolve ID collisions with upstream (origin always wins)
     Rebase {
         /// Show what would be renumbered without changing anything
@@ -325,6 +327,7 @@ pub fn run() -> i32 {
         } => cmd_sync_plan(check, fix, strict, brief, plan.as_deref()),
         Commands::Validate { strict, brief } => cmd_validate(strict, brief),
         Commands::Query => cmd_query(),
+        Commands::Capabilities => cmd_capabilities(),
         Commands::Rebase { dry_run } => cmd_rebase(dry_run),
         Commands::Audit { strict, brief } => cmd_audit(strict, brief),
         Commands::Config {
@@ -386,6 +389,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::SyncPlan { .. } => "sync-plan",
         Commands::Validate { .. } => "validate",
         Commands::Query => "query",
+        Commands::Capabilities => "capabilities",
         Commands::Rebase { .. } => "rebase",
         Commands::Audit { .. } => "audit",
         Commands::Config { .. } => "config",
@@ -1669,6 +1673,82 @@ fn cmd_query() -> Result<i32> {
 
         println!("{{{}}}", fields.join(","));
     }
+    Ok(0)
+}
+
+// --- cmd_capabilities ---
+
+fn cmd_capabilities() -> Result<i32> {
+    let version = env!("CARGO_PKG_VERSION");
+    let json = serde_json::json!({
+        "version": version,
+        "commands": {
+            "ready": {
+                "description": "Show frontier (unblocked tickets)",
+                "flags": ["--json"],
+                "reads": true,
+                "mutates": false
+            },
+            "new": {
+                "description": "Create and claim a new ticket",
+                "flags": ["--title", "--blocked-by", "--priority", "--env", "--spec", "--status"],
+                "reads": false,
+                "mutates": true
+            },
+            "claim": {
+                "description": "Mark ticket in_progress (pushed WIP)",
+                "flags": [],
+                "reads": false,
+                "mutates": true
+            },
+            "close": {
+                "description": "Mark ticket done with resolution",
+                "flags": ["--resolution", "--note", "--ac", "--check-all", "--force"],
+                "reads": false,
+                "mutates": true
+            },
+            "edit": {
+                "description": "Surgical field corrections",
+                "flags": ["--title", "--blocked-by", "--priority", "--env", "--spec", "--status", "--ac"],
+                "reads": false,
+                "mutates": true
+            },
+            "query": {
+                "description": "Dump all tickets as JSON Lines",
+                "flags": [],
+                "reads": true,
+                "mutates": false
+            },
+            "validate": {
+                "description": "Check for cycles, dangling deps, contract issues",
+                "flags": ["--strict", "--brief"],
+                "reads": true,
+                "mutates": false
+            },
+            "config": {
+                "description": "Manage user/project configuration",
+                "flags": ["--set", "--get", "--unset", "--list", "--show"],
+                "reads": true,
+                "mutates": true
+            },
+            "capabilities": {
+                "description": "Machine-readable feature manifest",
+                "flags": [],
+                "reads": true,
+                "mutates": false
+            }
+        },
+        "workflows": {
+            "single_agent": "ready → close <id> --check-all --resolution '...'",
+            "shared_repo": "ready → claim <id> → [work] → close <id> --check-all --resolution '...'",
+            "scripting": "ready --json | jq '.id' | xargs tkt claim"
+        },
+        "config": {
+            "user": "~/.config/tkt/config.toml",
+            "project": ".tickets/config.toml"
+        }
+    });
+    println!("{}", serde_json::to_string_pretty(&json).unwrap());
     Ok(0)
 }
 
