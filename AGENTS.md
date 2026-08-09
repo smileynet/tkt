@@ -36,7 +36,7 @@ TELEMETRY.md         — transparency document for telemetry collection
 ```bash
 cargo build                    # debug build
 cargo build --release          # release build (stripped, LTO)
-cargo test                     # all tests (48 unit + 48 integration)
+cargo test                     # all tests
 cargo test -- --nocapture      # with output
 cargo clippy                   # lint (must be 0 warnings)
 cargo fmt                      # format (must produce no diff)

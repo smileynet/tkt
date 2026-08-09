@@ -192,7 +192,7 @@ Machine-readable discovery: `tkt capabilities` outputs a JSON manifest of comman
 
 ```bash
 cargo build            # debug build
-cargo test             # 96 tests (48 unit + 48 integration)
+cargo test             # all tests
 cargo clippy           # must be 0 warnings
 cargo fmt --check      # must produce no diff
 ```
