@@ -1,7 +1,7 @@
 ---
 id: "46"
 title: "design useful filters and views aligned with JTBD"
-status: open
+status: in_progress
 blocked_by: ["44"]
 ---
 
