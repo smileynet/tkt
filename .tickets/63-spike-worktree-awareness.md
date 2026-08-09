@@ -1,7 +1,7 @@
 ---
 id: "63"
 title: "Support spike/ branch + worktree pattern in ticket workflows"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
