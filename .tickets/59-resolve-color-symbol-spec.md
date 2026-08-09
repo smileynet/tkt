@@ -1,7 +1,7 @@
 ---
 id: "59"
 title: "Resolve color/symbol spec vs implementation (F9)"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -46,12 +46,16 @@ Related: the error prefix changed from `tkt: <msg>` to `✗ <msg>`, dropping pro
 
 ## Acceptance criteria
 
-- [ ] Decision documented (implement color OR drop requirement)
-- [ ] Color crate selected with rationale (research output)
-- [ ] Color active on tty when NO_COLOR unset; off otherwise
-- [ ] `--color=always|never|auto` flag (matches cargo/git convention)
-- [ ] `NO_COLOR=1` disables (https://no-color.org/)
-- [ ] `TKT_ASCII=1` degrades to ASCII symbols (optional, stretch)
-- [ ] Error output includes program name for pipeline diagnostics
-- [ ] Behavior consistent across commands
-- [ ] No color in `--json` output regardless of settings
+- [x] Decision documented (implement color OR drop requirement)
+- [x] Color crate selected with rationale (research output)
+- [x] Color active on tty when NO_COLOR unset; off otherwise
+- [x] `--color=always|never|auto` flag (matches cargo/git convention)
+- [x] `NO_COLOR=1` disables (https://no-color.org/)
+- [x] `TKT_ASCII=1` degrades to ASCII symbols (optional, stretch)
+- [x] Error output includes program name for pipeline diagnostics
+- [x] Behavior consistent across commands
+- [x] No color in `--json` output regardless of settings
+
+## Resolution (2026-08-09)
+
+Implemented all deliverables: color module (no deps), --color=always|never|auto, NO_COLOR, TKT_COLOR, TKT_ASCII, program name in errors. Zero ANSI in JSON. Crate decision: none needed — std::io::IsTerminal + raw ANSI codes keeps it minimal.
