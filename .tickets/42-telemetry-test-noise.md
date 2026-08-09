@@ -1,7 +1,7 @@
 ---
 id: "42"
 title: "telemetry test noise: 'work' project events from integration tests"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -28,6 +28,10 @@ The `DO_NOT_TRACK=1` fix (applied in an earlier session) prevents the base `run_
 
 ## Acceptance criteria
 
-- [ ] Root cause confirmed
-- [ ] Fix prevents future test noise
-- [ ] Existing work.jsonl cleaned
+- [x] Root cause confirmed
+- [x] Fix prevents future test noise
+- [x] Existing work.jsonl cleaned
+
+## Resolution (2026-08-09)
+
+Root cause: run_tkt_env() didn't set DO_NOT_TRACK=1, allowing debug tests to record events under 'work' slug. Fix: default DO_NOT_TRACK=1 in helper unless caller overrides. Cleaned 16 stale events from work.jsonl.
