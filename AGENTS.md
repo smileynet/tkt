@@ -12,6 +12,8 @@ Single Rust binary. Originally ported from a Python implementation (now removed)
 src/
 ├── main.rs          — entry point
 ├── cli.rs           — clap derive commands + dispatch
+├── color.rs         — color/symbol support (NO_COLOR, --color, TKT_ASCII)
+├── config.rs        — user config (~/.config/tkt/) + project config (.tickets/config.toml)
 ├── telemetry.rs     — consent, session tracking, JSONL sink, rotation
 ├── core/
 │   ├── mod.rs       — re-exports
@@ -33,7 +35,7 @@ TELEMETRY.md         — transparency document for telemetry collection
 ```bash
 cargo build                    # debug build
 cargo build --release          # release build (stripped, LTO)
-cargo test                     # all tests (40 unit + 25 integration)
+cargo test                     # all tests (48 unit + 48 integration)
 cargo test -- --nocapture      # with output
 cargo clippy                   # lint (must be 0 warnings)
 cargo fmt                      # format (must produce no diff)
@@ -52,18 +54,59 @@ All three must pass with zero warnings before presenting work as done.
 ```bash
 tkt --version                                     # print version
 tkt ready [--json]                                # frontier: open + deps done + env match
-tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority high] [--env E]
+tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority P] [--env E] [--status S]
 tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E]
 tkt claim <id>                                    # status→in_progress, pushed
-tkt close <id> [--note "..."] [--ac N,N]          # status→done
-tkt edit <id> [--title T] [--blocked-by IDS] [--priority high|''] [--env E|''] [--spec S|''] [--ac N,N]
+tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force]
+tkt edit <id> [--title T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
-tkt query                                         # full corpus as JSON Lines
+tkt query [--status S] [--priority P]             # full corpus as JSON Lines (filterable)
+tkt blocked                                       # open tickets with unsatisfied deps
+tkt capabilities                                  # machine-readable JSON feature manifest
+tkt rebase [--dry-run]                            # resolve ID collisions with upstream
+tkt audit [--strict] [--brief]                    # closure quality check
 tkt sync-plan --check [--strict] [--brief] [plan] # report drift
 tkt sync-plan --fix [--strict] [--brief] [plan]   # fix derivable columns
 tkt validate [--strict] [--brief]                 # contract + cycle + decay findings
+tkt config [--set K=V] [--get K] [--unset K] [--list] [--show]  # user + project config
 tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telemetry
 ```
+
+### Global flags
+
+| Flag | Effect |
+|------|--------|
+| `-q` / `--quiet` | Suppress confirmations, emit only essential data |
+| `--color=always\|never\|auto` | Control ANSI color output (default: auto) |
+
+### Priority levels
+
+`urgent` > `high` > `medium` (default) > `low`. Frontier sorts by priority bucket then ID.
+
+### Status values
+
+`backlog` (parked, excluded from frontier) → `open` → `in_progress` → `done`
+
+### Configuration
+
+- **User config**: `~/.config/tkt/config.toml` — debug mode, format preferences
+- **Project config**: `.tickets/config.toml` — committed to repo, shared by contributors
+  - `[close]` require_resolution, require_checked_acs
+  - `[validate]` strict
+  - `[ready]` default_env
+  - `[priority]` warn_unknown
+  - `[new]` default_priority
+  - `[push]` enabled (set false for local-only repos)
+
+### Environment variables
+
+| Var | Effect |
+|-----|--------|
+| `TKT_DEBUG=1\|json` | Debug output to stderr |
+| `TKT_ASCII=1` | ASCII-only symbols (✓→[ok], ✗→[err], ⚠→[warn]) |
+| `NO_COLOR=1` | Disable ANSI color |
+| `CREW_ENV` | Filter frontier by env (corp/personal) |
+| `DO_NOT_TRACK=1` | Disable telemetry |
 
 ## Architecture Decisions
 
@@ -73,6 +116,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 - **No async**: all operations are sequential (fetch → scan → write → commit → push)
 - **Local-only telemetry**: opt-in JSONL file sink, per-project segmentation, session-aware rotation, never blocks CLI
 - **LazyLock regex statics**: fixed patterns compiled once via `std::sync::LazyLock`
+- **No color crate**: raw ANSI codes + `std::io::IsTerminal` — zero additional dependencies
 
 ## Contract
 
@@ -81,6 +125,8 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 - Push-to-claim: pushed commit = claimed id (race detection on push rejection)
 - Exit codes: 0=success, 1=domain failure (not found, conflict, drift), 2=operational crash (I/O, git, parse)
 - Output: JSON by default for validate/sync-plan; human by default for ready/new/claim/close/edit (use --json for ready)
+- Spike branches: closing from `spike/*` auto-appends branch name to resolution
+- Worktree-aware: works from git worktrees (`.tickets/` is part of the checked-out tree)
 
 ## Constraints
 
