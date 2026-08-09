@@ -1,7 +1,7 @@
 ---
 id: "59"
 title: "Resolve color/symbol spec vs implementation (F9)"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
