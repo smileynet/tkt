@@ -2,7 +2,7 @@
 id: "64"
 title: "Release automation: cargo-release + git-cliff + CHANGELOG.md"
 status: open
-blocked_by: ["01"]
+blocked_by: []
 priority: high
 ---
 
