@@ -25,15 +25,26 @@ strip = true
 lto = true
 codegen-units = 1
 
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
 
-# Config for 'cargo dist'
+# Config for 'dist'
 [workspace.metadata.dist]
-# CI backends to target
+# CI backends to support
 ci = "github"
-# Target platforms
-targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
-# Installers to generate
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+# The installers to generate for each app
 installers = ["shell", "powershell"]
-# Archive format
+# The archive format to use for non-windows builds (defaults .tar.xz)
 unix-archive = ".tar.gz"
+# The archive format to use for windows builds (defaults .zip)
 windows-archive = ".zip"
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.32.0"
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Whether to install an updater program
+install-updater = false
