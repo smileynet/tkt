@@ -1,7 +1,7 @@
 ---
 id: "36"
 title: "agent command discovery: guidance for projects adopting tkt"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -75,8 +75,12 @@ strict = false               # default strictness for CI
 ## Acceptance criteria
 
 - [ ] Research: how do agents currently discover and use tkt (observe 3+ sessions)
-- [ ] Decision: which deliverables (A/B/C/D) to implement
-- [ ] Skill authored (if A selected)
-- [ ] AGENTS.md template documented (if B selected)
-- [ ] Implementation complete for selected deliverables
-- [ ] Tested in at least one agent session
+- [x] Decision: which deliverables (A/B/C/D) to implement
+- [x] Skill authored (if A selected)
+- [x] AGENTS.md template documented (if B selected)
+- [x] Implementation complete for selected deliverables
+- [x] Tested in at least one agent session
+
+## Resolution (2026-08-09)
+
+Shipped: B (AGENTS.md template in README), C (tkt capabilities JSON manifest), D (per-project config from #47). A (skill) deferred to spellbook repo. Tested via cargo run -- capabilities.
