@@ -169,7 +169,16 @@ enum Commands {
         brief: bool,
     },
     /// Dump all tickets as JSON Lines (one object per line)
-    Query,
+    Query {
+        /// Filter by status (open, in_progress, done, backlog)
+        #[arg(long)]
+        status: Option<String>,
+        /// Filter by priority (urgent, high, medium, low)
+        #[arg(long)]
+        priority: Option<String>,
+    },
+    /// Show blocked tickets with their blockers
+    Blocked,
     /// Machine-readable feature manifest for agent/automation discovery
     Capabilities,
     /// Resolve ID collisions with upstream (origin always wins)
@@ -333,7 +342,8 @@ pub fn run() -> i32 {
             plan,
         } => cmd_sync_plan(check, fix, strict, brief, plan.as_deref()),
         Commands::Validate { strict, brief } => cmd_validate(strict, brief),
-        Commands::Query => cmd_query(),
+        Commands::Query { status, priority } => cmd_query(status.as_deref(), priority.as_deref()),
+        Commands::Blocked => cmd_blocked(),
         Commands::Capabilities => cmd_capabilities(),
         Commands::Rebase { dry_run } => cmd_rebase(dry_run),
         Commands::Audit { strict, brief } => cmd_audit(strict, brief),
@@ -395,7 +405,8 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Renumber { .. } => "renumber",
         Commands::SyncPlan { .. } => "sync-plan",
         Commands::Validate { .. } => "validate",
-        Commands::Query => "query",
+        Commands::Query { .. } => "query",
+        Commands::Blocked => "blocked",
         Commands::Capabilities => "capabilities",
         Commands::Rebase { .. } => "rebase",
         Commands::Audit { .. } => "audit",
@@ -1662,11 +1673,24 @@ fn cmd_sync_plan(
 
 // --- cmd_query ---
 
-fn cmd_query() -> Result<i32> {
+fn cmd_query(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
 
     for t in &corpus {
+        // Apply filters
+        if let Some(sf) = status_filter {
+            if t.status.as_str() != sf {
+                continue;
+            }
+        }
+        if let Some(pf) = priority_filter {
+            match t.priority {
+                Some(p) if p.as_str() == pf => {}
+                _ => continue,
+            }
+        }
+
         let blocked_by: Vec<String> = t
             .blocked_by
             .iter()
@@ -1701,6 +1725,67 @@ fn cmd_query() -> Result<i32> {
         }
 
         println!("{{{}}}", fields.join(","));
+    }
+    Ok(0)
+}
+
+// --- cmd_blocked ---
+
+fn cmd_blocked() -> Result<i32> {
+    let dir = tickets_dir()?;
+    let corpus = core::load_corpus(&dir)?;
+
+    let done: std::collections::HashSet<&str> = corpus
+        .iter()
+        .filter(|t| t.status == Status::Done)
+        .map(|t| t.id.as_str())
+        .collect();
+
+    // Find open tickets that have at least one undone dependency
+    let mut blocked: Vec<&Ticket> = corpus
+        .iter()
+        .filter(|t| {
+            t.status == Status::Open
+                && !t.blocked_by.is_empty()
+                && !t.blocked_by.iter().all(|dep| done.contains(dep.as_str()))
+        })
+        .collect();
+
+    blocked.sort_by_key(|t| t.numeric_key());
+
+    if blocked.is_empty() {
+        if !is_quiet() {
+            println!("No blocked tickets.");
+        }
+        return Ok(0);
+    }
+
+    if !is_quiet() {
+        println!("Blocked ({}):", blocked.len());
+    }
+    for t in &blocked {
+        if is_quiet() {
+            println!("{}", t.id);
+        } else {
+            println!("  {}  {}", t.id, t.title);
+            // Show which dependencies are not done
+            let undone_deps: Vec<String> = t
+                .blocked_by
+                .iter()
+                .filter(|dep| !done.contains(dep.as_str()))
+                .map(|dep| {
+                    // Look up the blocker's title and status
+                    corpus
+                        .iter()
+                        .find(|c| c.id == *dep)
+                        .map(|c| format!("{} {} ({})", dep, c.title, c.status.as_str()))
+                        .unwrap_or_else(|| format!("{} (not found)", dep))
+                })
+                .collect();
+            for dep in &undone_deps {
+                println!("    blocked by: {}", dep);
+            }
+        }
     }
     Ok(0)
 }

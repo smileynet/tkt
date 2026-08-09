@@ -1518,3 +1518,85 @@ fn test_error_output_includes_program_name() {
         stderr
     );
 }
+
+// --- Filter and view tests ---
+
+#[test]
+fn test_query_status_filter() {
+    let (_tmp, clone) = setup_repo();
+
+    // Seed has status: done. Add an open ticket.
+    std::fs::write(
+        clone.join(".tickets/02-open.md"),
+        "---\nid: \"02\"\ntitle: \"Open task\"\nstatus: open\nblocked_by: []\n---\n\n# Open\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add open"]);
+
+    // Filter for done — should return only ticket 01
+    let (code, out) = run_tkt(&clone, &["query", "--status", "done"]);
+    assert_eq!(code, 0);
+    assert!(
+        out.contains("\"01\""),
+        "should include done ticket: {}",
+        out
+    );
+    assert!(
+        !out.contains("\"02\""),
+        "should exclude open ticket: {}",
+        out
+    );
+
+    // Filter for open — should return only ticket 02
+    let (code, out) = run_tkt(&clone, &["query", "--status", "open"]);
+    assert_eq!(code, 0);
+    assert!(
+        out.contains("\"02\""),
+        "should include open ticket: {}",
+        out
+    );
+    assert!(
+        !out.contains("\"01\""),
+        "should exclude done ticket: {}",
+        out
+    );
+}
+
+#[test]
+fn test_blocked_shows_blockers() {
+    let (_tmp, clone) = setup_repo();
+
+    // Add a ticket blocked by the done seed (should be on frontier, NOT blocked)
+    std::fs::write(
+        clone.join(".tickets/02-unblocked.md"),
+        "---\nid: \"02\"\ntitle: \"Unblocked\"\nstatus: open\nblocked_by: [\"01\"]\n---\n\n# Unblocked\n",
+    )
+    .unwrap();
+    // Add a ticket blocked by something NOT done
+    std::fs::write(
+        clone.join(".tickets/03-blocked.md"),
+        "---\nid: \"03\"\ntitle: \"Blocked task\"\nstatus: open\nblocked_by: [\"02\"]\n---\n\n# Blocked\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add tickets"]);
+
+    let (code, out) = run_tkt(&clone, &["blocked"]);
+    assert_eq!(code, 0);
+    assert!(
+        out.contains("03") && out.contains("Blocked task"),
+        "should show blocked ticket 03: {}",
+        out
+    );
+    assert!(
+        out.contains("blocked by: 02"),
+        "should show the blocker: {}",
+        out
+    );
+    assert!(
+        !out.contains("02  Unblocked"),
+        "should NOT show unblocked ticket 02 as blocked: {}",
+        out
+    );
+}
