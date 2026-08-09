@@ -1,7 +1,7 @@
 ---
 id: "47"
 title: "per-project config: .tickets/config.toml for tunable behaviors"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -67,11 +67,15 @@ Existing projects without config.toml continue working identically (all defaults
 
 ## Acceptance criteria
 
-- [ ] `.tickets/config.toml` parsed at startup when present
-- [ ] All documented fields supported with correct defaults
-- [ ] Missing config file = all defaults (no error)
-- [ ] Unknown keys produce a warning (forward-compatible)
-- [ ] Flags override config values
-- [ ] `tkt config --show` dumps effective configuration with source annotations
-- [ ] Integration test: config changes behavior (e.g., require_resolution = true blocks bare close)
-- [ ] Document config format in README
+- [x] `.tickets/config.toml` parsed at startup when present
+- [x] All documented fields supported with correct defaults
+- [x] Missing config file = all defaults (no error)
+- [x] Unknown keys produce a warning (forward-compatible)
+- [x] Flags override config values
+- [x] `tkt config --show` dumps effective configuration with source annotations
+- [x] Integration test: config changes behavior (e.g., require_resolution = true blocks bare close)
+- [x] Document config format in README
+
+## Resolution (2026-08-09)
+
+Implemented: ProjectConfig struct with 7 settings across 5 sections. Parsed from .tickets/config.toml with section headers. All fields have sensible defaults. Unknown keys warn. Flags override config. --show dumps effective settings. 6 tests (2 unit + 4 integration).
