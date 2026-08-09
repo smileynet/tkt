@@ -1,7 +1,7 @@
 ---
 id: "65"
 title: "Confirm and address Codex review findings through 260c09e"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 ---
@@ -110,3 +110,7 @@ each finding against current code before changing it.
 - [ ] Regression tests cover confirmed defects where practical
 - [ ] Relevant build, test, and lint checks pass
 - [ ] Corrected changes receive a fresh review
+
+## Resolution (2026-08-09)
+
+8 findings fixed (F1-F3, F5-F8, F10), 1 rejected (F9: by design), 1 confirmed-deferred (F4: inherent ambiguity). All fixes verified via cargo fmt + clippy + test (96 pass). Key fixes: push.enabled now gates all paths, status validation on creation, rebase stages surgically, AC detection line-aware, close respects require_checked_acs config.
