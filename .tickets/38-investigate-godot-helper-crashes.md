@@ -34,3 +34,7 @@ Should `tkt ready` and `tkt query` crash (exit 2) on a single unparseable file, 
 - [ ] Fix applied (either fix the malformed file, or make read commands resilient)
 - [ ] If resilience fix: read commands skip unparseable files with stderr warning
 - [ ] Regression test for graceful degradation on malformed files
+
+## Resolution (2026-08-09)
+
+Fixed in commit 88d0faa: lenient priority parsing + graceful corpus loading. Crashes were caused by Priority::parse rejecting unknown values and load_corpus crashing on unparseable files. Both now degrade gracefully with stderr warnings.

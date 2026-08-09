@@ -36,3 +36,7 @@ Use tolerant loading for read commands (`ready`, `query`) and mutation preflight
 - [ ] `tkt query` shows all parseable tickets, skips broken ones with warning
 - [ ] Mutation commands error clearly if their target ticket is unparseable
 - [ ] Integration test: corpus with one good + one bad file → ready shows the good one
+
+## Resolution (2026-08-09)
+
+Fixed in commit 88d0faa: lenient priority parsing + graceful corpus loading. Crashes were caused by Priority::parse rejecting unknown values and load_corpus crashing on unparseable files. Both now degrade gracefully with stderr warnings.

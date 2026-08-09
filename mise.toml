@@ -1,6 +1,10 @@
 # mise task definitions for tkt
 # Run with: mise run <task>
 
+[tools]
+"cargo:cargo-release" = "latest"
+"cargo:git-cliff" = "latest"
+
 [tasks.release]
 description = "Cut a release (dry-run by default, pass --execute to ship)"
 run = """

@@ -102,6 +102,17 @@ pub fn validate_priority(priority: &str) -> Result<(), String> {
     }
 }
 
+/// Validate a status value.
+pub fn validate_status(status: &str) -> Result<(), String> {
+    match status {
+        "open" | "in_progress" | "done" | "backlog" => Ok(()),
+        _ => Err(format!(
+            "status must be open/in_progress/done/backlog (got {:?})",
+            status
+        )),
+    }
+}
+
 /// Check for duplicate slugs in a batch.
 pub fn validate_no_duplicate_slugs(slugs: &[&str]) -> Result<(), String> {
     let mut seen = std::collections::HashSet::new();

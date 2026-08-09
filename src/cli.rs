@@ -708,6 +708,11 @@ fn cmd_new(
             domain_bail!("{}", err);
         }
     }
+    if let Some(s) = status {
+        if let Err(err) = core::validate::validate_status(s) {
+            domain_bail!("{}", err);
+        }
+    }
     for dep in blocked_by {
         if let Err(e) = core::validate::validate_id(dep) {
             domain_bail!("--blocked-by: {}", e);
@@ -873,7 +878,9 @@ fn cmd_close(
     let total_acs = unchecked_before + checked_before;
 
     // Error if ALL ACs are unchecked (unless --force, --ac, or --check-all will handle it)
-    if total_acs > 0
+    // Respects project config: close.require_checked_acs = false disables this guard
+    if pcfg.close_require_checked_acs
+        && total_acs > 0
         && unchecked_before == total_acs
         && ac_indices.is_empty()
         && !check_all
@@ -1401,6 +1408,7 @@ fn cmd_rebase(dry_run: bool) -> Result<i32> {
         .collect();
 
     let mut refs_updated = 0;
+    let mut modified_paths: Vec<String> = Vec::new();
     for name in &updated_corpus {
         let path = dir.join(name);
         let mut file = core::TicketFile::parse(&path)?;
@@ -1429,13 +1437,17 @@ fn cmd_rebase(dry_run: bool) -> Result<i32> {
                     .join(", ");
                 file.set_field("blocked_by", &format!("[{}]", formatted));
                 file.write()?;
+                modified_paths.push(format!(".tickets/{}", name));
                 refs_updated += 1;
             }
         }
     }
 
-    // Step 7: commit atomically
-    git::git(&repo, &["add", ".tickets/"])?;
+    // Step 7: commit atomically — only stage files we changed
+    let mut all_paths = renamed_paths.clone();
+    all_paths.extend(modified_paths);
+    let add_paths: Vec<&str> = all_paths.iter().map(|s| s.as_str()).collect();
+    git::add(&repo, &add_paths)?;
     let msg = format!(
         "chore(tickets): rebase — renumber {} ticket(s) to resolve ID collision",
         renumber_map.len()
@@ -2195,6 +2207,11 @@ fn cmd_batch(
             domain_bail!("{}", err);
         }
     }
+    if let Some(s) = status {
+        if let Err(err) = core::validate::validate_status(s) {
+            domain_bail!("{}", err);
+        }
+    }
     for dep in blocked_by {
         if let Err(e) = core::validate::validate_id(dep) {
             domain_bail!("--blocked-by: {}", e);
@@ -2294,6 +2311,7 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
     }
 
     let dir = tickets_dir()?;
+    let pcfg = project_config(&dir);
     let repo = git::repo_root(&dir)?;
     let corpus = core::load_corpus(&dir)?;
 
@@ -2421,10 +2439,8 @@ fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i
         &repo,
         &format!("chore(tickets): renumber {} -> {}", old_id, new_id),
     )?;
-    if has_remote(&repo) {
+    if has_remote(&repo) && pcfg.push_enabled {
         git::push_with_retry(&repo)?;
-    } else {
-        eprintln!("committed locally, no remote configured");
     }
 
     let detail = if refs_updated > 0 {

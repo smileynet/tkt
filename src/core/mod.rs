@@ -12,7 +12,12 @@ pub use ticket::{
 /// ending at the next `## ` heading or EOF. Returns None if no AC section exists.
 pub fn ac_section_range(body: &str) -> Option<std::ops::Range<usize>> {
     let heading = "## Acceptance criteria";
-    let start_idx = body.find(heading)?;
+    // Match only when heading appears at the start of a line (or start of body)
+    let start_idx = if body.starts_with(heading) {
+        Some(0)
+    } else {
+        body.find(&format!("\n{}", heading)).map(|i| i + 1)
+    }?;
     let after_heading = start_idx + heading.len();
     let content_start = body[after_heading..]
         .find('\n')

@@ -31,3 +31,7 @@ Both projects had query attempts crash. Likely same root cause as #38 (malformed
 
 - [ ] Root cause identified for herdr and recall crashes
 - [ ] Fix applied or documented (if it's a project setup issue vs tkt bug)
+
+## Resolution (2026-08-09)
+
+Fixed in commit 88d0faa: lenient priority parsing + graceful corpus loading. Crashes were caused by Priority::parse rejecting unknown values and load_corpus crashing on unparseable files. Both now degrade gracefully with stderr warnings.

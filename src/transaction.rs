@@ -33,7 +33,11 @@ impl GitTransaction {
     /// Create a new transaction: resolves repo root, detects remote, fetches if remote exists.
     pub fn new(dir: &Path) -> Result<Self> {
         let repo = git::repo_root(dir)?;
-        let remote = git::has_remote(&repo).unwrap_or(false);
+        let has_remote = git::has_remote(&repo).unwrap_or(false);
+
+        // Respect project config push.enabled
+        let pcfg = crate::config::ProjectConfig::load(dir);
+        let remote = has_remote && pcfg.push_enabled;
 
         if remote {
             git::fetch(&repo)?;

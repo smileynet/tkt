@@ -3,7 +3,7 @@
 
 [workspace]
 allow-branch = ["main"]
-pre-release-hook = ["git", "cliff", "--output", "CHANGELOG.md", "--tag", "{{version}}"]
+pre-release-hook = ["git", "cliff", "--output", "CHANGELOG.md", "--tag", "v{{version}}"]
 pre-release-commit-message = "chore(release): v{{version}}"
 tag-message = "tkt v{{version}}"
 tag-prefix = "v"
