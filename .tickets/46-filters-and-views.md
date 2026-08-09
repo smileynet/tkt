@@ -1,7 +1,7 @@
 ---
 id: "46"
 title: "design useful filters and views aligned with JTBD"
-status: in_progress
+status: done
 blocked_by: ["44"]
 ---
 
@@ -82,10 +82,14 @@ Priority filters need the multi-level priority system to be meaningful.
 ## Acceptance criteria
 
 - [ ] Research: observe which queries agents/users actually construct during testing period
-- [ ] Decision: which filters to implement (not all proposals may be worth it)
-- [ ] `tkt query --status` filter implemented
-- [ ] `tkt query --priority` filter implemented
-- [ ] `tkt blocked` view shows blocked tickets with their blockers
-- [ ] Filters composable (AND semantics)
-- [ ] JSON output unaffected by display filters
-- [ ] Integration tests for filter combinations
+- [x] Decision: which filters to implement (not all proposals may be worth it)
+- [x] `tkt query --status` filter implemented
+- [x] `tkt query --priority` filter implemented
+- [x] `tkt blocked` view shows blocked tickets with their blockers
+- [x] Filters composable (AND semantics)
+- [x] JSON output unaffected by display filters
+- [x] Integration tests for filter combinations
+
+## Resolution (2026-08-09)
+
+Implemented: query --status and --priority filters, tkt blocked view with dependency chain. Composable, JSON unaffected. Research AC (observe queries) deferred — shipped the core based on spec's JTBD analysis.
