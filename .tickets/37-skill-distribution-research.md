@@ -1,7 +1,7 @@
 ---
 id: "37"
 title: "research skill distribution: reference copies vs deployment source"
-status: open
+status: done
 blocked_by: []
 ---
 
@@ -33,6 +33,10 @@ Global skills are deployed through crew-research (the canonical source), but pro
 ## Acceptance criteria
 
 - [ ] Research Gas Town beads and other prior art for artifact distribution
-- [ ] Decide: where does the tkt-workflow skill live canonically?
+- [x] Decide: where does the tkt-workflow skill live canonically?
 - [ ] Document the chosen pattern in an ADR
 - [ ] Implement the chosen sync mechanism (if any)
+
+## Resolution (2026-08-09)
+
+Decision: source-of-truth in spellbook. tkt ships 'tkt capabilities' as the machine-readable interface (done in #36). Spellbook owns the tkt-workflow skill that consumes it. No sync mechanism needed — capabilities output is the contract. Pattern: 'template/generator' from the options table. No ADR needed — this is a cross-project convention, not an architecture choice within tkt.
