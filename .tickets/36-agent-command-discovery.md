@@ -1,7 +1,7 @@
 ---
 id: "36"
 title: "agent command discovery: guidance for projects adopting tkt"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
