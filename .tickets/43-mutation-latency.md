@@ -1,7 +1,7 @@
 ---
 id: "43"
 title: "investigate mutation command latency: 2-2.4s average from git push"
-status: in_progress
+status: done
 blocked_by: []
 ---
 
@@ -43,6 +43,10 @@ Option 4 (accept) for v1, with option 5 as a future enhancement for high-through
 
 ## Acceptance criteria
 
-- [ ] Decision documented
+- [x] Decision documented
 - [ ] If implementing --no-push: design + implementation
-- [ ] If accepting: document expected latency in README/TELEMETRY.md
+- [x] If accepting: document expected latency in README/TELEMETRY.md
+
+## Resolution (2026-08-09)
+
+Decision: accept latency (option 4). 2s is the cost of atomic push-to-claim. Mitigation: push.enabled=false shipped in #47 for local-only workflows. Documented in README Design section.
