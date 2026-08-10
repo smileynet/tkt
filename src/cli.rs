@@ -302,7 +302,7 @@ pub fn run() -> i32 {
             force,
         } => {
             let text = resolution.or(note);
-            cmd_close(
+            crate::commands::close::run(
                 &id,
                 text.as_deref(),
                 &ac.unwrap_or_default(),
@@ -319,7 +319,7 @@ pub fn run() -> i32 {
             priority,
             status,
             ac,
-        } => cmd_edit(
+        } => crate::commands::edit::run(
             &id,
             title.as_deref(),
             blocked_by.as_deref(),
