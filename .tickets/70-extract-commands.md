@@ -1,7 +1,7 @@
 ---
 id: "70"
 title: "Extract command implementations from cli.rs into src/commands/"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 ---
@@ -41,9 +41,13 @@ After this work:
 
 ## Acceptance criteria
 
-- [ ] `src/commands/` module created with per-command files
-- [ ] `src/cli.rs` reduced to dispatch + framework concerns only
-- [ ] Shared helpers extracted to `src/commands/common.rs`
-- [ ] All 48 integration tests pass without modification
-- [ ] `cargo clippy` zero warnings
-- [ ] No behavioral change (output, exit codes, flags unchanged)
+- [x] `src/commands/` module created with per-command files
+- [x] `src/cli.rs` reduced to dispatch + framework concerns only
+- [x] Shared helpers extracted to `src/commands/common.rs`
+- [x] All 48 integration tests pass without modification
+- [x] `cargo clippy` zero warnings
+- [x] No behavioral change (output, exit codes, flags unchanged)
+
+## Resolution (2026-08-10)
+
+Extracted all 16 commands from cli.rs (2460 lines) into src/commands/ (17 modules, 2113 lines). cli.rs reduced to 414 lines — only dispatch, Cli/Commands types, and telemetry. Zero clippy warnings, all 48 tests pass.
