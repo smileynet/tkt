@@ -6,6 +6,7 @@ mod core;
 mod findings;
 mod git;
 mod mutation;
+mod renumber;
 mod telemetry;
 mod transaction;
 
