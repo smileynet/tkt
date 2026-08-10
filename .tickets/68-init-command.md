@@ -211,6 +211,45 @@ Creates parent directories as needed. Reports what was written.
 - Idempotent: safe to run multiple times. Creates directories only if missing, skips config if exists, updates markers in-place.
 - Print a summary of actions taken (created/updated/skipped for each file)
 
+### Detection strategy: promiscuous install (no detection)
+
+**Decision:** `tkt init --all` writes ALL tool-specific files unconditionally. No agent detection.
+
+**Rationale (from beads reference study):**
+
+Beads uses a two-layer model:
+1. `bd init` — always installs Claude/Codex/Cursor files with NO detection (non-fatal on failure)
+2. `bd doctor` — detects active agents via env vars, PATH, config files (diagnostic only)
+3. `bd setup <tool>` — explicit per-tool install for 14 supported tools
+
+Their detection signals include `CLAUDECODE=1` env var, `which claude` PATH check, `~/.claude/` existence, JSON config parsing for plugins/MCP/hooks. This is expensive, fragile (env vars can be set by other tools), and only used for diagnostics — never for deciding what to install.
+
+**Why tkt doesn't need detection:**
+- Our per-agent files are 10-20 lines each (vs beads' hooks/JSON/plugins)
+- Dormant files have zero cost if the tool isn't installed
+- Detection adds complexity (env vars, PATH checks, file sniffing) for zero practical benefit
+- Users who run `--all` explicitly accept all files; users who run `--target cursor` know what they want
+
+**The only detection tkt needs:** check if target files already exist (for idempotent marker updates). This is file-existence, not agent-presence detection.
+
+### `--all` behavior
+
+Writes all targets unconditionally. Each write is non-fatal — if a directory can't be created (permissions), warn and continue. Report a summary:
+
+```
+✓ created .tickets/
+✓ created .tickets/config.toml
+✓ updated AGENTS.md (tkt section)
+✓ created CLAUDE.md (tkt section)
+✓ created .cursor/rules/tkt.mdc
+✓ created .kiro/steering/tkt.md
+✓ skipped .github/copilot-instructions.md (.github/ doesn't exist)
+✓ created .windsurf/rules/tkt.md
+```
+
+Note: for `.github/copilot-instructions.md`, only write if `.github/` already exists (don't create a `.github/` directory just for this — it implies a GitHub repo structure the user may not want).
+
+
 ## Acceptance criteria
 
 - [ ] `tkt init` creates `.tickets/` and `.tickets/config.toml` when missing
