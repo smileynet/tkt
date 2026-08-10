@@ -140,4 +140,5 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 - Unit tests must NOT assert specific consent state (result depends on ambient env vars)
 - Windows: `std::fs::rename` cannot overwrite — always delete destination before rename
 - Codex review dispatch: `codex exec --dangerously-bypass-approvals-and-sandbox` (bwrap namespace restriction on this machine; `codex review --base <SHA>` cannot combine --base with custom prompt)
+- cargo-dist binary name is `dist` (not `cargo dist`) — `cargo dist --version` will fail; use `dist --version`
 - New mutation commands MUST route push through a push-gated path (GitTransaction respects `push.enabled`; direct `git::push_with_retry` calls must check `pcfg.push_enabled` first)

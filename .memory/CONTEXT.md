@@ -49,3 +49,7 @@ _Avoid_: permission (implies access control), opt-in (describes the mechanism, n
 **Session ID**:
 A hex string (`{timestamp_ms:012x}-{pid:04x}`) generated once per CLI invocation. Included in every telemetry event and debug trace. Enables grouping all log lines from one command run.
 _Avoid_: trace ID (implies distributed tracing), correlation ID (overloaded)
+
+**crates.io name check**:
+Use `cargo search <name>` to check availability — NOT raw `curl` to the API (returns 403 "violation of API data access policy" for automated requests). A 404 on the web page also confirms availability.
+_Avoid_: curl to crates.io/api/v1/crates/ (blocked)
