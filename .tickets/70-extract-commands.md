@@ -1,7 +1,7 @@
 ---
 id: "70"
 title: "Extract command implementations from cli.rs into src/commands/"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 ---
