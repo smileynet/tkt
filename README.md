@@ -27,27 +27,28 @@ tkt manages `.tickets/` files with YAML frontmatter inside any git repo. It comp
 **Prerequisites:** `git` on PATH, inside a git repository.
 
 ```bash
-# Build and install
-cargo install --path .
+# Install
+curl -fsSL https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.sh | sh
 
 # Create the tickets directory
 mkdir .tickets && git add .tickets && git commit -m "init tickets"
 
 # Create your first ticket
 tkt new auth-system --title "Implement authentication"
-# → allocated 01-auth-system.md (pushed — id claimed, status: open)
+# → ✓ created 01 auth-system (pushed)
 
 # See what's ready to work on
 tkt ready
-# → 01  Implement authentication
+# → Ready (1):
+# →   01  Implement authentication
 
 # Claim it (marks in_progress, pushes to remote)
 tkt claim 01
-# → claimed 01-auth-system.md (in_progress pushed)
+# → ✓ claimed 01 auth-system (→ in_progress)
 
 # Close it when done
 tkt close 01 --note "JWT + refresh tokens shipped"
-# → closed 01-auth-system.md (done pushed)
+# → ✓ closed 01 auth-system (Resolution written)
 ```
 
 ## Install
@@ -211,15 +212,11 @@ tkt capabilities                                  # machine-readable feature man
 
 ### Single-agent workflow
 
-When one agent works a repo alone, skip `claim` — it adds a push round-trip with no value:
-
 ```
 tkt ready → close <id> --check-all --resolution "..."
 ```
 
 ### Shared-repo workflow
-
-When multiple agents or humans work the same repo, `claim` signals WIP and detects races:
 
 ```
 tkt ready → claim <id> → [work] → close <id> --check-all --resolution "..."
@@ -227,13 +224,9 @@ tkt ready → claim <id> → [work] → close <id> --check-all --resolution "...
 
 If a claim push is rejected, someone else got there first — pick the next frontier ticket.
 
-### Environment filtering
+**Note:** `claim` is optional. `close` works directly on `open` tickets — useful for single-agent workflows where the push round-trip adds latency without value. Use `claim` in shared repos to signal WIP and detect races.
 
-Set `CREW_ENV=corp` or `CREW_ENV=personal` to filter the frontier by ticket `env` field. Unset means show all.
-
-### Machine-readable discovery
-
-`tkt capabilities` outputs a JSON manifest of commands, flags, and workflows — useful for agents that introspect available tools at session start.
+Set `CREW_ENV=corp` or `CREW_ENV=personal` to filter the frontier by ticket `env` field. `tkt capabilities` outputs a JSON manifest for agent tool discovery.
 
 ## Development
 
