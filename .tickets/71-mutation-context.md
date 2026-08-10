@@ -1,7 +1,7 @@
 ---
 id: "71"
 title: "Introduce MutationContext for existing-ticket mutation workflow"
-status: open
+status: done
 blocked_by: ["70"]
 priority: high
 ---
@@ -44,10 +44,14 @@ After this work:
 
 ## Acceptance criteria
 
-- [ ] `src/mutation.rs` (or `src/commands/common.rs`) exports `MutationContext`
-- [ ] `MutationContext::open()` handles: tickets dir, repo root, config, remote detection, fetch, corpus load
-- [ ] `ctx.find_ticket(id)` with proper domain error
-- [ ] `ctx.publish(paths, message)` respects push.enabled
-- [ ] `cmd_claim`, `cmd_close`, `cmd_edit`, `cmd_renumber` migrated to use it
-- [ ] No direct `git::push` calls in command modules (push-gating enforced structurally)
-- [ ] All tests pass, no behavioral change
+- [x] `src/mutation.rs` (or `src/commands/common.rs`) exports `MutationContext`
+- [x] `MutationContext::open()` handles: tickets dir, repo root, config, remote detection, fetch, corpus load
+- [x] `ctx.find_ticket(id)` with proper domain error
+- [x] `ctx.publish(paths, message)` respects push.enabled
+- [x] `cmd_claim`, `cmd_close`, `cmd_edit`, `cmd_renumber` migrated to use it
+- [x] No direct `git::push` calls in command modules (push-gating enforced structurally)
+- [x] All tests pass, no behavioral change
+
+## Resolution (2026-08-10)
+
+MutationContext struct in src/mutation.rs. All four mutation commands (claim, close, edit, renumber) migrated. Push-gating enforced structurally — no direct git::push in src/commands/. 96/96 tests pass.
