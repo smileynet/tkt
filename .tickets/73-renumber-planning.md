@@ -1,7 +1,7 @@
 ---
 id: "73"
 title: "Extract renumber/rebase planning as pure domain operation"
-status: open
+status: done
 blocked_by: ["71", "72"]
 priority: high
 ---
@@ -44,12 +44,16 @@ After this work:
 
 ## Acceptance criteria
 
-- [ ] `src/core/renumber.rs` (or `src/renumber.rs`) created
-- [ ] `RenumberPlan` type with collision detection and single-ticket planning
-- [ ] `apply_renumber()` uses typed TicketFile mutations for id and blocked_by rewrites
-- [ ] `cmd_rebase` refactored to plan → apply → publish
-- [ ] `cmd_renumber` refactored to plan → apply → publish
-- [ ] Unit tests for plan computation (pure, no filesystem)
-- [ ] Unit tests for reference rewriting (in-memory ticket text)
-- [ ] All integration tests pass unchanged
-- [ ] `rebase --dry-run` exercises plan path without side effects
+- [x] `src/core/renumber.rs` (or `src/renumber.rs`) created
+- [x] `RenumberPlan` type with collision detection and single-ticket planning
+- [x] `apply_renumber()` uses typed TicketFile mutations for id and blocked_by rewrites
+- [x] `cmd_rebase` refactored to plan → apply → publish
+- [x] `cmd_renumber` refactored to plan → apply → publish
+- [x] Unit tests for plan computation (pure, no filesystem)
+- [x] Unit tests for reference rewriting (in-memory ticket text)
+- [x] All integration tests pass unchanged
+- [x] `rebase --dry-run` exercises plan path without side effects
+
+## Resolution (2026-08-10)
+
+RenumberPlan type with for_collisions() and single(). apply_renumber() uses typed TicketFile mutations. Both commands refactored to plan→apply→publish. 10 unit tests for pure planning. 122 total tests pass.
