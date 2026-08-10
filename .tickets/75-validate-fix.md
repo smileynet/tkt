@@ -1,7 +1,7 @@
 ---
 id: "75"
 title: "tkt validate --fix: guided auto-repair with safety guardrails"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -65,11 +65,15 @@ Needs manual review (2):
 
 ## Acceptance criteria
 
-- [ ] `tkt validate --fix` applies tier 1 fixes (quoting) without data loss
-- [ ] `tkt validate --fix` applies tier 2 fixes (status mapping) with a warning
-- [ ] `tkt validate --fix` prints advisory guidance for tier 3 issues
-- [ ] `--dry-run` shows plan without writing
-- [ ] Never modifies body content
-- [ ] Never deletes files
-- [ ] Reports what was changed and what needs manual action
-- [ ] Existing `tkt validate` (without --fix) behavior unchanged
+- [x] `tkt validate --fix` applies tier 1 fixes (quoting) without data loss
+- [x] `tkt validate --fix` applies tier 2 fixes (status mapping) with a warning
+- [x] `tkt validate --fix` prints advisory guidance for tier 3 issues
+- [x] `--dry-run` shows plan without writing
+- [x] Never modifies body content
+- [x] Never deletes files
+- [x] Reports what was changed and what needs manual action
+- [x] Existing `tkt validate` (without --fix) behavior unchanged
+
+## Resolution (2026-08-10)
+
+Implemented 3-tier fix system: mechanical auto-apply (quoting, invalid optional fields), mapped with warning (status closed→done), advisory only (foreign schemas, ambiguous status). --dry-run supported. Integration test covers quoting + env removal. 138 tests green.
