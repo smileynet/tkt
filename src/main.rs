@@ -5,6 +5,7 @@ mod commands;
 mod config;
 mod core;
 mod findings;
+mod fix;
 mod git;
 mod mutation;
 mod renumber;

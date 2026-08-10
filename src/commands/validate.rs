@@ -39,3 +39,48 @@ pub fn run(strict: bool, brief: bool) -> Result<i32> {
     findings::print_findings(&all_findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
 }
+
+/// Run validate with --fix mode: repair fixable issues, advise on the rest.
+pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
+    let dir = tickets_dir()?;
+
+    // Run the fix pass
+    let result = crate::fix::run_fix(&dir, dry_run)?;
+
+    // Report repairs
+    if !result.repairs.is_empty() {
+        let verb = if dry_run { "Would fix" } else { "Fixed" };
+        println!("{} ({}):", verb, result.repairs.len());
+        for r in &result.repairs {
+            let tier_label = match r.tier {
+                1 => "",
+                2 => " [mapped]",
+                _ => "",
+            };
+            println!("  {}: {}{}", r.file, r.description, tier_label);
+        }
+        println!();
+    }
+
+    // Report advisories
+    if !result.advisories.is_empty() {
+        println!("Needs manual review ({}):", result.advisories.len());
+        for a in &result.advisories {
+            println!("  {}: {}", a.file, a.message);
+            println!("    → {}", a.suggestion);
+        }
+        println!();
+    }
+
+    if result.repairs.is_empty() && result.advisories.is_empty() {
+        println!("Nothing to fix.");
+    }
+
+    // After fixing, run normal validate to show remaining state
+    if !dry_run && !result.repairs.is_empty() {
+        println!("--- post-fix validation ---");
+        return run(strict, brief);
+    }
+
+    Ok(if result.advisories.is_empty() { 0 } else { 1 })
+}

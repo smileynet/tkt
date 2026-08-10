@@ -1600,3 +1600,63 @@ fn test_blocked_shows_blockers() {
         out
     );
 }
+
+#[test]
+fn test_validate_fix_quotes_ids_and_removes_invalid_env() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create a ticket with unquoted id and invalid env
+    std::fs::write(
+        clone.join(".tickets/02-unquoted.md"),
+        "---\nid: 02\ntitle: \"Unquoted\"\nstatus: open\nblocked_by: [01]\nenv: custom-invalid\n---\n\n# Unquoted\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add unquoted ticket"]);
+
+    // Dry run first
+    let (code, out) = run_tkt(&clone, &["validate", "--fix", "--dry-run"]);
+    assert_eq!(code, 0, "dry-run should succeed: {}", out);
+    assert!(
+        out.contains("Would fix"),
+        "should show dry-run plan: {}",
+        out
+    );
+    assert!(
+        out.contains("quoted id"),
+        "should plan to quote id: {}",
+        out
+    );
+    assert!(
+        out.contains("removed invalid env"),
+        "should plan to remove env: {}",
+        out
+    );
+
+    // Verify file NOT modified (dry-run)
+    let content = std::fs::read_to_string(clone.join(".tickets/02-unquoted.md")).unwrap();
+    assert!(content.contains("id: 02"), "dry-run should not modify file");
+
+    // Now apply
+    let (code, out) = run_tkt(&clone, &["validate", "--fix"]);
+    assert_eq!(code, 0, "fix should succeed: {}", out);
+    assert!(out.contains("Fixed"), "should report fixes: {}", out);
+
+    // Verify file IS modified
+    let content = std::fs::read_to_string(clone.join(".tickets/02-unquoted.md")).unwrap();
+    assert!(
+        content.contains("id: \"02\""),
+        "id should be quoted: {}",
+        content
+    );
+    assert!(
+        !content.contains("env:"),
+        "invalid env should be removed: {}",
+        content
+    );
+    assert!(
+        content.contains("blocked_by: [\"01\"]"),
+        "blocked_by should be quoted: {}",
+        content
+    );
+}

@@ -122,6 +122,12 @@ enum Commands {
         strict: bool,
         #[arg(long)]
         brief: bool,
+        /// Auto-repair fixable issues (quoting, invalid optional fields, status mapping)
+        #[arg(long)]
+        fix: bool,
+        /// Show what --fix would change without writing (requires --fix)
+        #[arg(long)]
+        dry_run: bool,
     },
     /// Dump all tickets as JSON Lines (one object per line)
     Query {
@@ -296,7 +302,18 @@ pub fn run() -> i32 {
             brief,
             plan,
         } => crate::commands::sync_plan::run(check, fix, strict, brief, plan.as_deref()),
-        Commands::Validate { strict, brief } => crate::commands::validate::run(strict, brief),
+        Commands::Validate {
+            strict,
+            brief,
+            fix,
+            dry_run,
+        } => {
+            if fix || dry_run {
+                crate::commands::validate::run_with_fix(strict, brief, dry_run)
+            } else {
+                crate::commands::validate::run(strict, brief)
+            }
+        }
         Commands::Query { status, priority } => {
             crate::commands::query::run(status.as_deref(), priority.as_deref())
         }
