@@ -5,6 +5,7 @@ mod config;
 mod core;
 mod findings;
 mod git;
+mod mutation;
 mod telemetry;
 mod transaction;
 

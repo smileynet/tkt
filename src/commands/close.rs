@@ -5,11 +5,9 @@ use std::sync::LazyLock;
 use anyhow::Result;
 use regex::Regex;
 
-use crate::commands::common::{
-    check_remote_status, commit_and_publish, domain_bail, is_quiet, preflight_mutation,
-    project_config, slug_from_filename, success_msg, tickets_dir,
-};
+use crate::commands::common::{domain_bail, is_quiet, slug_from_filename, success_msg};
 use crate::core::{self, Status};
+use crate::mutation::MutationContext;
 
 static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
 static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[x\]").unwrap());
@@ -21,20 +19,14 @@ pub fn run(
     check_all: bool,
     force: bool,
 ) -> Result<i32> {
-    let (repo, remote, corpus) = preflight_mutation()?;
-    let dir = tickets_dir()?;
-    let pcfg = project_config(&dir);
+    let ctx = MutationContext::open()?;
+    let t = ctx.find_ticket(id)?;
 
-    let t = match core::find_ticket(&corpus, id) {
-        Ok(t) => t,
-        Err(_) => domain_bail!("no ticket with id {:?}", id),
-    };
-
-    if pcfg.close_require_resolution && note.is_none() && !force {
+    if ctx.config.close_require_resolution && note.is_none() && !force {
         domain_bail!("project config requires --resolution (or --note) to close a ticket");
     }
 
-    if let Some(remote_status) = check_remote_status(&repo, remote, t) {
+    if let Some(remote_status) = ctx.remote_status(t) {
         if remote_status == "done" {
             domain_bail!("{} is already done (updated on remote)", id);
         }
@@ -46,7 +38,7 @@ pub fn run(
     let (unchecked_before, checked_before) = count_ac_boxes(&t.body);
     let total_acs = unchecked_before + checked_before;
 
-    if pcfg.close_require_checked_acs
+    if ctx.config.close_require_checked_acs
         && total_acs > 0
         && unchecked_before == total_acs
         && ac_indices.is_empty()
@@ -66,7 +58,7 @@ pub fn run(
         let date = chrono_date();
         let resolution = note.unwrap_or("TBD");
 
-        let branch_note = crate::git::current_branch(&repo)
+        let branch_note = crate::git::current_branch(&ctx.repo)
             .ok()
             .filter(|b| b.starts_with("spike/"))
             .map(|b| format!("\n\nSpike branch: {}", b))
@@ -95,18 +87,8 @@ pub fn run(
     let (unchecked_after, _) = count_ac_boxes(&file.body);
     let checked_after = total_acs.saturating_sub(unchecked_after);
 
-    let rel_path = file
-        .path
-        .strip_prefix(&repo)
-        .unwrap_or(&file.path)
-        .to_string_lossy()
-        .replace('\\', "/");
-    commit_and_publish(
-        &repo,
-        remote,
-        &[&rel_path],
-        &format!("chore(tickets): close {}", id),
-    )?;
+    let rel_path = ctx.rel_path(&file.path);
+    ctx.publish(&[&rel_path], &format!("chore(tickets): close {}", id))?;
 
     if !is_quiet() {
         let verb = if note.is_some() {
@@ -135,12 +117,11 @@ pub fn run(
             );
         }
 
-        let pre_frontier: std::collections::HashSet<String> = core::frontier(&corpus)
+        let pre_frontier: std::collections::HashSet<String> = core::frontier(&ctx.corpus)
             .iter()
             .map(|t| t.id.clone())
             .collect();
-        let dir = tickets_dir()?;
-        match core::load_corpus(&dir) {
+        match core::load_corpus(&ctx.tickets_dir) {
             Ok(new_corpus) => {
                 let post_frontier: Vec<&core::Ticket> = core::frontier(&new_corpus)
                     .into_iter()

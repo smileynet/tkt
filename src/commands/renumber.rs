@@ -2,23 +2,18 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{
-    domain_bail, has_remote, is_quiet, project_config, success_msg, tickets_dir,
-};
+use crate::commands::common::{domain_bail, is_quiet, success_msg};
 use crate::core::{self, validate, Ticket};
-use crate::git;
+use crate::mutation::MutationContext;
 
 pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
     if let Err(e) = validate::validate_id(new_id) {
         domain_bail!("new id: {}", e);
     }
 
-    let dir = tickets_dir()?;
-    let pcfg = project_config(&dir);
-    let repo = git::repo_root(&dir)?;
-    let corpus = core::load_corpus(&dir)?;
+    let ctx = MutationContext::open()?;
 
-    let holders: Vec<&Ticket> = corpus.iter().filter(|t| t.id == old_id).collect();
+    let holders: Vec<&Ticket> = ctx.corpus.iter().filter(|t| t.id == old_id).collect();
     if holders.is_empty() {
         domain_bail!("no ticket with id {:?}", old_id);
     }
@@ -50,7 +45,7 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
             })?
     };
 
-    if corpus.iter().any(|t| t.id == new_id) {
+    if ctx.corpus.iter().any(|t| t.id == new_id) {
         domain_bail!("id {:?} already exists locally", new_id);
     }
 
@@ -63,7 +58,7 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
         .map(|x| x.1)
         .unwrap_or("unknown.md")
         .to_string();
-    let new_path = dir.join(format!("{}-{}", new_id, slug));
+    let new_path = ctx.tickets_dir.join(format!("{}-{}", new_id, slug));
 
     let mut file = src.file.clone();
     let old_raw = file.get("id").unwrap_or("");
@@ -78,8 +73,15 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
     std::fs::remove_file(&old_path)?;
 
     let mut refs_updated = 0;
+    let mut staged_paths: Vec<String> = Vec::new();
+
+    // Stage the old (deleted) and new (created) ticket file
+    staged_paths.push(ctx.rel_path(&old_path));
+    staged_paths.push(ctx.rel_path(&new_path));
+
+    // Update references in other tickets
     if holders.len() == 1 {
-        for other in &corpus {
+        for other in &ctx.corpus {
             if other.path == old_path {
                 continue;
             }
@@ -103,43 +105,17 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
                     .join(", ");
                 other_file.set_field("blocked_by", &format!("[{}]", formatted));
                 other_file.write()?;
+                staged_paths.push(ctx.rel_path(&other.path));
                 refs_updated += 1;
             }
         }
     }
 
-    let old_rel = old_path
-        .strip_prefix(&repo)
-        .unwrap_or(&old_path)
-        .to_string_lossy()
-        .replace('\\', "/");
-    let new_rel = new_path
-        .strip_prefix(&repo)
-        .unwrap_or(&new_path)
-        .to_string_lossy()
-        .replace('\\', "/");
-    git::git(&repo, &["add", &old_rel, &new_rel])?;
-    for other in &corpus {
-        if other.path == old_path {
-            continue;
-        }
-        if other.blocked_by.contains(&old_id.to_string()) {
-            let rel = other
-                .path
-                .strip_prefix(&repo)
-                .unwrap_or(&other.path)
-                .to_string_lossy()
-                .replace('\\', "/");
-            git::add(&repo, &[&rel])?;
-        }
-    }
-    git::commit(
-        &repo,
+    let path_refs: Vec<&str> = staged_paths.iter().map(|s| s.as_str()).collect();
+    ctx.publish(
+        &path_refs,
         &format!("chore(tickets): renumber {} -> {}", old_id, new_id),
     )?;
-    if has_remote(&repo) && pcfg.push_enabled {
-        git::push_with_retry(&repo)?;
-    }
 
     let detail = if refs_updated > 0 {
         format!("{} refs updated", refs_updated)

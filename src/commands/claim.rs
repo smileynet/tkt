@@ -2,20 +2,15 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{
-    check_remote_status, commit_and_publish, domain_bail, is_quiet, preflight_mutation,
-    slug_from_filename, success_msg,
-};
-use crate::core::{self, Status};
+use crate::commands::common::{domain_bail, is_quiet, slug_from_filename, success_msg};
+use crate::core::Status;
+use crate::mutation::MutationContext;
 
 pub fn run(id: &str) -> Result<i32> {
-    let (repo, remote, corpus) = preflight_mutation()?;
-    let t = match core::find_ticket(&corpus, id) {
-        Ok(t) => t,
-        Err(_) => domain_bail!("no ticket with id {:?}", id),
-    };
+    let ctx = MutationContext::open()?;
+    let t = ctx.find_ticket(id)?;
 
-    if let Some(remote_status) = check_remote_status(&repo, remote, t) {
+    if let Some(remote_status) = ctx.remote_status(t) {
         if remote_status != "open" {
             domain_bail!("{} is {}, not open (updated on remote)", id, remote_status);
         }
@@ -28,18 +23,8 @@ pub fn run(id: &str) -> Result<i32> {
     file.set_field("status", "in_progress");
     file.write()?;
 
-    let rel_path = file
-        .path
-        .strip_prefix(&repo)
-        .unwrap_or(&file.path)
-        .to_string_lossy()
-        .replace('\\', "/");
-    commit_and_publish(
-        &repo,
-        remote,
-        &[&rel_path],
-        &format!("chore(tickets): claim {}", id),
-    )?;
+    let rel_path = ctx.rel_path(&file.path);
+    ctx.publish(&[&rel_path], &format!("chore(tickets): claim {}", id))?;
 
     if !is_quiet() {
         println!(

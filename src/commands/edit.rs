@@ -5,11 +5,9 @@ use std::sync::LazyLock;
 use anyhow::Result;
 use regex::Regex;
 
-use crate::commands::common::{
-    check_remote_status, commit_and_publish, domain_bail, is_quiet, preflight_mutation,
-    slug_from_filename, success_msg,
-};
+use crate::commands::common::{domain_bail, is_quiet, slug_from_filename, success_msg};
 use crate::core::{self, Status};
+use crate::mutation::MutationContext;
 
 static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
 
@@ -24,13 +22,10 @@ pub fn run(
     status: Option<&str>,
     ac_indices: &[u32],
 ) -> Result<i32> {
-    let (repo, remote, corpus) = preflight_mutation()?;
-    let t = match core::find_ticket(&corpus, id) {
-        Ok(t) => t,
-        Err(_) => domain_bail!("no ticket with id {:?}", id),
-    };
+    let ctx = MutationContext::open()?;
+    let t = ctx.find_ticket(id)?;
 
-    if let Some(remote_status) = check_remote_status(&repo, remote, t) {
+    if let Some(remote_status) = ctx.remote_status(t) {
         if remote_status == "done" {
             domain_bail!("ticket {} was closed on remote", id);
         }
@@ -139,15 +134,8 @@ pub fn run(
     }
 
     file.write()?;
-    let rel_path = file
-        .path
-        .strip_prefix(&repo)
-        .unwrap_or(&file.path)
-        .to_string_lossy()
-        .replace('\\', "/");
-    commit_and_publish(
-        &repo,
-        remote,
+    let rel_path = ctx.rel_path(&file.path);
+    ctx.publish(
         &[&rel_path],
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
     )?;
