@@ -1,7 +1,7 @@
 ---
 id: "74"
 title: "Move audit rules beside validation findings"
-status: open
+status: done
 blocked_by: ["70"]
 priority: high
 ---
@@ -45,12 +45,16 @@ After this work:
 
 ## Acceptance criteria
 
-- [ ] `src/audit.rs` created with pure rule functions
-- [ ] `check_resolution_quality` extracted and unit-tested
-- [ ] `check_ac_completeness` extracted and unit-tested
-- [ ] `check_stale_wip` extracted with injectable timestamp provider
-- [ ] `check_frontier_health` extracted and unit-tested
-- [ ] Command module only orchestrates (load → check → print), no inline rule logic
-- [ ] Stale-WIP unit test uses fake timestamps (no git)
-- [ ] All integration tests pass unchanged
-- [ ] Audit output format/content identical to current behavior
+- [x] `src/audit.rs` created with pure rule functions
+- [x] `check_resolution_quality` extracted and unit-tested
+- [x] `check_ac_completeness` extracted and unit-tested
+- [x] `check_stale_wip` extracted with injectable timestamp provider
+- [x] `check_frontier_health` extracted and unit-tested
+- [x] Command module only orchestrates (load → check → print), no inline rule logic
+- [x] Stale-WIP unit test uses fake timestamps (no git)
+- [x] All integration tests pass unchanged
+- [x] Audit output format/content identical to current behavior
+
+## Resolution (2026-08-10)
+
+src/audit.rs with 4 pure rule functions (injectable deps). commands/audit.rs is 50-line orchestrator. 15 unit tests with synthetic data. 137 total tests pass.
