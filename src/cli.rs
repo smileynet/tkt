@@ -259,7 +259,7 @@ pub fn run() -> i32 {
     crate::color::init(cli.color.as_deref());
 
     let result = match cli.command {
-        Commands::Ready { json } => cmd_ready(json),
+        Commands::Ready { json } => crate::commands::ready::run(json),
         Commands::New {
             slug,
             title,
@@ -292,7 +292,7 @@ pub fn run() -> i32 {
             status.as_deref(),
             &blocked_by.unwrap_or_default(),
         ),
-        Commands::Claim { id } => cmd_claim(&id),
+        Commands::Claim { id } => crate::commands::claim::run(&id),
         Commands::Close {
             id,
             note,
@@ -341,10 +341,10 @@ pub fn run() -> i32 {
             brief,
             plan,
         } => cmd_sync_plan(check, fix, strict, brief, plan.as_deref()),
-        Commands::Validate { strict, brief } => cmd_validate(strict, brief),
-        Commands::Query { status, priority } => cmd_query(status.as_deref(), priority.as_deref()),
-        Commands::Blocked => cmd_blocked(),
-        Commands::Capabilities => cmd_capabilities(),
+        Commands::Validate { strict, brief } => crate::commands::validate::run(strict, brief),
+        Commands::Query { status, priority } => crate::commands::query::run(status.as_deref(), priority.as_deref()),
+        Commands::Blocked => crate::commands::blocked::run(),
+        Commands::Capabilities => crate::commands::capabilities::run(),
         Commands::Rebase { dry_run } => cmd_rebase(dry_run),
         Commands::Audit { strict, brief } => cmd_audit(strict, brief),
         Commands::Config {
