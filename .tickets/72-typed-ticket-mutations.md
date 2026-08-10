@@ -1,7 +1,7 @@
 ---
 id: "72"
 title: "Add typed mutation methods to TicketFile (deepen surgical edit)"
-status: open
+status: done
 blocked_by: ["70"]
 priority: high
 ---
@@ -47,13 +47,17 @@ After this work:
 
 ## Acceptance criteria
 
-- [ ] `TicketFile::set_status(Status)` implemented
-- [ ] `TicketFile::set_blocked_by(&[impl AsRef<str>])` implemented
-- [ ] `TicketFile::set_priority(Option<Priority>)` / clear implemented
-- [ ] `TicketFile::set_env(Option<Env>)` / clear implemented
-- [ ] `TicketFile::append_resolution(date, note, Option<branch>)` implemented
-- [ ] `TicketFile::check_acs(AcSelection) -> AcStats` implemented
-- [ ] AC helpers moved from cli.rs to core
-- [ ] Unit tests for each method (string roundtrip, no filesystem)
-- [ ] Command modules use typed methods exclusively (no raw set_field for managed fields)
-- [ ] All integration tests pass unchanged
+- [x] `TicketFile::set_status(Status)` implemented
+- [x] `TicketFile::set_blocked_by(&[impl AsRef<str>])` implemented
+- [x] `TicketFile::set_priority(Option<Priority>)` / clear implemented
+- [x] `TicketFile::set_env(Option<Env>)` / clear implemented
+- [x] `TicketFile::append_resolution(date, note, Option<branch>)` implemented
+- [x] `TicketFile::check_acs(AcSelection) -> AcStats` implemented
+- [x] AC helpers moved from cli.rs to core
+- [x] Unit tests for each method (string roundtrip, no filesystem)
+- [x] Command modules use typed methods exclusively (no raw set_field for managed fields)
+- [x] All integration tests pass unchanged
+
+## Resolution (2026-08-10)
+
+Typed mutations on TicketFile: set_status, set_blocked_by, set_priority, set_env, append_resolution, check_acs/ac_stats. AcSelection enum + AcStats struct. All commands migrated. 16 unit tests. 112 total tests pass.
