@@ -2,11 +2,11 @@
 
 use anyhow::Result;
 
-use crate::core::{self, Status};
 use crate::commands::common::{
     check_remote_status, commit_and_publish, domain_bail, is_quiet, preflight_mutation,
     slug_from_filename, success_msg,
 };
+use crate::core::{self, Status};
 
 pub fn run(id: &str) -> Result<i32> {
     let (repo, remote, corpus) = preflight_mutation()?;

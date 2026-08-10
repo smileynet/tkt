@@ -2,10 +2,10 @@
 
 use anyhow::Result;
 
+use crate::commands::common::{domain_bail, is_quiet, success_msg, tickets_dir};
 use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
-use crate::commands::common::{domain_bail, is_quiet, success_msg, tickets_dir};
 
 pub fn run(
     items: &[String],

@@ -24,8 +24,7 @@ impl std::fmt::Display for DomainError {
 impl std::error::Error for DomainError {}
 
 /// Global quiet flag — set once at startup, read by command functions.
-pub(crate) static QUIET: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
+pub(crate) static QUIET: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 fn main() -> ExitCode {
     let code = cli::run();

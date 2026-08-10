@@ -5,10 +5,10 @@ use std::sync::LazyLock;
 use anyhow::Result;
 use regex::Regex;
 
-use crate::core::{self, Status, Ticket};
+use crate::commands::common::tickets_dir;
+use crate::core::{self, Status};
 use crate::findings::{self, Finding};
 use crate::git;
-use crate::commands::common::tickets_dir;
 
 static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
 static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[x\]").unwrap());

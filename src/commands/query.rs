@@ -2,8 +2,8 @@
 
 use anyhow::Result;
 
-use crate::core;
 use crate::commands::common::tickets_dir;
+use crate::core;
 
 pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result<i32> {
     let dir = tickets_dir()?;

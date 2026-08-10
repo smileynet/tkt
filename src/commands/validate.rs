@@ -2,9 +2,9 @@
 
 use anyhow::Result;
 
+use crate::commands::common::{project_config, tickets_dir};
 use crate::core::Ticket;
 use crate::findings::{self, Finding};
-use crate::commands::common::{project_config, tickets_dir};
 
 pub fn run(strict: bool, brief: bool) -> Result<i32> {
     let dir = tickets_dir()?;

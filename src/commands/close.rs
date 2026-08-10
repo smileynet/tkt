@@ -5,11 +5,11 @@ use std::sync::LazyLock;
 use anyhow::Result;
 use regex::Regex;
 
-use crate::core::{self, Status};
 use crate::commands::common::{
     check_remote_status, commit_and_publish, domain_bail, is_quiet, preflight_mutation,
     project_config, slug_from_filename, success_msg, tickets_dir,
 };
+use crate::core::{self, Status};
 
 static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
 static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[x\]").unwrap());

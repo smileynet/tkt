@@ -2,8 +2,8 @@
 
 use anyhow::Result;
 
-use crate::core::{self, Status, Ticket};
 use crate::commands::common::{is_quiet, tickets_dir};
+use crate::core::{self, Status, Ticket};
 
 pub fn run() -> Result<i32> {
     let dir = tickets_dir()?;
