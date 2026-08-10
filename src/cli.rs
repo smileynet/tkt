@@ -268,7 +268,7 @@ pub fn run() -> i32 {
             priority,
             status,
             blocked_by,
-        } => cmd_new(
+        } => crate::commands::new::run(
             &slug,
             title.as_deref(),
             spec.as_deref(),
