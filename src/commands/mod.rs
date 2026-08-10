@@ -1,4 +1,5 @@
 pub mod audit;
+pub mod batch;
 pub mod blocked;
 pub mod capabilities;
 pub mod claim;

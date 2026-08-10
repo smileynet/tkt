@@ -284,7 +284,7 @@ pub fn run() -> i32 {
             priority,
             status,
             blocked_by,
-        } => cmd_batch(
+        } => crate::commands::batch::run(
             &items,
             spec.as_deref(),
             env.as_deref(),
@@ -333,34 +333,34 @@ pub fn run() -> i32 {
             old_id,
             new_id,
             file,
-        } => cmd_renumber(&old_id, &new_id, file.as_deref()),
+        } => crate::commands::renumber::run(&old_id, &new_id, file.as_deref()),
         Commands::SyncPlan {
             check,
             fix,
             strict,
             brief,
             plan,
-        } => cmd_sync_plan(check, fix, strict, brief, plan.as_deref()),
+        } => crate::commands::sync_plan::run(check, fix, strict, brief, plan.as_deref()),
         Commands::Validate { strict, brief } => crate::commands::validate::run(strict, brief),
         Commands::Query { status, priority } => crate::commands::query::run(status.as_deref(), priority.as_deref()),
         Commands::Blocked => crate::commands::blocked::run(),
         Commands::Capabilities => crate::commands::capabilities::run(),
-        Commands::Rebase { dry_run } => cmd_rebase(dry_run),
-        Commands::Audit { strict, brief } => cmd_audit(strict, brief),
+        Commands::Rebase { dry_run } => crate::commands::rebase::run(dry_run),
+        Commands::Audit { strict, brief } => crate::commands::audit::run(strict, brief),
         Commands::Config {
             set,
             get,
             unset,
             list,
             show,
-        } => cmd_config(set.as_deref(), get.as_deref(), unset.as_deref(), list, show),
+        } => crate::commands::config::run(set.as_deref(), get.as_deref(), unset.as_deref(), list, show),
         Commands::Telemetry {
             enable,
             disable,
             status,
             show,
             clear,
-        } => cmd_telemetry(enable, disable, status, show, clear),
+        } => crate::commands::telemetry::run(enable, disable, status, show, clear),
     };
     let exit_code = match result {
         Ok(code) => code,
@@ -1301,7 +1301,7 @@ fn cmd_validate(strict: bool, brief: bool) -> Result<i32> {
 
 // --- cmd_rebase ---
 
-fn cmd_rebase(dry_run: bool) -> Result<i32> {
+pub fn cmd_rebase_impl(dry_run: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let repo = dir.parent().unwrap().to_path_buf();
 
@@ -1575,7 +1575,7 @@ fn cmd_audit(strict: bool, brief: bool) -> Result<i32> {
 
 // --- cmd_sync_plan ---
 
-fn cmd_sync_plan(
+pub fn cmd_sync_plan_impl(
     _check: bool,
     _fix: bool,
     strict: bool,
@@ -2305,7 +2305,7 @@ fn cmd_batch(
 
 // --- cmd_renumber ---
 
-fn cmd_renumber(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
+pub fn cmd_renumber_impl(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
     if let Err(e) = core::validate::validate_id(new_id) {
         domain_bail!("new id: {}", e);
     }
