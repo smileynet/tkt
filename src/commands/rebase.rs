@@ -142,12 +142,7 @@ pub fn run(dry_run: bool) -> Result<i32> {
                 }
             }
             if changed {
-                let formatted = new_deps
-                    .iter()
-                    .map(|d| format!("\"{}\"", d))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                file.set_field("blocked_by", &format!("[{}]", formatted));
+                file.set_blocked_by(&new_deps);
                 file.write()?;
                 modified_paths.push(format!(".tickets/{}", name));
                 refs_updated += 1;

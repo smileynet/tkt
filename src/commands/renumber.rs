@@ -3,7 +3,7 @@
 use anyhow::Result;
 
 use crate::commands::common::{domain_bail, is_quiet, success_msg};
-use crate::core::{self, validate, Ticket};
+use crate::core::{validate, Ticket};
 use crate::mutation::MutationContext;
 
 pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
@@ -98,12 +98,7 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
                         }
                     })
                     .collect();
-                let formatted = new_deps
-                    .iter()
-                    .map(|d| format!("\"{}\"", core::yaml_scalar_escape(d)))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                other_file.set_field("blocked_by", &format!("[{}]", formatted));
+                other_file.set_blocked_by(&new_deps);
                 other_file.write()?;
                 staged_paths.push(ctx.rel_path(&other.path));
                 refs_updated += 1;

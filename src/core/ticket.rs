@@ -137,6 +137,29 @@ impl std::fmt::Display for Priority {
     }
 }
 
+// --- AC types ---
+
+/// Specifies which acceptance criteria boxes to check.
+pub enum AcSelection<'a> {
+    /// Check all unchecked boxes.
+    All,
+    /// Check specific 1-based indices.
+    Indices(&'a [u32]),
+}
+
+/// Stats about acceptance criteria state after a check operation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AcStats {
+    pub checked: usize,
+    pub unchecked: usize,
+    pub total: usize,
+}
+
+// --- Compiled regex for AC manipulation ---
+
+static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
+static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[x\]").unwrap());
+
 // --- TicketFile ---
 
 /// Raw frontmatter editor. Preserves field ordering and unknown fields for surgical edits.
@@ -232,6 +255,117 @@ impl TicketFile {
     /// Remove a field entirely (for clearing optional fields).
     pub fn remove_field(&mut self, key: &str) {
         self.fm.retain(|(k, _)| k != key);
+    }
+
+    // --- Typed mutation methods ---
+
+    /// Set the ticket status (typed — no raw strings in callers).
+    pub fn set_status(&mut self, status: Status) {
+        self.set_field("status", status.as_str());
+    }
+
+    /// Set the blocked_by array (handles YAML formatting internally).
+    pub fn set_blocked_by(&mut self, ids: &[impl AsRef<str>]) {
+        let formatted = ids
+            .iter()
+            .map(|d| format!("\"{}\"", yaml_scalar_escape(d.as_ref())))
+            .collect::<Vec<_>>()
+            .join(", ");
+        self.set_field("blocked_by", &format!("[{}]", formatted));
+    }
+
+    /// Set or clear the priority field.
+    pub fn set_priority(&mut self, priority: Option<Priority>) {
+        match priority {
+            Some(p) => self.set_field("priority", p.as_str()),
+            None => self.remove_field("priority"),
+        }
+    }
+
+    /// Set or clear the env field.
+    pub fn set_env(&mut self, env: Option<Env>) {
+        match env {
+            Some(e) => self.set_field("env", e.as_str()),
+            None => self.remove_field("env"),
+        }
+    }
+
+    /// Append a resolution section to the body (idempotent — skips if already present).
+    pub fn append_resolution(&mut self, date: &str, note: &str, spike_branch: Option<&str>) {
+        if self.body.contains("## Resolution") {
+            return;
+        }
+        let branch_note = spike_branch
+            .map(|b| format!("\n\nSpike branch: {}", b))
+            .unwrap_or_default();
+        self.body = format!(
+            "{}\n\n## Resolution ({})\n\n{}{}\n",
+            self.body.trim_end(),
+            date,
+            note,
+            branch_note
+        );
+    }
+
+    /// Check acceptance criteria boxes. Returns stats about the final state.
+    pub fn check_acs(&mut self, selection: AcSelection) -> AcStats {
+        let range = match crate::core::ac_section_range(&self.body) {
+            Some(r) => r,
+            None => {
+                return AcStats {
+                    checked: 0,
+                    unchecked: 0,
+                    total: 0,
+                }
+            }
+        };
+
+        match selection {
+            AcSelection::All => {
+                let section = self.body[range.clone()].replace("- [ ]", "- [x]");
+                self.body.replace_range(range.clone(), &section);
+            }
+            AcSelection::Indices(indices) => {
+                let section = &self.body[range.clone()];
+                let offsets: Vec<(usize, usize)> = RE_UNCHECKED_AC
+                    .find_iter(section)
+                    .map(|m| (range.start + m.start(), range.start + m.end()))
+                    .collect();
+                // Apply in reverse order to preserve offsets
+                for &idx in indices.iter().rev() {
+                    let i = (idx as usize).saturating_sub(1);
+                    if i < offsets.len() {
+                        let (abs_start, abs_end) = offsets[i];
+                        self.body.replace_range(abs_start..abs_end, "- [x]");
+                    }
+                }
+            }
+        }
+
+        // Compute final stats
+        self.ac_stats()
+    }
+
+    /// Get current acceptance criteria stats without modifying anything.
+    pub fn ac_stats(&self) -> AcStats {
+        let range = match crate::core::ac_section_range(&self.body) {
+            Some(r) => r,
+            None => {
+                return AcStats {
+                    checked: 0,
+                    unchecked: 0,
+                    total: 0,
+                }
+            }
+        };
+        let section = &self.body[range];
+        let unchecked = RE_UNCHECKED_AC.find_iter(section).count();
+        let checked = RE_CHECKED_AC.find_iter(section).count();
+        AcStats {
+            checked,
+            unchecked,
+            total: checked + unchecked,
+        }
     }
 
     /// Serialize preserving raw frontmatter (surgical writes).
@@ -767,5 +901,170 @@ mod tests {
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
         assert!(msg.contains("env") || msg.contains("bogus"));
+    }
+
+    // --- Typed mutation method tests ---
+
+    #[test]
+    fn set_status_typed() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_status(Status::Done);
+        let out = file.serialize();
+        assert!(out.contains("status: done"));
+        assert!(!out.contains("status: open"));
+    }
+
+    #[test]
+    fn set_status_preserves_other_fields() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: [\"02\"]\npriority: high\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_status(Status::InProgress);
+        let out = file.serialize();
+        assert!(out.contains("status: in_progress"));
+        assert!(out.contains("priority: high"));
+        assert!(out.contains("blocked_by: [\"02\"]"));
+    }
+
+    #[test]
+    fn set_blocked_by_empty() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: [\"02\", \"03\"]\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        let empty: Vec<&str> = vec![];
+        file.set_blocked_by(&empty);
+        let out = file.serialize();
+        assert!(out.contains("blocked_by: []"));
+    }
+
+    #[test]
+    fn set_blocked_by_multiple() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_blocked_by(&["05", "10"]);
+        let out = file.serialize();
+        assert!(out.contains("blocked_by: [\"05\", \"10\"]"));
+    }
+
+    #[test]
+    fn set_blocked_by_escapes_values() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_blocked_by(&["01"]);
+        let out = file.serialize();
+        assert!(out.contains("blocked_by: [\"01\"]"));
+    }
+
+    #[test]
+    fn set_priority_some() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_priority(Some(Priority::Urgent));
+        let out = file.serialize();
+        assert!(out.contains("priority: urgent"));
+    }
+
+    #[test]
+    fn set_priority_none_removes_field() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\npriority: high\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_priority(None);
+        let out = file.serialize();
+        assert!(!out.contains("priority"));
+    }
+
+    #[test]
+    fn set_env_some() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_env(Some(Env::Corp));
+        let out = file.serialize();
+        assert!(out.contains("env: corp"));
+    }
+
+    #[test]
+    fn set_env_none_removes_field() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\nenv: personal\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_env(None);
+        let out = file.serialize();
+        assert!(!out.contains("env"));
+    }
+
+    #[test]
+    fn append_resolution_basic() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n## Acceptance criteria\n\n- [x] Done\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.append_resolution("2026-08-10", "Shipped it", None);
+        assert!(file.body.contains("## Resolution (2026-08-10)"));
+        assert!(file.body.contains("Shipped it"));
+        assert!(!file.body.contains("Spike branch"));
+    }
+
+    #[test]
+    fn append_resolution_with_spike() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.append_resolution("2026-08-10", "Validated", Some("spike/experiment"));
+        assert!(file.body.contains("## Resolution (2026-08-10)"));
+        assert!(file.body.contains("Validated"));
+        assert!(file.body.contains("Spike branch: spike/experiment"));
+    }
+
+    #[test]
+    fn append_resolution_idempotent() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n## Resolution (2026-01-01)\n\nAlready here\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        let before = file.body.clone();
+        file.append_resolution("2026-08-10", "New note", None);
+        assert_eq!(file.body, before);
+    }
+
+    #[test]
+    fn check_acs_all() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n## Acceptance criteria\n\n- [ ] First\n- [ ] Second\n- [x] Already done\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        let stats = file.check_acs(AcSelection::All);
+        assert_eq!(stats.total, 3);
+        assert_eq!(stats.checked, 3);
+        assert_eq!(stats.unchecked, 0);
+        assert!(!file.body.contains("- [ ]"));
+    }
+
+    #[test]
+    fn check_acs_indices() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n## Acceptance criteria\n\n- [ ] First\n- [ ] Second\n- [ ] Third\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        let stats = file.check_acs(AcSelection::Indices(&[1, 3]));
+        assert_eq!(stats.total, 3);
+        assert_eq!(stats.checked, 2);
+        assert_eq!(stats.unchecked, 1);
+        // Second item should still be unchecked
+        assert!(file.body.contains("- [x] First"));
+        assert!(file.body.contains("- [ ] Second"));
+        assert!(file.body.contains("- [x] Third"));
+    }
+
+    #[test]
+    fn check_acs_no_section() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\nNo AC section here.\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        let stats = file.check_acs(AcSelection::All);
+        assert_eq!(stats.total, 0);
+    }
+
+    #[test]
+    fn ac_stats_without_mutation() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n## Acceptance criteria\n\n- [x] Done\n- [ ] Not done\n- [ ] Also not\n";
+        let file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        let stats = file.ac_stats();
+        assert_eq!(stats.total, 3);
+        assert_eq!(stats.checked, 1);
+        assert_eq!(stats.unchecked, 2);
     }
 }

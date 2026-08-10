@@ -20,7 +20,7 @@ pub fn run(id: &str) -> Result<i32> {
     }
 
     let mut file = t.file.clone();
-    file.set_field("status", "in_progress");
+    file.set_status(Status::InProgress);
     file.write()?;
 
     let rel_path = ctx.rel_path(&file.path);

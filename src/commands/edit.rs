@@ -1,15 +1,10 @@
 //! `tkt edit` — surgical field corrections.
 
-use std::sync::LazyLock;
-
 use anyhow::Result;
-use regex::Regex;
 
 use crate::commands::common::{domain_bail, is_quiet, slug_from_filename, success_msg};
-use crate::core::{self, Status};
+use crate::core::{self, AcSelection, Env, Priority, Status};
 use crate::mutation::MutationContext;
-
-static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
 
 #[allow(clippy::too_many_arguments)]
 pub fn run(
@@ -61,25 +56,20 @@ pub fn run(
         if let Err(e) = core::validate::validate_no_self_dep(id, &deps) {
             domain_bail!("{}", e);
         }
-        let formatted = deps
-            .iter()
-            .map(|d| format!("\"{}\"", core::yaml_scalar_escape(d)))
-            .collect::<Vec<_>>()
-            .join(", ");
-        file.set_field("blocked_by", &format!("[{}]", formatted));
+        file.set_blocked_by(&deps);
         changed.push("blocked_by");
     }
     if let Some(env_val) = env {
         if env_val.is_empty() {
-            file.remove_field("env");
+            file.set_env(None);
         } else {
-            if !core::ENV_VALUES.contains(&env_val) {
-                domain_bail!(
+            let parsed = Env::parse(env_val).map_err(|_| {
+                crate::DomainError(format!(
                     "env must be one of {} (or '' to clear)",
                     core::ENV_VALUES.join("/")
-                );
-            }
-            file.set_field("env", env_val);
+                ))
+            })?;
+            file.set_env(Some(parsed));
         }
         changed.push("env");
     }
@@ -99,12 +89,14 @@ pub fn run(
     }
     if let Some(prio_val) = priority {
         if prio_val.is_empty() {
-            file.remove_field("priority");
+            file.set_priority(None);
         } else {
-            if let Err(e) = core::validate::validate_priority(prio_val) {
-                domain_bail!("{} (or '' to clear)", e);
-            }
-            file.set_field("priority", prio_val);
+            let parsed = Priority::parse(prio_val).ok_or_else(|| {
+                crate::DomainError(
+                    "priority must be one of urgent/high/medium/low (or '' to clear)".to_string(),
+                )
+            })?;
+            file.set_priority(Some(parsed));
         }
         changed.push("priority");
     }
@@ -114,18 +106,18 @@ pub fn run(
                 "status cannot be cleared — use a valid value (backlog/open/in_progress/done)"
             );
         }
-        if Status::parse(status_val).is_err() {
-            domain_bail!(
+        let parsed = Status::parse(status_val).map_err(|_| {
+            crate::DomainError(format!(
                 "status must be one of {} (got {:?})",
                 core::STATUS_VALUES.join("/"),
                 status_val
-            );
-        }
-        file.set_field("status", status_val);
+            ))
+        })?;
+        file.set_status(parsed);
         changed.push("status");
     }
     if !ac_indices.is_empty() {
-        file.body = flip_ac_boxes(&file.body, ac_indices);
+        file.check_acs(AcSelection::Indices(ac_indices));
         changed.push("ac");
     }
 
@@ -151,25 +143,4 @@ pub fn run(
         );
     }
     Ok(0)
-}
-
-fn flip_ac_boxes(body: &str, indices: &[u32]) -> String {
-    let mut result = body.to_string();
-    let range = match core::ac_section_range(body) {
-        Some(r) => r,
-        None => return result,
-    };
-    let section = &body[range.clone()];
-    let matches: Vec<_> = RE_UNCHECKED_AC.find_iter(section).collect();
-
-    for &idx in indices.iter().rev() {
-        let i = (idx as usize).saturating_sub(1);
-        if i < matches.len() {
-            let m = &matches[i];
-            let abs_start = range.start + m.start();
-            let abs_end = range.start + m.end();
-            result.replace_range(abs_start..abs_end, "- [x]");
-        }
-    }
-    result
 }
