@@ -7,6 +7,7 @@ license = "MIT"
 repository = "https://github.com/smileynet/tkt"
 keywords = ["cli", "tickets", "git", "project-management"]
 categories = ["command-line-utilities", "development-tools"]
+exclude = [".tickets/", ".memory/", ".codex/", ".github/", "tests/"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
@@ -48,3 +49,5 @@ cargo-dist-version = "0.32.0"
 install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
+# Don't complain about our self-hosted runner modifications
+allow-dirty = ["ci"]
