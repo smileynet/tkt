@@ -2,10 +2,12 @@
 name = "tkt"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.80"
 description = "Git-native ticket CLI — frontmatter-driven work tracking in .tickets/"
 license = "MIT"
 repository = "https://github.com/smileynet/tkt"
-keywords = ["cli", "tickets", "git", "project-management"]
+readme = "README.md"
+keywords = ["cli", "tickets", "git", "project-management", "markdown"]
 categories = ["command-line-utilities", "development-tools"]
 exclude = [".tickets/", ".memory/", ".codex/", ".github/", "tests/"]
 

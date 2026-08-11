@@ -2,6 +2,10 @@
 
 Track work as markdown files in git. Dependency-aware frontier, atomic push-to-claim, race detection — no server required.
 
+[![CI](https://github.com/smileynet/tkt/actions/workflows/ci.yml/badge.svg)](https://github.com/smileynet/tkt/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/tkt.svg)](https://crates.io/crates/tkt)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 ## What It Does
 
 tkt manages `.tickets/` files with YAML frontmatter inside any git repo. It computes what's ready to work on (the "frontier"), claims tickets atomically via git push, and detects when two people grab the same work.
@@ -53,17 +57,28 @@ tkt close 01 --note "JWT + refresh tokens shipped"
 
 ## Install
 
+Pre-built binaries (fastest):
+
 ```bash
 # macOS / Linux
 curl -fsSL https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.sh | sh
 
 # Windows (PowerShell)
 irm https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.ps1 | iex
+```
 
-# From crates.io
+From crates.io:
+
+```bash
 cargo install tkt
 
-# From source
+# Or with cargo-binstall (downloads pre-built binary, no compile)
+cargo binstall tkt
+```
+
+From source:
+
+```bash
 cargo install --path .
 ```
 
@@ -78,7 +93,7 @@ tkt ready              # human output
 tkt ready --json       # JSON Lines (one object per ticket)
 ```
 
-Shows open tickets whose dependencies are all done, filtered by `CREW_ENV` if set, sorted by priority then ID.
+Shows open tickets whose dependencies are all done, sorted by priority then ID.
 
 ### Create tickets
 
@@ -97,18 +112,16 @@ tkt claim 03           # open → in_progress (pushed)
 tkt close 03 --note "Deployed" --ac 1,2   # → done, checks AC boxes 1 and 2
 ```
 
-**Note:** `claim` is optional. `close` works directly on `open` tickets — useful for single-agent workflows where the push round-trip adds latency without value. Use `claim` in shared repos to signal WIP and detect races.
+`claim` is optional — `close` works directly on `open` tickets. Use `claim` in shared repos to signal WIP and detect races.
 
 ### Edit and maintain
 
 ```bash
 tkt edit 02 --title "New title" --blocked-by 01,03 --priority high
-tkt renumber 05 02     # reassign ID (birth-window only)
 tkt validate           # check for cycles, dangling deps, contract violations
-tkt validate --strict  # promote warnings to errors
+tkt validate --fix     # auto-repair fixable issues (quoting, invalid fields)
 tkt sync-plan --check  # compare ticket status vs docs/plan.md table
 tkt query              # dump full corpus as JSON Lines
-tkt query --status open --priority high  # filtered view
 tkt blocked            # show tickets with unsatisfied deps
 ```
 
@@ -120,16 +133,12 @@ tkt blocked            # show tickets with unsatisfied deps
 | `--strict` | validate, sync-plan | warnings become errors |
 | `--brief` | validate, sync-plan | human output instead of JSON |
 | `--blocked-by N,N` | new, batch, edit | set dependencies |
-| `--priority high` | new, batch, edit | jump frontier order |
+| `--priority P` | new, batch, edit | urgent, high, medium (default), low |
 | `--env E` | new, batch, edit | corp / personal / either |
 | `--note "..."` | close | resolution text |
-| `--resolution "..."` | close | resolution text (alias for --note) |
 | `--ac N,N` | close, edit | check acceptance criteria boxes |
 | `--check-all` | close | check all AC boxes at once |
-| `--force` | close | close even with all ACs unchecked |
-| `--status S` | query, new, edit | filter or set status |
-| `--priority P` | query, new, edit | filter or set priority |
-| `--color` | all | always / never / auto |
+| `--force` | close | close even with unchecked ACs |
 
 ## Ticket Format
 
@@ -139,7 +148,7 @@ id: "01"
 title: "Implement authentication"
 status: open          # backlog | open | in_progress | done
 blocked_by: []        # ids that must be done first
-priority: high        # optional: jumps frontier order
+priority: high        # optional: urgent > high > medium > low
 env: corp             # optional: corp | personal | either
 spec: auth-spec       # optional: links to a spec name
 ---
@@ -155,22 +164,6 @@ spec: auth-spec       # optional: links to a spec name
 ```
 
 Files are the database. Hand-edit any time — tkt reads what's there.
-
-## Design
-
-- **Push-to-claim** — a pushed commit is a claim; race detection on push rejection
-- **Remote-aware** — scans `origin/main` via `git ls-tree` before allocating IDs
-- **Surgical edits** — changes one field without disturbing the rest of the file
-- **Single binary** — shells out to `git` for full SSH/HTTPS auth compatibility
-- **Worktree-aware** — works from git worktrees (`.tickets/` is part of the checked-out tree)
-
-### Expected latency
-
-Read commands (`ready`, `query`, `validate`) complete in ~50-100ms. Mutation commands (`new`, `claim`, `close`, `edit`) take ~2s because they include a git fetch + push round-trip — this is the cost of atomic remote operations and push-to-claim semantics. For local-only workflows, set `push.enabled = false` in `.tickets/config.toml` to skip network I/O.
-
-### Spike branches
-
-When closing a ticket from a `spike/*` branch, tkt auto-appends "Spike branch: spike/name" to the resolution. This documents which experimental branch validated the work.
 
 ## Configuration
 
@@ -194,11 +187,20 @@ default_env = ""          # pre-filter frontier (corp/personal)
 default_priority = "medium"  # default priority for new tickets
 ```
 
-User-level config at `~/.config/tkt/config.toml` stores debug preferences. Manage both with `tkt config --list` (show all) or `tkt config --set push.enabled=false`.
+Manage with `tkt config --list` or `tkt config --set push.enabled=false`.
+
+## Design
+
+- **Push-to-claim** — a pushed commit is a claim; race detection on push rejection
+- **Remote-aware** — scans `origin/main` via `git ls-tree` before allocating IDs
+- **Surgical edits** — changes one field without disturbing the rest of the file
+- **Single binary** — shells out to `git` for full SSH/HTTPS auth compatibility
+
+Read commands (`ready`, `query`, `validate`) complete in ~50-100ms. Mutation commands (`new`, `claim`, `close`) take ~2s due to git fetch + push round-trips — set `push.enabled = false` in config to skip network I/O for local-only workflows.
 
 ## Agent Integration
 
-For AI coding agents (kiro-cli, codex, etc.), add this to your project's AGENTS.md:
+For AI coding agents, add to your project's AGENTS.md:
 
 ```markdown
 ## Tickets
@@ -207,26 +209,12 @@ tkt ready                                         # what to work on next
 tkt claim <id>                                    # mark as in_progress (shared repos)
 tkt close <id> --check-all --resolution "..."     # mark done
 tkt validate --brief                              # check for issues
-tkt capabilities                                  # machine-readable feature manifest
 ```
 
-### Single-agent workflow
+Single-agent workflow: `tkt ready` → `tkt close <id> --check-all --resolution "..."`.
+Shared-repo workflow: `tkt ready` → `tkt claim <id>` → work → `tkt close <id>`.
 
-```
-tkt ready → close <id> --check-all --resolution "..."
-```
-
-### Shared-repo workflow
-
-```
-tkt ready → claim <id> → [work] → close <id> --check-all --resolution "..."
-```
-
-If a claim push is rejected, someone else got there first — pick the next frontier ticket.
-
-**Note:** `claim` is optional. `close` works directly on `open` tickets — useful for single-agent workflows where the push round-trip adds latency without value. Use `claim` in shared repos to signal WIP and detect races.
-
-Set `CREW_ENV=corp` or `CREW_ENV=personal` to filter the frontier by ticket `env` field. `tkt capabilities` outputs a JSON manifest for agent tool discovery.
+Set `CREW_ENV=corp` or `CREW_ENV=personal` to filter the frontier by ticket `env` field.
 
 ## Development
 
@@ -239,24 +227,15 @@ cargo fmt --check      # must produce no diff
 
 ## Telemetry
 
-tkt includes optional, **local-only** telemetry (disabled by default). No data leaves your machine. See [TELEMETRY.md](TELEMETRY.md) for full details on what's collected, where it's stored, and how to opt in/out.
+Optional, **local-only** telemetry (disabled by default). No data leaves your machine. See [TELEMETRY.md](TELEMETRY.md) for details.
 
 ```bash
 tkt telemetry --enable   # opt in
 tkt telemetry --status   # see what's stored
-tkt telemetry --show     # print recent events
 tkt telemetry --disable  # opt out
-tkt telemetry --clear    # delete all local data
 ```
 
-### Debug mode
-
-For real-time diagnostics without persisting anything:
-
-```bash
-TKT_DEBUG=1 tkt ready        # human-readable trace to stderr
-TKT_DEBUG=json tkt ready     # JSONL trace to stderr
-```
+Debug mode (no persistence): `TKT_DEBUG=1 tkt ready`
 
 ## Contributing
 
