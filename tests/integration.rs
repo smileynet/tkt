@@ -822,7 +822,7 @@ fn test_telemetry_enable_disable_cycle() {
     let (_tmp, clone) = setup_repo();
 
     // Clear any inherited telemetry env vars for a clean test
-    let clean_env: &[(&str, &str)] = &[("TKT_TELEMETRY", ""), ("DO_NOT_TRACK", "")];
+    let clean_env: &[(&str, &str)] = &[("TKT_TELEMETRY", ""), ("DO_NOT_TRACK", ""), ("CI", "")];
 
     // First disable to reset any persisted state from prior runs
     let (code, _, _) = run_tkt_env(&clone, &["telemetry", "--disable"], clean_env);
