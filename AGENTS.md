@@ -15,9 +15,12 @@ src/
 ├── color.rs         — color/symbol support (NO_COLOR, --color, TKT_ASCII)
 ├── config.rs        — user config (~/.config/tkt/) + project config (.tickets/config.toml)
 ├── telemetry.rs     — consent, session tracking, JSONL sink, rotation
+├── mutation.rs      — MutationContext (push-gated lifecycle for existing-ticket mutations)
+├── renumber.rs      — RenumberPlan (pure ID remapping: plan + apply)
+├── audit.rs         — pure audit rules (injectable deps, no I/O)
 ├── core/
 │   ├── mod.rs       — re-exports
-│   ├── ticket.rs    — TicketFile (raw editor) + Ticket (typed domain), Status/Env/Priority enums
+│   ├── ticket.rs    — TicketFile (raw editor + typed mutations) + Ticket (typed domain)
 │   └── validate.rs  — input validation (slugs, free text, IDs, enums)
 ├── findings.rs      — validation rules, Finding struct, output formatting
 ├── transaction.rs   — GitTransaction (allocation: fetch→scan→commit→push→retry)
@@ -118,6 +121,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 - **Local-only telemetry**: opt-in JSONL file sink, per-project segmentation, session-aware rotation, never blocks CLI
 - **LazyLock regex statics**: fixed patterns compiled once via `std::sync::LazyLock`
 - **No color crate**: raw ANSI codes + `std::io::IsTerminal` — zero additional dependencies
+- **Facade re-exports**: only re-export types from `core/mod.rs` that callers name directly; types returned by methods but never named (e.g., `AcStats`) stay unexported from the facade to avoid unused-import warnings
 
 ## Contract
 
