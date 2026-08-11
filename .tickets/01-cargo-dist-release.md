@@ -1,7 +1,7 @@
 ---
 id: "01"
 title: "Set up cargo-dist and publish v0.1.0"
-status: open
+status: done
 blocked_by: ["02", "03", "04", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "64"]
 ---
 
@@ -73,12 +73,16 @@ targets = [
 
 ## Acceptance criteria
 
-- [ ] `dist-workspace.toml` committed with correct targets and installers
-- [ ] `.github/workflows/release.yml` generated and committed
-- [ ] `cargo dist plan` produces correct release plan
-- [ ] Crate name "tkt" available on crates.io (or fallback chosen)
-- [ ] `cargo publish --dry-run` passes
-- [ ] `cargo publish` succeeds (v0.1.0 live on crates.io)
-- [ ] v0.1.0 tag pushed, GitHub Releases populated with 5 platform binaries
-- [ ] Install script works: `curl -fsSL ... | sh` installs the binary
-- [ ] `cargo install tkt` works from crates.io
+- [x] `dist-workspace.toml` committed with correct targets and installers
+- [x] `.github/workflows/release.yml` generated and committed
+- [x] `cargo dist plan` produces correct release plan
+- [x] Crate name "tkt" available on crates.io (or fallback chosen)
+- [x] `cargo publish --dry-run` passes
+- [x] `cargo publish` succeeds (v0.1.0 live on crates.io)
+- [x] v0.1.0 tag pushed, GitHub Releases populated with 5 platform binaries
+- [x] Install script works: `curl -fsSL ... | sh` installs the binary
+- [x] `cargo install tkt` works from crates.io
+
+## Resolution (2026-08-11)
+
+v0.1.0 published to crates.io, GitHub Release with 5 platform binaries + shell/powershell installers. Self-hosted runner for CI orchestration, GitHub-hosted for cross-platform builds.
