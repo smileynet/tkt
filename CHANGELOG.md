@@ -9,38 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`tkt init`** — scaffold `.tickets/` directory, config, and agent integration files
-  - `--write [FILE]` appends to AGENTS.md (or specified file) with idempotent markers
-  - `--target <tool>` generates for specific agents (claude, cursor, kiro, copilot, windsurf)
-  - `--all` deploys integration files for all supported agent tools
-  - `--agent-only` skips project bootstrapping
-- **`tkt doctor`** — health check for setup verification
-  - No args: checks git, `.tickets/`, config, remote, and runs validation
-  - With path: cross-project scan, finds all `.tickets/` dirs and reports per-project health
-- **`validation_criteria`** frontmatter field — machine-readable criteria for what "done" means
-  - `--validation "..."` flag on `new`, `batch`, `edit` (repeatable; alias: `--vc`)
-  - `--evidence "..."` flag on `close` — link proof to each criterion
-  - Positional mapping by default; named with `N=text` prefix
-  - Evidence pairs recorded in the Resolution section
-  - Config: `close.require_validation_criteria` (default: false)
-  - Config: `close.require_validation_evidence` (default: "warn"; also "true" or "false")
-  - `--force` bypasses all evidence gates
-  - Audit rule `low-evidence-closure` flags done tickets without evidence
-- **`tkt validate --fix`** — auto-repair fixable issues (quoting, invalid optional fields)
+- **`tkt init`** — set up a project for tkt in one command
+  - Creates `.tickets/` directory and default config
+  - Deploys agent instructions to AGENTS.md, CLAUDE.md, Cursor, Kiro, Copilot, Windsurf
+  - `--write` adds a tkt section to your existing AGENTS.md without touching other content
+  - `--all` generates files for all supported AI coding tools at once
+  - Safe to re-run — updates its own section, never duplicates or overwrites yours
+- **`tkt doctor`** — verify your setup is working
+  - Checks git, tickets directory, config, remote connection, and ticket validity
+  - `tkt doctor ~/code` scans all your projects at once and reports which need attention
+- **`tkt validate --fix`** — automatically repair common ticket issues
+- **Validation criteria** — define what "done" means, require proof when closing
+  - Add criteria when creating tickets: `tkt new auth --validation "tests pass" --validation "login works"`
+  - Provide evidence when closing: `tkt close 01 --evidence "49 tests passed" --evidence "login returns JWT"`
+  - Evidence is recorded alongside the resolution so reviewers see what was verified
+  - Configurable enforcement: warn by default, or require evidence before closing
+  - `tkt audit` flags tickets that were closed without evidence
 
 ### Changed
 
-- README rewritten for clarity — removed jargon, user-centric language
-- Cargo.toml description aligned with README: "Track tasks as markdown files in your git repo"
-- Added `rust-version = "1.80"` (MSRV)
-- Added 5th keyword "markdown" for crates.io discoverability
-- Package excludes `.tickets/`, `.memory/`, `.codex/`, `.github/`, `tests/` (65KB compressed)
-
-### Fixed
-
-- CI: self-hosted runner needs `~/.cargo/bin` in PATH
-- CI: Rust toolchain step required for GitHub Actions runner
-- Test: telemetry test unsets `CI` env for self-hosted runner compatibility
+- Clearer README and crate description focused on what tkt does, not how it works
 
 ## [0.1.0] - 2026-08-09
 
