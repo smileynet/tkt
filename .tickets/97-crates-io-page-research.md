@@ -4,6 +4,11 @@ title: "Research top crates.io projects for description page style and best prac
 status: in_progress
 blocked_by: []
 priority: medium
+validation_criteria: 
+  - "Research covers 5+ top crates"
+  - "Findings written to .scratch/research/"
+  - "Specific recommendations for tkt"
+  - "Recommended changes applied"
 ---
 
 # Research top crates.io projects for description page style and best practices
