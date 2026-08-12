@@ -1660,3 +1660,175 @@ fn test_validate_fix_quotes_ids_and_removes_invalid_env() {
         content
     );
 }
+
+#[test]
+fn test_validation_criteria_and_evidence_flow() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create a ticket with validation criteria
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "new",
+            "auth",
+            "--title",
+            "Implement auth",
+            "--validation",
+            "cargo test passes",
+            "--validation",
+            "login returns JWT",
+        ],
+    );
+    assert_eq!(code, 0, "new should succeed: {}", out);
+
+    // Verify the file has validation_criteria
+    let content =
+        std::fs::read_to_string(clone.join(".tickets/02-auth.md")).unwrap();
+    assert!(
+        content.contains("validation_criteria:"),
+        "should have vc field: {}",
+        content
+    );
+    assert!(
+        content.contains("cargo test passes"),
+        "should have first criterion: {}",
+        content
+    );
+
+    // Close with evidence (positional)
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--note",
+            "All verified",
+            "--evidence",
+            "49 passed, 0 failed",
+            "--evidence",
+            "POST /login returns JWT",
+            "--check-all",
+        ],
+    );
+    assert_eq!(code, 0, "close with evidence should succeed: {}", out);
+
+    // Verify the resolution section has evidence
+    let content =
+        std::fs::read_to_string(clone.join(".tickets/02-auth.md")).unwrap();
+    assert!(
+        content.contains("### Verification"),
+        "should have Verification section: {}",
+        content
+    );
+    assert!(
+        content.contains("✓ cargo test passes"),
+        "should have first criterion with checkmark: {}",
+        content
+    );
+    assert!(
+        content.contains("49 passed, 0 failed"),
+        "should have first evidence: {}",
+        content
+    );
+}
+
+#[test]
+fn test_evidence_named_mapping() {
+    let (_tmp, clone) = setup_repo();
+
+    // Create ticket with 3 criteria
+    let (code, _) = run_tkt(
+        &clone,
+        &[
+            "new",
+            "multi",
+            "--title",
+            "Multi criteria",
+            "--validation",
+            "A passes",
+            "--validation",
+            "B passes",
+            "--validation",
+            "C passes",
+        ],
+    );
+    assert_eq!(code, 0);
+
+    // Close with named evidence (out of order)
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--note",
+            "Done",
+            "--evidence",
+            "3=C verified",
+            "--evidence",
+            "1=A verified",
+            "--evidence",
+            "2=B verified",
+            "--check-all",
+        ],
+    );
+    assert_eq!(code, 0, "named evidence should succeed: {}", out);
+
+    let content =
+        std::fs::read_to_string(clone.join(".tickets/02-multi.md")).unwrap();
+    assert!(
+        content.contains("✓ A passes — \"A verified\""),
+        "criterion 1 should map to evidence 1: {}",
+        content
+    );
+    assert!(
+        content.contains("✓ C passes — \"C verified\""),
+        "criterion 3 should map to evidence 3: {}",
+        content
+    );
+}
+
+#[test]
+fn test_evidence_gate_blocks_when_configured() {
+    let (_tmp, clone) = setup_repo();
+
+    // Set config to require evidence
+    std::fs::create_dir_all(clone.join(".tickets")).ok();
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_validation_evidence = \"true\"\n",
+    )
+    .unwrap();
+
+    // Create ticket with criteria
+    let (code, _) = run_tkt(
+        &clone,
+        &[
+            "new",
+            "gated",
+            "--title",
+            "Gated ticket",
+            "--validation",
+            "must verify",
+        ],
+    );
+    assert_eq!(code, 0);
+
+    // Try to close without evidence — should fail
+    let (code, out) = run_tkt(
+        &clone,
+        &["close", "02", "--note", "Done", "--check-all"],
+    );
+    assert_eq!(code, 1, "should be blocked: {}", out);
+    assert!(
+        out.contains("no --evidence provided"),
+        "should explain why blocked: {}",
+        out
+    );
+
+    // Close with --force should work
+    let (code, out) = run_tkt(
+        &clone,
+        &["close", "02", "--note", "Done", "--check-all", "--force"],
+    );
+    assert_eq!(code, 0, "force should override: {}", out);
+}
