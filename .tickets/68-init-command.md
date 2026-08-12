@@ -1,7 +1,7 @@
 ---
 id: "68"
 title: "Add tkt init command with per-agent scaffolding"
-status: open
+status: in_progress
 blocked_by: ["01"]
 priority: medium
 ---
