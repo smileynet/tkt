@@ -42,7 +42,7 @@ enum Commands {
         #[arg(long, value_delimiter = ',')]
         blocked_by: Option<Vec<String>>,
         /// Validation criteria (repeatable)
-        #[arg(long = "vc", num_args = 1, action = clap::ArgAction::Append)]
+        #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
         validation_criteria: Vec<String>,
     },
     /// Allocate N sequential ids in one commit/push
@@ -60,7 +60,7 @@ enum Commands {
         #[arg(long, value_delimiter = ',')]
         blocked_by: Option<Vec<String>>,
         /// Validation criteria (repeatable)
-        #[arg(long = "vc", num_args = 1, action = clap::ArgAction::Append)]
+        #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
         validation_criteria: Vec<String>,
     },
     /// Mark open ticket in_progress (pushed = visible WIP)
@@ -106,7 +106,7 @@ enum Commands {
         #[arg(long, value_delimiter = ',')]
         ac: Option<Vec<u32>>,
         /// Validation criteria (repeatable, replaces existing list)
-        #[arg(long = "vc", num_args = 1, action = clap::ArgAction::Append)]
+        #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
         validation_criteria: Vec<String>,
     },
     /// Move a ticket to a new id atomically
