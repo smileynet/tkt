@@ -1,7 +1,7 @@
 ---
 id: "76"
 title: "tkt doctor: cross-project health check"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
