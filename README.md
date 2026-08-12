@@ -8,7 +8,7 @@ Track tasks as markdown files in your git repo.
 
 ## What It Does
 
-tkt keeps your task list in `.tickets/` — one markdown file per task, with status and dependencies in the header. It tells you what's ready to work on next.
+One markdown file per task, with status and dependencies in the header. tkt tells you what's ready to work on next.
 
 ```
 .tickets/
