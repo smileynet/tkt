@@ -1,7 +1,7 @@
 ---
 id: "98"
 title: "Test warning 2"
-status: open
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -16,4 +16,8 @@ TBD
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [x] TBD
+
+## Resolution (2026-08-12)
+
+Done
