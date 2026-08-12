@@ -3,6 +3,13 @@ id: "76"
 title: "tkt doctor: cross-project health check"
 status: in_progress
 blocked_by: []
+validation_criteria: 
+  - "Discovers all .tickets/ dirs under a given path"
+  - "Reports per-project status (clean/fixable/broken)"
+  - "Summary line with counts"
+  - "Exit code reflects health (0=clean, 1=issues)"
+  - "Single-project mode checks git, .tickets, config, remote, validate"
+  - "Handles repos with parse errors gracefully"
 ---
 
 # tkt doctor: cross-project health check
