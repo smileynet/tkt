@@ -12,6 +12,7 @@ pub fn run(
     ac_indices: &[u32],
     check_all: bool,
     force: bool,
+    evidence: &[String],
 ) -> Result<i32> {
     let ctx = MutationContext::open()?;
     let t = ctx.find_ticket(id)?;
@@ -27,6 +28,23 @@ pub fn run(
     }
     if t.status == Status::Done {
         domain_bail!("{} is already done", t.id);
+    }
+
+    // --- Evidence / validation_criteria pairing ---
+    let criteria = &t.validation_criteria;
+    let evidence_map = if !evidence.is_empty() && !criteria.is_empty() {
+        Some(parse_evidence(evidence, criteria.len())?)
+    } else {
+        None
+    };
+
+    // Warn if criteria exist but no evidence provided (soft gate for now)
+    if !criteria.is_empty() && evidence.is_empty() && !force {
+        eprintln!(
+            "  {} {} validation criteria present but no --evidence provided",
+            crate::color::sym_warn(),
+            criteria.len()
+        );
     }
 
     let mut file = t.file.clone();
@@ -51,7 +69,22 @@ pub fn run(
     let spike_branch = crate::git::current_branch(&ctx.repo)
         .ok()
         .filter(|b| b.starts_with("spike/"));
-    file.append_resolution(&chrono_date(), resolution, spike_branch.as_deref());
+
+    // Build resolution text with evidence if available
+    let full_resolution = if let Some(ref emap) = evidence_map {
+        let mut parts = vec![resolution.to_string()];
+        parts.push(String::new());
+        parts.push("### Verification".to_string());
+        for (i, criterion) in criteria.iter().enumerate() {
+            let ev = emap.get(i).map(|s| s.as_str()).unwrap_or("(no evidence)");
+            parts.push(format!("{}. ✓ {} — \"{}\"", i + 1, criterion, ev));
+        }
+        parts.join("\n")
+    } else {
+        resolution.to_string()
+    };
+
+    file.append_resolution(&chrono_date(), &full_resolution, spike_branch.as_deref());
 
     let after_stats = if check_all {
         file.check_acs(AcSelection::All)
@@ -150,4 +183,49 @@ fn chrono_date() -> String {
     let y = if m <= 2 { y + 1 } else { y };
 
     format!("{:04}-{:02}-{:02}", y, m, d)
+}
+
+/// Parse evidence strings into a vector indexed by criterion position.
+/// Supports positional (fills in order) and named (`N=text`, 1-based index).
+fn parse_evidence(evidence: &[String], criteria_count: usize) -> Result<Vec<String>> {
+    let mut result: Vec<Option<String>> = vec![None; criteria_count];
+    let mut positional_idx = 0;
+
+    for item in evidence {
+        // Check for named format: starts with digit(s) followed by '='
+        if let Some(eq_pos) = item.find('=') {
+            let prefix = &item[..eq_pos];
+            if let Ok(n) = prefix.parse::<usize>() {
+                if n == 0 || n > criteria_count {
+                    domain_bail!(
+                        "--evidence {}={}: criterion {} does not exist (ticket has {})",
+                        n,
+                        &item[eq_pos + 1..],
+                        n,
+                        criteria_count
+                    );
+                }
+                result[n - 1] = Some(item[eq_pos + 1..].to_string());
+                continue;
+            }
+        }
+        // Positional: assign to next unfilled slot
+        while positional_idx < criteria_count && result[positional_idx].is_some() {
+            positional_idx += 1;
+        }
+        if positional_idx >= criteria_count {
+            domain_bail!(
+                "--evidence: more evidence items than validation criteria ({})",
+                criteria_count
+            );
+        }
+        result[positional_idx] = Some(item.clone());
+        positional_idx += 1;
+    }
+
+    // Convert Option<String> to String (unfilled slots become empty)
+    Ok(result
+        .into_iter()
+        .map(|opt| opt.unwrap_or_default())
+        .collect())
 }

@@ -84,6 +84,9 @@ enum Commands {
         /// Force close even if all ACs are unchecked
         #[arg(long)]
         force: bool,
+        /// Evidence for validation criteria (repeatable, positional or N=text for named)
+        #[arg(long, num_args = 1, action = clap::ArgAction::Append)]
+        evidence: Vec<String>,
     },
     /// Surgical field corrections
     Edit {
@@ -274,6 +277,7 @@ pub fn run() -> i32 {
             ac,
             check_all,
             force,
+            evidence,
         } => {
             let text = resolution.or(note);
             crate::commands::close::run(
@@ -282,6 +286,7 @@ pub fn run() -> i32 {
                 &ac.unwrap_or_default(),
                 check_all,
                 force,
+                &evidence,
             )
         }
         Commands::Edit {
