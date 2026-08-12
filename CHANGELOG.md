@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`tkt init`** — scaffold `.tickets/` directory, config, and agent integration files
+  - `--write [FILE]` appends to AGENTS.md (or specified file) with idempotent markers
+  - `--target <tool>` generates for specific agents (claude, cursor, kiro, copilot, windsurf)
+  - `--all` deploys integration files for all supported agent tools
+  - `--agent-only` skips project bootstrapping
+- **`tkt doctor`** — health check for setup verification
+  - No args: checks git, `.tickets/`, config, remote, and runs validation
+  - With path: cross-project scan, finds all `.tickets/` dirs and reports per-project health
+- **`validation_criteria`** frontmatter field — machine-readable criteria for what "done" means
+  - `--validation "..."` flag on `new`, `batch`, `edit` (repeatable; alias: `--vc`)
+  - `--evidence "..."` flag on `close` — link proof to each criterion
+  - Positional mapping by default; named with `N=text` prefix
+  - Evidence pairs recorded in the Resolution section
+  - Config: `close.require_validation_criteria` (default: false)
+  - Config: `close.require_validation_evidence` (default: "warn"; also "true" or "false")
+  - `--force` bypasses all evidence gates
+  - Audit rule `low-evidence-closure` flags done tickets without evidence
+- **`tkt validate --fix`** — auto-repair fixable issues (quoting, invalid optional fields)
+
+### Changed
+
+- README rewritten for clarity — removed jargon, user-centric language
+- Cargo.toml description aligned with README: "Track tasks as markdown files in your git repo"
+- Added `rust-version = "1.80"` (MSRV)
+- Added 5th keyword "markdown" for crates.io discoverability
+- Package excludes `.tickets/`, `.memory/`, `.codex/`, `.github/`, `tests/` (65KB compressed)
+
+### Fixed
+
+- CI: self-hosted runner needs `~/.cargo/bin` in PATH
+- CI: Rust toolchain step required for GitHub Actions runner
+- Test: telemetry test unsets `CI` env for self-hosted runner compatibility
+
 ## [0.1.0] - 2026-08-09
 
 ### Added
