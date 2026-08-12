@@ -26,6 +26,21 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Initialize .tickets/ and deploy agent integration files
+    Init {
+        /// Write agent snippet into a file (default: AGENTS.md) using markers
+        #[arg(long)]
+        write: Option<Option<String>>,
+        /// Generate for a specific agent tool
+        #[arg(long, value_parser = ["agents", "claude", "cursor", "kiro", "copilot", "windsurf"])]
+        target: Option<String>,
+        /// Generate for all known agent tools
+        #[arg(long)]
+        all: bool,
+        /// Skip directory/config creation, only output agent snippet
+        #[arg(long)]
+        agent_only: bool,
+    },
     /// Allocate a new ticket id (fetch, scan, create, commit, push)
     New {
         slug: String,
@@ -233,6 +248,12 @@ pub fn run() -> i32 {
 
     let result = match cli.command {
         Commands::Ready { json } => crate::commands::ready::run(json),
+        Commands::Init {
+            write,
+            target,
+            all,
+            agent_only,
+        } => crate::commands::init::run(write, target.as_deref(), all, agent_only),
         Commands::New {
             slug,
             title,
@@ -308,7 +329,11 @@ pub fn run() -> i32 {
             priority.as_deref(),
             status.as_deref(),
             &ac.unwrap_or_default(),
-            if validation_criteria.is_empty() { None } else { Some(&validation_criteria) },
+            if validation_criteria.is_empty() {
+                None
+            } else {
+                Some(&validation_criteria)
+            },
         ),
         Commands::Renumber {
             old_id,
@@ -397,6 +422,7 @@ pub fn run() -> i32 {
 fn command_name(cmd: &Commands) -> String {
     match cmd {
         Commands::Ready { .. } => "ready",
+        Commands::Init { .. } => "init",
         Commands::New { .. } => "new",
         Commands::Batch { .. } => "batch",
         Commands::Claim { .. } => "claim",

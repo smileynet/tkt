@@ -75,8 +75,16 @@ pub fn run(
                 let tid = format!("{:0>width$}", base + i as u64, width = width);
                 let filename = format!("{}-{}.md", tid, slug);
                 let path = txn.dir.join(&filename);
-                let content =
-                    core::new_ticket_text(&tid, title, blocked_by, env, spec, priority, status, validation_criteria);
+                let content = core::new_ticket_text(
+                    &tid,
+                    title,
+                    blocked_by,
+                    env,
+                    spec,
+                    priority,
+                    status,
+                    validation_criteria,
+                );
                 std::fs::write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));
             }

@@ -130,8 +130,7 @@ pub fn check_validation_evidence(corpus: &[Ticket]) -> Vec<Finding> {
             continue;
         }
         // Check if the body contains a Verification section with evidence
-        let has_verification = t.body.contains("### Verification")
-            && t.body.contains("✓");
+        let has_verification = t.body.contains("### Verification") && t.body.contains("✓");
 
         if !has_verification {
             findings.push(Finding {

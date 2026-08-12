@@ -7,6 +7,7 @@ pub mod close;
 pub mod common;
 pub mod config;
 pub mod edit;
+pub mod init;
 pub mod new;
 pub mod query;
 pub mod ready;

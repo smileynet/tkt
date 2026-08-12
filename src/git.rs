@@ -25,6 +25,11 @@ pub fn repo_root(from: &Path) -> Result<std::path::PathBuf> {
     Ok(std::path::PathBuf::from(root))
 }
 
+/// Get repository root from the current working directory.
+pub fn repo_root_cwd() -> Result<std::path::PathBuf> {
+    repo_root(&std::env::current_dir()?)
+}
+
 /// Check if a remote named "origin" is configured. Returns Result to propagate git failures.
 pub fn has_remote(repo: &Path) -> Result<bool> {
     let remotes = git(repo, &["remote"])?;

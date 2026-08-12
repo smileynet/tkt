@@ -638,9 +638,7 @@ fn parse_validation_criteria(raw: &str) -> Vec<String> {
         let inner = &trimmed[1..trimmed.len() - 1];
         return inner
             .split(',')
-            .map(|s| {
-                yaml_scalar_unescape(s.trim().trim_matches('"').trim_matches('\''))
-            })
+            .map(|s| yaml_scalar_unescape(s.trim().trim_matches('"').trim_matches('\'')))
             .filter(|s| !s.is_empty())
             .collect();
     }
@@ -923,7 +921,16 @@ mod tests {
 
     #[test]
     fn new_ticket_text_escapes_title() {
-        let text = new_ticket_text("01", "Fix \"ready\" command", &[], None, None, None, None, &[]);
+        let text = new_ticket_text(
+            "01",
+            "Fix \"ready\" command",
+            &[],
+            None,
+            None,
+            None,
+            None,
+            &[],
+        );
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();
         assert!(t.title.contains("ready"));
@@ -1137,7 +1144,10 @@ mod tests {
         assert_eq!(ticket.validation_criteria.len(), 3);
         assert_eq!(ticket.validation_criteria[0], "cargo test passes");
         assert_eq!(ticket.validation_criteria[1], "clippy zero warnings");
-        assert_eq!(ticket.validation_criteria[2], "integration test covers flow");
+        assert_eq!(
+            ticket.validation_criteria[2],
+            "integration test covers flow"
+        );
     }
 
     #[test]
@@ -1151,14 +1161,16 @@ mod tests {
 
     #[test]
     fn parse_validation_criteria_empty_when_absent() {
-        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n";
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n";
         let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
         assert!(ticket.validation_criteria.is_empty());
     }
 
     #[test]
     fn set_validation_criteria_roundtrip() {
-        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n";
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n";
         let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
         file.set_validation_criteria(&["cargo test passes", "clippy clean"]);
         let serialized = file.serialize();

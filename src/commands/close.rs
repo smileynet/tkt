@@ -39,10 +39,7 @@ pub fn run(
     };
 
     // Config-driven gate: require_validation_criteria
-    if ctx.config.close_require_validation_criteria
-        && criteria.is_empty()
-        && !force
-    {
+    if ctx.config.close_require_validation_criteria && criteria.is_empty() && !force {
         domain_bail!(
             "project config requires validation_criteria on tickets being closed (use --force to override)"
         );
