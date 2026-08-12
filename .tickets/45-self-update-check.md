@@ -1,7 +1,7 @@
 ---
 id: "45"
 title: "self-update check: notify when a newer version is available"
-status: open
+status: in_progress
 blocked_by: ["01"]
 ---
 
