@@ -1,7 +1,7 @@
 ---
 id: "92"
 title: "Implement validation_criteria field + evidence-gated close"
-status: open
+status: in_progress
 blocked_by: ["91"]
 priority: high
 ---
