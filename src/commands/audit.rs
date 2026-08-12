@@ -21,6 +21,7 @@ pub fn run(strict: bool, brief: bool) -> Result<i32> {
         git_last_commit_ts(&repo, &dir, path)
     }));
     all_findings.extend(audit::check_frontier_health(&corpus));
+    all_findings.extend(audit::check_validation_evidence(&corpus));
 
     let status = findings::status_from_findings(&all_findings, strict);
     findings::print_findings(&all_findings, brief, status);

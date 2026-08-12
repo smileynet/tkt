@@ -121,6 +121,34 @@ pub fn check_frontier_health(corpus: &[Ticket]) -> Vec<Finding> {
     findings
 }
 
+/// Flag done tickets that have validation_criteria but were closed without evidence.
+pub fn check_validation_evidence(corpus: &[Ticket]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+
+    for t in corpus.iter().filter(|t| t.status == Status::Done) {
+        if t.validation_criteria.is_empty() {
+            continue;
+        }
+        // Check if the body contains a Verification section with evidence
+        let has_verification = t.body.contains("### Verification")
+            && t.body.contains("✓");
+
+        if !has_verification {
+            findings.push(Finding {
+                file: filename(t),
+                rule: "low-evidence-closure".into(),
+                message: format!(
+                    "{} validation criteria defined but no evidence recorded",
+                    t.validation_criteria.len()
+                ),
+                severity: "warning".into(),
+            });
+        }
+    }
+
+    findings
+}
+
 fn filename(t: &Ticket) -> String {
     t.path
         .file_name()
