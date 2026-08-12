@@ -1,7 +1,7 @@
 ---
 id: "97"
 title: "Research top crates.io projects for description page style and best practices"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria: 
@@ -30,10 +30,10 @@ Deliverable: recommendations for tkt's crates.io presence (description wording, 
 
 ## Acceptance criteria
 
-- [ ] Research dispatched covering 5+ top crates
-- [ ] Findings written to .scratch/research/
-- [ ] Specific recommendations for tkt's Cargo.toml and crates.io page
-- [ ] Any recommended changes applied before v0.2.0
+- [x] Research dispatched covering 5+ top crates
+- [x] Findings written to .scratch/research/
+- [x] Specific recommendations for tkt's Cargo.toml and crates.io page
+- [x] Any recommended changes applied before v0.2.0
 
 # Research top crates.io projects for description page style and best practices
 
@@ -44,3 +44,13 @@ TBD
 ## Acceptance criteria
 
 - [ ] TBD
+
+## Resolution (2026-08-12)
+
+Researched 6 top crates. Applied: homepage, documentation link, replaced 'cli' keyword with 'todo'.
+
+### Verification
+1. ✓ Research covers 5+ top crates — "Researched ripgrep, bat, fd-find, just, starship, delta (6 crates)"
+2. ✓ Findings written to .scratch/research/ — "Written to .scratch/research/crates-io-pages.md"
+3. ✓ Specific recommendations for tkt — "Recommendations: add homepage, docs link, fix keywords"
+4. ✓ Recommended changes applied — "Cargo.toml updated with homepage, documentation, keywords"
