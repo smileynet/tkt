@@ -9,26 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`tkt init`** — set up a project for tkt in one command
-  - Creates `.tickets/` directory and default config
-  - Deploys agent instructions to AGENTS.md, CLAUDE.md, Cursor, Kiro, Copilot, Windsurf
-  - `--write` adds a tkt section to your existing AGENTS.md without touching other content
-  - `--all` generates files for all supported AI coding tools at once
-  - Safe to re-run — updates its own section, never duplicates or overwrites yours
-- **`tkt doctor`** — verify your setup is working
-  - Checks git, tickets directory, config, remote connection, and ticket validity
-  - `tkt doctor ~/code` scans all your projects at once and reports which need attention
-- **`tkt validate --fix`** — automatically repair common ticket issues
-- **Validation criteria** — define what "done" means, require proof when closing
-  - Add criteria when creating tickets: `tkt new auth --validation "tests pass" --validation "login works"`
-  - Provide evidence when closing: `tkt close 01 --evidence "49 tests passed" --evidence "login returns JWT"`
-  - Evidence is recorded alongside the resolution so reviewers see what was verified
-  - Configurable enforcement: warn by default, or require evidence before closing
-  - `tkt audit` flags tickets that were closed without evidence
+- `tkt init` command to set up a project and deploy AI agent instructions in one step
+- `tkt doctor` command to verify your setup is correct
+- `tkt doctor <path>` to scan all your projects at once and report health
+- `tkt validate --fix` to automatically repair common ticket issues
+- Validation criteria on tickets — define what "done" means at creation time
+- Evidence on close — link proof to each criterion so reviewers see what was verified
+- Configurable enforcement for validation evidence (warn, require, or off)
+- `tkt audit` flags tickets closed without evidence when criteria were defined
 
 ### Changed
 
-- Clearer README and crate description focused on what tkt does, not how it works
+- Clearer README and crate description
 
 ## [0.1.0] - 2026-08-09
 
