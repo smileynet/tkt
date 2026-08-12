@@ -1,7 +1,7 @@
 ---
 id: "91"
 title: "Agent close confirmation: formalize validation_criteria field + y/n gate"
-status: open
+status: done
 blocked_by: []
 priority: high
 ---
@@ -118,19 +118,19 @@ Low-evidence closures: 2/12
 
 ## Acceptance criteria
 
-- [ ] `validation_criteria` field parsed and preserved in frontmatter
-- [ ] `tkt new --vc "..."` sets criteria (repeatable flag)
-- [ ] `tkt edit --vc "..."` replaces criteria list
-- [ ] `--evidence` flag on close, positional by default
-- [ ] Named evidence (`N=...`) supported, mixed with positional
-- [ ] Count mismatch behavior respects config (false/warn/true)
-- [ ] `require_validation_criteria` config: false (default) / true
-- [ ] `require_validation_evidence` config: "warn" (default) / false / true
-- [ ] `--force` bypasses all gates (with audit trail)
-- [ ] Resolution section records criterion + evidence pairs
-- [ ] `tkt audit` flags low-evidence closures
-- [ ] Backward compatible: tickets without VC close normally
-- [ ] Our .tickets/config.toml set to require both
+- [x] `validation_criteria` field parsed and preserved in frontmatter
+- [x] `tkt new --vc "..."` sets criteria (repeatable flag)
+- [x] `tkt edit --vc "..."` replaces criteria list
+- [x] `--evidence` flag on close, positional by default
+- [x] Named evidence (`N=...`) supported, mixed with positional
+- [x] Count mismatch behavior respects config (false/warn/true)
+- [x] `require_validation_criteria` config: false (default) / true
+- [x] `require_validation_evidence` config: "warn" (default) / false / true
+- [x] `--force` bypasses all gates (with audit trail)
+- [x] Resolution section records criterion + evidence pairs
+- [x] `tkt audit` flags low-evidence closures
+- [x] Backward compatible: tickets without VC close normally
+- [x] Our .tickets/config.toml set to require both
 
 # Agent close confirmation: formalize validation_criteria field + y/n gate
 
