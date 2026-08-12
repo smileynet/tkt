@@ -6,8 +6,10 @@ rust-version = "1.80"
 description = "Track tasks as markdown files in your git repo"
 license = "MIT"
 repository = "https://github.com/smileynet/tkt"
+homepage = "https://github.com/smileynet/tkt"
+documentation = "https://github.com/smileynet/tkt#usage"
 readme = "README.md"
-keywords = ["cli", "tickets", "git", "project-management", "markdown"]
+keywords = ["tickets", "task-management", "git", "todo", "markdown"]
 categories = ["command-line-utilities", "development-tools"]
 exclude = [".tickets/", ".memory/", ".codex/", ".github/", "tests/"]
 
