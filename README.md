@@ -1,6 +1,6 @@
 # tkt
 
-Track tasks as markdown files in your git repo. Know what's ready to work on, claim tasks without stepping on each other, and keep dependencies straight — no server, no accounts, no setup beyond git.
+Track tasks as markdown files in your git repo.
 
 [![CI](https://github.com/smileynet/tkt/actions/workflows/ci.yml/badge.svg)](https://github.com/smileynet/tkt/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/tkt.svg)](https://crates.io/crates/tkt)
