@@ -290,6 +290,19 @@ impl TicketFile {
         }
     }
 
+    /// Set or clear the validation_criteria field (multi-line YAML list format).
+    pub fn set_validation_criteria(&mut self, criteria: &[impl AsRef<str>]) {
+        if criteria.is_empty() {
+            self.remove_field("validation_criteria");
+            return;
+        }
+        let lines = criteria
+            .iter()
+            .map(|c| format!("\n  - \"{}\"", yaml_scalar_escape(c.as_ref())))
+            .collect::<String>();
+        self.set_field("validation_criteria", &lines);
+    }
+
     /// Append a resolution section to the body (idempotent — skips if already present).
     pub fn append_resolution(&mut self, date: &str, note: &str, spike_branch: Option<&str>) {
         if self.body.contains("## Resolution") {
@@ -403,6 +416,7 @@ pub struct Ticket {
     pub env: Env,
     pub priority: Option<Priority>,
     pub spec: Option<String>,
+    pub validation_criteria: Vec<String>,
     pub path: PathBuf,
     pub body: String,
     /// The underlying raw file for mutations.
@@ -454,6 +468,9 @@ impl Ticket {
             .get("spec")
             .map(|v| yaml_scalar_unescape(v.trim_matches('"').trim_matches('\'')));
 
+        let validation_criteria =
+            parse_validation_criteria(file.get("validation_criteria").unwrap_or(""));
+
         Ok(Ticket {
             id,
             title,
@@ -462,6 +479,7 @@ impl Ticket {
             env,
             priority,
             spec,
+            validation_criteria,
             path: file.path.clone(),
             body: file.body.clone(),
             file,
@@ -603,6 +621,43 @@ fn parse_blocked_by(raw: &str) -> Vec<String> {
         .collect()
 }
 
+/// Parse validation_criteria from frontmatter.
+/// Supports both inline array `["a", "b"]` and multi-line YAML list:
+/// ```yaml
+/// validation_criteria:
+///   - "cargo test passes"
+///   - "login returns JWT"
+/// ```
+fn parse_validation_criteria(raw: &str) -> Vec<String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Vec::new();
+    }
+    // Inline array format: ["a", "b"]
+    if trimmed.starts_with('[') && trimmed.ends_with(']') {
+        let inner = &trimmed[1..trimmed.len() - 1];
+        return inner
+            .split(',')
+            .map(|s| {
+                yaml_scalar_unescape(s.trim().trim_matches('"').trim_matches('\''))
+            })
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    // Multi-line YAML list format (continuation lines joined with newlines):
+    //   - "criterion one"
+    //   - "criterion two"
+    raw.split('\n')
+        .map(|line| line.trim())
+        .filter(|line| line.starts_with('-'))
+        .map(|line| {
+            let val = line[1..].trim();
+            yaml_scalar_unescape(val.trim_matches('"').trim_matches('\''))
+        })
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
 // --- YAML/JSON escaping ---
 
 /// Escape a string for use inside YAML double-quoted scalars.
@@ -688,6 +743,7 @@ pub fn new_ticket_text(
     spec: Option<&str>,
     priority: Option<&str>,
     status: Option<&str>,
+    validation_criteria: &[String],
 ) -> String {
     let status_val = status.unwrap_or("open");
     let mut fm_lines = vec![
@@ -709,6 +765,12 @@ pub fn new_ticket_text(
     }
     if let Some(p) = priority {
         fm_lines.push(format!("priority: {}", p));
+    }
+    if !validation_criteria.is_empty() {
+        fm_lines.push("validation_criteria:".to_string());
+        for vc in validation_criteria {
+            fm_lines.push(format!("  - \"{}\"", yaml_scalar_escape(vc)));
+        }
     }
     let body = format!(
         "\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
@@ -861,7 +923,7 @@ mod tests {
 
     #[test]
     fn new_ticket_text_escapes_title() {
-        let text = new_ticket_text("01", "Fix \"ready\" command", &[], None, None, None, None);
+        let text = new_ticket_text("01", "Fix \"ready\" command", &[], None, None, None, None, &[]);
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();
         assert!(t.title.contains("ready"));
@@ -1066,5 +1128,43 @@ mod tests {
         assert_eq!(stats.total, 3);
         assert_eq!(stats.checked, 1);
         assert_eq!(stats.unchecked, 2);
+    }
+
+    #[test]
+    fn parse_validation_criteria_multiline() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\nvalidation_criteria:\n  - \"cargo test passes\"\n  - \"clippy zero warnings\"\n  - \"integration test covers flow\"\n---\n\n# Test\n";
+        let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(ticket.validation_criteria.len(), 3);
+        assert_eq!(ticket.validation_criteria[0], "cargo test passes");
+        assert_eq!(ticket.validation_criteria[1], "clippy zero warnings");
+        assert_eq!(ticket.validation_criteria[2], "integration test covers flow");
+    }
+
+    #[test]
+    fn parse_validation_criteria_inline_array() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\nvalidation_criteria: [\"test passes\", \"lint clean\"]\n---\n\n# Test\n";
+        let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(ticket.validation_criteria.len(), 2);
+        assert_eq!(ticket.validation_criteria[0], "test passes");
+        assert_eq!(ticket.validation_criteria[1], "lint clean");
+    }
+
+    #[test]
+    fn parse_validation_criteria_empty_when_absent() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n";
+        let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert!(ticket.validation_criteria.is_empty());
+    }
+
+    #[test]
+    fn set_validation_criteria_roundtrip() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        file.set_validation_criteria(&["cargo test passes", "clippy clean"]);
+        let serialized = file.serialize();
+        let reparsed = Ticket::parse_str(&serialized, Path::new("t.md")).unwrap();
+        assert_eq!(reparsed.validation_criteria.len(), 2);
+        assert_eq!(reparsed.validation_criteria[0], "cargo test passes");
+        assert_eq!(reparsed.validation_criteria[1], "clippy clean");
     }
 }

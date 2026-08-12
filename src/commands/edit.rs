@@ -16,6 +16,7 @@ pub fn run(
     priority: Option<&str>,
     status: Option<&str>,
     ac_indices: &[u32],
+    validation_criteria: Option<&[String]>,
 ) -> Result<i32> {
     let ctx = MutationContext::open()?;
     let t = ctx.find_ticket(id)?;
@@ -119,6 +120,10 @@ pub fn run(
     if !ac_indices.is_empty() {
         file.check_acs(AcSelection::Indices(ac_indices));
         changed.push("ac");
+    }
+    if let Some(vc) = validation_criteria {
+        file.set_validation_criteria(vc);
+        changed.push("validation_criteria");
     }
 
     if changed.is_empty() {

@@ -41,6 +41,9 @@ enum Commands {
         status: Option<String>,
         #[arg(long, value_delimiter = ',')]
         blocked_by: Option<Vec<String>>,
+        /// Validation criteria (repeatable)
+        #[arg(long = "vc", num_args = 1, action = clap::ArgAction::Append)]
+        validation_criteria: Vec<String>,
     },
     /// Allocate N sequential ids in one commit/push
     Batch {
@@ -56,6 +59,9 @@ enum Commands {
         status: Option<String>,
         #[arg(long, value_delimiter = ',')]
         blocked_by: Option<Vec<String>>,
+        /// Validation criteria (repeatable)
+        #[arg(long = "vc", num_args = 1, action = clap::ArgAction::Append)]
+        validation_criteria: Vec<String>,
     },
     /// Mark open ticket in_progress (pushed = visible WIP)
     Claim { id: String },
@@ -96,6 +102,9 @@ enum Commands {
         status: Option<String>,
         #[arg(long, value_delimiter = ',')]
         ac: Option<Vec<u32>>,
+        /// Validation criteria (repeatable, replaces existing list)
+        #[arg(long = "vc", num_args = 1, action = clap::ArgAction::Append)]
+        validation_criteria: Vec<String>,
     },
     /// Move a ticket to a new id atomically
     Renumber {
@@ -229,6 +238,7 @@ pub fn run() -> i32 {
             priority,
             status,
             blocked_by,
+            validation_criteria,
         } => crate::commands::new::run(
             &slug,
             title.as_deref(),
@@ -237,6 +247,7 @@ pub fn run() -> i32 {
             priority.as_deref(),
             status.as_deref(),
             &blocked_by.unwrap_or_default(),
+            &validation_criteria,
         ),
         Commands::Batch {
             items,
@@ -245,6 +256,7 @@ pub fn run() -> i32 {
             priority,
             status,
             blocked_by,
+            validation_criteria,
         } => crate::commands::batch::run(
             &items,
             spec.as_deref(),
@@ -252,6 +264,7 @@ pub fn run() -> i32 {
             priority.as_deref(),
             status.as_deref(),
             &blocked_by.unwrap_or_default(),
+            &validation_criteria,
         ),
         Commands::Claim { id } => crate::commands::claim::run(&id),
         Commands::Close {
@@ -280,6 +293,7 @@ pub fn run() -> i32 {
             priority,
             status,
             ac,
+            validation_criteria,
         } => crate::commands::edit::run(
             &id,
             title.as_deref(),
@@ -289,6 +303,7 @@ pub fn run() -> i32 {
             priority.as_deref(),
             status.as_deref(),
             &ac.unwrap_or_default(),
+            if validation_criteria.is_empty() { None } else { Some(&validation_criteria) },
         ),
         Commands::Renumber {
             old_id,

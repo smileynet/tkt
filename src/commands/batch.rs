@@ -14,6 +14,7 @@ pub fn run(
     priority: Option<&str>,
     status: Option<&str>,
     blocked_by: &[String],
+    validation_criteria: &[String],
 ) -> Result<i32> {
     if let Some(s) = spec {
         if let Err(e) = validate::validate_free_text(s, "spec", 100) {
@@ -75,7 +76,7 @@ pub fn run(
                 let filename = format!("{}-{}.md", tid, slug);
                 let path = txn.dir.join(&filename);
                 let content =
-                    core::new_ticket_text(&tid, title, blocked_by, env, spec, priority, status);
+                    core::new_ticket_text(&tid, title, blocked_by, env, spec, priority, status, validation_criteria);
                 std::fs::write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));
             }

@@ -15,6 +15,7 @@ pub fn run(
     priority: Option<&str>,
     status: Option<&str>,
     blocked_by: &[String],
+    validation_criteria: &[String],
 ) -> Result<i32> {
     if let Err(e) = validate::validate_slug(slug) {
         domain_bail!("{}", e);
@@ -71,7 +72,7 @@ pub fn run(
 
     let filename = format!("{}-{}.md", tid, slug);
     let path = dir.join(&filename);
-    let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority, status);
+    let content = core::new_ticket_text(&tid, title, blocked_by, env, spec, priority, status, validation_criteria);
     std::fs::write(&path, &content)?;
 
     let rel_path = format!(".tickets/{}", filename);
@@ -97,7 +98,7 @@ pub fn run(
             let filename2 = format!("{}-{}.md", tid2, slug);
             let path2 = dir.join(&filename2);
             let content2 =
-                core::new_ticket_text(&tid2, title, blocked_by, env, spec, priority, status);
+                core::new_ticket_text(&tid2, title, blocked_by, env, spec, priority, status, validation_criteria);
             std::fs::write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;
