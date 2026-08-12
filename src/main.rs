@@ -11,6 +11,7 @@ mod mutation;
 mod renumber;
 mod telemetry;
 mod transaction;
+mod update_check;
 
 use std::process::ExitCode;
 
@@ -32,5 +33,6 @@ pub(crate) static QUIET: std::sync::atomic::AtomicBool = std::sync::atomic::Atom
 
 fn main() -> ExitCode {
     let code = cli::run();
+    update_check::check_for_update();
     ExitCode::from(code as u8)
 }
