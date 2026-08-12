@@ -4,6 +4,20 @@ title: "Add tkt init command with per-agent scaffolding"
 status: in_progress
 blocked_by: ["01"]
 priority: medium
+validation_criteria: 
+  - "tkt init creates .tickets/ and config.toml"
+  - "tkt init prints agent snippet to stdout"
+  - "tkt init --write appends/updates AGENTS.md with markers"
+  - "tkt init --write is idempotent"
+  - "tkt init --agent-only skips directory creation"
+  - "tkt init --target claude writes CLAUDE.md"
+  - "tkt init --target cursor writes .cursor/rules/tkt.mdc"
+  - "tkt init --target kiro writes .kiro/steering/tkt.md"
+  - "tkt init --target copilot writes .github/copilot-instructions.md"
+  - "tkt init --target windsurf writes .windsurf/rules/tkt.md"
+  - "tkt init --all generates all targets"
+  - "Parent directories created automatically"
+  - "Existing user content outside markers preserved"
 ---
 
 # Add tkt init command with per-agent scaffolding
