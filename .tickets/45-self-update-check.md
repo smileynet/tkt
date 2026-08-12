@@ -3,6 +3,13 @@ id: "45"
 title: "self-update check: notify when a newer version is available"
 status: in_progress
 blocked_by: ["01"]
+validation_criteria: 
+  - "Update check runs on invocation, at most once per 24 hours"
+  - "Prints notice to stderr when newer version exists"
+  - "Check result cached with timestamp"
+  - "3-second timeout, silent on network errors"
+  - "Disabled via env var and quiet mode"
+  - "Does not affect exit code or stdout"
 ---
 
 # Self-update check: notify when a newer version is available
