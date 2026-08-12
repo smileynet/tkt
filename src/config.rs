@@ -21,6 +21,9 @@ const KNOWN_KEYS: &[(&str, &str)] = &[("debug", "false"), ("debug.format", "huma
 pub struct ProjectConfig {
     pub close_require_resolution: bool,
     pub close_require_checked_acs: bool,
+    pub close_require_validation_criteria: bool,
+    /// "false" | "warn" | "true"
+    pub close_require_validation_evidence: String,
     pub validate_strict: bool,
     pub ready_default_env: String,
     pub priority_warn_unknown: bool,
@@ -35,6 +38,8 @@ impl Default for ProjectConfig {
         Self {
             close_require_resolution: false,
             close_require_checked_acs: true,
+            close_require_validation_criteria: false,
+            close_require_validation_evidence: "warn".to_string(),
             validate_strict: false,
             ready_default_env: String::new(),
             priority_warn_unknown: true,
@@ -62,6 +67,12 @@ impl ProjectConfig {
             match key.as_str() {
                 "close.require_resolution" => cfg.close_require_resolution = is_truthy(value),
                 "close.require_checked_acs" => cfg.close_require_checked_acs = is_truthy(value),
+                "close.require_validation_criteria" => {
+                    cfg.close_require_validation_criteria = is_truthy(value)
+                }
+                "close.require_validation_evidence" => {
+                    cfg.close_require_validation_evidence = value.clone()
+                }
                 "validate.strict" => cfg.validate_strict = is_truthy(value),
                 "ready.default_env" => cfg.ready_default_env = value.clone(),
                 "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
@@ -86,6 +97,16 @@ impl ProjectConfig {
                 "close.require_checked_acs",
                 &self.close_require_checked_acs.to_string(),
                 "true",
+            ),
+            entry(
+                "close.require_validation_criteria",
+                &self.close_require_validation_criteria.to_string(),
+                "false",
+            ),
+            entry(
+                "close.require_validation_evidence",
+                &self.close_require_validation_evidence,
+                "warn",
             ),
             entry(
                 "validate.strict",

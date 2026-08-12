@@ -38,13 +38,34 @@ pub fn run(
         None
     };
 
-    // Warn if criteria exist but no evidence provided (soft gate for now)
-    if !criteria.is_empty() && evidence.is_empty() && !force {
-        eprintln!(
-            "  {} {} validation criteria present but no --evidence provided",
-            crate::color::sym_warn(),
-            criteria.len()
+    // Config-driven gate: require_validation_criteria
+    if ctx.config.close_require_validation_criteria
+        && criteria.is_empty()
+        && !force
+    {
+        domain_bail!(
+            "project config requires validation_criteria on tickets being closed (use --force to override)"
         );
+    }
+
+    // Config-driven gate: require_validation_evidence
+    if !criteria.is_empty() && evidence.is_empty() && !force {
+        match ctx.config.close_require_validation_evidence.as_str() {
+            "true" => {
+                domain_bail!(
+                    "{} validation criteria present but no --evidence provided (use --force to override)",
+                    criteria.len()
+                );
+            }
+            "warn" => {
+                eprintln!(
+                    "  {} {} validation criteria present but no --evidence provided",
+                    crate::color::sym_warn(),
+                    criteria.len()
+                );
+            }
+            _ => {} // "false" or anything else — no gate
+        }
     }
 
     let mut file = t.file.clone();
