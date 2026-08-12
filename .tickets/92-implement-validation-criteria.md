@@ -4,6 +4,19 @@ title: "Implement validation_criteria field + evidence-gated close"
 status: in_progress
 blocked_by: ["91"]
 priority: high
+validation_criteria: 
+  - "validation_criteria parsed from frontmatter as Vec<String>"
+  - "tkt new --validation creates tickets with criteria"
+  - "tkt edit --validation replaces criteria list"
+  - "tkt close --evidence maps evidence to criteria positional"
+  - "Named evidence N= maps to specific criterion"
+  - "Config require_validation_criteria works"
+  - "Config require_validation_evidence works (false/warn/true)"
+  - "force bypasses evidence gate"
+  - "Resolution section shows criterion + evidence pairs"
+  - "tkt audit reports low-evidence closures"
+  - "All existing tests pass (backward compatible)"
+  - ".tickets/config.toml requires both"
 ---
 
 # Implement validation_criteria field + evidence-gated close
