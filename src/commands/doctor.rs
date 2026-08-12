@@ -10,6 +10,12 @@ use crate::core::{self, Ticket};
 use crate::findings;
 
 pub fn run(path: Option<&str>, fix: bool) -> Result<i32> {
+    if fix {
+        eprintln!(
+            "  {} --fix is not yet implemented for doctor (use `tkt validate --fix` per project)",
+            sym_warn()
+        );
+    }
     match path {
         None => run_single_project(fix),
         Some(p) => run_cross_project(Path::new(p), fix),

@@ -125,8 +125,8 @@ pub fn run(
         write_all_targets(&repo_root)?;
     } else if let Some(t) = target {
         write_target(&repo_root, t)?;
-    } else if let Some(file_opt) = write {
-        let file = file_opt.unwrap_or_else(|| "AGENTS.md".to_string());
+    } else if let Some(filename) = write {
+        let file = filename.unwrap_or_else(|| "AGENTS.md".to_string());
         let path = repo_root.join(&file);
         write_with_markers(&path, SNIPPET_AGENTS)?;
         if !is_quiet() {
@@ -241,12 +241,20 @@ fn write_target(repo_root: &std::path::Path, target: &str) -> Result<()> {
             write_owned_file(repo_root, ".kiro/steering/tkt.md", SNIPPET_KIRO)?;
         }
         "copilot" => {
-            let path = repo_root.join(".github/copilot-instructions.md");
-            write_with_markers(&path, SNIPPET_AGENTS)?;
-            if !is_quiet() {
+            let github_dir = repo_root.join(".github");
+            if github_dir.exists() {
+                let path = github_dir.join("copilot-instructions.md");
+                write_with_markers(&path, SNIPPET_AGENTS)?;
+                if !is_quiet() {
+                    println!(
+                        "  {} updated .github/copilot-instructions.md (tkt section)",
+                        sym_ok()
+                    );
+                }
+            } else if !is_quiet() {
                 println!(
-                    "  {} updated .github/copilot-instructions.md (tkt section)",
-                    sym_ok()
+                    "  {} skipped .github/copilot-instructions.md (.github/ doesn't exist)",
+                    sym_warn()
                 );
             }
         }

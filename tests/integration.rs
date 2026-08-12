@@ -1682,8 +1682,7 @@ fn test_validation_criteria_and_evidence_flow() {
     assert_eq!(code, 0, "new should succeed: {}", out);
 
     // Verify the file has validation_criteria
-    let content =
-        std::fs::read_to_string(clone.join(".tickets/02-auth.md")).unwrap();
+    let content = std::fs::read_to_string(clone.join(".tickets/02-auth.md")).unwrap();
     assert!(
         content.contains("validation_criteria:"),
         "should have vc field: {}",
@@ -1713,8 +1712,7 @@ fn test_validation_criteria_and_evidence_flow() {
     assert_eq!(code, 0, "close with evidence should succeed: {}", out);
 
     // Verify the resolution section has evidence
-    let content =
-        std::fs::read_to_string(clone.join(".tickets/02-auth.md")).unwrap();
+    let content = std::fs::read_to_string(clone.join(".tickets/02-auth.md")).unwrap();
     assert!(
         content.contains("### Verification"),
         "should have Verification section: {}",
@@ -1773,8 +1771,7 @@ fn test_evidence_named_mapping() {
     );
     assert_eq!(code, 0, "named evidence should succeed: {}", out);
 
-    let content =
-        std::fs::read_to_string(clone.join(".tickets/02-multi.md")).unwrap();
+    let content = std::fs::read_to_string(clone.join(".tickets/02-multi.md")).unwrap();
     assert!(
         content.contains("✓ A passes — \"A verified\""),
         "criterion 1 should map to evidence 1: {}",
@@ -1814,10 +1811,7 @@ fn test_evidence_gate_blocks_when_configured() {
     assert_eq!(code, 0);
 
     // Try to close without evidence — should fail
-    let (code, out) = run_tkt(
-        &clone,
-        &["close", "02", "--note", "Done", "--check-all"],
-    );
+    let (code, out) = run_tkt(&clone, &["close", "02", "--note", "Done", "--check-all"]);
     assert_eq!(code, 1, "should be blocked: {}", out);
     assert!(
         out.contains("no --evidence provided"),
@@ -1831,4 +1825,97 @@ fn test_evidence_gate_blocks_when_configured() {
         &["close", "02", "--note", "Done", "--check-all", "--force"],
     );
     assert_eq!(code, 0, "force should override: {}", out);
+}
+
+#[test]
+fn test_init_creates_tickets_dir_and_config() {
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = tmp.path().join("repo");
+    std::fs::create_dir_all(&repo).unwrap();
+    std::process::Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+
+    let (code, out) = run_tkt(&repo, &["init"]);
+    assert_eq!(code, 0, "init should succeed: {}", out);
+    assert!(
+        repo.join(".tickets").exists(),
+        ".tickets/ should be created"
+    );
+    assert!(
+        repo.join(".tickets/config.toml").exists(),
+        "config.toml should be created"
+    );
+}
+
+#[test]
+fn test_init_idempotent() {
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = tmp.path().join("repo");
+    std::fs::create_dir_all(&repo).unwrap();
+    std::process::Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+
+    // Run init twice
+    let (code, _) = run_tkt(&repo, &["init"]);
+    assert_eq!(code, 0);
+    let (code, out) = run_tkt(&repo, &["init"]);
+    assert_eq!(code, 0, "second init should succeed: {}", out);
+    assert!(
+        out.contains("already exists"),
+        "should say already exists: {}",
+        out
+    );
+}
+
+#[test]
+fn test_init_write_creates_agents_md_with_markers() {
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = tmp.path().join("repo");
+    std::fs::create_dir_all(&repo).unwrap();
+    std::process::Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+
+    // Write some existing content
+    std::fs::write(repo.join("AGENTS.md"), "# My Project\n\nCustom content.\n").unwrap();
+
+    let (code, _) = run_tkt(&repo, &["init", "--write"]);
+    assert_eq!(code, 0);
+
+    let content = std::fs::read_to_string(repo.join("AGENTS.md")).unwrap();
+    assert!(
+        content.contains("# My Project"),
+        "should preserve existing content: {}",
+        content
+    );
+    assert!(
+        content.contains("<!-- tkt:begin -->"),
+        "should have begin marker: {}",
+        content
+    );
+    assert!(
+        content.contains("<!-- tkt:end -->"),
+        "should have end marker: {}",
+        content
+    );
+    assert!(
+        content.contains("tkt ready"),
+        "should have tkt commands: {}",
+        content
+    );
+
+    // Run again — should update, not duplicate
+    let (code, _) = run_tkt(&repo, &["init", "--write"]);
+    assert_eq!(code, 0);
+    let content = std::fs::read_to_string(repo.join("AGENTS.md")).unwrap();
+    let marker_count = content.matches("<!-- tkt:begin -->").count();
+    assert_eq!(marker_count, 1, "should have exactly one marker block");
 }

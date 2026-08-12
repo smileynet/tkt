@@ -65,6 +65,31 @@ pub fn run(
         }
     }
 
+    // Partial evidence gate: evidence provided but doesn't cover all criteria
+    if !criteria.is_empty() && !evidence.is_empty() && evidence.len() < criteria.len() && !force {
+        let gap = criteria.len() - evidence.len();
+        match ctx.config.close_require_validation_evidence.as_str() {
+            "true" => {
+                domain_bail!(
+                    "{} evidence items provided for {} criteria ({} missing) — provide evidence for all criteria or use --force",
+                    evidence.len(),
+                    criteria.len(),
+                    gap
+                );
+            }
+            "warn" => {
+                eprintln!(
+                    "  {} {} evidence items for {} criteria ({} unevidenced)",
+                    crate::color::sym_warn(),
+                    evidence.len(),
+                    criteria.len(),
+                    gap
+                );
+            }
+            _ => {}
+        }
+    }
+
     let mut file = t.file.clone();
     let before_stats = file.ac_stats();
 
