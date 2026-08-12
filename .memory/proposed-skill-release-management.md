@@ -87,10 +87,12 @@ If yes → rewrite to describe the user-visible effect instead.
 
 ### Entry format
 
-- Imperative mood: "Add", "Fix", "Remove" (not "Added", "Fixes")
-- One change per line
-- Specific impact: "Fix crash when closing tickets with no AC section" not "Fix bug"
-- Link to reference: "Fix timeout on push (#43)"
+- **One line per entry.** If it takes two lines to explain, you're describing mechanics not value.
+- Start with what changed, not how: "`tkt doctor` command to verify your setup is correct"
+- No sub-bullets, no indented details, no implementation notes
+- No config key names, internal module names, or technical jargon
+- Specific enough to be useful: "Fix crash when closing tickets with no AC section" not "Fix bug"
+- Ask: "Would someone who uses tkt but doesn't build it understand this?" If no, rewrite.
 
 ### Six categories only
 
