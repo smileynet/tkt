@@ -41,6 +41,14 @@ enum Commands {
         #[arg(long)]
         agent_only: bool,
     },
+    /// Health check: verify setup, find issues, scan multiple projects
+    Doctor {
+        /// Path to scan for .tickets/ dirs (omit for current project only)
+        path: Option<String>,
+        /// Apply safe fixes to fixable issues
+        #[arg(long)]
+        fix: bool,
+    },
     /// Allocate a new ticket id (fetch, scan, create, commit, push)
     New {
         slug: String,
@@ -254,6 +262,7 @@ pub fn run() -> i32 {
             all,
             agent_only,
         } => crate::commands::init::run(write, target.as_deref(), all, agent_only),
+        Commands::Doctor { path, fix } => crate::commands::doctor::run(path.as_deref(), fix),
         Commands::New {
             slug,
             title,
@@ -423,6 +432,7 @@ fn command_name(cmd: &Commands) -> String {
     match cmd {
         Commands::Ready { .. } => "ready",
         Commands::Init { .. } => "init",
+        Commands::Doctor { .. } => "doctor",
         Commands::New { .. } => "new",
         Commands::Batch { .. } => "batch",
         Commands::Claim { .. } => "claim",
