@@ -75,6 +75,17 @@ tkt close 01 --evidence "49 passed, 0 failed" --evidence "POST /login returns JW
 ```
 
 ## Key behaviors
+## Creating tickets
+
+Before writing a ticket, read [ticket-standards.md](references/ticket-standards.md). Every ticket must have:
+
+1. **Intent source** — why does this exist? (spec, ADR, user request, discovery, or parent ticket)
+2. **Context for a fresh agent** — files to read, decisions already made, boundaries
+3. **Behavioral outcome** — what changes for the user, not implementation steps
+4. **Testable validation** — acceptance criteria an agent can verify independently
+
+Run the 8-point checklist in ticket-standards.md before committing. A ticket that fails the checklist wastes the implementer's context window.
+
 
 - `tkt ready` sorts by priority (urgent > high > medium > low) then by ID
 - Tasks with unsatisfied `blocked_by` dependencies don't appear in ready
