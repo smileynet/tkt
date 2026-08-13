@@ -38,11 +38,16 @@ When tickets exist and no specific task is given:
 
 When a ticket's acceptance criteria are all met:
 
-1. Check the AC boxes, then `tkt close <id> --check-all` (appends a dated Resolution stub — fill it in; rejects closure if ACs unchecked unless `--force`). Without tkt: edit `status: done` by hand, commit, push
-2. If ticket originated from GitHub: `gh issue close <number>` (only if `CREW_TICKET_SYNC=true`)
-3. Update `PLAN.md` task graph — mark the ticket complete, note any fog cleared (`tkt sync-plan --check` reports drift)
-4. Check if completing this ticket unblocks others — if so, state the new frontier
-5. If the completed ticket was the last one: report "All tickets done for this spec"
+1. Verify each AC independently — run the check, confirm pass. Don't check boxes you haven't verified.
+2. Close with evidence: `tkt close <id> --check-all --evidence "..." --resolution "what was done"`. All projects enforce:
+   - Acceptance criteria must be checked (`require_checked_acs`)
+   - Validation criteria must exist (`require_validation_criteria`)
+   - Evidence must be provided (`require_validation_evidence`)
+   Use `--force` only with explicit justification.
+3. If ticket originated from GitHub: `gh issue close <number>` (only if `CREW_TICKET_SYNC=true`)
+4. Update `PLAN.md` task graph — mark the ticket complete, note any fog cleared (`tkt sync-plan --check` reports drift)
+5. Check if completing this ticket unblocks others — if so, state the new frontier
+6. If the completed ticket was the last one: report "All tickets done for this spec"
 
 ## Creating Tickets
 
