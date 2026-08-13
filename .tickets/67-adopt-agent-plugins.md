@@ -1,7 +1,7 @@
 ---
 id: "67"
 title: "Adopt Agent Plugins standard — own and deploy tkt skills from this repo"
-status: open
+status: in_progress
 blocked_by: []
 priority: normal
 ---
