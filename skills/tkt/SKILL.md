@@ -74,7 +74,6 @@ tkt new auth --title "Implement auth" --validation "tests pass" --validation "lo
 tkt close 01 --evidence "49 passed, 0 failed" --evidence "POST /login returns JWT" --resolution "Done"
 ```
 
-## Key behaviors
 ## Creating tickets
 
 Before writing a ticket, read [ticket-standards.md](references/ticket-standards.md). Every ticket must have:
@@ -86,6 +85,33 @@ Before writing a ticket, read [ticket-standards.md](references/ticket-standards.
 
 Run the 8-point checklist in ticket-standards.md before committing. A ticket that fails the checklist wastes the implementer's context window.
 
+## Updating tickets
+
+As work progresses, keep the ticket current:
+
+- **Add context discovered during work** — files that turned out to be relevant, constraints found
+- **Narrow scope if it grew** — split new work into a new ticket, add it to `blocked_by` if needed
+- **Update validation_criteria** — if implementation reveals the original criteria were wrong or incomplete, fix them BEFORE closing (don't close against stale criteria)
+
+Use `tkt edit <id>` for frontmatter changes. Edit the file directly for body changes. Commit either way.
+
+## Closing tickets
+
+Closure is a quality gate, not a status flip. Before closing:
+
+1. **Verify each acceptance criterion independently** — run the check, read the output, confirm pass. Don't check boxes you haven't verified.
+2. **Provide evidence** — `tkt close <id> --check-all --evidence "..."` for each validation criterion. Evidence must cite actual output (test results, command output, file state), not "should work" or "looks good."
+3. **Write a resolution** — `--resolution "what was done"` summarizes the approach for future readers.
+4. **Run project checks** — the verification gate (build, test, lint) must pass before closure.
+
+`tkt close` enforces:
+- All acceptance criteria checked (or `--force` with justification)
+- Evidence provided for each validation criterion (if `require_validation_evidence = "true"`)
+- Criteria exist (if `require_validation_criteria = true`)
+
+A ticket closed without evidence is a ticket that might not actually be done.
+
+## Key behaviors
 
 - `tkt ready` sorts by priority (urgent > high > medium > low) then by ID
 - Tasks with unsatisfied `blocked_by` dependencies don't appear in ready
