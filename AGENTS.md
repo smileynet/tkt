@@ -39,6 +39,7 @@ TELEMETRY.md         — transparency document for telemetry collection
 ```bash
 cargo build                    # debug build
 cargo build --release          # release build (stripped, LTO)
+cargo install --path .         # deploy to PATH (shows git hash in --version)
 cargo test                     # all tests
 cargo test -- --nocapture      # with output
 cargo clippy                   # lint (must be 0 warnings)
@@ -51,7 +52,13 @@ cargo fmt                      # format (must produce no diff)
 cargo fmt && cargo clippy --all-targets && cargo test
 ```
 
-All three must pass with zero warnings before presenting work as done.
+### Deploy (run after pulling or making changes)
+
+```bash
+cargo build --release && cargo install --path .
+```
+
+All three gate checks must pass with zero warnings before presenting work as done.
 
 ## tkt CLI (the product)
 

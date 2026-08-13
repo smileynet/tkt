@@ -171,7 +171,7 @@ enabled = true            # false for local-only repos (no network calls)
 
 [close]
 require_resolution = false  # require a --note when closing
-require_checked_acs = false # require all acceptance criteria checked
+require_checked_acs = true  # require all acceptance criteria checked (default: true)
 
 [validate]
 strict = false            # treat warnings as errors
@@ -211,11 +211,17 @@ Multi-agent workflow: `tkt ready` → `tkt claim <id>` → work → `tkt close <
 
 ## Development
 
+If you've cloned this repo, you're a maintainer. Regular users install from crates.io or pre-built binaries.
+
 ```bash
-cargo build            # debug build
-cargo test             # all tests
-cargo clippy           # lint (must be 0 warnings)
-cargo fmt --check      # format check
+# Build and deploy to PATH (run after pulling or making changes)
+cargo build --release && cargo install --path .
+
+# Verify
+tkt --version          # shows version + git hash, e.g. "tkt 0.1.0 (ea047fb)"
+
+# Gate (run before every commit)
+cargo fmt && cargo clippy --all-targets && cargo test
 ```
 
 ## Telemetry
