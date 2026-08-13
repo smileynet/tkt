@@ -145,3 +145,4 @@ Task runner entry point: `mise run release` gates on fmt+clippy+test before call
 - Never release without running the gate check
 - Never batch unrelated changes into one version bump
 - Never use "misc improvements" or "various fixes" as entries
+- Never suggest releasing with open tickets. If tickets exist, they ship first or the user explicitly defers them. Don't assume backlog — ask.
