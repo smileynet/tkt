@@ -3,7 +3,6 @@ id: "67"
 title: "Adopt Agent Plugins standard — own and deploy tkt skills from this repo"
 status: done
 blocked_by: []
-priority: normal
 validation_criteria: 
   - "skills/tkt/SKILL.md with CLI usage documentation"
   - "plugin.json at repo root"
