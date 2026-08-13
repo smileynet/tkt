@@ -25,20 +25,19 @@ Current state (2026-08-13):
 
 ## What to build
 
+The gate already defaults on (`close_require_checked_acs: true` in code, configurable off via `.tickets/config.toml`). No code change needed — the problem is purely retroactive debt.
+
 1. **Retroactive audit**: Review each repo's unchecked-AC tickets. Categorize:
    - Work actually completed but boxes never checked → check the boxes
    - Work partially done but ticket closed anyway → reopen or document gap
    - Spikes/research where ACs were aspirational → mark with `--force` note or remove ACs
 
-2. **Enforce going forward**: Enable `close.require_checked_acs = true` in `.tickets/config.toml` for every repo that has acceptance criteria in its tickets. This makes `tkt close` reject closure unless ACs are checked (or `--force` is explicit).
-
-3. **Steering update**: Update frontier-work steering to make the AC gate non-negotiable. Close commands in AGENTS.md examples should always include `--check-all` or explicit `--ac` indices.
+2. **Steering update**: Update frontier-work steering to make the AC gate explicit in agent instructions. Close commands in AGENTS.md examples should always include `--check-all` or explicit `--ac` indices.
 
 ## Acceptance criteria
 
 - [ ] Each repo's unchecked-AC tickets audited and categorized
 - [ ] Boxes checked for tickets where work was genuinely complete
 - [ ] Reopened or annotated tickets where work was incomplete
-- [ ] `close.require_checked_acs = true` set in every repo's `.tickets/config.toml`
 - [ ] `tkt validate --strict` passes in every repo after cleanup
 - [ ] Steering/AGENTS.md updated to require AC verification before closure
