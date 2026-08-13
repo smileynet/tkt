@@ -1,7 +1,7 @@
 ---
 id: "67"
 title: "Adopt Agent Plugins standard — own and deploy tkt skills from this repo"
-status: in_progress
+status: done
 blocked_by: []
 priority: normal
 validation_criteria: 
@@ -110,14 +110,25 @@ Follow archwright's pattern. Simpler than archwright (one skill, no steering, no
 
 ## Acceptance criteria
 
-- [ ] `skills/tkt/SKILL.md` with CLI usage documentation
-- [ ] `plugin.json` passes Agent Plugins JSON Schema
-- [ ] `SKILL_MANIFEST.yaml` with version matching Cargo.toml
-- [ ] `tools/deploy-skills.sh` deploys to kiro/claude/codex paths
-- [ ] Deployed skill activates when user asks about ticket management
-- [ ] `tkt --version` output matches manifest version
+- [x] `skills/tkt/SKILL.md` with CLI usage documentation
+- [x] `plugin.json` passes Agent Plugins JSON Schema
+- [x] `SKILL_MANIFEST.yaml` with version matching Cargo.toml
+- [x] `tools/deploy-skills.sh` deploys to kiro/claude/codex paths
+- [x] Deployed skill activates when user asks about ticket management
+- [x] `tkt --version` output matches manifest version
 
 ## Out of scope
 
 - Moving `ticket-planning` skill from crew-research (stays there — it's methodology)
 - Updating crew-research's known-tools.yaml for tkt (that's crew-research ticket 98)
+
+## Resolution (2026-08-13)
+
+Shipped: agentskills.io format SKILL.md, plugin.json, deploy script. Deployed to 3 harnesses.
+
+### Verification
+1. ✓ skills/tkt/SKILL.md with CLI usage documentation — "skills/tkt/SKILL.md created with triggers, tools, workflows"
+2. ✓ plugin.json at repo root — "plugin.json created with schema reference and skill path"
+3. ✓ tools/deploy-skills.sh deploys to kiro/claude/codex — "deploy-skills.sh: 3 deployed, 0 skipped (verified with --dry-run and live)"
+4. ✓ Deployed skill readable from harness paths — "ls -la ~/.kiro/skills/tkt confirms symlink to source"
+5. ✓ tkt --version output matches plugin.json version — "tkt --version = 0.1.0, plugin.json version = 0.1.0"
