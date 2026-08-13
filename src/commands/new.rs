@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_quiet, project_config, success_msg, tickets_dir};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_quiet, project_config, success_msg, tickets_dir,
+};
 use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
@@ -72,6 +74,26 @@ pub fn run(
 
     let filename = format!("{}-{}.md", tid, slug);
     let path = dir.join(&filename);
+
+    // Dry-run: show what would happen without writing
+    if is_dry_run() {
+        println!("Would create .tickets/{}", filename);
+        println!(
+            "  id: {}, status: {}, priority: {}",
+            tid,
+            status.unwrap_or("open"),
+            priority.unwrap_or("medium")
+        );
+        if !blocked_by.is_empty() {
+            println!("  blocked_by: {:?}", blocked_by);
+        }
+        if !validation_criteria.is_empty() {
+            println!("  validation_criteria: {} items", validation_criteria.len());
+        }
+        println!("  Would commit and push");
+        return Ok(0);
+    }
+
     let content = core::new_ticket_text(
         &tid,
         title,

@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_quiet, slug_from_filename, success_msg};
+use crate::commands::common::{domain_bail, is_dry_run, is_quiet, slug_from_filename, success_msg};
 use crate::core::{self, AcSelection, Status};
 use crate::mutation::MutationContext;
 
@@ -88,6 +88,39 @@ pub fn run(
             }
             _ => {}
         }
+    }
+
+    // Dry-run: show what would happen
+    if is_dry_run() {
+        println!(
+            "Would close {} {} (→ done)",
+            t.id,
+            slug_from_filename(&t.path)
+        );
+        if let Some(n) = note {
+            println!("  Resolution: {}", n);
+        }
+        if let Some(ref emap) = evidence_map {
+            println!("  Verification: {} criteria with evidence", emap.len());
+        }
+        // Compute what would be unblocked
+        let mut corpus_clone = ctx.corpus.clone();
+        if let Some(ticket) = corpus_clone.iter_mut().find(|x| x.id == t.id) {
+            ticket.status = Status::Done;
+        }
+        let unblocked: Vec<_> = core::frontier(&corpus_clone)
+            .into_iter()
+            .filter(|x| !core::frontier(&ctx.corpus).iter().any(|f| f.id == x.id))
+            .collect();
+        if !unblocked.is_empty() {
+            let items: Vec<String> = unblocked
+                .iter()
+                .map(|x| format!("{} {}", x.id, x.title))
+                .collect();
+            println!("  Would unblock: {}", items.join(", "));
+        }
+        println!("  Would commit and push");
+        return Ok(0);
     }
 
     let mut file = t.file.clone();

@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_quiet, success_msg, tickets_dir};
+use crate::commands::common::{domain_bail, is_dry_run, is_quiet, success_msg, tickets_dir};
 use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
@@ -108,6 +108,18 @@ pub fn run(
             )?;
             Ok((base, width))
         };
+
+    // Dry-run: compute IDs and show what would be created
+    if is_dry_run() {
+        let base = core::max_id(&names) + 1;
+        let width = core::id_width(&names);
+        println!("Would create {} tickets:", parsed.len());
+        for (i, (slug, title)) in parsed.iter().enumerate() {
+            let tid = format!("{:0>width$}", base + i as u64, width = width);
+            println!("  {} {}-{}.md — {}", tid, tid, slug, title);
+        }
+        return Ok(0);
+    }
 
     let (mut base, mut width) = allocate_and_commit(&names, &parsed)?;
 

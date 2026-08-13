@@ -15,6 +15,10 @@ struct Cli {
     #[arg(long, global = true)]
     color: Option<String>,
 
+    /// Show what would happen without making changes
+    #[arg(long, global = true)]
+    dry_run: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -250,6 +254,9 @@ pub fn run() -> i32 {
 
     // Store quiet flag for access by command functions
     crate::QUIET.store(cli.quiet, std::sync::atomic::Ordering::Relaxed);
+
+    // Store dry-run flag
+    crate::DRY_RUN.store(cli.dry_run, std::sync::atomic::Ordering::Relaxed);
 
     // Initialize color mode from --color flag and environment
     crate::color::init(cli.color.as_deref());

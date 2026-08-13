@@ -31,6 +31,10 @@ impl std::error::Error for DomainError {}
 /// Global quiet flag — set once at startup, read by command functions.
 pub(crate) static QUIET: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
+/// Global dry-run flag — set once at startup, read by mutation commands.
+pub(crate) static DRY_RUN: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 fn main() -> ExitCode {
     let code = cli::run();
     update_check::check_for_update();

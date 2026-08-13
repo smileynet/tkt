@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_quiet, slug_from_filename, success_msg};
+use crate::commands::common::{domain_bail, is_dry_run, is_quiet, slug_from_filename, success_msg};
 use crate::core::{self, AcSelection, Env, Priority, Status};
 use crate::mutation::MutationContext;
 
@@ -128,6 +128,16 @@ pub fn run(
 
     if changed.is_empty() {
         domain_bail!("nothing to edit — pass at least one field option");
+    }
+
+    if is_dry_run() {
+        println!(
+            "Would edit {} {} ({})",
+            id,
+            slug_from_filename(&file.path),
+            changed.join(", ")
+        );
+        return Ok(0);
     }
 
     file.write()?;

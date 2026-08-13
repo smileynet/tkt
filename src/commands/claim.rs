@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_quiet, slug_from_filename, success_msg};
+use crate::commands::common::{domain_bail, is_dry_run, is_quiet, slug_from_filename, success_msg};
 use crate::core::Status;
 use crate::mutation::MutationContext;
 
@@ -17,6 +17,16 @@ pub fn run(id: &str) -> Result<i32> {
     }
     if t.status != Status::Open {
         domain_bail!("{} is {}, not open", t.id, t.status.as_str());
+    }
+
+    if is_dry_run() {
+        println!(
+            "Would claim {} {} (open → in_progress)",
+            t.id,
+            slug_from_filename(&t.path)
+        );
+        println!("  Would commit and push");
+        return Ok(0);
     }
 
     let mut file = t.file.clone();

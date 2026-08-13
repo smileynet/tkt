@@ -19,6 +19,10 @@ pub(crate) fn is_quiet() -> bool {
     crate::QUIET.load(std::sync::atomic::Ordering::Relaxed)
 }
 
+pub(crate) fn is_dry_run() -> bool {
+    crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Resolve the .tickets/ directory from cwd.
 pub(crate) fn tickets_dir() -> Result<PathBuf> {
     let cwd = std::env::current_dir()?;
