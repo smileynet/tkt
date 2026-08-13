@@ -1,10 +1,19 @@
 use clap::{Parser, Subcommand};
 
+const fn version_string() -> &'static str {
+    const HASH: &str = env!("TKT_GIT_HASH");
+    if HASH.is_empty() {
+        env!("CARGO_PKG_VERSION")
+    } else {
+        concat!(env!("CARGO_PKG_VERSION"), " (", env!("TKT_GIT_HASH"), ")")
+    }
+}
+
 #[derive(Parser)]
 #[command(
     name = "tkt",
     about = "Git-native ticket CLI (.tickets/ contract)",
-    version
+    version = version_string(),
 )]
 struct Cli {
     /// Suppress confirmations, emit only essential data
