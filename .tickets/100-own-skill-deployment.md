@@ -1,7 +1,7 @@
 ---
 id: "100"
 title: "tkt owns its own skill/steering deployment"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
