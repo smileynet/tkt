@@ -103,5 +103,6 @@ Tasks are markdown files in `.tickets/`. Edit by hand anytime.
 
 - [commands.md](references/commands.md) — full command reference
 - [ticket-format.md](references/ticket-format.md) — ticket file format, required/optional fields, formatting rules
+- [ticket-standards.md](references/ticket-standards.md) — quality gate for ticket content (intent links, context, outcomes, validation)
 - [wide-refactors.md](references/wide-refactors.md) — expand-contract sequencing for wide changes
 - [migration-assist.md](references/migration-assist.md) — converting foreign ticket schemas to tkt format
