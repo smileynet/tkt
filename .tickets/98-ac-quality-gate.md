@@ -1,7 +1,7 @@
 ---
 id: "98"
 title: "Enforce acceptance criteria checked before closure across all repos"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 ---
