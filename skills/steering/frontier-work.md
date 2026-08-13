@@ -1,0 +1,70 @@
+
+# Frontier Work
+
+When a project has tickets, work the frontier.
+
+## Ticket Sources (priority order)
+
+Check `$CREW_TICKET_SOURCES` (comma-separated) or default to `local,github`:
+
+1. **local** — scan `.tickets/*.md` frontmatter for `status: open` with all `blocked_by` done
+2. **github** — `gh issue list --label ready-for-agent --state open --json number,title,body` (only if `gh` auth'd + GitHub upstream exists)
+3. **gitlab** — `glab issue list --label ready-for-agent --opened` (only if GitLab upstream)
+
+Use the first source that returns results. Local always takes priority when `.tickets/` exists.
+
+## The Rule
+
+The **frontier** = any ticket where `status: open` and all `blocked_by` are `done`.
+
+When tickets exist and no specific task is given:
+1. Identify the frontier: `tkt ready` (env-filtered, priority-aware). If `tkt` is not on PATH, fall back to scanning sources manually in priority order
+2. Pick the first ticket `tkt ready` lists — it already applies lowest-number-first with `priority: high` jumping the order
+3. Propose it: "Next on the frontier: {title}. Start?"
+
+## Working a Ticket
+
+1. Claim it: `tkt claim <id>` (pushes visible WIP; a lost claim race names the winner — pick the next frontier ticket instead)
+2. Read the ticket file (or issue body) completely
+3. Read referenced context (files, specs, ADRs listed in the ticket)
+4. If `Reporter: Codex` and `Confirmation status: unconfirmed`, independently
+   reproduce every finding before editing. Mark each confirmed, rejected, or
+   obsolete with evidence; never accept Codex's diagnosis or remedy on authority.
+5. Do the work described in "What to build"
+6. Verify all acceptance criteria pass
+7. Mark done + update plan (see below)
+
+## Marking Done
+
+When a ticket's acceptance criteria are all met:
+
+1. Check the AC boxes, then `tkt close <id> --check-all` (appends a dated Resolution stub — fill it in; rejects closure if ACs unchecked unless `--force`). Without tkt: edit `status: done` by hand, commit, push
+2. If ticket originated from GitHub: `gh issue close <number>` (only if `CREW_TICKET_SYNC=true`)
+3. Update `PLAN.md` task graph — mark the ticket complete, note any fog cleared (`tkt sync-plan --check` reports drift)
+4. Check if completing this ticket unblocks others — if so, state the new frontier
+5. If the completed ticket was the last one: report "All tickets done for this spec"
+
+## Creating Tickets
+
+Ticket creation is a race when 2+ sessions work the same repo (observed twice: archwright 005 pair, crew-research 12/13 collision — both required reconciliation merges).
+
+**With tkt (default):** `tkt new <slug> --title "..." [--blocked-by IDS] [--priority high]` does the whole claim protocol in one step — fetch, true-max scan (local + origin), create, commit, push, with automatic renumber on a lost race. Get `--blocked-by` right at creation; fix later with `tkt edit <id>`. Reconcile out-of-band collisions with `tkt renumber <old> <new>` (birth-window only — cited ids are contracts).
+
+**Manual fallback (tkt absent):**
+1. **Claim before allocating:** `git fetch`, then rescan `.tickets/` (local + `origin/main`) for the true max ID
+2. **Push promptly:** commit + push the ticket file right after creating it — a pushed ticket is a claim; an unpushed ticket is invisible to other sessions
+3. **On collision:** reconcile immediately — merge content into the lower-numbered/pushed ticket (or renumber the newer one), never let both proceed
+4. Optional `lane:` frontmatter when sessions have declared work lanes
+
+`tk` on PATH is an UNRELATED third-party tool — never use it on `.tickets/` (reads `deps` not `blocked_by`, silently hides tickets it can't parse).
+
+## Between Tickets
+
+- Do NOT carry implementation context from one ticket to another
+- Each ticket starts from its file + referenced context
+- If a ticket reveals new work: create a new ticket file, don't expand the current one
+- If context is exhausted: `/handoff` and start fresh for the next ticket
+
+## PLAN.md is Authoritative
+
+The plan is the single source of truth for work status. Tickets provide detail; the plan provides the map. Never duplicate status in HANDOFF.md or AGENTS.md — reference the plan instead.

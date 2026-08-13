@@ -215,7 +215,7 @@ If you've cloned this repo, you're a maintainer. Regular users install from crat
 
 ```bash
 # Build and deploy to PATH (run after pulling or making changes)
-cargo build --release && cargo install --path .
+cargo build --release && cargo install --path . && bash tools/deploy-skills.sh
 
 # Verify
 tkt --version          # shows version + git hash, e.g. "tkt 0.1.0 (ea047fb)"

@@ -1,6 +1,6 @@
 ---
 title: tkt
-description: "Track tasks as markdown files in your git repo. Use when managing tickets, checking what's ready, claiming work, closing tasks, or validating project health."
+description: "Track tasks as markdown files in your git repo. Use when managing tickets, checking what's ready, claiming work, closing tasks, creating tickets, decomposing work, or validating project health."
 triggers:
   - tkt
   - tickets
@@ -11,6 +11,12 @@ triggers:
   - close ticket
   - create ticket
   - validate tickets
+  - decompose
+  - break into tasks
+  - work breakdown
+  - task graph
+  - ticket format
+  - blocked by
 tools:
   - shell
 ---
@@ -92,3 +98,10 @@ validation_criteria:      # optional: what "done" means
 ```
 
 Tasks are markdown files in `.tickets/`. Edit by hand anytime.
+
+## References
+
+- [commands.md](references/commands.md) — full command reference
+- [ticket-format.md](references/ticket-format.md) — ticket file format, required/optional fields, formatting rules
+- [wide-refactors.md](references/wide-refactors.md) — expand-contract sequencing for wide changes
+- [migration-assist.md](references/migration-assist.md) — converting foreign ticket schemas to tkt format

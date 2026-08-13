@@ -55,7 +55,7 @@ cargo fmt && cargo clippy --all-targets && cargo test
 ### Deploy (run after pulling or making changes)
 
 ```bash
-cargo build --release && cargo install --path .
+cargo build --release && cargo install --path . && bash tools/deploy-skills.sh
 ```
 
 All three gate checks must pass with zero warnings before presenting work as done.
