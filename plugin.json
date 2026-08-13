@@ -1,0 +1,16 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "tkt",
+  "version": "0.1.0",
+  "description": "Track tasks as markdown files in your git repo",
+  "repository": "https://github.com/smileynet/tkt",
+  "license": "MIT",
+  "keywords": ["tickets", "task-management", "dependencies", "frontier"],
+  "skills": [
+    {
+      "name": "tkt",
+      "path": "skills/tkt",
+      "format": "agentskills.io"
+    }
+  ]
+}
