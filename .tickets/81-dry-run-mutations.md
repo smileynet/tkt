@@ -1,7 +1,7 @@
 ---
 id: "81"
 title: "Add --dry-run to mutation commands (new, claim, close, edit)"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 ---
