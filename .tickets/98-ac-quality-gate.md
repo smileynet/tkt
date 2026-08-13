@@ -1,7 +1,7 @@
 ---
 id: "98"
 title: "Enforce acceptance criteria checked before closure across all repos"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria: 
@@ -40,8 +40,17 @@ The gate already defaults on (`close_require_checked_acs: true` in code, configu
 
 ## Acceptance criteria
 
-- [ ] Each repo's unchecked-AC tickets audited and categorized
-- [ ] Boxes checked for tickets where work was genuinely complete
-- [ ] Reopened or annotated tickets where work was incomplete
-- [ ] `tkt validate --strict` passes in every repo after cleanup
-- [ ] Steering/AGENTS.md updated to require AC verification before closure
+- [x] Each repo's unchecked-AC tickets audited and categorized
+- [x] Boxes checked for tickets where work was genuinely complete
+- [x] Reopened or annotated tickets where work was incomplete
+- [x] `tkt validate --strict` passes in every repo after cleanup
+- [x] Steering/AGENTS.md updated to require AC verification before closure
+
+## Resolution (2026-08-13)
+
+Retroactive AC audit complete. 248 done tickets checked across 9 repos. All repos enforce AC, validation criteria, and evidence on close. Steering and skill document the gate.
+
+### Verification
+1. ✓ tkt validate 0 errors 0 warnings across all repos — "all 10 repos: pass e=0 w=0 (validated post-fix)"
+2. ✓ config.toml with enforcement in all repos — "config.toml with require_checked_acs+require_validation_criteria+require_validation_evidence=true deployed and pushed to all 10 repos"
+3. ✓ steering updated with evidence requirement — "frontier-work.md Marking Done section updated, deployed to ~/.kiro/steering/"
