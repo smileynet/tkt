@@ -4,6 +4,14 @@ title: "Add --dry-run to mutation commands (new, claim, close, edit)"
 status: in_progress
 blocked_by: []
 priority: medium
+validation_criteria: 
+  - "tkt new --dry-run shows ID and filename"
+  - "tkt batch --dry-run shows all allocated IDs"
+  - "tkt claim --dry-run shows status change"
+  - "tkt close --dry-run shows unblocked tickets"
+  - "tkt edit --dry-run shows field changes"
+  - "No git operations during dry-run"
+  - "Exit code 0 when operation would succeed"
 ---
 
 # Add --dry-run to mutation commands
