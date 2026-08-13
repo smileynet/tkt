@@ -24,11 +24,11 @@ Additionally, `push()` in `git.rs` returns `Ok(false)` for every nonzero exit wi
 
 ## Acceptance criteria
 
-- [ ] `cmd_edit` exits nonzero when push fails (auth, network, hook)
-- [ ] `cmd_renumber` exits nonzero when push fails
-- [ ] Git stderr is included in the error message shown to user
-- [ ] Non-fast-forward rejection still triggers retry+rebase
-- [ ] Auth/DNS/hook failures do NOT trigger pull --rebase
-- [ ] No-remote case prints distinct message and exits 0
-- [ ] Existing tests still pass
-- [ ] New test: edit with unreachable remote fails with meaningful error
+- [x] `cmd_edit` exits nonzero when push fails (auth, network, hook)
+- [x] `cmd_renumber` exits nonzero when push fails
+- [x] Git stderr is included in the error message shown to user
+- [x] Non-fast-forward rejection still triggers retry+rebase
+- [x] Auth/DNS/hook failures do NOT trigger pull --rebase
+- [x] No-remote case prints distinct message and exits 0
+- [x] Existing tests still pass
+- [x] New test: edit with unreachable remote fails with meaningful error

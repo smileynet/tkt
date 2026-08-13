@@ -24,8 +24,8 @@ blocked_by: []
 
 ## Acceptance criteria
 
-- [ ] `close` command appends correct ISO date on all platforms
-- [ ] No subprocess call for date generation
-- [ ] No locale dependency
-- [ ] Works on Windows, Linux, macOS
-- [ ] Existing close tests pass with real dates (not "UNDATED")
+- [x] `close` command appends correct ISO date on all platforms
+- [x] No subprocess call for date generation
+- [x] No locale dependency
+- [x] Works on Windows, Linux, macOS
+- [x] Existing close tests pass with real dates (not "UNDATED")

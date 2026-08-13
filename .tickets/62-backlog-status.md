@@ -40,7 +40,7 @@ backlog → open → in_progress → done
 - [x] `tkt edit <id> --status open` promotes backlog → open
 - [x] `tkt new --status backlog` creates in backlog
 - [x] `tkt query` includes backlog tickets in output
-- [ ] Documentation updated with lifecycle diagram
+- [x] Documentation updated with lifecycle diagram
 
 ## Resolution (2026-08-07)
 

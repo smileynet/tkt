@@ -31,11 +31,11 @@ Use tolerant loading for read commands (`ready`, `query`) and mutation preflight
 
 ## Acceptance criteria
 
-- [ ] `tkt ready` succeeds even if one .tickets/ file is malformed
-- [ ] Warning printed to stderr for each skipped file
-- [ ] `tkt query` shows all parseable tickets, skips broken ones with warning
-- [ ] Mutation commands error clearly if their target ticket is unparseable
-- [ ] Integration test: corpus with one good + one bad file → ready shows the good one
+- [x] `tkt ready` succeeds even if one .tickets/ file is malformed
+- [x] Warning printed to stderr for each skipped file
+- [x] `tkt query` shows all parseable tickets, skips broken ones with warning
+- [x] Mutation commands error clearly if their target ticket is unparseable
+- [x] Integration test: corpus with one good + one bad file → ready shows the good one
 
 ## Resolution (2026-08-09)
 

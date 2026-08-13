@@ -28,8 +28,8 @@ Use the existing tempdir+bare-repo pattern. Create helper functions for multi-cl
 
 ## Acceptance criteria
 
-- [ ] At least 6 new integration tests covering failure paths
-- [ ] At least 1 test with two competing clones
-- [ ] Push failure test verifies no pull --rebase on non-race errors
-- [ ] All new tests pass on CI (no timing dependencies)
-- [ ] Tests verify exit codes, not just stdout content
+- [x] At least 6 new integration tests covering failure paths
+- [x] At least 1 test with two competing clones
+- [x] Push failure test verifies no pull --rebase on non-race errors
+- [x] All new tests pass on CI (no timing dependencies)
+- [x] Tests verify exit codes, not just stdout content

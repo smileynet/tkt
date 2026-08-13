@@ -55,7 +55,7 @@ Without this, scripting with tkt requires parsing human-readable output (fragile
 - [x] `tkt new -q` prints only the allocated ID
 - [x] `tkt ready -q` prints one ID per line (no headers, no flags)
 - [x] Errors still print to stderr in quiet mode
-- [ ] Integration test: `tkt new ... -q` output is a bare ID
+- [x] Integration test: `tkt new ... -q` output is a bare ID
 
 ## Resolution (2026-08-05)
 

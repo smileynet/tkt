@@ -42,13 +42,13 @@ Create `src/core/validate.rs` with pure functions. Call from every write path. R
 
 ## Acceptance criteria
 
-- [ ] Windows reserved names rejected as slugs (case-insensitive)
-- [ ] Titles with newlines rejected with clear error
-- [ ] Titles with null bytes rejected
-- [ ] `--blocked-by` rejects non-numeric values
-- [ ] Self-dependency rejected (blocked_by contains own ID)
-- [ ] `new --env invalid` rejected (not just `edit`)
-- [ ] `batch slug1 slug1` rejected (duplicate slugs)
-- [ ] Validation errors include field name and reason
-- [ ] Unit tests for each validator with boundary cases
-- [ ] All existing tests still pass
+- [x] Windows reserved names rejected as slugs (case-insensitive)
+- [x] Titles with newlines rejected with clear error
+- [x] Titles with null bytes rejected
+- [x] `--blocked-by` rejects non-numeric values
+- [x] Self-dependency rejected (blocked_by contains own ID)
+- [x] `new --env invalid` rejected (not just `edit`)
+- [x] `batch slug1 slug1` rejected (duplicate slugs)
+- [x] Validation errors include field name and reason
+- [x] Unit tests for each validator with boundary cases
+- [x] All existing tests still pass

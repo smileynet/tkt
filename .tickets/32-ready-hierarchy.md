@@ -56,7 +56,7 @@ Without hierarchy, the frontier output is a flat list that requires counting lin
 - [x] Empty frontier produces `No tickets ready.` message
 - [x] WIP section shown only when tickets are in_progress
 - [x] `--json` output unchanged
-- [ ] Integration tests updated for new format
+- [x] Integration tests updated for new format
 
 ## Resolution (2026-08-05)
 

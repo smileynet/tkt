@@ -42,7 +42,7 @@ Without consistency, each command has its own ad-hoc format (some show filenames
 
 - [x] new/batch/claim/close/edit/renumber use `✓ verb ID slug (detail)` format
 - [x] Domain errors use `✗ message` format
-- [ ] Symbols degrade gracefully when NO_COLOR=1 is set
+- [x] Symbols degrade gracefully when NO_COLOR=1 is set
 - [x] No breaking changes to --json output
 - [x] Existing integration tests updated to match new format
 

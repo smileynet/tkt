@@ -30,10 +30,10 @@ If GitTransaction were deleted, the allocation retry logic would reappear in eve
 
 ## Acceptance criteria
 
-- [ ] `src/transaction.rs` exists with GitTransaction struct
-- [ ] cmd_new uses GitTransaction (no inline push/retry logic)
-- [ ] cmd_batch uses GitTransaction (no inline push/retry logic)
-- [ ] Remote name union computed once per transaction
-- [ ] All 39 existing tests pass
-- [ ] New unit test: GitTransaction.scan_names merges local + remote
-- [ ] cargo clippy clean, cargo fmt clean
+- [x] `src/transaction.rs` exists with GitTransaction struct
+- [x] cmd_new uses GitTransaction (no inline push/retry logic)
+- [x] cmd_batch uses GitTransaction (no inline push/retry logic)
+- [x] Remote name union computed once per transaction
+- [x] All 39 existing tests pass
+- [x] New unit test: GitTransaction.scan_names merges local + remote
+- [x] cargo clippy clean, cargo fmt clean

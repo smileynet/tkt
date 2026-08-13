@@ -81,7 +81,7 @@ Priority filters need the multi-level priority system to be meaningful.
 
 ## Acceptance criteria
 
-- [ ] Research: observe which queries agents/users actually construct during testing period
+- [x] Research: observe which queries agents/users actually construct during testing period
 - [x] Decision: which filters to implement (not all proposals may be worth it)
 - [x] `tkt query --status` filter implemented
 - [x] `tkt query --priority` filter implemented

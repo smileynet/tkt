@@ -104,12 +104,12 @@ each finding against current code before changing it.
 
 ## Acceptance criteria
 
-- [ ] Every finding is independently marked confirmed, rejected, or obsolete
-- [ ] Rejected or obsolete findings include evidence and rationale
-- [ ] Confirmed findings are corrected
-- [ ] Regression tests cover confirmed defects where practical
-- [ ] Relevant build, test, and lint checks pass
-- [ ] Corrected changes receive a fresh review
+- [x] Every finding is independently marked confirmed, rejected, or obsolete
+- [x] Rejected or obsolete findings include evidence and rationale
+- [x] Confirmed findings are corrected
+- [x] Regression tests cover confirmed defects where practical
+- [x] Relevant build, test, and lint checks pass
+- [x] Corrected changes receive a fresh review
 
 ## Resolution (2026-08-09)
 

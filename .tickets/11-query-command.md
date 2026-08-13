@@ -21,9 +21,9 @@ Python tkt has a `query` command that emits every ticket as JSON Lines (one JSON
 
 ## Acceptance criteria
 
-- [ ] `tkt query` outputs one JSON object per line
-- [ ] Each object includes all frontmatter fields (id, title, status, blocked_by, priority, env, spec)
-- [ ] Output is valid JSON Lines (each line parses independently)
-- [ ] Empty corpus produces no output (exit 0)
-- [ ] Corpus with adversarial titles produces valid JSON
-- [ ] Integration test validates output against known corpus
+- [x] `tkt query` outputs one JSON object per line
+- [x] Each object includes all frontmatter fields (id, title, status, blocked_by, priority, env, spec)
+- [x] Output is valid JSON Lines (each line parses independently)
+- [x] Empty corpus produces no output (exit 0)
+- [x] Corpus with adversarial titles produces valid JSON
+- [x] Integration test validates output against known corpus

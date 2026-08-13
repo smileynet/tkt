@@ -38,7 +38,7 @@ Create a helper that identifies the AC section boundaries:
 - [x] AC count in close output reflects only the AC section
 - [x] `validate` and `audit` AC counting also scoped to the section
 - [x] Unit test: ticket with mixed sections, verify only AC boxes affected
-- [ ] Integration test: close --check-all with non-AC checkboxes, verify they're preserved
+- [x] Integration test: close --check-all with non-AC checkboxes, verify they're preserved
 
 ## Resolution (2026-08-05)
 

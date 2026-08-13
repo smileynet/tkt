@@ -51,4 +51,4 @@ For automated/agent workflows where tickets close rapidly:
 - [x] `tkt close` errors on all-unchecked ACs (or requires --force)
 - [x] `tkt close --resolution` flag accepted
 - [x] Unchecked AC count is prominent in close output (not just a warning)
-- [ ] Consider: `tkt audit` command for batch checking closure quality
+- [x] Consider: `tkt audit` command for batch checking closure quality

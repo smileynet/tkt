@@ -31,7 +31,7 @@ Example: a failed `renumber` that rewrites `blocked_by` in another ticket leaves
 - [x] Modified-only files in `.tickets/` are restored after undo
 - [x] Added files are still deleted (existing behavior preserved)
 - [x] Files outside `.tickets/` are not touched
-- [ ] Unit or integration test: modify+add commit, undo, verify clean state
+- [x] Unit or integration test: modify+add commit, undo, verify clean state
 
 ## Resolution (2026-08-05)
 

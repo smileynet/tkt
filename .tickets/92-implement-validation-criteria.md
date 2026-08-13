@@ -73,7 +73,6 @@ TBD
 
 ## Acceptance criteria
 
-- [ ] TBD
 
 ## Resolution (2026-08-12)
 

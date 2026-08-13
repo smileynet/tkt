@@ -30,10 +30,10 @@ If MutationContext were deleted, ~45 lines of preflight+publish boilerplate reap
 
 ## Acceptance criteria
 
-- [ ] MutationContext (or equivalent) encapsulates preflight + publish
-- [ ] cmd_claim body is < 30 lines (currently ~60)
-- [ ] cmd_close body is < 40 lines (currently ~87)
-- [ ] cmd_edit body is < 60 lines (currently ~146)
-- [ ] Remote state check happens in one place
-- [ ] All existing tests pass
-- [ ] cargo clippy clean, cargo fmt clean
+- [x] MutationContext (or equivalent) encapsulates preflight + publish
+- [x] cmd_claim body is < 30 lines (currently ~60)
+- [x] cmd_close body is < 40 lines (currently ~87)
+- [x] cmd_edit body is < 60 lines (currently ~146)
+- [x] Remote state check happens in one place
+- [x] All existing tests pass
+- [x] cargo clippy clean, cargo fmt clean

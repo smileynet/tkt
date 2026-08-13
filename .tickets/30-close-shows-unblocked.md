@@ -46,7 +46,7 @@ Without this, the user must run `tkt ready` after every close to discover what w
 - [x] Only shows tickets that were NOT on the frontier before closing
 - [x] Silent if nothing was unblocked
 - [x] Works correctly when closing unblocks multiple tickets
-- [ ] Integration test: close a blocker → verify unblocked tickets shown
+- [x] Integration test: close a blocker → verify unblocked tickets shown
 
 ## Resolution (2026-08-05)
 

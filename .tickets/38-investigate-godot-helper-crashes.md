@@ -30,10 +30,10 @@ Should `tkt ready` and `tkt query` crash (exit 2) on a single unparseable file, 
 
 ## Acceptance criteria
 
-- [ ] Root cause identified for godot-helper crashes
-- [ ] Fix applied (either fix the malformed file, or make read commands resilient)
-- [ ] If resilience fix: read commands skip unparseable files with stderr warning
-- [ ] Regression test for graceful degradation on malformed files
+- [x] Root cause identified for godot-helper crashes
+- [x] Fix applied (either fix the malformed file, or make read commands resilient)
+- [x] If resilience fix: read commands skip unparseable files with stderr warning
+- [x] Regression test for graceful degradation on malformed files
 
 ## Resolution (2026-08-09)
 

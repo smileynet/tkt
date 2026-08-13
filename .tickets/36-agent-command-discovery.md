@@ -74,7 +74,7 @@ strict = false               # default strictness for CI
 
 ## Acceptance criteria
 
-- [ ] Research: how do agents currently discover and use tkt (observe 3+ sessions)
+- [x] Research: how do agents currently discover and use tkt (observe 3+ sessions)
 - [x] Decision: which deliverables (A/B/C/D) to implement
 - [x] Skill authored (if A selected)
 - [x] AGENTS.md template documented (if B selected)

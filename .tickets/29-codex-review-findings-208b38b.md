@@ -69,4 +69,4 @@ before changing it.
 - [x] Confirmed findings are corrected
 - [x] Regression tests cover confirmed defects where practical
 - [x] Relevant build, test, and lint checks pass
-- [ ] Corrected changes receive a fresh review
+- [x] Corrected changes receive a fresh review

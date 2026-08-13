@@ -78,8 +78,8 @@ This is a git workflow issue, not a tkt feature — but `tkt rebase` makes the c
 - [x] `--dry-run` shows plan without modifying anything
 - [x] Commits the renumber atomically
 - [x] Works when origin has gaps in ID space (picks true next available)
-- [ ] Warns on dangling refs that point to now-ambiguous IDs
-- [ ] Documents branch-and-PR workflow for blocked push scenarios
+- [x] Warns on dangling refs that point to now-ambiguous IDs
+- [x] Documents branch-and-PR workflow for blocked push scenarios
 
 ## Resolution (2026-08-07)
 

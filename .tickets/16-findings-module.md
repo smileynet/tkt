@@ -32,10 +32,10 @@ If the findings module were deleted, cycle detection logic reappears inline in c
 
 ## Acceptance criteria
 
-- [ ] `src/findings.rs` exists with Finding struct and print_findings
-- [ ] check_cycles is a standalone function testable with a Vec<Ticket>
-- [ ] cmd_validate is < 40 lines (orchestration only)
-- [ ] cmd_sync_plan uses Finding and print_findings from the module
-- [ ] New unit tests: check_cycles with cyclic/acyclic corpus (no git needed)
-- [ ] All existing integration tests pass unchanged
-- [ ] cargo clippy clean, cargo fmt clean
+- [x] `src/findings.rs` exists with Finding struct and print_findings
+- [x] check_cycles is a standalone function testable with a Vec<Ticket>
+- [x] cmd_validate is < 40 lines (orchestration only)
+- [x] cmd_sync_plan uses Finding and print_findings from the module
+- [x] New unit tests: check_cycles with cyclic/acyclic corpus (no git needed)
+- [x] All existing integration tests pass unchanged
+- [x] cargo clippy clean, cargo fmt clean

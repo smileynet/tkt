@@ -15,4 +15,3 @@ Superseded by ticket #24 which includes proper gating (test runs must pass first
 
 - [x] Ticket #24 completed (which includes removal + verification)
 
-- [ ] TBD

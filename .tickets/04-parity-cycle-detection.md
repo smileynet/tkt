@@ -36,13 +36,13 @@ The README claims `validate` checks for cycles in the dependency graph, but it c
 
 ## Acceptance criteria
 
-- [ ] Self-cycle detected and reported
-- [ ] Two-node cycle detected and reported
-- [ ] 3+ node cycle detected with full path
-- [ ] Multiple disjoint cycles each reported independently
-- [ ] Each cycle reported exactly once (no duplicates)
-- [ ] Cycle path is deterministic (sorted start node)
-- [ ] Cycles classified as errors (affect exit code with --strict)
-- [ ] Integration test with cyclic corpus
-- [ ] Integration test with acyclic corpus (no false positives)
-- [ ] Does not interfere with existing dangling-ref detection
+- [x] Self-cycle detected and reported
+- [x] Two-node cycle detected and reported
+- [x] 3+ node cycle detected with full path
+- [x] Multiple disjoint cycles each reported independently
+- [x] Each cycle reported exactly once (no duplicates)
+- [x] Cycle path is deterministic (sorted start node)
+- [x] Cycles classified as errors (affect exit code with --strict)
+- [x] Integration test with cyclic corpus
+- [x] Integration test with acyclic corpus (no false positives)
+- [x] Does not interfere with existing dangling-ref detection

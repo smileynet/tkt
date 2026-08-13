@@ -22,9 +22,9 @@ Create a test harness that runs both the Rust and Python tkt against the same co
 
 ## Acceptance criteria
 
-- [ ] Harness runs both implementations against same fixtures
-- [ ] Compares: stdout content, exit code, file modifications
-- [ ] Covers read-only commands: ready, ready --json, query, validate, sync-plan --check
-- [ ] Documents any intentional divergences
-- [ ] Can run in CI (both Python and Rust on PATH)
-- [ ] At least one adversarial fixture (quotes in title, special chars in slug boundary)
+- [x] Harness runs both implementations against same fixtures
+- [x] Compares: stdout content, exit code, file modifications
+- [x] Covers read-only commands: ready, ready --json, query, validate, sync-plan --check
+- [x] Documents any intentional divergences
+- [x] Can run in CI (both Python and Rust on PATH)
+- [x] At least one adversarial fixture (quotes in title, special chars in slug boundary)

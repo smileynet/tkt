@@ -33,12 +33,12 @@ The Python tkt scans remote ticket filenames before allocating IDs and validates
 
 ## Acceptance criteria
 
-- [ ] `git ls-tree` used to scan remote ticket names after fetch
-- [ ] `new` allocation uses union of local + remote filenames
-- [ ] `batch` allocation uses union of local + remote filenames
-- [ ] `batch` on push rejection: undoes commit, refetches, reallocates IDs, retries
-- [ ] `claim` verifies target is still `open` after fetch (before writing)
-- [ ] `close` verifies target is still claimable/in_progress after fetch
-- [ ] `edit` verifies target still exists after fetch
-- [ ] Integration test: two clones, competing allocation → no ID collision
-- [ ] Integration test: stale claim (ticket closed remotely) → fails cleanly
+- [x] `git ls-tree` used to scan remote ticket names after fetch
+- [x] `new` allocation uses union of local + remote filenames
+- [x] `batch` allocation uses union of local + remote filenames
+- [x] `batch` on push rejection: undoes commit, refetches, reallocates IDs, retries
+- [x] `claim` verifies target is still `open` after fetch (before writing)
+- [x] `close` verifies target is still claimable/in_progress after fetch
+- [x] `edit` verifies target still exists after fetch
+- [x] Integration test: two clones, competing allocation → no ID collision
+- [x] Integration test: stale claim (ticket closed remotely) → fails cleanly

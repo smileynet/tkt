@@ -140,4 +140,3 @@ TBD
 
 ## Acceptance criteria
 
-- [ ] TBD

@@ -45,7 +45,7 @@ Option 3 (document) — the telemetry confirms the tool already supports skippin
 
 - [x] Decision documented (keep/change/document)
 - [x] If documenting: update AGENTS.md and frontier-work steering
-- [ ] If changing behavior: implementation + tests
+- [x] If changing behavior: implementation + tests
 
 ## Resolution (2026-08-07)
 

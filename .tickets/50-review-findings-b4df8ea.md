@@ -118,10 +118,10 @@ Verification run at review time (Linux, rustc/clippy 1.96):
 
 ## Acceptance criteria
 
-- [ ] Every finding is independently marked confirmed, rejected, or obsolete
-- [ ] Rejected or obsolete findings include evidence and rationale
-- [ ] Confirmed findings are corrected
-- [ ] Regression tests cover confirmed defects where practical
-- [ ] `cargo fmt --check`, `cargo clippy --all-targets` (0 warnings), and `cargo test` all pass
-- [ ] `tkt audit --brief` reports no `unchecked-acs-on-done` or `missing-resolution` for #28 and #30–#34
-- [ ] Corrected changes receive a fresh review
+- [x] Every finding is independently marked confirmed, rejected, or obsolete
+- [x] Rejected or obsolete findings include evidence and rationale
+- [x] Confirmed findings are corrected
+- [x] Regression tests cover confirmed defects where practical
+- [x] `cargo fmt --check`, `cargo clippy --all-targets` (0 warnings), and `cargo test` all pass
+- [x] `tkt audit --brief` reports no `unchecked-acs-on-done` or `missing-resolution` for #28 and #30–#34
+- [x] Corrected changes receive a fresh review

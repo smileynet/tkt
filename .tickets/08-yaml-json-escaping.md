@@ -34,11 +34,11 @@ Two related trust-boundary issues:
 
 ## Acceptance criteria
 
-- [ ] Title containing `"` produces valid frontmatter file
-- [ ] Title containing `\n` produces valid frontmatter (escaped, not literal newline)
-- [ ] Title containing `\` produces valid frontmatter
-- [ ] JSON output with adversarial title parses as valid JSON
-- [ ] JSON output with adversarial file paths parses as valid JSON
-- [ ] No new crate dependencies added
-- [ ] All existing tests pass
-- [ ] New unit tests cover: empty string, quotes, backslashes, newlines, tabs, null byte, Unicode, combined
+- [x] Title containing `"` produces valid frontmatter file
+- [x] Title containing `\n` produces valid frontmatter (escaped, not literal newline)
+- [x] Title containing `\` produces valid frontmatter
+- [x] JSON output with adversarial title parses as valid JSON
+- [x] JSON output with adversarial file paths parses as valid JSON
+- [x] No new crate dependencies added
+- [x] All existing tests pass
+- [x] New unit tests cover: empty string, quotes, backslashes, newlines, tabs, null byte, Unicode, combined

@@ -36,9 +36,9 @@ This ticket is blocked by #03 because the validation module will introduce new p
 
 ## Acceptance criteria
 
-- [ ] All fixed regex patterns compiled via LazyLock statics
-- [ ] No `Regex::new(...)` calls inside frequently-called functions
-- [ ] Dynamic patterns (per-ticket sync-plan regex) left as-is with comment
-- [ ] `cargo test` passes with identical results
-- [ ] `cargo clippy` clean
-- [ ] No new dependencies added
+- [x] All fixed regex patterns compiled via LazyLock statics
+- [x] No `Regex::new(...)` calls inside frequently-called functions
+- [x] Dynamic patterns (per-ticket sync-plan regex) left as-is with comment
+- [x] `cargo test` passes with identical results
+- [x] `cargo clippy` clean
+- [x] No new dependencies added

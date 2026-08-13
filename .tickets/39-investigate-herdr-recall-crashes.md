@@ -29,8 +29,8 @@ Both projects had query attempts crash. Likely same root cause as #38 (malformed
 
 ## Acceptance criteria
 
-- [ ] Root cause identified for herdr and recall crashes
-- [ ] Fix applied or documented (if it's a project setup issue vs tkt bug)
+- [x] Root cause identified for herdr and recall crashes
+- [x] Fix applied or documented (if it's a project setup issue vs tkt bug)
 
 ## Resolution (2026-08-09)
 

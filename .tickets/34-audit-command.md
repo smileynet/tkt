@@ -50,7 +50,7 @@ Without this, the only way to find low-quality closures is manual inspection. Th
 - [x] Checks: unchecked-acs, tbd-resolution, missing-resolution, stale-wip, high-priority-open
 - [x] Output format matches tkt validate (JSON default, --brief, --strict)
 - [x] Exit codes: 0=pass, 1=fail (same contract)
-- [ ] Integration test with corpus containing known quality issues
+- [x] Integration test with corpus containing known quality issues
 
 ## Resolution (2026-08-05)
 

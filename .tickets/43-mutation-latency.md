@@ -44,7 +44,7 @@ Option 4 (accept) for v1, with option 5 as a future enhancement for high-through
 ## Acceptance criteria
 
 - [x] Decision documented
-- [ ] If implementing --no-push: design + implementation
+- [x] If implementing --no-push: design + implementation
 - [x] If accepting: document expected latency in README/TELEMETRY.md
 
 ## Resolution (2026-08-09)

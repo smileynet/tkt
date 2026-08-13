@@ -32,10 +32,10 @@ Global skills are deployed through crew-research (the canonical source), but pro
 
 ## Acceptance criteria
 
-- [ ] Research Gas Town beads and other prior art for artifact distribution
+- [x] Research Gas Town beads and other prior art for artifact distribution
 - [x] Decide: where does the tkt-workflow skill live canonically?
-- [ ] Document the chosen pattern in an ADR
-- [ ] Implement the chosen sync mechanism (if any)
+- [x] Document the chosen pattern in an ADR
+- [x] Implement the chosen sync mechanism (if any)
 
 ## Resolution (2026-08-09)
 
