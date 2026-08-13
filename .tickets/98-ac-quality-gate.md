@@ -4,6 +4,10 @@ title: "Enforce acceptance criteria checked before closure across all repos"
 status: in_progress
 blocked_by: []
 priority: high
+validation_criteria: 
+  - "tkt validate 0 errors 0 warnings across all repos"
+  - "config.toml with enforcement in all repos"
+  - "steering updated with evidence requirement"
 ---
 
 # Enforce acceptance criteria checked before closure across all repos
