@@ -138,6 +138,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 - Do NOT change the frontmatter contract without updating frontier-work steering
 - Do NOT add dependencies beyond what's in Cargo.toml without justification
 - Do NOT use libgit2/gix for v1 — shell out to git binary
+- Do NOT suggest releasing with open tickets — all tickets ship first, or the user explicitly defers them
 - Maintain CLI compatibility (same commands, flags, output)
 - `cargo clippy` must produce 0 warnings; `cargo fmt --check` must produce no diff
 - Integration tests MUST set `DO_NOT_TRACK=1` on child processes (prevents ambient env pollution)
