@@ -4,6 +4,12 @@ title: "Adopt Agent Plugins standard — own and deploy tkt skills from this rep
 status: in_progress
 blocked_by: []
 priority: normal
+validation_criteria: 
+  - "skills/tkt/SKILL.md with CLI usage documentation"
+  - "plugin.json at repo root"
+  - "tools/deploy-skills.sh deploys to kiro/claude/codex"
+  - "Deployed skill readable from harness paths"
+  - "tkt --version output matches plugin.json version"
 ---
 
 # Adopt Agent Plugins Standard
