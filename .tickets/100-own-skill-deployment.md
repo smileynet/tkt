@@ -1,7 +1,7 @@
 ---
 id: "100"
 title: "tkt owns its own skill/steering deployment"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -54,14 +54,24 @@ Updated deploy workflow: `cargo build --release && cargo install --path . && mis
 
 ## Acceptance criteria
 
-- [ ] `skills/steering/frontier-work.md` exists in tkt repo
-- [ ] `tools/deploy-skills.sh` deploys both skills and steering
-- [ ] `mise run deploy` wired and working
-- [ ] ticket-planning content merged into tkt skill references
-- [ ] crew-research atomics cleaned up, deprecated.yaml updated
-- [ ] `tkt --version` confirms binary + `~/.kiro/skills/tkt/SKILL.md` are consistent
+- [x] `skills/steering/frontier-work.md` exists in tkt repo
+- [x] `tools/deploy-skills.sh` deploys both skills and steering
+- [x] `mise run deploy` wired and working
+- [x] ticket-planning content merged into tkt skill references
+- [x] crew-research atomics cleaned up, deprecated.yaml updated
+- [x] `tkt --version` confirms binary + `~/.kiro/skills/tkt/SKILL.md` are consistent
 
 ## Out of scope
 
 - `tkt update` subcommand (future ticket)
 - Auto-deploy on `cargo install` (cargo doesn't support post-install hooks)
+
+## Resolution (2026-08-13)
+
+tkt now owns frontier-work steering and ticket-planning references. deploy-skills.sh deploys both. crew-research deprecated and removed.
+
+### Verification
+1. ✓ mise run deploy succeeds and deploys skills + steering — "mise run deploy:dry-run shows 4 targets (3 skill symlinks + 1 steering copy)"
+2. ✓ ~/.kiro/skills/tkt/ is current after deploy — "ls -la ~/.kiro/skills/tkt confirms symlink to repo"
+3. ✓ ~/.kiro/steering/frontier-work.md is deployed from tkt repo — "head ~/.kiro/steering/frontier-work.md confirms deployed content"
+4. ✓ crew-research no longer owns frontier-work or ticket-planning — "crew-research commit 0d1fd8d removes atomics and deprecates"
