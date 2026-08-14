@@ -1,16 +1,31 @@
-//! User-level and project-level configuration.
+//! Unified configuration with cascade: CLI flag > env var > project > user > default.
 //!
-//! User config: ~/.config/tkt/config.toml (precedence: env > config > default)
-//! Project config: .tickets/config.toml (precedence: CLI flag > config > default)
+//! User config: ~/.config/tkt/config.toml
+//! Project config: .tickets/config.toml
 //!
-//! The user config is created on first `tkt config set`, not on install.
+//! Both files use the same [section] key = value format.
+//! The user config is created on first `tkt config --set`, not on install.
 //! The project config is optional — missing file means all defaults.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-/// Known user configuration keys and their defaults.
-const KNOWN_KEYS: &[(&str, &str)] = &[("debug", "false"), ("debug.format", "human")];
+/// All known configuration keys and their built-in defaults.
+const PROJECT_KEYS: &[(&str, &str)] = &[
+    ("close.require_resolution", "false"),
+    ("close.require_checked_acs", "true"),
+    ("close.require_validation_criteria", "false"),
+    ("close.require_validation_evidence", "warn"),
+    ("close.allow_force", "true"),
+    ("validate.strict", "false"),
+    ("ready.default_env", ""),
+    ("priority.warn_unknown", "true"),
+    ("new.default_priority", ""),
+    ("push.enabled", "true"),
+];
+
+/// User-only keys (debug settings, not applicable at project level).
+const USER_ONLY_KEYS: &[(&str, &str)] = &[("debug", "false"), ("debug.format", "human")];
 
 // ============================================================
 // Project-level configuration (.tickets/config.toml)
@@ -32,6 +47,8 @@ pub struct ProjectConfig {
     pub push_enabled: bool,
     /// Unknown keys found in the config file (for warning).
     pub unknown_keys: Vec<String>,
+    /// Track which keys came from which source for --show.
+    sources: BTreeMap<String, Source>,
 }
 
 impl Default for ProjectConfig {
@@ -48,111 +65,134 @@ impl Default for ProjectConfig {
             new_default_priority: String::new(),
             push_enabled: true,
             unknown_keys: Vec::new(),
+            sources: BTreeMap::new(),
         }
     }
 }
 
 impl ProjectConfig {
-    /// Load project config from `.tickets/config.toml` relative to the given tickets dir.
-    /// Missing file returns all defaults. Unknown keys are collected for warnings.
+    /// Load project config with cascade: project config > user config > default.
+    /// Missing files are not errors — they just don't contribute values.
     pub fn load(tickets_dir: &Path) -> Self {
-        let path = tickets_dir.join("config.toml");
-        let values = match read_project_config(&path) {
-            Some(v) => v,
-            None => return Self::default(),
-        };
+        let project_path = tickets_dir.join("config.toml");
+        let project_values = read_sectioned_config(&project_path);
+        let user_values = config_file_path().and_then(|p| read_sectioned_config(&p));
 
         let mut cfg = Self::default();
         let mut unknown = Vec::new();
+        let mut sources = BTreeMap::new();
 
-        for (key, value) in &values {
-            match key.as_str() {
-                "close.require_resolution" => cfg.close_require_resolution = is_truthy(value),
-                "close.require_checked_acs" => cfg.close_require_checked_acs = is_truthy(value),
-                "close.require_validation_criteria" => {
-                    cfg.close_require_validation_criteria = is_truthy(value)
+        // Initialize all sources as default
+        for &(key, _) in PROJECT_KEYS {
+            sources.insert(key.to_string(), Source::Default);
+        }
+
+        // Layer 1: user config (lowest priority)
+        if let Some(ref user_vals) = user_values {
+            for (key, value) in user_vals {
+                if apply_value(&mut cfg, key, value) {
+                    sources.insert(key.clone(), Source::User);
                 }
-                "close.require_validation_evidence" => {
-                    cfg.close_require_validation_evidence = value.clone()
-                }
-                "close.allow_force" => cfg.close_allow_force = is_truthy(value),
-                "validate.strict" => cfg.validate_strict = is_truthy(value),
-                "ready.default_env" => cfg.ready_default_env = value.clone(),
-                "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
-                "new.default_priority" => cfg.new_default_priority = value.clone(),
-                "push.enabled" => cfg.push_enabled = is_truthy(value),
-                _ => unknown.push(key.clone()),
             }
         }
+
+        // Layer 2: project config (overrides user)
+        if let Some(ref proj_vals) = project_values {
+            for (key, value) in proj_vals {
+                if apply_value(&mut cfg, key, value) {
+                    sources.insert(key.clone(), Source::ProjectConfig);
+                } else {
+                    unknown.push(key.clone());
+                }
+            }
+        }
+
+        // Layer 3: env vars (overrides project)
+        for &(key, _) in PROJECT_KEYS {
+            let env_name = format!("TKT_{}", key.replace('.', "_").to_uppercase());
+            if let Ok(val) = std::env::var(&env_name) {
+                apply_value(&mut cfg, key, &val);
+                sources.insert(key.to_string(), Source::Env);
+            }
+        }
+
         cfg.unknown_keys = unknown;
+        cfg.sources = sources;
         cfg
     }
 
-    /// List all project settings with their sources.
+    /// List all project settings with their resolved sources.
     pub fn list(&self) -> Vec<ConfigEntry> {
-        vec![
-            entry(
+        let mut entries = Vec::new();
+        let fields: Vec<(&str, String)> = vec![
+            (
                 "close.require_resolution",
-                &self.close_require_resolution.to_string(),
-                "false",
+                self.close_require_resolution.to_string(),
             ),
-            entry(
+            (
                 "close.require_checked_acs",
-                &self.close_require_checked_acs.to_string(),
-                "true",
+                self.close_require_checked_acs.to_string(),
             ),
-            entry(
+            (
                 "close.require_validation_criteria",
-                &self.close_require_validation_criteria.to_string(),
-                "false",
+                self.close_require_validation_criteria.to_string(),
             ),
-            entry(
+            (
                 "close.require_validation_evidence",
-                &self.close_require_validation_evidence,
-                "warn",
+                self.close_require_validation_evidence.clone(),
             ),
-            entry(
-                "close.allow_force",
-                &self.close_allow_force.to_string(),
-                "true",
-            ),
-            entry(
-                "validate.strict",
-                &self.validate_strict.to_string(),
-                "false",
-            ),
-            entry("ready.default_env", &self.ready_default_env, ""),
-            entry(
+            ("close.allow_force", self.close_allow_force.to_string()),
+            ("validate.strict", self.validate_strict.to_string()),
+            ("ready.default_env", self.ready_default_env.clone()),
+            (
                 "priority.warn_unknown",
-                &self.priority_warn_unknown.to_string(),
-                "true",
+                self.priority_warn_unknown.to_string(),
             ),
-            entry("new.default_priority", &self.new_default_priority, ""),
-            entry("push.enabled", &self.push_enabled.to_string(), "true"),
-        ]
+            ("new.default_priority", self.new_default_priority.clone()),
+            ("push.enabled", self.push_enabled.to_string()),
+        ];
+
+        for (key, value) in fields {
+            let source = self.sources.get(key).cloned().unwrap_or(Source::Default);
+            entries.push(ConfigEntry {
+                key: key.to_string(),
+                value,
+                source,
+            });
+        }
+        entries
     }
 }
 
-fn entry(key: &str, value: &str, default: &str) -> ConfigEntry {
-    let source = if value == default {
-        Source::Default
-    } else {
-        Source::ProjectConfig
-    };
-    ConfigEntry {
-        key: key.to_string(),
-        value: value.to_string(),
-        source,
+/// Apply a key-value pair to the config struct. Returns true if the key was recognized.
+fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> bool {
+    match key {
+        "close.require_resolution" => cfg.close_require_resolution = is_truthy(value),
+        "close.require_checked_acs" => cfg.close_require_checked_acs = is_truthy(value),
+        "close.require_validation_criteria" => {
+            cfg.close_require_validation_criteria = is_truthy(value)
+        }
+        "close.require_validation_evidence" => {
+            cfg.close_require_validation_evidence = value.to_string()
+        }
+        "close.allow_force" => cfg.close_allow_force = is_truthy(value),
+        "validate.strict" => cfg.validate_strict = is_truthy(value),
+        "ready.default_env" => cfg.ready_default_env = value.to_string(),
+        "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
+        "new.default_priority" => cfg.new_default_priority = value.to_string(),
+        "push.enabled" => cfg.push_enabled = is_truthy(value),
+        _ => return false,
     }
+    true
 }
 
 fn is_truthy(s: &str) -> bool {
     matches!(s, "true" | "1" | "yes")
 }
 
-/// Parse a TOML-like project config with [sections].
+/// Parse a TOML-like config with [sections].
 /// Converts `[section]\nkey = value` to `section.key = value` in the map.
-fn read_project_config(path: &Path) -> Option<BTreeMap<String, String>> {
+fn read_sectioned_config(path: &Path) -> Option<BTreeMap<String, String>> {
     let content = std::fs::read_to_string(path).ok()?;
     let mut map = BTreeMap::new();
     let mut current_section = String::new();
@@ -184,7 +224,7 @@ fn read_project_config(path: &Path) -> Option<BTreeMap<String, String>> {
 // User-level configuration (~/.config/tkt/config.toml)
 // ============================================================
 
-/// Resolved configuration state.
+/// User configuration state (debug settings + shared project defaults).
 #[derive(Debug)]
 pub struct Config {
     values: BTreeMap<String, String>,
@@ -195,7 +235,7 @@ impl Config {
     /// Missing file is not an error (returns all defaults).
     pub fn load() -> Self {
         let values = config_file_path()
-            .and_then(|p| read_config_file(&p))
+            .and_then(|p| read_sectioned_config(&p))
             .unwrap_or_default();
         Config { values }
     }
@@ -221,33 +261,35 @@ impl Config {
         matches!(self.get(key).as_str(), "true" | "1" | "yes")
     }
 
-    /// Set a key in the config file. Creates the file if it doesn't exist.
+    /// Set a key in the user config file. Creates the file if it doesn't exist.
     pub fn set(key: &str, value: &str) -> std::io::Result<()> {
         let path = config_file_path().ok_or_else(|| {
             std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory")
         })?;
 
-        let mut values = read_config_file(&path).unwrap_or_default();
+        let mut values = read_sectioned_config(&path).unwrap_or_default();
         values.insert(key.to_string(), value.to_string());
         write_config_file(&path, &values)
     }
 
-    /// Remove a key from the config file (revert to default).
+    /// Remove a key from the user config file (revert to default).
     pub fn unset(key: &str) -> std::io::Result<bool> {
         let path = config_file_path().ok_or_else(|| {
             std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory")
         })?;
 
-        let mut values = read_config_file(&path).unwrap_or_default();
+        let mut values = read_sectioned_config(&path).unwrap_or_default();
         let existed = values.remove(key).is_some();
         write_config_file(&path, &values)?;
         Ok(existed)
     }
 
-    /// List all settings: known keys with their effective values and sources.
+    /// List all user settings: known keys with their effective values and sources.
     pub fn list(&self) -> Vec<ConfigEntry> {
         let mut entries = Vec::new();
-        for &(key, default) in KNOWN_KEYS {
+
+        // User-only keys (debug)
+        for &(key, default) in USER_ONLY_KEYS {
             let env_name = format!("TKT_{}", key.replace('.', "_").to_uppercase());
             let (value, source) = if let Ok(val) = std::env::var(&env_name) {
                 (val, Source::Env)
@@ -262,9 +304,33 @@ impl Config {
                 source,
             });
         }
-        // Include any extra keys in config file not in KNOWN_KEYS
+
+        // Project keys that have user-level overrides
+        for &(key, _default) in PROJECT_KEYS {
+            if let Some(val) = self.values.get(key) {
+                entries.push(ConfigEntry {
+                    key: key.to_string(),
+                    value: val.clone(),
+                    source: Source::ConfigFile,
+                });
+            } else {
+                // Only show if env var set
+                let env_name = format!("TKT_{}", key.replace('.', "_").to_uppercase());
+                if let Ok(val) = std::env::var(&env_name) {
+                    entries.push(ConfigEntry {
+                        key: key.to_string(),
+                        value: val,
+                        source: Source::Env,
+                    });
+                }
+            }
+        }
+
+        // Include any extra keys in config file not in known lists
         for (key, val) in &self.values {
-            if !KNOWN_KEYS.iter().any(|(k, _)| k == key) {
+            if !USER_ONLY_KEYS.iter().any(|(k, _)| k == key)
+                && !PROJECT_KEYS.iter().any(|(k, _)| k == key)
+            {
                 entries.push(ConfigEntry {
                     key: key.clone(),
                     value: val.clone(),
@@ -276,17 +342,18 @@ impl Config {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ConfigEntry {
     pub key: String,
     pub value: String,
     pub source: Source,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Source {
     Env,
     ConfigFile,
+    User,
     ProjectConfig,
     Default,
 }
@@ -296,6 +363,7 @@ impl std::fmt::Display for Source {
         match self {
             Source::Env => write!(f, "env"),
             Source::ConfigFile => write!(f, "config"),
+            Source::User => write!(f, "user"),
             Source::ProjectConfig => write!(f, "project"),
             Source::Default => write!(f, "default"),
         }
@@ -304,49 +372,87 @@ impl std::fmt::Display for Source {
 
 /// Platform-appropriate config file path.
 /// Linux: ~/.config/tkt/config.toml
-/// macOS: ~/Library/Application Support/tkt/config.toml
+/// macOS: ~/Library/Application Support/tkt/config.toml (but we use ~/.config for consistency)
 /// Windows: %APPDATA%/tkt/config.toml
 pub fn config_file_path() -> Option<PathBuf> {
     dirs::config_dir().map(|d| d.join("tkt").join("config.toml"))
 }
 
-/// Get the default value for a key.
+/// Get the default value for a key (user-only or project keys).
 fn default_for(key: &str) -> &str {
-    KNOWN_KEYS
+    USER_ONLY_KEYS
         .iter()
+        .chain(PROJECT_KEYS.iter())
         .find(|(k, _)| *k == key)
         .map(|(_, v)| *v)
         .unwrap_or("")
 }
 
-/// Parse a simple TOML-like config (flat key = value pairs, supports # comments).
-fn read_config_file(path: &Path) -> Option<BTreeMap<String, String>> {
-    let content = std::fs::read_to_string(path).ok()?;
-    let mut map = BTreeMap::new();
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() || trimmed.starts_with('#') {
-            continue;
-        }
-        if let Some((key, value)) = trimmed.split_once('=') {
-            let key = key.trim().to_string();
-            let value = value.trim().trim_matches('"').to_string();
-            map.insert(key, value);
-        }
-    }
-    Some(map)
-}
-
-/// Write config file (flat key = "value" format).
+/// Write config file with sections. Groups keys by prefix (before the dot).
 fn write_config_file(path: &Path, values: &BTreeMap<String, String>) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let mut content = String::from("# tkt user configuration\n# See: tkt config list\n\n");
+
+    let mut content = String::from(
+        "# tkt user configuration\n# Cascade: env > project config > this file > default\n\n",
+    );
+
+    // Group by section
+    let mut sections: BTreeMap<String, Vec<(String, String)>> = BTreeMap::new();
     for (key, value) in values {
-        content.push_str(&format!("{} = \"{}\"\n", key, value));
+        if let Some((section, field)) = key.split_once('.') {
+            sections
+                .entry(section.to_string())
+                .or_default()
+                .push((field.to_string(), value.clone()));
+        } else {
+            sections
+                .entry(String::new())
+                .or_default()
+                .push((key.clone(), value.clone()));
+        }
     }
+
+    // Write unsectioned keys first
+    if let Some(flat_keys) = sections.remove("") {
+        for (key, value) in &flat_keys {
+            content.push_str(&format!("{} = \"{}\"\n", key, value));
+        }
+        if !flat_keys.is_empty() {
+            content.push('\n');
+        }
+    }
+
+    // Write sectioned keys
+    for (section, fields) in &sections {
+        content.push_str(&format!("[{}]\n", section));
+        for (field, value) in fields {
+            content.push_str(&format!("{} = \"{}\"\n", field, value));
+        }
+        content.push('\n');
+    }
+
     std::fs::write(path, content)
+}
+
+/// Set a key in the project config file.
+#[allow(dead_code)]
+pub fn set_project_config(tickets_dir: &Path, key: &str, value: &str) -> std::io::Result<()> {
+    let path = tickets_dir.join("config.toml");
+    let mut values = read_sectioned_config(&path).unwrap_or_default();
+    values.insert(key.to_string(), value.to_string());
+    write_config_file(&path, &values)
+}
+
+/// Remove a key from the project config file.
+#[allow(dead_code)]
+pub fn unset_project_config(tickets_dir: &Path, key: &str) -> std::io::Result<bool> {
+    let path = tickets_dir.join("config.toml");
+    let mut values = read_sectioned_config(&path).unwrap_or_default();
+    let existed = values.remove(key).is_some();
+    write_config_file(&path, &values)?;
+    Ok(existed)
 }
 
 #[cfg(test)]
@@ -363,7 +469,7 @@ mod tests {
         writeln!(f, "debug = \"true\"").unwrap();
         writeln!(f, "debug.format = \"json\"").unwrap();
 
-        let map = read_config_file(&path).unwrap();
+        let map = read_sectioned_config(&path).unwrap();
         assert_eq!(map.get("debug").unwrap(), "true");
         assert_eq!(map.get("debug.format").unwrap(), "json");
     }
@@ -371,7 +477,7 @@ mod tests {
     #[test]
     fn test_read_config_file_missing_returns_none() {
         let path = Path::new("/nonexistent/config.toml");
-        assert!(read_config_file(path).is_none());
+        assert!(read_sectioned_config(path).is_none());
     }
 
     #[test]
@@ -384,7 +490,7 @@ mod tests {
         values.insert("debug.format".to_string(), "json".to_string());
 
         write_config_file(&path, &values).unwrap();
-        let read_back = read_config_file(&path).unwrap();
+        let read_back = read_sectioned_config(&path).unwrap();
         assert_eq!(read_back, values);
     }
 
@@ -392,6 +498,7 @@ mod tests {
     fn test_default_for_known_keys() {
         assert_eq!(default_for("debug"), "false");
         assert_eq!(default_for("debug.format"), "human");
+        assert_eq!(default_for("close.allow_force"), "true");
         assert_eq!(default_for("unknown"), "");
     }
 
@@ -431,5 +538,65 @@ foo = "bar"
         assert!(!cfg.push_enabled);
         assert_eq!(cfg.ready_default_env, "corp");
         assert_eq!(cfg.unknown_keys, vec!["mystery.foo"]);
+    }
+
+    #[test]
+    fn test_user_config_cascades_to_project() {
+        // User config sets allow_force = false
+        let user_dir = tempfile::tempdir().unwrap();
+        let user_path = user_dir.path().join("config.toml");
+        std::fs::write(
+            &user_path,
+            "[close]\nallow_force = false\nrequire_resolution = true\n",
+        )
+        .unwrap();
+
+        // Project config only overrides require_resolution
+        let proj_dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            proj_dir.path().join("config.toml"),
+            "[close]\nrequire_resolution = false\n",
+        )
+        .unwrap();
+
+        // Load with user config — we need to test the cascade logic directly
+        let user_vals = read_sectioned_config(&user_path).unwrap();
+        let proj_vals = read_sectioned_config(&proj_dir.path().join("config.toml")).unwrap();
+
+        let mut cfg = ProjectConfig::default();
+        // Apply user first
+        for (key, value) in &user_vals {
+            apply_value(&mut cfg, key, value);
+        }
+        // Then project overrides
+        for (key, value) in &proj_vals {
+            apply_value(&mut cfg, key, value);
+        }
+
+        // allow_force from user (not overridden by project)
+        assert!(!cfg.close_allow_force);
+        // require_resolution overridden by project (false beats user's true)
+        assert!(!cfg.close_require_resolution);
+    }
+
+    #[test]
+    fn test_write_sectioned_config() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.toml");
+
+        let mut values = BTreeMap::new();
+        values.insert("close.allow_force".to_string(), "false".to_string());
+        values.insert("close.require_resolution".to_string(), "true".to_string());
+        values.insert("push.enabled".to_string(), "false".to_string());
+
+        write_config_file(&path, &values).unwrap();
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(content.contains("[close]"));
+        assert!(content.contains("allow_force = \"false\""));
+        assert!(content.contains("[push]"));
+
+        // Roundtrip
+        let read_back = read_sectioned_config(&path).unwrap();
+        assert_eq!(read_back, values);
     }
 }
