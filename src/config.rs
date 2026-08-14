@@ -73,10 +73,16 @@ impl Default for ProjectConfig {
 impl ProjectConfig {
     /// Load project config with cascade: project config > user config > default.
     /// Missing files are not errors — they just don't contribute values.
+    /// Set TKT_NO_USER_CONFIG=1 to skip user config (for testing).
     pub fn load(tickets_dir: &Path) -> Self {
         let project_path = tickets_dir.join("config.toml");
         let project_values = read_sectioned_config(&project_path);
-        let user_values = config_file_path().and_then(|p| read_sectioned_config(&p));
+        let skip_user = std::env::var("TKT_NO_USER_CONFIG").as_deref() == Ok("1");
+        let user_values = if skip_user {
+            None
+        } else {
+            config_file_path().and_then(|p| read_sectioned_config(&p))
+        };
 
         let mut cfg = Self::default();
         let mut unknown = Vec::new();
@@ -233,7 +239,13 @@ pub struct Config {
 impl Config {
     /// Load config from the platform-appropriate path.
     /// Missing file is not an error (returns all defaults).
+    /// Respects TKT_NO_USER_CONFIG=1 to skip loading (for testing).
     pub fn load() -> Self {
+        if std::env::var("TKT_NO_USER_CONFIG").as_deref() == Ok("1") {
+            return Config {
+                values: BTreeMap::new(),
+            };
+        }
         let values = config_file_path()
             .and_then(|p| read_sectioned_config(&p))
             .unwrap_or_default();
@@ -371,10 +383,13 @@ impl std::fmt::Display for Source {
 }
 
 /// Platform-appropriate config file path.
-/// Linux: ~/.config/tkt/config.toml
-/// macOS: ~/Library/Application Support/tkt/config.toml (but we use ~/.config for consistency)
-/// Windows: %APPDATA%/tkt/config.toml
+/// Respects XDG_CONFIG_HOME if set (for testing and Linux convention).
+/// Otherwise: macOS ~/Library/Application Support/tkt/config.toml,
+/// Linux ~/.config/tkt/config.toml, Windows %APPDATA%/tkt/config.toml.
 pub fn config_file_path() -> Option<PathBuf> {
+    if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
+        return Some(PathBuf::from(xdg).join("tkt").join("config.toml"));
+    }
     dirs::config_dir().map(|d| d.join("tkt").join("config.toml"))
 }
 

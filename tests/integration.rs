@@ -26,6 +26,7 @@ fn run_tkt(dir: &Path, args: &[&str]) -> (i32, String) {
         .args(args)
         .current_dir(dir)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_NO_USER_CONFIG", "1")
         .env_remove("TKT_DEBUG")
         .output()
         .expect("failed to execute tkt");
@@ -737,6 +738,7 @@ fn run_tkt_env(dir: &Path, args: &[&str], env: &[(&str, &str)]) -> (i32, String,
         cmd.env("DO_NOT_TRACK", "1");
     }
     cmd.env_remove("TKT_DEBUG");
+    cmd.env("TKT_NO_USER_CONFIG", "1");
     for (k, v) in env {
         if v.is_empty() {
             cmd.env_remove(k);
@@ -1040,6 +1042,7 @@ fn test_new_quiet_outputs_bare_id() {
             .args(["new", "another", "--title", "Another", "-q"])
             .current_dir(&clone)
             .env("DO_NOT_TRACK", "1")
+            .env("TKT_NO_USER_CONFIG", "1")
             .output()
             .unwrap()
             .stdout,
@@ -1215,6 +1218,7 @@ fn run_tkt_with_config(dir: &Path, args: &[&str], config_home: &Path) -> (i32, S
         .args(args)
         .current_dir(dir)
         .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_NO_USER_CONFIG")
         .env_remove("TKT_DEBUG")
         .env_remove("TKT_DEBUG_FORMAT")
         .env("XDG_CONFIG_HOME", config_home)
@@ -1249,6 +1253,7 @@ fn test_config_set_get_list() {
         .args(["config", "--get", "debug"])
         .current_dir(&clone)
         .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_NO_USER_CONFIG")
         .env_remove("TKT_DEBUG")
         .env_remove("TKT_DEBUG_FORMAT")
         .env("XDG_CONFIG_HOME", &config_dir)
@@ -1294,6 +1299,7 @@ fn test_config_env_overrides_config_file() {
         .args(["config", "--get", "debug"])
         .current_dir(&clone)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_DEBUG", "1")
         .env("XDG_CONFIG_HOME", &config_dir)
         .output()
@@ -1316,6 +1322,7 @@ fn test_config_debug_enables_debug_output() {
         .args(["ready"])
         .current_dir(&clone)
         .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_NO_USER_CONFIG")
         .env_remove("TKT_DEBUG")
         .env("XDG_CONFIG_HOME", &config_dir)
         .output()

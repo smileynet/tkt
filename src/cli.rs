@@ -62,6 +62,14 @@ enum Commands {
         #[arg(long)]
         fix: bool,
     },
+    /// Normalize ticket frontmatter style (quoting, field order, whitespace)
+    Lint {
+        /// Report deviations without fixing (exit 1 if any file would change)
+        #[arg(long)]
+        check: bool,
+        /// Specific ticket IDs to lint (omit for all)
+        ids: Vec<String>,
+    },
     /// Allocate a new ticket id (fetch, scan, create, commit, push)
     New {
         slug: String,
@@ -279,6 +287,7 @@ pub fn run() -> i32 {
             agent_only,
         } => crate::commands::init::run(write, target.as_deref(), all, agent_only),
         Commands::Doctor { path, fix } => crate::commands::doctor::run(path.as_deref(), fix),
+        Commands::Lint { check, ids } => crate::commands::lint::run(check, &ids),
         Commands::New {
             slug,
             title,
@@ -449,6 +458,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Ready { .. } => "ready",
         Commands::Init { .. } => "init",
         Commands::Doctor { .. } => "doctor",
+        Commands::Lint { .. } => "lint",
         Commands::New { .. } => "new",
         Commands::Batch { .. } => "batch",
         Commands::Claim { .. } => "claim",
