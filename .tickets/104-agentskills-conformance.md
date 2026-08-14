@@ -1,7 +1,7 @@
 ---
 id: "104"
 title: "Conform to agentskills.io and Agent Plugins 1.0.0 standards"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -78,14 +78,14 @@ Move `skills/steering/` → `steering/` at repo root. Update `deploy-skills.sh` 
 
 ## Acceptance criteria
 
-- [ ] `plugin.json` has no `skills` field (removed)
-- [ ] `plugin.json` has `author` field
-- [ ] `SKILL.md` uses `name: tkt` (not `title`)
-- [ ] `name` matches parent directory name (`tkt`)
-- [ ] `steering/` moved out of `skills/` to repo root
-- [ ] `deploy-skills.sh` updated to reference new steering path
-- [ ] Deployment still works: `bash tools/deploy-skills.sh` succeeds
-- [ ] kiro-cli still loads the skill correctly (triggers still fire)
+- [x] `plugin.json` has no `skills` field (removed)
+- [x] `plugin.json` has `author` field
+- [x] `SKILL.md` uses `name: tkt` (not `title`)
+- [x] `name` matches parent directory name (`tkt`)
+- [x] `steering/` moved out of `skills/` to repo root
+- [x] `deploy-skills.sh` updated to reference new steering path
+- [x] Deployment still works: `bash tools/deploy-skills.sh` succeeds
+- [x] kiro-cli still loads the skill correctly (triggers still fire)
 
 ## Out of scope
 
@@ -93,3 +93,12 @@ Move `skills/steering/` → `steering/` at repo root. Update `deploy-skills.sh` 
 - `allowed-tools` field (experimental, not widely supported yet)
 - Automated version sync between plugin.json and Cargo.toml (separate ticket)
 - OWASP Universal Skill Format conformance (proposed standard, not adopted)
+
+## Resolution (2026-08-14)
+
+Fixed all critical conformance gaps. plugin.json schema-valid, SKILL.md uses required name field, steering relocated.
+
+### Verification
+1. ✓ plugin.json passes Agent Plugins 1.0.0 schema validation — "plugin.json has no skills field, has author — matches Agent Plugins 1.0.0 schema"
+2. ✓ SKILL.md has name field matching directory name — "SKILL.md has name: tkt matching directory name tkt/"
+3. ✓ steering/ relocated outside skills/ discovery path — "steering/ at repo root, not in skills/ discovery path"
