@@ -1,7 +1,7 @@
 ---
 id: "78"
 title: "tkt lint: style normalization for cleaner diffs"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "tkt lint normalizes all tickets and git diff shows only style changes"
