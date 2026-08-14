@@ -17,9 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Evidence on close — link proof to each criterion so reviewers see what was verified
 - Configurable enforcement for validation evidence (warn, require, or off)
 - `tkt audit` flags tickets closed without evidence when criteria were defined
+- `--dry-run` flag on all mutation commands — preview what would happen without writing
+- Self-update check — notifies when a newer version is available (once per day, non-blocking)
+- Unified config cascade — user config provides global defaults, project config overrides per-repo
+- `close.allow_force` config — disable the `--force` escape hatch project-wide or globally
+- Git hash in `--version` output for dev build traceability (e.g., `tkt 0.1.0 (ea047fb)`)
 
 ### Changed
 
+- `tkt config --show` now reports the source of each resolved value (env/project/user/default)
 - Clearer README and crate description
 
 ## [0.1.0] - 2026-08-09
