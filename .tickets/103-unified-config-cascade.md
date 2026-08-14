@@ -1,7 +1,7 @@
 ---
 id: "103"
 title: "Unified config cascade: CLI > project > user > default"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
