@@ -17,6 +17,10 @@ pub fn run(
     let ctx = MutationContext::open()?;
     let t = ctx.find_ticket(id)?;
 
+    if force && !ctx.config.close_allow_force {
+        domain_bail!("--force is disabled by project config (close.allow_force = false)");
+    }
+
     if ctx.config.close_require_resolution && note.is_none() && !force {
         domain_bail!("project config requires --resolution (or --note) to close a ticket");
     }

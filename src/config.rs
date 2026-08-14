@@ -24,6 +24,7 @@ pub struct ProjectConfig {
     pub close_require_validation_criteria: bool,
     /// "false" | "warn" | "true"
     pub close_require_validation_evidence: String,
+    pub close_allow_force: bool,
     pub validate_strict: bool,
     pub ready_default_env: String,
     pub priority_warn_unknown: bool,
@@ -40,6 +41,7 @@ impl Default for ProjectConfig {
             close_require_checked_acs: true,
             close_require_validation_criteria: false,
             close_require_validation_evidence: "warn".to_string(),
+            close_allow_force: true,
             validate_strict: false,
             ready_default_env: String::new(),
             priority_warn_unknown: true,
@@ -73,6 +75,7 @@ impl ProjectConfig {
                 "close.require_validation_evidence" => {
                     cfg.close_require_validation_evidence = value.clone()
                 }
+                "close.allow_force" => cfg.close_allow_force = is_truthy(value),
                 "validate.strict" => cfg.validate_strict = is_truthy(value),
                 "ready.default_env" => cfg.ready_default_env = value.clone(),
                 "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
@@ -107,6 +110,11 @@ impl ProjectConfig {
                 "close.require_validation_evidence",
                 &self.close_require_validation_evidence,
                 "warn",
+            ),
+            entry(
+                "close.allow_force",
+                &self.close_allow_force.to_string(),
+                "true",
             ),
             entry(
                 "validate.strict",
