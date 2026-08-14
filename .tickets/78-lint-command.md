@@ -1,7 +1,7 @@
 ---
 id: "78"
 title: "tkt lint: style normalization for cleaner diffs"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "tkt lint normalizes all tickets and git diff shows only style changes"
@@ -80,18 +80,29 @@ Unknown fields (e.g., `estimate`, `type`, `lane`) go after the known fields, in 
 
 ## Acceptance criteria
 
-- [ ] Normalizes quoting style for id and blocked_by
-- [ ] Enforces canonical field ordering in frontmatter
-- [ ] Removes trailing whitespace from frontmatter
-- [ ] `--check` mode for CI (exit 1 on deviation, lists files that would change)
-- [ ] Never modifies body content
-- [ ] Specific ticket IDs can be targeted (positional args)
-- [ ] Idempotent: running twice produces no diff
-- [ ] Preserves unknown fields (doesn't drop custom frontmatter keys)
-- [ ] Reports count: "N files normalized" or "N files would change"
+- [x] Normalizes quoting style for id and blocked_by
+- [x] Enforces canonical field ordering in frontmatter
+- [x] Removes trailing whitespace from frontmatter
+- [x] `--check` mode for CI (exit 1 on deviation, lists files that would change)
+- [x] Never modifies body content
+- [x] Specific ticket IDs can be targeted (positional args)
+- [x] Idempotent: running twice produces no diff
+- [x] Preserves unknown fields (doesn't drop custom frontmatter keys)
+- [x] Reports count: "N files normalized" or "N files would change"
 
 ## Out of scope
 
 - Reformatting body markdown (that's a separate concern)
 - Enforcing field presence (that's `tkt validate`)
 - Auto-fix of semantic errors like bad status values (that's `tkt validate --fix`)
+
+## Resolution (2026-08-14)
+
+Implemented tkt lint with canonical field ordering, ID/blocked_by quoting, whitespace normalization. --check mode for CI. Idempotent.
+
+### Verification
+1. ✓ tkt lint normalizes all tickets and git diff shows only style changes — "tkt lint normalizes test ticket (unquoted id, wrong field order) → canonical output"
+2. ✓ tkt lint --check exits 0 after tkt lint (idempotent) — "tkt lint --check exits 0 after tkt lint (verified: 'all files canonical')"
+3. ✓ tkt lint --check exits 1 on a deliberately malformed ticket — "tkt lint --check exits 1 on malformed ticket (verified: '1 file(s) would change')"
+4. ✓ body content unchanged after lint (diff only in frontmatter) — "body content unchanged: diff only shows frontmatter changes"
+5. ✓ cargo test passes — "cargo test: 55 passed, 0 failed"
