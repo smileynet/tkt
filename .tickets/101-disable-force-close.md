@@ -1,7 +1,7 @@
 ---
 id: "101"
 title: "Config option to disable --force on close"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
