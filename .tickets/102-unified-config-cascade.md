@@ -1,7 +1,7 @@
 ---
 id: "102"
 title: "Unified config cascade: CLI > project > user > default"
-status: open
+status: done
 blocked_by: []
 priority: high
 validation_criteria: 
@@ -16,4 +16,11 @@ TBD
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [x] TBD
+
+## Resolution (2026-08-14)
+
+Duplicate of 103. Created from a cancelled command.
+
+### Verification
+1. ✓ n/a — duplicate of 103 — "duplicate of ticket 103 which is already closed"
