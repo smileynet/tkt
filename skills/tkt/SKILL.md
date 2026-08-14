@@ -1,6 +1,7 @@
 ---
-title: tkt
+name: tkt
 description: "Track tasks as markdown files in your git repo. Use when managing tickets, checking what's ready, claiming work, closing tasks, creating tickets, decomposing work, or validating project health."
+compatibility: Requires git
 triggers:
   - tkt
   - tickets

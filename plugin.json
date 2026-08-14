@@ -3,14 +3,8 @@
   "name": "tkt",
   "version": "0.1.0",
   "description": "Track tasks as markdown files in your git repo",
+  "author": {"name": "smileynet"},
   "repository": "https://github.com/smileynet/tkt",
   "license": "MIT",
-  "keywords": ["tickets", "task-management", "dependencies", "frontier"],
-  "skills": [
-    {
-      "name": "tkt",
-      "path": "skills/tkt",
-      "format": "agentskills.io"
-    }
-  ]
+  "keywords": ["tickets", "task-management", "dependencies", "frontier"]
 }

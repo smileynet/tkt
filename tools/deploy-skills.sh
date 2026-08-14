@@ -10,7 +10,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILL_SRC="$REPO_ROOT/skills/tkt"
-STEERING_SRC="$REPO_ROOT/skills/steering"
+STEERING_SRC="$REPO_ROOT/steering"
 
 DRY_RUN=false
 [[ "${1:-}" == "--dry-run" ]] && DRY_RUN=true
