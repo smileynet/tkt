@@ -1,7 +1,7 @@
 ---
 id: "101"
 title: "Config option to disable --force on close"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -49,13 +49,23 @@ allow_force = false   # reject --force entirely
 
 ## Acceptance criteria
 
-- [ ] `close.allow_force = false` in config rejects `tkt close --force` with clear error
-- [ ] `close.allow_force = true` (or absent) preserves all current behavior
-- [ ] `tkt config --show` displays the setting with source
-- [ ] Error message names the config key so the user knows how to change it
-- [ ] All existing tests pass unchanged (default is true)
+- [x] `close.allow_force = false` in config rejects `tkt close --force` with clear error
+- [x] `close.allow_force = true` (or absent) preserves all current behavior
+- [x] `tkt config --show` displays the setting with source
+- [x] Error message names the config key so the user knows how to change it
+- [x] All existing tests pass unchanged (default is true)
 
 ## Out of scope
 
 - Per-ticket force override (e.g. frontmatter `allow_force: true`)
 - Audit logging of force usage (separate concern)
+
+## Resolution (2026-08-14)
+
+Added close.allow_force config. Default true (backward compat). Disabled across all 10 repos.
+
+### Verification
+1. ✓ close.allow_force = false rejects --force with clear error — "tkt close --force exits 1 with 'disabled by project config (close.allow_force = false)'"
+2. ✓ close.allow_force = true (default) preserves current behavior — "tkt config --show displays 'close.allow_force = false (project)'"
+3. ✓ tkt config --show displays the setting — "cargo test: 55 passed, 0 failed"
+4. ✓ existing tests pass unchanged — "default true confirmed: absent config key allows --force (integration test passes)"
