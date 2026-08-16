@@ -70,47 +70,71 @@ tkt --json claim 01
 
 ## Implementation
 
-### Approach: error type annotation on DomainError
+### Approach: annotated DomainError + JSON envelope on stderr
 
-Currently `DomainError(String)` is untyped. Change to `DomainError { code: ErrorCode, message: String }`:
+Based on research (clispec v0.3, MCP error model, Stripe/Google error taxonomies, agent recovery patterns):
+
+**Key design decisions (research-informed):**
+
+1. **Errors on stderr, data on stdout** — clispec consensus. JSON error envelope is the last line of stderr when `--json` active. Stdout reserved for data.
+2. **Small fixed vocabulary (8 codes)** — maps to recovery strategies (retry, fix input, escalate, give up). Extensible later without breaking clients.
+3. **`retryable` flag** — agents need this for automated recovery. Most tkt errors are NOT retryable; only `conflict` (push race) is.
+4. **`hint` field** — what would fix it (when deterministic). Enables corrective feedback loops.
+5. **Exit code = primary machine signal** — error code for routing, message for LLM reasoning. Both present.
+
+### Error envelope (stderr, last line when --json)
+
+```json
+{"ok":false,"error":"not_found","message":"no ticket with id \"999\"","hint":"check tkt query for valid IDs","retryable":false,"exit_code":1}
+```
+
+Success envelope (stdout when --json):
+```json
+{"ok":true,"result":"claimed 01 auth-system (→ in_progress)"}
+```
+
+### Expanded DomainError
 
 ```rust
 #[derive(Debug, Clone, Copy)]
 pub enum ErrorCode {
-    NotFound,
-    AlreadyDone,
-    Conflict,
-    GateFailed,
-    Validation,
-    Cycle,
-    Io,
-    Parse,
+    NotFound,       // ticket/resource doesn't exist
+    AlreadyDone,   // idempotency violation
+    Conflict,      // push race, claim lost (RETRYABLE)
+    GateFailed,    // quality gate blocked operation
+    Validation,    // invalid input
+    Cycle,         // dependency cycle
+    Io,            // filesystem/git failure (exit 2)
+    Parse,         // unparseable ticket file (exit 2)
+}
+
+impl ErrorCode {
+    pub fn as_str(&self) -> &'static str { ... }
+    pub fn exit_code(&self) -> i32 { ... }  // 1 for domain, 2 for operational
+    pub fn retryable(&self) -> bool { ... } // only Conflict is retryable
 }
 
 #[derive(Debug)]
 pub struct DomainError {
     pub code: ErrorCode,
     pub message: String,
+    pub hint: Option<String>,
 }
 ```
 
-Then in the error handler (cli.rs line 424):
-- If `--json` flag is active: serialize envelope to stdout
-- Else: print human text to stderr (current behavior)
-
 ### Changes needed
 
-1. `src/main.rs` — expand `DomainError` to carry `ErrorCode`
-2. `src/commands/common.rs` — update `domain_bail!` macro to accept error code
-3. `src/cli.rs` — promote `--json` to global flag, handle in error dispatch
-4. Each command file — annotate `domain_bail!` calls with the appropriate error code
-5. Success path — optionally emit `{"ok": true, ...}` for mutations when `--json`
+1. `src/main.rs` — expand `DomainError` to `{ code, message, hint }`
+2. `src/commands/common.rs` — update `domain_bail!` macro: `domain_bail!(NotFound, "msg")` and `domain_bail!(NotFound, "msg", hint: "hint")`
+3. `src/cli.rs` — promote `--json` to global flag, emit envelope in error handler
+4. Each command file — annotate `domain_bail!` calls with error code + optional hint
+5. Success path — emit `{"ok": true, "result": "..."}` to stdout for mutations when `--json`
 
 ### Backward compatibility
 
 - Without `--json`: zero change. Same stderr text, same exit codes.
-- `domain_bail!("message")` without code defaults to `Validation` (most common)
-- Existing `ready --json` behavior preserved (it already emits JSON on success)
+- `domain_bail!("message")` without explicit code defaults to `Validation` (most common)
+- Existing `ready --json` behavior preserved (it already emits JSON to stdout)
 
 ## Context
 
