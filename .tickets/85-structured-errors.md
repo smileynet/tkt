@@ -1,7 +1,7 @@
 ---
 id: "85"
 title: "Structured error envelopes for agent-parseable failures"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
