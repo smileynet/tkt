@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt -o json close 999 emits JSON error envelope to stderr"
   - "envelope has ok, error.kind, error.message, error.hint fields"
   - "without -o json, stderr text output unchanged"
-  - "tkt capabilities (or schema) declares error kinds with exit codes"
+  - "tkt capabilities declares error kinds with exit codes"
   - "cargo test passes"
 ---
 
@@ -18,29 +18,27 @@ validation_criteria:
 
 tkt errors are human-readable text on stderr (`tkt: ✗ Ticket 99 not found`). Agents must regex-parse these to understand what went wrong. A structured envelope lets agents distinguish error types programmatically and decide recovery actions without brittle string matching.
 
-## Research Findings
+## Research Summary
 
-Cloned and studied:
-- **clispec v0.3** (clispec.dev) — emerging standard for agent-friendly CLIs. Defines error envelopes as last line of stderr, declares error kinds with exit codes and retryable flags in schema.
-- **octo-cli** (Mininglamp-OSS) — Go CLI designed for AI agents. Uses `{ok: false, error: {type, code, message, hint, detail}}` envelope to stderr.
-- **axocli** (axodotdev) — Rust CLI lib. Emits JSON error to stdout AND human error to stderr simultaneously.
+Studied three reference implementations:
 
-Key consensus across sources:
-1. **Errors on stderr** — stdout is for data only (clispec Principle 3)
-2. **Error envelope as last line of stderr** when structured output requested (clispec §Errors)
-3. **Fixed error kind vocabulary** declared in schema with exit_code + retryable (clispec, octo-cli)
-4. **Hint field** for actionable remediation (clispec, octo-cli, Stripe)
-5. **Exit code is primary machine signal** — even without JSON mode (clispec)
-6. **`-o json` is the canonical flag** (clispec prefers `--output`/`-o` over `--json`)
+| Source | Stars | Authority | Pattern adopted |
+|--------|-------|-----------|-----------------|
+| **octo-cli** (Mininglamp-OSS) | 510⭐ | High — production AI-agent CLI, active daily | Error envelope shape: `{ok, error: {type, code, message, hint}}` |
+| **axocli** (axodotdev/cargo-dist) | 16⭐ | Medium — sound engineering, but lib abandoned since Dec 2025 | Dual output: JSON to stderr + human text to stderr simultaneously |
+| **clispec.dev** (rvben) | 9⭐ | Low — solo author, zero external adoption, 4 months old | Ideas are sound but not an adopted standard; treat as design inspiration |
+
+Additional sources informing the design:
+- **gh CLI** (GitHub) — `-o json` global flag pattern, errors stay as text on stderr
+- **kubectl** — Status JSON object on failure with `-o json`
+- **MCP** (Anthropic) — two-layer error model: codes for orchestration, messages for LLM reasoning
+- **Stripe/Google APIs** — small fixed error vocabulary, hint/remediation fields
 
 ## What to build
 
-### Global `-o json` flag (clispec-aligned)
+### Global `-o json` flag
 
-Replace `ready --json` with a global `--output`/`-o` flag. When `-o json`:
-- **Success**: commands emit JSON to stdout
-- **Errors**: emit JSON envelope as last line of stderr
-- **Human text still on stderr**: both JSON and human error emitted (axocli pattern)
+Industry-standard pattern (gh, kubectl, terraform). Replace `ready --json` with a global `--output`/`-o` flag:
 
 ```bash
 tkt -o json close 999
@@ -52,7 +50,7 @@ tkt -o json claim 01
 # exit code: 0
 ```
 
-### Error envelope schema (clispec + octo-cli hybrid)
+### Error envelope (inspired by octo-cli's ExitError)
 
 ```json
 {
@@ -66,14 +64,11 @@ tkt -o json claim 01
 }
 ```
 
-Fields:
-- `ok` (bool) — false for errors, true for success
-- `error.kind` (string) — stable identifier from declared vocabulary
-- `error.message` (string) — human-readable detail (mutable, not a contract)
-- `error.hint` (string, optional) — actionable remediation
-- `exit_code` (int) — duplicated from process exit for when envelope is captured separately
+- Emitted as **last line of stderr** when `-o json` active
+- Human text still printed to stderr regardless (axocli dual-output pattern)
+- `error.kind` is stable (machine contract); `error.message` is mutable (human-facing)
 
-### Error kind vocabulary (clispec-style declaration)
+### Error kind vocabulary
 
 | Kind | Exit | Retryable | Description |
 |------|------|-----------|-------------|
@@ -86,7 +81,9 @@ Fields:
 | `io` | 2 | false | Filesystem or git subprocess failure |
 | `parse` | 2 | false | Ticket file couldn't be parsed |
 
-### Success envelope (mutations only)
+Design rationale: 8 codes mapping to 4 recovery strategies (retry, fix input, escalate, give up). Only `conflict` is retryable — matches tkt's push-race retry semantics.
+
+### Success envelope (mutations)
 
 ```json
 {
@@ -96,24 +93,25 @@ Fields:
 }
 ```
 
-`changed` (bool) — clispec/Terraform convention: true when the command did work, false when state was already correct.
+`changed` (bool) — true when the command modified state, false when already in desired state. Useful for agent idempotency checks.
 
-### Schema declaration (tkt capabilities)
+### Capabilities declaration
 
-Update `tkt capabilities` to declare error kinds per clispec:
+Update `tkt capabilities` to declare error kinds:
 
 ```json
 {
   "errors": [
-    {"kind": "not_found", "exit_code": 1, "retryable": false, "description": "Ticket does not exist"},
-    {"kind": "conflict", "exit_code": 1, "retryable": true, "description": "Push race or claim conflict"}
+    {"kind": "not_found", "exit_code": 1, "retryable": false},
+    {"kind": "conflict", "exit_code": 1, "retryable": true},
+    ...
   ]
 }
 ```
 
 ## Implementation
 
-### Approach (from octo-cli pattern, adapted for Rust)
+### ErrorKind enum + DomainError struct (from octo-cli's ExitError pattern)
 
 ```rust
 #[derive(Debug, Clone, Copy)]
@@ -144,17 +142,17 @@ pub struct DomainError {
 ### Changes needed
 
 1. `src/main.rs` — expand `DomainError` to `{ kind, message, hint }`
-2. `src/commands/common.rs` — update `domain_bail!`: `domain_bail!(NotFound, "msg")` or `domain_bail!(NotFound, "msg", hint: "check IDs")`
-3. `src/cli.rs` — replace `--json` on ready with global `-o`/`--output` flag; handle envelope in error dispatch
+2. `src/commands/common.rs` — update `domain_bail!`: `domain_bail!(NotFound, "msg")` or with hint
+3. `src/cli.rs` — add global `-o`/`--output` flag; emit envelope in error handler
 4. Each command file — annotate `domain_bail!` calls with error kind + optional hint
 5. Success envelope — emit to stdout for mutations when `-o json`
-6. `src/commands/capabilities.rs` — add `errors` array to schema output
-7. Backward compat: `ready --json` still works (aliased)
+6. `src/commands/capabilities.rs` — add `errors` array
+7. Backward compat: `ready --json` still works (aliased to `-o json ready`)
 
 ### Backward compatibility
 
 - Without `-o json`: zero change. Same stderr text, same exit codes.
-- `ready --json` preserved as hidden alias
+- `ready --json` preserved as alias
 - `domain_bail!("message")` without explicit kind defaults to `Validation`
 
 ## Context
@@ -162,25 +160,25 @@ pub struct DomainError {
 - `src/main.rs` — DomainError struct (line 21)
 - `src/cli.rs` — error handler (line 424), global flags
 - `src/commands/common.rs` — domain_bail! macro (line 10)
-- `.references/clispec/` — clispec schema and test fixtures (error kinds, exit codes)
-- `.references/octo-cli/internal/output/` — envelope.go, errors.go (ExitError pattern)
-- `.references/axocli/src/lib.rs` — json_errors mode (dual output pattern)
+- `.references/octo-cli/internal/output/envelope.go` — success/error envelope implementation
+- `.references/octo-cli/internal/output/errors.go` — ExitError struct with Type/Code/Message/Hint
+- `.references/axocli/src/lib.rs` — dual json+human error output (report_error fn)
 
 ## Acceptance criteria
 
 - [ ] Global `-o json` flag available on all commands
-- [ ] Errors emit JSON envelope to stderr (last line) when -o json active
-- [ ] Error kind field uses fixed vocabulary (8 types declared)
+- [ ] Errors emit JSON envelope as last line of stderr when -o json active
+- [ ] Error kind field uses fixed vocabulary (8 types)
 - [ ] Hint field present when remediation is deterministic
 - [ ] Exit codes consistent: 1=domain, 2=operational
-- [ ] Without -o json, stderr text output unchanged (backward compatible)
+- [ ] Without -o json, stderr text output unchanged
 - [ ] Mutation success emits `{"ok": true, "result": "...", "changed": ...}` to stdout
 - [ ] `tkt capabilities` declares error kinds with exit_code + retryable
-- [ ] `ready --json` still works (backward compat alias)
+- [ ] `ready --json` backward compat alias works
 
 ## Out of scope
 
-- Full clispec v0.3 schema command (separate ticket — would declare all commands, effects, cardinality)
-- Pagination (no unbounded collections in tkt currently)
-- `--output yaml`/`--output text` (just json for now; text is the default)
-- Auto-detect piped output (future clispec alignment)
+- Full clispec v0.3 schema command (aspirational standard, no adoption yet)
+- Pagination (tkt has no unbounded collections)
+- Auto-detect piped output format
+- `--output yaml`/`--output text` variants
