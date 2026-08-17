@@ -28,6 +28,10 @@ struct Cli {
     #[arg(long, global = true)]
     dry_run: bool,
 
+    /// Output format: json or text (default: text)
+    #[arg(short = 'o', long = "output", global = true)]
+    output_format: Option<String>,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -275,11 +279,19 @@ pub fn run() -> i32 {
     // Store dry-run flag
     crate::DRY_RUN.store(cli.dry_run, std::sync::atomic::Ordering::Relaxed);
 
+    // Store JSON output flag
+    let json_output = cli
+        .output_format
+        .as_deref()
+        .map(|f| f.eq_ignore_ascii_case("json"))
+        .unwrap_or(false);
+    crate::JSON_OUTPUT.store(json_output, std::sync::atomic::Ordering::Relaxed);
+
     // Initialize color mode from --color flag and environment
     crate::color::init(cli.color.as_deref());
 
     let result = match cli.command {
-        Commands::Ready { json } => crate::commands::ready::run(json),
+        Commands::Ready { json } => crate::commands::ready::run(json || json_output),
         Commands::Init {
             write,
             target,
@@ -424,10 +436,21 @@ pub fn run() -> i32 {
     let exit_code = match result {
         Ok(code) => code,
         Err(e) => {
-            if e.downcast_ref::<crate::DomainError>().is_some() {
-                eprintln!("tkt: {} {}", crate::color::sym_err(), e);
-                1
+            if let Some(de) = e.downcast_ref::<crate::DomainError>() {
+                let code = de.kind.exit_code();
+                if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
+                    emit_json_error(de);
+                }
+                eprintln!("tkt: {} {}", crate::color::sym_err(), de.message);
+                code
             } else {
+                if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
+                    let envelope = format!(
+                        "{{\"ok\":false,\"error\":{{\"kind\":\"io\",\"message\":{}}},\"exit_code\":2}}",
+                        json_escape(&e.to_string())
+                    );
+                    eprintln!("{}", envelope);
+                }
                 eprintln!("tkt: {} crash: {}", crate::color::sym_err(), e);
                 2
             }
@@ -510,4 +533,47 @@ fn record_telemetry(cmd: &str, exit_code: i32, duration_ms: u64) {
     };
 
     telemetry::record_event(&event);
+}
+
+/// Emit a structured JSON error envelope to stderr (last line).
+fn emit_json_error(de: &crate::DomainError) {
+    let hint_part = match &de.hint {
+        Some(h) => format!(",\"hint\":{}", json_escape(h)),
+        None => String::new(),
+    };
+    let envelope = format!(
+        "{{\"ok\":false,\"error\":{{\"kind\":\"{}\",\"message\":{}{}}},\"exit_code\":{}}}",
+        de.kind.as_str(),
+        json_escape(&de.message),
+        hint_part,
+        de.kind.exit_code()
+    );
+    eprintln!("{}", envelope);
+}
+
+/// Escape a string as a JSON string literal (with quotes).
+fn json_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c.is_control() => {
+                out.push_str(&format!("\\u{:04x}", c as u32));
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
+/// Emit a structured JSON success envelope to stdout.
+#[allow(dead_code)]
+pub(crate) fn emit_json_success(result: &str) {
+    println!("{{\"ok\":true,\"result\":{}}}", json_escape(result));
 }

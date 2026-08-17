@@ -6,10 +6,30 @@ use anyhow::Result;
 
 use crate::git;
 
-/// Bail with a domain error (exit code 1).
+/// Bail with a domain error (exit code 1 or 2 depending on kind).
+/// Usage:
+///   domain_bail!(NotFound, "ticket {} not found", id)
+///   domain_bail!(GateFailed, "message", hint: "use --force")
+///   domain_bail!("message")  // defaults to Validation kind
 macro_rules! domain_bail {
+    ($kind:ident, $fmt:literal $(, $arg:expr)* , hint: $hint:expr) => {
+        return Err($crate::DomainError::with_hint(
+            $crate::ErrorKind::$kind,
+            format!($fmt $(, $arg)*),
+            $hint.to_string(),
+        ).into())
+    };
+    ($kind:ident, $fmt:literal $(, $arg:expr)*) => {
+        return Err($crate::DomainError::new(
+            $crate::ErrorKind::$kind,
+            format!($fmt $(, $arg)*),
+        ).into())
+    };
     ($($arg:tt)*) => {
-        return Err($crate::DomainError(format!($($arg)*)).into())
+        return Err($crate::DomainError::new(
+            $crate::ErrorKind::Validation,
+            format!($($arg)*),
+        ).into())
     };
 }
 pub(crate) use domain_bail;
@@ -17,6 +37,12 @@ pub(crate) use domain_bail;
 /// Global quiet flag — set once at startup, read by command functions.
 pub(crate) fn is_quiet() -> bool {
     crate::QUIET.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Global JSON output flag — set once at startup.
+#[allow(dead_code)]
+pub(crate) fn is_json_output() -> bool {
+    crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed)
 }
 
 pub(crate) fn is_dry_run() -> bool {
@@ -57,6 +83,17 @@ pub(crate) fn success_msg(verb: &str, id: &str, slug: &str, detail: &str) -> Str
         slug,
         detail
     )
+}
+
+/// Print a success message — emits JSON envelope when -o json, human text otherwise.
+#[allow(dead_code)]
+pub(crate) fn print_success(verb: &str, id: &str, slug: &str, detail: &str) {
+    if is_json_output() {
+        let result = format!("{} {} {} ({})", verb, id, slug, detail);
+        crate::cli::emit_json_success(&result);
+    } else {
+        println!("{}", success_msg(verb, id, slug, detail));
+    }
 }
 
 /// Extract slug from a ticket filename like "01-my-slug.md" → "my-slug"

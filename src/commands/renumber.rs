@@ -16,7 +16,7 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
 
     // Plan
     let plan = RenumberPlan::single(&ctx.corpus, old_id, new_id, file_hint)
-        .map_err(|e| crate::DomainError(e.to_string()))?;
+        .map_err(|e| crate::DomainError::new(crate::ErrorKind::Validation, e.to_string()))?;
 
     // Apply
     let result = apply_renumber(&ctx.tickets_dir, &plan)?;

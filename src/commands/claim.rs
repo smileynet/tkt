@@ -12,11 +12,16 @@ pub fn run(id: &str) -> Result<i32> {
 
     if let Some(remote_status) = ctx.remote_status(t) {
         if remote_status != "open" {
-            domain_bail!("{} is {}, not open (updated on remote)", id, remote_status);
+            domain_bail!(
+                Conflict,
+                "{} is {}, not open (updated on remote)",
+                id,
+                remote_status
+            );
         }
     }
     if t.status != Status::Open {
-        domain_bail!("{} is {}, not open", t.id, t.status.as_str());
+        domain_bail!(AlreadyDone, "{} is {}, not open", t.id, t.status.as_str());
     }
 
     if is_dry_run() {

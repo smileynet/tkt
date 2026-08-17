@@ -23,7 +23,7 @@ pub fn run(
 
     if let Some(remote_status) = ctx.remote_status(t) {
         if remote_status == "done" {
-            domain_bail!("ticket {} was closed on remote", id);
+            domain_bail!(AlreadyDone, "ticket {} was closed on remote", id);
         }
     }
 
@@ -65,10 +65,13 @@ pub fn run(
             file.set_env(None);
         } else {
             let parsed = Env::parse(env_val).map_err(|_| {
-                crate::DomainError(format!(
-                    "env must be one of {} (or '' to clear)",
-                    core::ENV_VALUES.join("/")
-                ))
+                crate::DomainError::new(
+                    crate::ErrorKind::Validation,
+                    format!(
+                        "env must be one of {} (or '' to clear)",
+                        core::ENV_VALUES.join("/")
+                    ),
+                )
             })?;
             file.set_env(Some(parsed));
         }
@@ -93,7 +96,8 @@ pub fn run(
             file.set_priority(None);
         } else {
             let parsed = Priority::parse(prio_val).ok_or_else(|| {
-                crate::DomainError(
+                crate::DomainError::new(
+                    crate::ErrorKind::Validation,
                     "priority must be one of urgent/high/medium/low (or '' to clear)".to_string(),
                 )
             })?;
@@ -108,11 +112,14 @@ pub fn run(
             );
         }
         let parsed = Status::parse(status_val).map_err(|_| {
-            crate::DomainError(format!(
-                "status must be one of {} (got {:?})",
-                core::STATUS_VALUES.join("/"),
-                status_val
-            ))
+            crate::DomainError::new(
+                crate::ErrorKind::Validation,
+                format!(
+                    "status must be one of {} (got {:?})",
+                    core::STATUS_VALUES.join("/"),
+                    status_val
+                ),
+            )
         })?;
         file.set_status(parsed);
         changed.push("status");

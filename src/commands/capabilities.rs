@@ -70,6 +70,22 @@ pub fn run() -> Result<i32> {
         "config": {
             "user": "~/.config/tkt/config.toml",
             "project": ".tickets/config.toml"
+        },
+        "errors": [
+            {"kind": "not_found", "exit_code": 1, "retryable": false, "description": "Ticket or resource does not exist"},
+            {"kind": "already_done", "exit_code": 1, "retryable": false, "description": "Ticket already closed or not in expected state"},
+            {"kind": "conflict", "exit_code": 1, "retryable": true, "description": "Push race or claim conflict — retry with fresh state"},
+            {"kind": "gate_failed", "exit_code": 1, "retryable": false, "description": "Quality gate blocked operation (ACs, evidence, force)"},
+            {"kind": "validation", "exit_code": 1, "retryable": false, "description": "Invalid input (bad priority, slug, status, etc.)"},
+            {"kind": "cycle", "exit_code": 1, "retryable": false, "description": "Dependency cycle detected"},
+            {"kind": "io", "exit_code": 2, "retryable": false, "description": "Filesystem or git subprocess failure"},
+            {"kind": "parse", "exit_code": 2, "retryable": false, "description": "Ticket file could not be parsed"}
+        ],
+        "output": {
+            "flag": "--output / -o",
+            "formats": ["json", "text"],
+            "default": "text",
+            "error_envelope": "last line of stderr when -o json"
         }
     });
     println!("{}", serde_json::to_string_pretty(&json).unwrap());

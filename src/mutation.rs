@@ -29,9 +29,11 @@ impl MutationContext {
         let repo = git::repo_root(&cwd)?;
         let tickets_dir = repo.join(".tickets");
         if !tickets_dir.is_dir() {
-            return Err(
-                DomainError(format!("no .tickets/ directory in {}", repo.display())).into(),
-            );
+            return Err(DomainError::new(
+                crate::ErrorKind::NotFound,
+                format!("no .tickets/ directory in {}", repo.display()),
+            )
+            .into());
         }
 
         let config = load_project_config(&tickets_dir);
@@ -89,8 +91,13 @@ impl MutationContext {
 
     /// Find a ticket by ID in the loaded corpus. Returns a domain error if not found.
     pub fn find_ticket(&self, id: &str) -> Result<&Ticket> {
-        core::find_ticket(&self.corpus, id)
-            .map_err(|_| DomainError(format!("no ticket with id {:?}", id)).into())
+        core::find_ticket(&self.corpus, id).map_err(|_| {
+            DomainError::new(
+                crate::ErrorKind::NotFound,
+                format!("no ticket with id {:?}", id),
+            )
+            .into()
+        })
     }
 
     /// Check the remote status of a ticket. Returns `Some(status_string)` if remote

@@ -18,20 +18,26 @@ pub fn run(
     let t = ctx.find_ticket(id)?;
 
     if force && !ctx.config.close_allow_force {
-        domain_bail!("--force is disabled by project config (close.allow_force = false)");
+        domain_bail!(
+            GateFailed,
+            "--force is disabled by project config (close.allow_force = false)"
+        );
     }
 
     if ctx.config.close_require_resolution && note.is_none() && !force {
-        domain_bail!("project config requires --resolution (or --note) to close a ticket");
+        domain_bail!(
+            GateFailed,
+            "project config requires --resolution (or --note) to close a ticket"
+        );
     }
 
     if let Some(remote_status) = ctx.remote_status(t) {
         if remote_status == "done" {
-            domain_bail!("{} is already done (updated on remote)", id);
+            domain_bail!(AlreadyDone, "{} is already done (updated on remote)", id);
         }
     }
     if t.status == Status::Done {
-        domain_bail!("{} is already done", t.id);
+        domain_bail!(AlreadyDone, "{} is already done", t.id);
     }
 
     // --- Evidence / validation_criteria pairing ---
@@ -45,6 +51,7 @@ pub fn run(
     // Config-driven gate: require_validation_criteria
     if ctx.config.close_require_validation_criteria && criteria.is_empty() && !force {
         domain_bail!(
+            GateFailed,
             "project config requires validation_criteria on tickets being closed (use --force to override)"
         );
     }
@@ -54,6 +61,7 @@ pub fn run(
         match ctx.config.close_require_validation_evidence.as_str() {
             "true" => {
                 domain_bail!(
+                    GateFailed,
                     "{} validation criteria present but no --evidence provided (use --force to override)",
                     criteria.len()
                 );
@@ -138,6 +146,7 @@ pub fn run(
         && !force
     {
         domain_bail!(
+            GateFailed,
             "all {} acceptance criteria are unchecked — check at least one with --ac, use --check-all, or use --force to close anyway",
             before_stats.total
         );
