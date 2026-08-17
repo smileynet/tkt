@@ -10,8 +10,15 @@ priority: low
 
 ## What to build
 
-TBD
+Two clippy `too_many_arguments` warnings (8/7 limit):
+
+- `src/commands/new.rs:12` — the `run()` function
+- `src/core/ticket.rs:736` — likely a constructor or builder
+
+Fix by introducing a params struct or builder pattern for the offending signatures.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] `cargo clippy --all-targets` produces 0 warnings
+- [ ] No behavioral change to the commands
+- [ ] API remains internal (no public surface change)
