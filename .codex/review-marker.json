@@ -1,11 +1,11 @@
 {
   "schema_version": 2,
   "reviewer": "codex",
-  "reviewed_at": "2026-08-09T15:41:04Z",
+  "reviewed_at": "2026-08-18T03:36:48Z",
   "verdict": "changes_requested",
   "commits": {
     "scope": "all ancestors through reviewed_through, inclusive",
-    "reviewed_through": "260c09e7ac9feffa959a9754b981dcce52c9e004"
+    "reviewed_through": "7082cd1a5e9ce89514a3c80645af01a1292354e4"
   },
   "ticket_source": {
     "type": "tkt",
@@ -15,67 +15,99 @@
   "tickets": [
     {
       "path": ".tickets/01-cargo-dist-release.md",
-      "blob": "c37ba1451ffd6c6be8617ce5b6090ec03521b25e"
+      "blob": "1e29c5190557d262c824c4655fb1f66f6b7e0f46"
     },
     {
       "path": ".tickets/02-parity-race-detection.md",
-      "blob": "c30c3f0fdd8fa218a1b12685e2b7c56127c403f5"
+      "blob": "de7f85f55d06b098602e4d34748842e0d2ea1c77"
     },
     {
       "path": ".tickets/03-parity-input-validation.md",
-      "blob": "d25f51154966128f702ac27752544c5244f7ce72"
+      "blob": "9f64b96c07f7ada0cb47d1ab0eba48c691ea0654"
     },
     {
       "path": ".tickets/04-parity-cycle-detection.md",
-      "blob": "610f65028a3dfd4a9c1c884cbefcba45f166bc8c"
+      "blob": "194dc77438a2d519a28f9921110432095ae3f0ca"
     },
     {
       "path": ".tickets/05-remove-python-tkt.md",
-      "blob": "d2c3d984816807a984597d0a79b8d5f57ee06783"
+      "blob": "1b2197042ab7815d05e9b8c09e91baaab7e0c445"
     },
     {
       "path": ".tickets/06-regex-compile-once.md",
-      "blob": "d91d219802424fefde17ea8cf1743072e0b4264c"
+      "blob": "97e598ad33208ce0861909d4f4cd7fe0c343bf4c"
     },
     {
       "path": ".tickets/07-fix-push-propagation.md",
-      "blob": "2af8b83aa1226608ac662dfeb7cdd1b91a39b728"
+      "blob": "9e3e36715759cb39f15743f9f1076dec0fd8cabe"
     },
     {
       "path": ".tickets/08-yaml-json-escaping.md",
-      "blob": "935c76629784d5e74e7a1c91e60edf1187faaab8"
+      "blob": "42e8fd4e480488faf5d707e41cbc799c4cfb29cc"
     },
     {
       "path": ".tickets/09-exit-code-contract.md",
-      "blob": "bd2a7949ad250039c2670e0a3ca08852e5ef58ed"
+      "blob": "e2d44848c7d35e5ca87c8bffb07bfedceb25a923"
     },
     {
       "path": ".tickets/10-cross-platform-dates.md",
-      "blob": "86c42f42b6e573fd0ca0905044c412b8c9e5dc3d"
+      "blob": "a49ab95a03bccdb852f5e88b85ddee86f0cb4929"
+    },
+    {
+      "path": ".tickets/100-own-skill-deployment.md",
+      "blob": "92776ff6066d5dd550e0d968bb54a1a6904c3ec5"
+    },
+    {
+      "path": ".tickets/101-disable-force-close.md",
+      "blob": "f8c7f40507146fde82e2399011fe84a92d3d66c7"
+    },
+    {
+      "path": ".tickets/102-unified-config-cascade.md",
+      "blob": "9dac1522969a9bd4a69df6fa6ef71ae5b4ff6f4e"
+    },
+    {
+      "path": ".tickets/103-unified-config-cascade.md",
+      "blob": "0db5bad16b090fe94a6aaa92222806d1e774f071"
+    },
+    {
+      "path": ".tickets/104-agentskills-conformance.md",
+      "blob": "5a84a4273182dd10b3fe32d8a64dd95d142e649b"
+    },
+    {
+      "path": ".tickets/105-wire-json-success.md",
+      "blob": "6643249c53e1bbf3718a4f32523f9ee86b264843"
+    },
+    {
+      "path": ".tickets/106-json-escape-robustness.md",
+      "blob": "b550d735d91a055cb8a62a44a2e72c414835b0b9"
+    },
+    {
+      "path": ".tickets/107-fix-too-many-args-warnings.md",
+      "blob": "fcfd37437028dbaaae03c940dfa5621f6c689710"
     },
     {
       "path": ".tickets/11-query-command.md",
-      "blob": "c56b858bfbe4e4e776df789b390cba29c64f5275"
+      "blob": "f684526f8175254805be89ea19a96999da1344d4"
     },
     {
       "path": ".tickets/12-parity-test-harness.md",
-      "blob": "9658daeaf22953fc366f9730a207fe1930578cde"
+      "blob": "519702614dd4c47f0ba69f55773cfcde8dc74fbb"
     },
     {
       "path": ".tickets/13-failure-path-tests.md",
-      "blob": "e5edf976ef41323cdc86d238cd9f2526407444ba"
+      "blob": "49bd077356728a016e53293ec256198f4c621f5d"
     },
     {
       "path": ".tickets/14-git-transaction.md",
-      "blob": "4dacfe2c84ba72e314bf96ba47238b89a7c7a5f5"
+      "blob": "5844d2629a9b0f2410e969e114a8823006bedfe2"
     },
     {
       "path": ".tickets/15-mutation-context.md",
-      "blob": "0411a0f8ac1daeb491c094aad08dcb079220dd73"
+      "blob": "66f32c05051614794b147f8c30ea8f1be1295e44"
     },
     {
       "path": ".tickets/16-findings-module.md",
-      "blob": "78aa3bac5a295ee2a215a459e13796dac2bb789e"
+      "blob": "87d579602797bf9203854d94103771678ff80095"
     },
     {
       "path": ".tickets/17-ticket-ticketfile-split.md",
@@ -119,7 +151,7 @@
     },
     {
       "path": ".tickets/27-close-workflow-improvements.md",
-      "blob": "ef65c08fa7131eff57c35a1fffe7f9c4a6a4eacb"
+      "blob": "cb2e19f72b0a10ad0a792d463f69279caab06b9b"
     },
     {
       "path": ".tickets/28-ux-improvements-audit.md",
@@ -127,27 +159,27 @@
     },
     {
       "path": ".tickets/29-codex-review-findings-208b38b.md",
-      "blob": "1a483ca9083cade91f843d0dc164f39d4e74184d"
+      "blob": "f1aa9bb2a97d6c6dff2ea496435691ca1ff19bce"
     },
     {
       "path": ".tickets/30-close-shows-unblocked.md",
-      "blob": "ce1bcbb2225c86355b7ac52a7559a57c49ac9f44"
+      "blob": "5026e04ca52df4d1ee4c553a7626e38b16e88a6e"
     },
     {
       "path": ".tickets/31-output-consistency.md",
-      "blob": "6960572d1890aaa6888795f7be602b5dc285ba03"
+      "blob": "88d8023a987a1dfc0c413c86c0fd28c5cf561332"
     },
     {
       "path": ".tickets/32-ready-hierarchy.md",
-      "blob": "ea1cf2dc525e5544dbe36496b0f6665972ebddb2"
+      "blob": "084d53fe5949ffc0d492896762b7a6ea2906c063"
     },
     {
       "path": ".tickets/33-quiet-flag.md",
-      "blob": "08e23317245eb7c6efbc522db20aa742397c48b8"
+      "blob": "00007555ef75639c7a76b3782add61e916b214e6"
     },
     {
       "path": ".tickets/34-audit-command.md",
-      "blob": "0d4f8c6323a5602f06b9de50fcce47c701ab3b57"
+      "blob": "aa5f1ae129504599f589cfd71dd5d37c2db541f9"
     },
     {
       "path": ".tickets/35-close-workflow-improvements.md",
@@ -155,27 +187,27 @@
     },
     {
       "path": ".tickets/36-agent-command-discovery.md",
-      "blob": "77aa8627f0a04e05b57889c0876eff9bbd4e2226"
+      "blob": "500c78e7b2c598b4726378e38e60ef07554c9733"
     },
     {
       "path": ".tickets/37-skill-distribution-research.md",
-      "blob": "561c150e384add9398bf44445c9c558391e68a4b"
+      "blob": "ec20a1d517cc00015d2762550157416e79418881"
     },
     {
       "path": ".tickets/38-investigate-godot-helper-crashes.md",
-      "blob": "38264bd0903982d566b53d38a1d0a15bdf2c23e4"
+      "blob": "35cf613b6d2619e37577df7da8ac3975fdfa5346"
     },
     {
       "path": ".tickets/39-investigate-herdr-recall-crashes.md",
-      "blob": "cb4f161bebf413c4ee9ba8d1d349e8a5cdc4b2cf"
+      "blob": "a577e17d79702a2e47149562544107485afe6aab"
     },
     {
       "path": ".tickets/40-graceful-degradation.md",
-      "blob": "796fb8ffe2803a1c8f9b6caad2c9b8d66e2d5632"
+      "blob": "6c8a101b1f306091e514c4c9943d9a4159c72fa7"
     },
     {
       "path": ".tickets/41-evaluate-claim-usage.md",
-      "blob": "499810d933168189dc38d86c0cd879c54a51ba47"
+      "blob": "32d80f3f5efa630e51600a813a8048e1a2c38681"
     },
     {
       "path": ".tickets/42-telemetry-test-noise.md",
@@ -183,7 +215,7 @@
     },
     {
       "path": ".tickets/43-mutation-latency.md",
-      "blob": "bcc38315f58ad408a490bbe0ae614b130909d657"
+      "blob": "d36db898fc19cf86b7112cbc21fff9b23639d9ae"
     },
     {
       "path": ".tickets/44-multi-level-priority.md",
@@ -191,11 +223,11 @@
     },
     {
       "path": ".tickets/45-self-update-check.md",
-      "blob": "0cfddb968df5628f955066ec08f15b4e3d03b484"
+      "blob": "0b9e9158a7ad3835f403c0777cc119ff46b045f7"
     },
     {
       "path": ".tickets/46-filters-and-views.md",
-      "blob": "2cfa7d61d302449615d6ea9248b65ce2e25e3b76"
+      "blob": "b47e79475a6e12a416742e3cbd6ce4a20325bed5"
     },
     {
       "path": ".tickets/47-project-config.md",
@@ -211,7 +243,7 @@
     },
     {
       "path": ".tickets/50-review-findings-b4df8ea.md",
-      "blob": "a20c99968a3ae549704fcf8b3ce219f80afe70c9"
+      "blob": "4154b8d6103529d0f693f7963bc31b96b3e405ff"
     },
     {
       "path": ".tickets/51-fix-windows-path-test.md",
@@ -227,7 +259,7 @@
     },
     {
       "path": ".tickets/54-scope-check-all-to-ac-section.md",
-      "blob": "a43ff88adf73f749cc65dc09a7474d4aff74d34c"
+      "blob": "edf0b85748a830cfa9187e1ff96bbe40a6fa1ba6"
     },
     {
       "path": ".tickets/55-gate-edit-on-quiet.md",
@@ -239,7 +271,7 @@
     },
     {
       "path": ".tickets/57-rename-undo-commit-hard.md",
-      "blob": "dc6cdf423b63d66520779c670f8f683b28731acd"
+      "blob": "49d94875791944dfb1e4d2a9d0ea415ec8a01241"
     },
     {
       "path": ".tickets/58-consolidate-quiet-flag.md",
@@ -255,11 +287,11 @@
     },
     {
       "path": ".tickets/61-auto-renumber-on-collision.md",
-      "blob": "47605e639fce55bcece97dd5a7c5ef5a6b3f0f9b"
+      "blob": "ead00307e12b5643a63d3ef03c8fd0504c1e5072"
     },
     {
       "path": ".tickets/62-backlog-status.md",
-      "blob": "1a938b4c07fbd349a20581c41e34e9c6628a8c1f"
+      "blob": "2f69837a96158814d6f3af8eae12e60197c2e7b4"
     },
     {
       "path": ".tickets/63-spike-worktree-awareness.md",
@@ -268,6 +300,146 @@
     {
       "path": ".tickets/64-release-automation.md",
       "blob": "0b5ccc9e9032051d029775015d805fd930baacb6"
+    },
+    {
+      "path": ".tickets/65-codex-review-findings-260c09e.md",
+      "blob": "bb44ef3ba48f2243cd3c08d0ef1445164f4800ff"
+    },
+    {
+      "path": ".tickets/66-dist-config-migration.md",
+      "blob": "f4827c216d90287d05abea402fef93653f0c9064"
+    },
+    {
+      "path": ".tickets/67-adopt-agent-plugins.md",
+      "blob": "41a93bac44f6bc79a75fb191a87ae3a18eec0196"
+    },
+    {
+      "path": ".tickets/68-init-command.md",
+      "blob": "04de34a99ef674f24ab10decd9c223a0ed533e38"
+    },
+    {
+      "path": ".tickets/69-agent-integrations.md",
+      "blob": "ed6eefb0e309397d90ba7ffbc81eb590c30259d6"
+    },
+    {
+      "path": ".tickets/70-extract-commands.md",
+      "blob": "28d6bbf152ee4c1c8b3a878c8e50e353f10421fd"
+    },
+    {
+      "path": ".tickets/71-mutation-context.md",
+      "blob": "2b03cbec27301da1ecac5afe83f9bdd3c9584cfd"
+    },
+    {
+      "path": ".tickets/72-typed-ticket-mutations.md",
+      "blob": "487c68630037ee21f85a4863f72e18dffebfd64f"
+    },
+    {
+      "path": ".tickets/73-renumber-planning.md",
+      "blob": "6b8317dc021f8a10b2728fed3f80c3f43a7b2a71"
+    },
+    {
+      "path": ".tickets/74-extract-audit-rules.md",
+      "blob": "4fbc4af71ef092ffd6837e9b7632d41ee2ce5a19"
+    },
+    {
+      "path": ".tickets/75-validate-fix.md",
+      "blob": "084d07731e7d78d158a1436c18b9513e5652e07a"
+    },
+    {
+      "path": ".tickets/76-doctor-command.md",
+      "blob": "fd74f34fe10091d5947ba3983ce20992f1cd0dc9"
+    },
+    {
+      "path": ".tickets/77-migrate-command.md",
+      "blob": "9722f85c67c351d7d6ba1c1fa60e404fd4648ffe"
+    },
+    {
+      "path": ".tickets/78-lint-command.md",
+      "blob": "b971357713306ab2084030d5bec1d3830a5b530f"
+    },
+    {
+      "path": ".tickets/79-undo-command.md",
+      "blob": "889c1ac570ae70f86703d9e6bf1baeaef42671ed"
+    },
+    {
+      "path": ".tickets/80-context-system.md",
+      "blob": "5b3ff2ff90080453df7c13605ca1ac949666f4a1"
+    },
+    {
+      "path": ".tickets/81-dry-run-mutations.md",
+      "blob": "db62c7a0156da75fc1656b419996d45d87128964"
+    },
+    {
+      "path": ".tickets/82-urgency-scoring.md",
+      "blob": "b15268c87fbcbb985503d93789e649158d658a02"
+    },
+    {
+      "path": ".tickets/83-note-command.md",
+      "blob": "bc9e7775be7fe31f80d1939301e78e2ff1fc72cc"
+    },
+    {
+      "path": ".tickets/84-capabilities-schema.md",
+      "blob": "1bbf5e846810a745cd4062458693c3e19cc02ab6"
+    },
+    {
+      "path": ".tickets/85-structured-errors.md",
+      "blob": "9f1f6108896d6eedf19bc6ca93485939c2f345c7"
+    },
+    {
+      "path": ".tickets/86-github-import.md",
+      "blob": "d33d560cecc9b6686597d703258721319b1b154c"
+    },
+    {
+      "path": ".tickets/87-templates.md",
+      "blob": "d9bf9b31c57a9c5bf256d6087c40a905cae532de"
+    },
+    {
+      "path": ".tickets/88-done-report.md",
+      "blob": "6455cbecee293e71c208ae628548f70d5a0ee409"
+    },
+    {
+      "path": ".tickets/89-hooks.md",
+      "blob": "0f1ce066deb799dec6acaa95ed52919a71f36723"
+    },
+    {
+      "path": ".tickets/90-open-command.md",
+      "blob": "e387bad5bb7436d1e1d6d683fb1450301c5ce7b4"
+    },
+    {
+      "path": ".tickets/91-agent-close-validation.md",
+      "blob": "a3167e305427f6ac74db41b8d554c1b199fd3c7d"
+    },
+    {
+      "path": ".tickets/92-implement-validation-criteria.md",
+      "blob": "7815d828ed9bbc74eb9ffd89145b066d682f37ca"
+    },
+    {
+      "path": ".tickets/93-pluggable-schema.md",
+      "blob": "0a308c1e6b2c68b2ea52ea833f464c59f5f6b832"
+    },
+    {
+      "path": ".tickets/94-test-vc-flag.md",
+      "blob": "b4cbd1ca8623a1a7c5c0b249c51bdd26fe00064a"
+    },
+    {
+      "path": ".tickets/95-env-tags.md",
+      "blob": "59bf4ce01ad43403c0e1bba141cd96967a882dd5"
+    },
+    {
+      "path": ".tickets/96-cut-v020.md",
+      "blob": "db13d8ea906b9ef5ebb26e66d12573a87f88c709"
+    },
+    {
+      "path": ".tickets/97-crates-io-page-research.md",
+      "blob": "a7bfe4855a20405c7886231bb7c047e9fdd835a4"
+    },
+    {
+      "path": ".tickets/98-ac-quality-gate.md",
+      "blob": "65eeab0dda8913ea2a9ea1805050f23cd97db899"
+    },
+    {
+      "path": ".tickets/99-configurable-update-check.md",
+      "blob": "3fe4030043e81fc09223dc358e72ac9b8b5054d7"
     }
   ],
   "adoption": {
