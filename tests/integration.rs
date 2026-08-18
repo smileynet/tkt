@@ -1835,6 +1835,47 @@ fn test_evidence_gate_blocks_when_configured() {
 }
 
 #[test]
+fn test_evidence_duplicate_named_index_rejected() {
+    let (_tmp, clone) = setup_repo();
+    // Create a ticket with 2 validation criteria
+    let ticket_content = "---\nid: \"02\"\ntitle: \"Two criteria\"\nstatus: open\nblocked_by: []\nvalidation_criteria:\n  - \"first check\"\n  - \"second check\"\n---\n\n# Two criteria\n";
+    std::fs::write(clone.join(".tickets/02-two-criteria.md"), ticket_content).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add ticket"]);
+
+    // Enable evidence gate
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_validation_evidence = \"true\"\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "config"]);
+
+    // Try to close with duplicate named index (1=foo, 1=bar) — should fail
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--check-all",
+            "--note",
+            "done",
+            "--evidence",
+            "1=first evidence",
+            "--evidence",
+            "1=duplicate first",
+        ],
+    );
+    assert_eq!(code, 1, "duplicate evidence index should fail: {}", out);
+    assert!(
+        out.contains("duplicate evidence"),
+        "should mention duplicate: {}",
+        out
+    );
+}
+
+#[test]
 fn test_init_creates_tickets_dir_and_config() {
     let tmp = tempfile::tempdir().unwrap();
     let repo = tmp.path().join("repo");

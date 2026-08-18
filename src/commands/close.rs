@@ -286,11 +286,20 @@ fn parse_evidence(evidence: &[String], criteria_count: usize) -> Result<Vec<Stri
             if let Ok(n) = prefix.parse::<usize>() {
                 if n == 0 || n > criteria_count {
                     domain_bail!(
+                        GateFailed,
                         "--evidence {}={}: criterion {} does not exist (ticket has {})",
                         n,
                         &item[eq_pos + 1..],
                         n,
                         criteria_count
+                    );
+                }
+                if result[n - 1].is_some() {
+                    domain_bail!(
+                        GateFailed,
+                        "--evidence: criterion {} has duplicate evidence (index {} used twice)",
+                        n,
+                        n
                     );
                 }
                 result[n - 1] = Some(item[eq_pos + 1..].to_string());
@@ -303,6 +312,7 @@ fn parse_evidence(evidence: &[String], criteria_count: usize) -> Result<Vec<Stri
         }
         if positional_idx >= criteria_count {
             domain_bail!(
+                GateFailed,
                 "--evidence: more evidence items than validation criteria ({})",
                 criteria_count
             );
@@ -311,7 +321,25 @@ fn parse_evidence(evidence: &[String], criteria_count: usize) -> Result<Vec<Stri
         positional_idx += 1;
     }
 
-    // Convert Option<String> to String (unfilled slots become empty)
+    // Verify all slots are filled — unfilled slots mean missing evidence
+    let unfilled: Vec<usize> = result
+        .iter()
+        .enumerate()
+        .filter(|(_, v)| v.is_none())
+        .map(|(i, _)| i + 1)
+        .collect();
+    if !unfilled.is_empty() {
+        domain_bail!(
+            GateFailed,
+            "--evidence: criteria {} have no evidence (provide positional or named evidence for each)",
+            unfilled
+                .iter()
+                .map(|n| n.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
+
     Ok(result
         .into_iter()
         .map(|opt| opt.unwrap_or_default())
