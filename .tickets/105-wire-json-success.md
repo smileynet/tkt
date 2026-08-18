@@ -1,7 +1,7 @@
 ---
 id: "105"
 title: "Wire emit_json_success/print_success into mutation commands"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 ---
