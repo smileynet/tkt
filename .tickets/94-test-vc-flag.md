@@ -1,7 +1,7 @@
 ---
 id: "94"
 title: "Test VC flag"
-status: open
+status: backlog
 blocked_by: []
 priority: low
 validation_criteria:
