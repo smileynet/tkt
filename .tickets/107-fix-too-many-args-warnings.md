@@ -4,6 +4,10 @@ title: "Fix clippy too_many_arguments warnings in new.rs and ticket.rs"
 status: in_progress
 blocked_by: []
 priority: low
+validation_criteria: 
+  - "cargo clippy 0 warnings"
+  - "cargo test passes"
+  - "no behavioral change"
 ---
 
 # Fix clippy too_many_arguments warnings in new.rs and ticket.rs
