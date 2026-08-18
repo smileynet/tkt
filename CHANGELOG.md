@@ -12,20 +12,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tkt init` command to set up a project and deploy AI agent instructions in one step
 - `tkt doctor` command to verify your setup is correct
 - `tkt doctor <path>` to scan all your projects at once and report health
+- `tkt lint` command to normalize ticket frontmatter style (quoting, field order, whitespace)
+- `tkt lint --check` for CI — exits 1 if any file would change
 - `tkt validate --fix` to automatically repair common ticket issues
 - Validation criteria on tickets — define what "done" means at creation time
 - Evidence on close — link proof to each criterion so reviewers see what was verified
 - Configurable enforcement for validation evidence (warn, require, or off)
 - `tkt audit` flags tickets closed without evidence when criteria were defined
 - `--dry-run` flag on all mutation commands — preview what would happen without writing
+- Global `-o json` flag — structured JSON output for all commands
+- Structured error envelopes — machine-parseable errors with kind, message, hint, and exit code
+- Error kind vocabulary (8 types) declared in `tkt capabilities` with retryable flags
 - Self-update check — notifies when a newer version is available (once per day, non-blocking)
 - Unified config cascade — user config provides global defaults, project config overrides per-repo
 - `close.allow_force` config — disable the `--force` escape hatch project-wide or globally
-- Git hash in `--version` output for dev build traceability (e.g., `tkt 0.1.0 (ea047fb)`)
+- Git hash in `--version` output for dev build traceability (e.g., `tkt 0.2.0 (ea047fb)`)
+- Agent Plugins conformance — ships `plugin.json` and `skills/tkt/SKILL.md` per agentskills.io spec
 
 ### Changed
 
 - `tkt config --show` now reports the source of each resolved value (env/project/user/default)
+- `ready --json` still works but `-o json ready` is now the canonical form
 - Clearer README and crate description
 
 ## [0.1.0] - 2026-08-09
