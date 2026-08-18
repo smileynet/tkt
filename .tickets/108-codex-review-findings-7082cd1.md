@@ -4,6 +4,10 @@ title: "Confirm and address Codex review findings through 7082cd1"
 status: in_progress
 blocked_by: []
 priority: high
+validation_criteria: 
+  - "F1 confirmed and fixed"
+  - "regression test passes"
+  - "cargo test 56 passed"
 ---
 
 # Confirm and address Codex review findings through 7082cd1
