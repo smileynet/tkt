@@ -5,11 +5,11 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use crate::color::{sym_err, sym_ok, sym_warn};
-use crate::commands::common::is_quiet;
+use crate::commands::common::{is_json_output, is_quiet};
 use crate::core::{self, Ticket};
 use crate::findings;
 
-pub fn run(path: Option<&str>, fix: bool) -> Result<i32> {
+pub fn run(path: Option<&str>, fix: bool, strict: bool) -> Result<i32> {
     if fix {
         eprintln!(
             "  {} --fix is not yet implemented for doctor (use `tkt validate --fix` per project)",
@@ -17,14 +17,14 @@ pub fn run(path: Option<&str>, fix: bool) -> Result<i32> {
         );
     }
     match path {
-        None => run_single_project(fix),
-        Some(p) => run_cross_project(Path::new(p), fix),
+        None => run_single_project(fix, strict),
+        Some(p) => run_cross_project(Path::new(p), fix, strict),
     }
 }
 
 // --- Single-project doctor (no path arg) ---
 
-fn run_single_project(fix: bool) -> Result<i32> {
+fn run_single_project(fix: bool, strict: bool) -> Result<i32> {
     let mut issues = 0;
 
     // Check 1: git available
@@ -105,7 +105,9 @@ fn run_single_project(fix: bool) -> Result<i32> {
                 .filter(|f| f.severity == "warning")
                 .count();
 
-            if errors == 0 && warnings == 0 {
+            let effective_errors = if strict { errors + warnings } else { errors };
+
+            if effective_errors == 0 && warnings == 0 {
                 println!("  {} no validation issues", sym_ok());
             } else {
                 if errors > 0 {
@@ -113,7 +115,16 @@ fn run_single_project(fix: bool) -> Result<i32> {
                     issues += errors;
                 }
                 if warnings > 0 {
-                    println!("  {} {} validation warnings", sym_warn(), warnings);
+                    if strict {
+                        println!(
+                            "  {} {} validation warnings (strict: treated as errors)",
+                            sym_err(),
+                            warnings
+                        );
+                        issues += warnings;
+                    } else {
+                        println!("  {} {} validation warnings", sym_warn(), warnings);
+                    }
                 }
             }
         }
@@ -137,22 +148,26 @@ fn run_single_project(fix: bool) -> Result<i32> {
 
 // --- Cross-project scan ---
 
-fn run_cross_project(scan_path: &Path, fix: bool) -> Result<i32> {
+fn run_cross_project(scan_path: &Path, fix: bool, strict: bool) -> Result<i32> {
     let projects = find_ticket_dirs(scan_path);
+    let non_tkt = find_non_tkt_git_repos(scan_path, &projects);
+    let json_mode = is_json_output();
 
-    if projects.is_empty() {
-        println!(
-            "No .tickets/ directories found under {}",
-            scan_path.display()
-        );
+    if projects.is_empty() && non_tkt.is_empty() {
+        if json_mode {
+            // nothing to report
+        } else {
+            println!("No projects found under {}", scan_path.display());
+        }
         return Ok(0);
     }
 
-    if !is_quiet() {
+    if !json_mode && !is_quiet() {
         println!(
-            "Scanning {} ({} projects found)\n",
+            "Scanning {} ({} tkt projects, {} non-tkt repos)\n",
             scan_path.display(),
-            projects.len()
+            projects.len(),
+            non_tkt.len()
         );
     }
 
@@ -161,9 +176,9 @@ fn run_cross_project(scan_path: &Path, fix: bool) -> Result<i32> {
     let mut broken = 0;
 
     for tickets_dir in &projects {
-        let project_name = tickets_dir
-            .parent()
-            .and_then(|p| p.file_name())
+        let project_path = tickets_dir.parent().unwrap_or(tickets_dir);
+        let project_name = project_path
+            .file_name()
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| "unknown".to_string());
 
@@ -182,10 +197,21 @@ fn run_cross_project(scan_path: &Path, fix: bool) -> Result<i32> {
                     .filter(|f| f.severity == "warning")
                     .count();
 
-                if errors == 0 && warnings == 0 {
+                let effective_errors = if strict { errors + warnings } else { errors };
+
+                if json_mode {
+                    println!(
+                        "{{\"path\":{},\"status\":\"{}\",\"tickets\":{},\"errors\":{},\"warnings\":{}}}",
+                        serde_json::to_string(&project_path.display().to_string()).unwrap_or_default(),
+                        if effective_errors > 0 { "fail" } else { "pass" },
+                        count,
+                        errors,
+                        warnings
+                    );
+                } else if effective_errors == 0 && warnings == 0 {
                     println!("  {} {} ({} tickets)", sym_ok(), project_name, count);
                     clean += 1;
-                } else if errors == 0 {
+                } else if effective_errors == 0 {
                     println!(
                         "  {} {} ({} tickets, {} warnings)",
                         sym_warn(),
@@ -200,27 +226,56 @@ fn run_cross_project(scan_path: &Path, fix: bool) -> Result<i32> {
                         sym_err(),
                         project_name,
                         count,
-                        errors
+                        effective_errors
                     );
                     broken += 1;
                 }
             }
             Err(_) => {
-                println!(
-                    "  {} {} ({} tickets, parse errors)",
-                    sym_err(),
-                    project_name,
-                    count
-                );
+                if json_mode {
+                    println!(
+                        "{{\"path\":{},\"status\":\"parse_error\",\"tickets\":{}}}",
+                        serde_json::to_string(&project_path.display().to_string())
+                            .unwrap_or_default(),
+                        count
+                    );
+                } else {
+                    println!(
+                        "  {} {} ({} tickets, parse errors)",
+                        sym_err(),
+                        project_name,
+                        count
+                    );
+                }
                 broken += 1;
             }
         }
     }
 
-    if !is_quiet() {
+    // Report non-tkt git repos
+    for repo_path in &non_tkt {
+        let name = repo_path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "unknown".to_string());
+
+        if json_mode {
+            println!(
+                "{{\"path\":{},\"status\":\"no_tickets\",\"is_git\":true}}",
+                serde_json::to_string(&repo_path.display().to_string()).unwrap_or_default()
+            );
+        } else {
+            println!("  · {} (git repo, no .tickets/)", name);
+        }
+    }
+
+    if !json_mode && !is_quiet() {
         println!(
-            "\nSummary: {} clean, {} fixable, {} broken",
-            clean, fixable, broken
+            "\nSummary: {} clean, {} fixable, {} broken, {} not using tkt",
+            clean,
+            fixable,
+            broken,
+            non_tkt.len()
         );
     }
 
@@ -278,6 +333,36 @@ fn find_ticket_dirs_recursive(dir: &Path, results: &mut Vec<PathBuf>, depth: u8)
             find_ticket_dirs_recursive(&path, results, depth - 1);
         }
     }
+}
+
+/// Find git repos under scan_path that DON'T have .tickets/ — the non-tkt projects.
+fn find_non_tkt_git_repos(scan_path: &Path, tkt_dirs: &[PathBuf]) -> Vec<PathBuf> {
+    let tkt_parents: std::collections::HashSet<PathBuf> = tkt_dirs
+        .iter()
+        .filter_map(|d| d.parent().map(|p| p.to_path_buf()))
+        .collect();
+
+    let mut non_tkt = Vec::new();
+    let Ok(entries) = std::fs::read_dir(scan_path) else {
+        return non_tkt;
+    };
+
+    for entry in entries.filter_map(|e| e.ok()) {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let name_str = entry.file_name().to_string_lossy().to_string();
+        if name_str.starts_with('.') {
+            continue;
+        }
+        // Is it a git repo?
+        if path.join(".git").exists() && !tkt_parents.contains(&path) {
+            non_tkt.push(path);
+        }
+    }
+    non_tkt.sort();
+    non_tkt
 }
 
 fn run_validate_checks(

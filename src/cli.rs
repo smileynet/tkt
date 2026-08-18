@@ -65,6 +65,9 @@ enum Commands {
         /// Apply safe fixes to fixable issues
         #[arg(long)]
         fix: bool,
+        /// Treat warnings as errors
+        #[arg(long)]
+        strict: bool,
     },
     /// Normalize ticket frontmatter style (quoting, field order, whitespace)
     Lint {
@@ -298,7 +301,9 @@ pub fn run() -> i32 {
             all,
             agent_only,
         } => crate::commands::init::run(write, target.as_deref(), all, agent_only),
-        Commands::Doctor { path, fix } => crate::commands::doctor::run(path.as_deref(), fix),
+        Commands::Doctor { path, fix, strict } => {
+            crate::commands::doctor::run(path.as_deref(), fix, strict)
+        }
         Commands::Lint { check, ids } => crate::commands::lint::run(check, &ids),
         Commands::New {
             slug,
