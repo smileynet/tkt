@@ -1,7 +1,7 @@
 ---
 id: "106"
 title: "Harden hand-rolled json_escape or replace with serde_json::to_string"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 ---
