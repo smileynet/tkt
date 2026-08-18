@@ -2,7 +2,6 @@
 
 Track tasks as markdown files in your git repo.
 
-[![CI](https://github.com/smileynet/tkt/actions/workflows/ci.yml/badge.svg)](https://github.com/smileynet/tkt/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/tkt.svg)](https://crates.io/crates/tkt)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -119,6 +118,10 @@ tkt close 03 --note "Deployed" --ac 1,2   # mark done, check acceptance criteria
 tkt edit 02 --title "New title" --blocked-by 01,03 --priority high
 tkt validate           # check for cycles, broken references, contract issues
 tkt validate --fix     # auto-repair fixable problems
+tkt lint               # normalize frontmatter style (quoting, field order)
+tkt lint --check       # CI mode: exit 1 if anything needs fixing
+tkt doctor             # health check for current project
+tkt doctor ~/code      # scan all projects, flag non-tkt repos
 tkt sync-plan --check  # compare ticket status vs a plan document
 tkt query              # dump everything as JSON Lines
 tkt blocked            # show tasks stuck waiting on dependencies
@@ -128,15 +131,18 @@ tkt blocked            # show tasks stuck waiting on dependencies
 
 | Flag | Used by | Effect |
 |------|---------|--------|
-| `--json` | ready | machine-readable output |
-| `--strict` | validate, sync-plan | treat warnings as errors |
+| `-o json` | all | structured JSON output (errors to stderr, data to stdout) |
+| `--dry-run` | new, claim, close, edit | preview what would happen without writing |
+| `--json` | ready | machine-readable output (alias for `-o json ready`) |
+| `--strict` | validate, sync-plan, doctor | treat warnings as errors |
 | `--brief` | validate, sync-plan | short human output |
 | `--blocked-by N,N` | new, batch, edit | set dependencies |
 | `--priority P` | new, batch, edit | urgent, high, medium (default), low |
 | `--note "..."` | close | explain what was done |
 | `--ac N,N` | close, edit | check acceptance criteria boxes |
 | `--check-all` | close | check all acceptance criteria at once |
-| `--force` | close | close even with unchecked criteria |
+| `--evidence "..."` | close | link proof to validation criteria |
+| `--vc "..."` | new, edit | set validation criteria (repeatable) |
 
 ## Task Format
 
@@ -172,6 +178,9 @@ enabled = true            # false for local-only repos (no network calls)
 [close]
 require_resolution = false  # require a --note when closing
 require_checked_acs = true  # require all acceptance criteria checked (default: true)
+require_validation_criteria = false  # require validation_criteria field
+require_validation_evidence = "warn"  # "true" | "warn" | "false"
+allow_force = true          # false to disable --force escape hatch
 
 [validate]
 strict = false            # treat warnings as errors
@@ -184,6 +193,8 @@ default_priority = "medium"
 ```
 
 Manage with `tkt config --list` or `tkt config --set push.enabled=false`.
+
+User config (`~/.config/tkt/config.toml`) provides global defaults; project config overrides per-repo. See `tkt config --show` for resolved values with sources.
 
 ## How It Works
 
