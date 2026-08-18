@@ -1,7 +1,7 @@
 ---
 id: "109"
 title: "tkt validate-all: cross-project health check with discovery"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria: 
