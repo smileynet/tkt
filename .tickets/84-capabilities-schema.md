@@ -4,6 +4,10 @@ title: "Enrich capabilities with JSON Schema input definitions"
 status: in_progress
 blocked_by: []
 priority: medium
+validation_criteria: 
+  - "capabilities output has inputSchema per command"
+  - "schemas use JSON Schema vocabulary"
+  - "cargo test passes"
 ---
 
 # Enrich capabilities with JSON Schema input definitions
