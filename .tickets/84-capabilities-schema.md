@@ -1,7 +1,7 @@
 ---
 id: "84"
 title: "Enrich capabilities with JSON Schema input definitions"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria: 
@@ -47,12 +47,12 @@ Also add `tkt capabilities --schema` as an alias that emphasizes the schema outp
 
 ## Acceptance criteria
 
-- [ ] Each command in capabilities output includes `inputSchema`
-- [ ] Schemas use standard JSON Schema Draft 7 vocabulary
-- [ ] Required fields marked correctly per command
-- [ ] Enum constraints match actual validation (priority, status, env)
-- [ ] `tkt capabilities --schema` works as explicit flag
-- [ ] Existing capabilities output remains backward-compatible (additive)
+- [x] Each command in capabilities output includes `inputSchema`
+- [x] Schemas use standard JSON Schema Draft 7 vocabulary
+- [x] Required fields marked correctly per command
+- [x] Enum constraints match actual validation (priority, status, env)
+- [x] `tkt capabilities --schema` works as explicit flag
+- [x] Existing capabilities output remains backward-compatible (additive)
 
 # Enrich capabilities with JSON Schema input definitions
 
@@ -63,3 +63,12 @@ TBD
 ## Acceptance criteria
 
 - [ ] TBD
+
+## Resolution (2026-08-18)
+
+All 11 commands have inputSchema. Effects declared. Backward compatible.
+
+### Verification
+1. ✓ capabilities output has inputSchema per command — "capabilities: 11 commands with inputSchema, JSON Schema Draft 7 vocabulary (type/enum/pattern/required)"
+2. ✓ schemas use JSON Schema vocabulary — "required fields correct: new=slug, claim/close/edit=id; enums match validation (4 priorities, 4 statuses, 3 envs)"
+3. ✓ cargo test passes — "cargo test: 55 passed, 0 warnings, backward compatible (additive only)"
