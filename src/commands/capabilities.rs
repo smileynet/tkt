@@ -1,4 +1,4 @@
-//! `tkt capabilities` — machine-readable feature manifest.
+//! `tkt capabilities` — machine-readable feature manifest with JSON Schema inputs.
 
 use anyhow::Result;
 
@@ -9,57 +9,144 @@ pub fn run() -> Result<i32> {
         "commands": {
             "ready": {
                 "description": "Show frontier (unblocked tickets)",
-                "flags": ["--json"],
-                "reads": true,
-                "mutates": false
+                "effects": "read_only",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "json": { "type": "boolean", "description": "Output as JSON Lines" }
+                    }
+                }
             },
             "new": {
                 "description": "Create and claim a new ticket",
-                "flags": ["--title", "--blocked-by", "--priority", "--env", "--spec", "--status"],
-                "reads": false,
-                "mutates": true
+                "effects": "non_idempotent",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "URL-safe ticket slug" },
+                        "title": { "type": "string", "description": "Human-readable title" },
+                        "blocked_by": { "type": "string", "description": "Comma-separated ticket IDs" },
+                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] },
+                        "env": { "type": "string", "enum": ["corp", "personal", "either"] },
+                        "spec": { "type": "string", "description": "Originating spec slug" },
+                        "status": { "type": "string", "enum": ["open", "backlog"], "default": "open" },
+                        "vc": { "type": "string", "description": "Validation criterion (repeatable)" }
+                    },
+                    "required": ["slug"]
+                }
+            },
+            "batch": {
+                "description": "Create multiple tickets in one push",
+                "effects": "non_idempotent",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "items": { "type": "array", "items": { "type": "string" }, "description": "slug[:title] pairs" },
+                        "blocked_by": { "type": "string", "description": "Comma-separated ticket IDs" },
+                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] },
+                        "env": { "type": "string", "enum": ["corp", "personal", "either"] },
+                        "spec": { "type": "string" }
+                    },
+                    "required": ["items"]
+                }
             },
             "claim": {
                 "description": "Mark ticket in_progress (pushed WIP)",
-                "flags": [],
-                "reads": false,
-                "mutates": true
+                "effects": "idempotent",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string", "description": "Ticket ID to claim" }
+                    },
+                    "required": ["id"]
+                }
             },
             "close": {
                 "description": "Mark ticket done with resolution",
-                "flags": ["--resolution", "--note", "--ac", "--check-all", "--force"],
-                "reads": false,
-                "mutates": true
+                "effects": "idempotent",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string", "description": "Ticket ID to close" },
+                        "resolution": { "type": "string", "description": "What was done (alias: --note)" },
+                        "ac": { "type": "string", "description": "Comma-separated AC indices to check" },
+                        "check_all": { "type": "boolean", "description": "Check all acceptance criteria" },
+                        "evidence": { "type": "array", "items": { "type": "string" }, "description": "Evidence strings mapped to validation criteria" }
+                    },
+                    "required": ["id"]
+                }
             },
             "edit": {
                 "description": "Surgical field corrections",
-                "flags": ["--title", "--blocked-by", "--priority", "--env", "--spec", "--status", "--ac"],
-                "reads": false,
-                "mutates": true
+                "effects": "idempotent",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string", "description": "Ticket ID to edit" },
+                        "title": { "type": "string" },
+                        "blocked_by": { "type": "string", "description": "Comma-separated IDs (or '' to clear)" },
+                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low", ""], "description": "Set or clear priority" },
+                        "env": { "type": "string", "enum": ["corp", "personal", "either", ""], "description": "Set or clear env" },
+                        "spec": { "type": "string", "description": "Set or clear spec" },
+                        "status": { "type": "string", "enum": ["open", "in_progress", "done", "backlog"] },
+                        "ac": { "type": "string", "description": "Comma-separated AC indices to check" },
+                        "vc": { "type": "string", "description": "Validation criterion (repeatable, replaces list)" }
+                    },
+                    "required": ["id"]
+                }
             },
             "query": {
                 "description": "Dump all tickets as JSON Lines",
-                "flags": [],
-                "reads": true,
-                "mutates": false
+                "effects": "read_only",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "status": { "type": "string", "enum": ["open", "in_progress", "done", "backlog"] },
+                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] }
+                    }
+                }
             },
             "validate": {
                 "description": "Check for cycles, dangling deps, contract issues",
-                "flags": ["--strict", "--brief"],
-                "reads": true,
-                "mutates": false
+                "effects": "read_only",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "strict": { "type": "boolean", "description": "Treat warnings as errors" },
+                        "brief": { "type": "boolean", "description": "Short human output" },
+                        "fix": { "type": "boolean", "description": "Auto-repair fixable issues" }
+                    }
+                }
+            },
+            "lint": {
+                "description": "Normalize ticket frontmatter style",
+                "effects": "idempotent",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "check": { "type": "boolean", "description": "Report without fixing (exit 1 if changes needed)" },
+                        "ids": { "type": "array", "items": { "type": "string" }, "description": "Specific ticket IDs to lint" }
+                    }
+                }
             },
             "config": {
                 "description": "Manage user/project configuration",
-                "flags": ["--set", "--get", "--unset", "--list", "--show"],
-                "reads": true,
-                "mutates": true
+                "effects": "idempotent",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "set": { "type": "string", "description": "Set key=value" },
+                        "get": { "type": "string", "description": "Get value by key" },
+                        "unset": { "type": "string", "description": "Remove key" },
+                        "list": { "type": "boolean", "description": "List user config" },
+                        "show": { "type": "boolean", "description": "Show resolved project config" }
+                    }
+                }
             },
             "capabilities": {
-                "description": "Machine-readable feature manifest",
-                "flags": [],
-                "reads": true,
-                "mutates": false
+                "description": "Machine-readable feature manifest with JSON Schema",
+                "effects": "read_only",
+                "inputSchema": { "type": "object", "properties": {} }
             }
         },
         "workflows": {
@@ -69,7 +156,8 @@ pub fn run() -> Result<i32> {
         },
         "config": {
             "user": "~/.config/tkt/config.toml",
-            "project": ".tickets/config.toml"
+            "project": ".tickets/config.toml",
+            "cascade": "CLI flag > env var > project > user > default"
         },
         "errors": [
             {"kind": "not_found", "exit_code": 1, "retryable": false, "description": "Ticket or resource does not exist"},
