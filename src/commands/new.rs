@@ -9,6 +9,7 @@ use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     slug: &str,
     title: Option<&str>,
@@ -94,8 +95,8 @@ pub fn run(
         return Ok(0);
     }
 
-    let content = core::new_ticket_text(
-        &tid,
+    let content = core::new_ticket_text(&core::NewTicketParams {
+        id: &tid,
         title,
         blocked_by,
         env,
@@ -103,7 +104,7 @@ pub fn run(
         priority,
         status,
         validation_criteria,
-    );
+    });
     std::fs::write(&path, &content)?;
 
     let rel_path = format!(".tickets/{}", filename);
@@ -128,8 +129,8 @@ pub fn run(
             let (tid2, _width) = GitTransaction::next_id(&names);
             let filename2 = format!("{}-{}.md", tid2, slug);
             let path2 = dir.join(&filename2);
-            let content2 = core::new_ticket_text(
-                &tid2,
+            let content2 = core::new_ticket_text(&core::NewTicketParams {
+                id: &tid2,
                 title,
                 blocked_by,
                 env,
@@ -137,7 +138,7 @@ pub fn run(
                 priority,
                 status,
                 validation_criteria,
-            );
+            });
             std::fs::write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;

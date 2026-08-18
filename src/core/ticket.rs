@@ -732,47 +732,51 @@ pub fn json_string_escape(s: &str) -> String {
     out
 }
 
+/// Parameters for creating a new ticket file.
+pub struct NewTicketParams<'a> {
+    pub id: &'a str,
+    pub title: &'a str,
+    pub blocked_by: &'a [String],
+    pub env: Option<&'a str>,
+    pub spec: Option<&'a str>,
+    pub priority: Option<&'a str>,
+    pub status: Option<&'a str>,
+    pub validation_criteria: &'a [String],
+}
+
 /// Generate the text for a new ticket file.
-pub fn new_ticket_text(
-    id: &str,
-    title: &str,
-    blocked_by: &[String],
-    env: Option<&str>,
-    spec: Option<&str>,
-    priority: Option<&str>,
-    status: Option<&str>,
-    validation_criteria: &[String],
-) -> String {
-    let status_val = status.unwrap_or("open");
+pub fn new_ticket_text(p: &NewTicketParams) -> String {
+    let status_val = p.status.unwrap_or("open");
     let mut fm_lines = vec![
-        format!("id: \"{}\"", yaml_scalar_escape(id)),
-        format!("title: \"{}\"", yaml_scalar_escape(title)),
+        format!("id: \"{}\"", yaml_scalar_escape(p.id)),
+        format!("title: \"{}\"", yaml_scalar_escape(p.title)),
         format!("status: {}", status_val),
     ];
-    let deps = blocked_by
+    let deps = p
+        .blocked_by
         .iter()
         .map(|d| format!("\"{}\"", yaml_scalar_escape(d)))
         .collect::<Vec<_>>()
         .join(", ");
     fm_lines.push(format!("blocked_by: [{}]", deps));
-    if let Some(e) = env {
+    if let Some(e) = p.env {
         fm_lines.push(format!("env: {}", e));
     }
-    if let Some(s) = spec {
+    if let Some(s) = p.spec {
         fm_lines.push(format!("spec: \"{}\"", yaml_scalar_escape(s)));
     }
-    if let Some(p) = priority {
-        fm_lines.push(format!("priority: {}", p));
+    if let Some(prio) = p.priority {
+        fm_lines.push(format!("priority: {}", prio));
     }
-    if !validation_criteria.is_empty() {
+    if !p.validation_criteria.is_empty() {
         fm_lines.push("validation_criteria:".to_string());
-        for vc in validation_criteria {
+        for vc in p.validation_criteria {
             fm_lines.push(format!("  - \"{}\"", yaml_scalar_escape(vc)));
         }
     }
     let body = format!(
         "\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
-        title
+        p.title
     );
     format!("---\n{}\n---\n{}", fm_lines.join("\n"), body)
 }
@@ -921,16 +925,16 @@ mod tests {
 
     #[test]
     fn new_ticket_text_escapes_title() {
-        let text = new_ticket_text(
-            "01",
-            "Fix \"ready\" command",
-            &[],
-            None,
-            None,
-            None,
-            None,
-            &[],
-        );
+        let text = new_ticket_text(&NewTicketParams {
+            id: "01",
+            title: "Fix \"ready\" command",
+            blocked_by: &[],
+            env: None,
+            spec: None,
+            priority: None,
+            status: None,
+            validation_criteria: &[],
+        });
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();
         assert!(t.title.contains("ready"));
