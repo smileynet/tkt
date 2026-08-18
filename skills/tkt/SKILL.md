@@ -45,8 +45,11 @@ tkt close <id> --note "..."  # mark done, append resolution
 tkt edit <id> --priority high --blocked-by 01,02
 tkt validate                 # check for cycles, broken deps, issues
 tkt validate --fix           # auto-repair fixable problems
+tkt lint                     # normalize frontmatter style (quoting, field order)
+tkt lint --check             # CI mode: exit 1 if any file would change
 tkt doctor                   # verify setup is correct
-tkt --dry-run <command>      # preview what would happen
+tkt doctor ~/code            # scan all projects for health
+tkt capabilities             # JSON manifest of commands and schemas
 ```
 
 ## Workflows

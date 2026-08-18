@@ -53,3 +53,11 @@ _Avoid_: trace ID (implies distributed tracing), correlation ID (overloaded)
 **crates.io name check**:
 Use `cargo search <name>` to check availability — NOT raw `curl` to the API (returns 403 "violation of API data access policy" for automated requests). A 404 on the web page also confirms availability.
 _Avoid_: curl to crates.io/api/v1/crates/ (blocked)
+
+**ErrorKind**:
+The 8-variant enum (`NotFound | AlreadyDone | Conflict | GateFailed | Validation | Cycle | Io | Parse`) in `src/main.rs`. Fixed vocabulary for machine error classification. Exit code and retryability derived from kind. Declared in `tkt capabilities`.
+_Avoid_: error code (implies numeric), error type (ambiguous with Rust types)
+
+**Config cascade**:
+Resolution order for all settings: CLI flag > env var (`TKT_{SECTION}_{KEY}`) > project config (`.tickets/config.toml`) > user config (`~/Library/Application Support/tkt/config.toml` or `XDG_CONFIG_HOME`) > built-in default. `tkt config --show` reports the winning source per key.
+_Avoid_: config precedence (same thing but less discoverable)

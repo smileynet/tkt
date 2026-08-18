@@ -10,10 +10,10 @@ Single Rust binary. Originally ported from a Python implementation (now removed)
 
 ```
 src/
-├── main.rs          — entry point
-├── cli.rs           — clap derive commands + dispatch
+├── main.rs          — entry point + ErrorKind enum + DomainError struct
+├── cli.rs           — clap derive commands + dispatch + JSON envelope helpers
 ├── color.rs         — color/symbol support (NO_COLOR, --color, TKT_ASCII)
-├── config.rs        — user config (~/.config/tkt/) + project config (.tickets/config.toml)
+├── config.rs        — unified config cascade (user + project + env)
 ├── telemetry.rs     — consent, session tracking, JSONL sink, rotation
 ├── mutation.rs      — MutationContext (push-gated lifecycle for existing-ticket mutations)
 ├── renumber.rs      — RenumberPlan (pure ID remapping: plan + apply)
@@ -22,15 +22,19 @@ src/
 │   ├── mod.rs       — re-exports
 │   ├── ticket.rs    — TicketFile (raw editor + typed mutations) + Ticket (typed domain)
 │   └── validate.rs  — input validation (slugs, free text, IDs, enums)
+├── commands/        — one file per subcommand (new, close, claim, edit, lint, doctor, etc.)
 ├── findings.rs      — validation rules, Finding struct, output formatting
 ├── transaction.rs   — GitTransaction (allocation: fetch→scan→commit→push→retry)
 └── git.rs           — git subprocess wrapper (fetch, commit, push, remote scanning)
 tests/
 ├── integration.rs   — integration tests (tempdir repos, race scenarios, telemetry, debug)
 └── parity/          — historical Python parity comparison harness
+skills/tkt/          — agentskills.io skill (deployed via symlink to ~/.kiro/skills/tkt)
+steering/            — always-on steering files (deployed as copy to ~/.kiro/steering/)
+plugin.json          — Agent Plugins v1.0.0 manifest
 .memory/CONTEXT.md   — project glossary
 .tickets/            — tkt's own tickets (dogfooding)
-.references/         — cloned reference repos (gitignored): cargo-release, git-cliff, release-plz
+.references/         — cloned reference repos (gitignored): clispec, axocli, octo-cli
 TELEMETRY.md         — transparency document for telemetry collection
 ```
 
@@ -79,6 +83,9 @@ tkt audit [--strict] [--brief]                    # closure quality check
 tkt sync-plan --check [--strict] [--brief] [plan] # report drift
 tkt sync-plan --fix [--strict] [--brief] [plan]   # fix derivable columns
 tkt validate [--strict] [--brief]                 # contract + cycle + decay findings
+tkt lint [--check] [IDs...]                       # normalize frontmatter style
+tkt doctor [<path>] [--strict]                    # health check (single or cross-project)
+tkt init [--target T] [--all]                     # scaffold project + agent instructions
 tkt config [--set K=V] [--get K] [--unset K] [--list] [--show]  # user + project config
 tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telemetry
 ```
@@ -88,6 +95,8 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 | Flag | Effect |
 |------|--------|
 | `-q` / `--quiet` | Suppress confirmations, emit only essential data |
+| `-o json` / `--output=json` | Structured JSON output (success to stdout, errors to stderr) |
+| `--dry-run` | Preview mutations without writing |
 | `--color=always\|never\|auto` | Control ANSI color output (default: auto) |
 
 ### Priority levels
