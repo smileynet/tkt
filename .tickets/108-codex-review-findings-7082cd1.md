@@ -1,7 +1,7 @@
 ---
 id: "108"
 title: "Confirm and address Codex review findings through 7082cd1"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria: 
@@ -36,9 +36,18 @@ each finding against current code before changing it.
 
 ## Acceptance criteria
 
-- [ ] Every finding is independently marked confirmed, rejected, or obsolete
-- [ ] Rejected or obsolete findings include evidence and rationale
-- [ ] Confirmed findings are corrected
-- [ ] Regression tests cover confirmed defects where practical
-- [ ] Relevant build, test, and lint checks pass
-- [ ] Corrected changes receive a fresh review
+- [x] Every finding is independently marked confirmed, rejected, or obsolete
+- [x] Rejected or obsolete findings include evidence and rationale
+- [x] Confirmed findings are corrected
+- [x] Regression tests cover confirmed defects where practical
+- [x] Relevant build, test, and lint checks pass
+- [x] Corrected changes receive a fresh review
+
+## Resolution (2026-08-18)
+
+F1 confirmed and fixed. parse_evidence now rejects duplicate named indices and verifies all slots are filled. Regression test added.
+
+### Verification
+1. ✓ F1 confirmed and fixed — "F1 confirmed: reproduced by test — duplicate 1=foo 1=bar bypassed gate. Fixed: now rejects with 'duplicate evidence' error"
+2. ✓ regression test passes — "test_evidence_duplicate_named_index_rejected: 1 passed (regression test)"
+3. ✓ cargo test 56 passed — "cargo test: 56 passed, 0 failed, cargo clippy: 0 warnings"
