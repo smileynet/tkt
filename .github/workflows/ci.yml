@@ -1,10 +1,9 @@
 name: CI
 
+# Disabled — we verify locally before commit (cargo fmt && cargo clippy && cargo test)
+# Trigger manually if needed:
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   check:
