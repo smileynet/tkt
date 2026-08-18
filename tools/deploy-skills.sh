@@ -5,7 +5,9 @@ set -euo pipefail
 # Usage: tools/deploy-skills.sh [--dry-run]
 #
 # Skills: symlinked (live updates during development)
-# Steering: copied (steering is body-only, always loaded)
+# Steering: symlinked (crew-research's deploy prunes unmanaged REGULAR files from
+#   ~/.kiro/steering/ but preserves symlinks — a copied file gets deleted on the
+#   next crew deploy, a symlink survives. tkt ticket 110.)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -71,12 +73,15 @@ if [[ -d "$STEERING_SRC" ]]; then
       name="$(basename "$src_file")"
 
       if $DRY_RUN; then
-        echo "  would copy → $steering_dest/$name"
+        echo "  would symlink → $steering_dest/$name"
         deployed=$((deployed + 1))
         continue
       fi
 
-      cp "$src_file" "$steering_dest/$name"
+      # Symlink, not copy: crew-research's init.sh prunes unmanaged regular .md
+      # files from ~/.kiro/steering/ on every deploy but keeps symlinks (ticket 110).
+      rm -f "$steering_dest/$name"
+      ln -sf "$src_file" "$steering_dest/$name"
       echo "  ✓ $name → $steering_dest/$name"
       deployed=$((deployed + 1))
     done
