@@ -4,11 +4,8 @@ title: "tkt validate-all: cross-project health check with discovery"
 status: open
 blocked_by: []
 priority: medium
-validation_criteria:
-  - "tkt validate-all ~/code reports per-project pass/fail"
-  - "projects without .tickets/ flagged separately"
-  - "exit code reflects overall health"
-  - "cargo test passes"
+validation_criteria: 
+  - "tkt doctor <path> already provides this functionality"
 ---
 
 # tkt validate-all: cross-project health check with discovery
