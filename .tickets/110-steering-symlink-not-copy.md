@@ -1,7 +1,7 @@
 ---
 id: "110"
 title: "deploy-skills.sh must symlink steering, not copy (crew prune deletes copies)"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
