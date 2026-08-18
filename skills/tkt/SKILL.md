@@ -18,132 +18,180 @@ triggers:
   - task graph
   - ticket format
   - blocked by
+  - backlog
+  - park this
+  - defer
 tools:
   - shell
 ---
 
 # tkt
 
-Track tasks as markdown files in your git repo.
+Track tasks as markdown files in your git repo. One file per ticket in `.tickets/`, with status and dependencies in YAML frontmatter. tkt computes what's ready to work on next.
 
-## When to use
+## Jobs to be done
 
-- Starting a work session: see what's unblocked
-- Creating tasks with dependencies
-- Claiming work in shared repos
-- Closing tasks with evidence of completion
-- Checking project health
+| When I'm... | I want to... | Command |
+|---|---|---|
+| Starting a work session | see what's unblocked and prioritized | `tkt ready` |
+| Planning future work | create tickets without them cluttering the frontier | `tkt new <slug> --title "..." --status backlog` |
+| Ready to start something | promote a backlogged ticket to actionable | `tkt edit <id> --status open` |
+| Grabbing a task in a shared repo | signal that I'm working on it | `tkt claim <id>` |
+| Finishing a task | prove it's done with evidence | `tkt close <id> --check-all --evidence "..."` |
+| Discovering work during implementation | capture it without losing focus | `tkt new <slug> --title "..." --status backlog` |
+| Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
+| Querying the full corpus | filter by status or priority | `tkt query --status open --priority high` |
+| Working in a specific environment | see only relevant work | Set `CREW_ENV=corp` → `tkt ready` filters by `env` |
+| Keeping a plan in sync | detect drift between tickets and plan doc | `tkt sync-plan --check` |
 
-## Commands
+For full flags and options, see [commands.md](references/commands.md).
+
+---
+
+## Status lifecycle
+
+```
+backlog → open → in_progress → done
+```
+
+| Status | Meaning | Appears in `tkt ready`? |
+|--------|---------|------------------------|
+| `backlog` | Parked — not prioritized, not actionable yet | **No** |
+| `open` | Available for work — dependencies satisfied = frontier | **Yes** (if deps done) |
+| `in_progress` | Claimed, actively being worked | **No** |
+| `done` | Completed, verified | **No** |
+
+**Key rule:** `tkt ready` only shows `open` tickets whose `blocked_by` are all `done`. Backlogged tickets are invisible to the frontier — that's the point.
+
+---
+
+## Backlog workflow
+
+Backlog is for work you've identified but aren't ready to commit to. Use it to:
+
+- **Park future ideas** without cluttering the frontier
+- **Capture discovered work** mid-task without losing focus
+- **Defer low-priority items** that aren't worth doing yet
+
+### Creating backlogged tickets
 
 ```bash
-tkt ready                    # show unblocked tasks, sorted by priority
-tkt ready --json             # machine-readable output
-tkt new <slug> --title "..." # create a task (pushes immediately)
-tkt claim <id>               # mark in-progress (shared repos)
-tkt close <id> --note "..."  # mark done, append resolution
-tkt edit <id> --priority high --blocked-by 01,02
-tkt validate                 # check for cycles, broken deps, issues
-tkt validate --fix           # auto-repair fixable problems
-tkt lint                     # normalize frontmatter style (quoting, field order)
-tkt lint --check             # CI mode: exit 1 if any file would change
-tkt doctor                   # verify setup is correct
-tkt doctor ~/code            # scan all projects for health
-tkt capabilities             # JSON manifest of commands and schemas
+tkt new caching --title "Add response caching" --status backlog
+tkt batch "cache:Response caching" "metrics:Add metrics" --status backlog
 ```
 
-## Workflows
+Default (no `--status` flag) creates as `open`.
 
-### Solo agent
+### Promoting / demoting
 
+```bash
+tkt edit 15 --status open           # promote → now appears in tkt ready
+tkt edit 07 --status backlog        # demote → disappears from frontier
 ```
-tkt ready → pick first → do the work → tkt close <id> --check-all --resolution "what was done"
+
+### When to use backlog vs blocked_by
+
+| Situation | Use |
+|-----------|-----|
+| "We'll do this someday, not now" | `--status backlog` |
+| "We'll do this after ticket 03 is done" | `--blocked-by 03` (status stays `open`) |
+| "We identified this but it's not scoped yet" | `--status backlog` |
+| "This is ready but depends on another ticket" | `--blocked-by N` |
+
+---
+
+## Working tickets
+
+### Solo workflow
+
+```bash
+tkt ready → pick first → work → tkt close <id> --check-all --resolution "what was done"
 ```
 
 ### Shared repo (multiple agents)
 
-```
-tkt ready → tkt claim <id> → do the work → tkt close <id> --check-all --resolution "what was done"
+```bash
+tkt ready → tkt claim <id> → work → tkt close <id> --check-all --resolution "what was done"
 ```
 
-If a claim push is rejected, someone else got there first — pick the next ticket.
+If `tkt claim` push is rejected → someone else got there first → pick next ticket.
 
-### With validation criteria
+---
+
+## Closing tickets (quality gate)
+
+Closure is a verification event, not a status flip. The close command enforces quality.
+
+```bash
+# Standard close with evidence
+tkt close 03 --check-all --resolution "JWT auth with refresh tokens" \
+  --evidence "56 tests pass" --evidence "POST /login returns 200 with token"
+
+# Force close (bypasses AC checks — use sparingly, justify)
+tkt close 03 --force --resolution "Superseded by ticket 12"
+```
+
+Project config controls what's required at close time (resolution, checked ACs, validation evidence). See enforcement config in [commands.md](references/commands.md).
+
+---
+
+## Validation criteria and evidence
+
+Machine-enforceable "definition of done":
 
 ```bash
 # Create with criteria
-tkt new auth --title "Implement auth" --validation "tests pass" --validation "login works"
+tkt new deploy --title "Deploy to staging" \
+  --vc "staging URL returns 200" --vc "smoke tests pass"
 
-# Close with evidence
-tkt close 01 --evidence "49 passed, 0 failed" --evidence "POST /login returns JWT" --resolution "Done"
+# Close with positional evidence (matches criteria order)
+tkt close 05 --check-all \
+  --evidence "curl staging.example.com → 200 OK" \
+  --evidence "make smoke → 4/4 passed" \
+  --resolution "Deployed via CI pipeline"
 ```
 
-## Creating tickets
+---
 
-Before writing a ticket, read [ticket-standards.md](references/ticket-standards.md). Every ticket must have:
+## Health checks
 
-1. **Intent source** — why does this exist? (spec, ADR, user request, discovery, or parent ticket)
-2. **Context for a fresh agent** — files to read, decisions already made, boundaries
-3. **Behavioral outcome** — what changes for the user, not implementation steps
-4. **Testable validation** — acceptance criteria an agent can verify independently
+| Command | Job |
+|---------|-----|
+| `tkt validate` | Contract integrity — cycles, broken deps, invalid fields |
+| `tkt audit` | Closure quality — unchecked ACs, TBD resolutions, stale WIP |
+| `tkt sync-plan --check` | Plan drift — ticket status vs plan document |
+| `tkt doctor` | Setup verification — current project or multi-project scan |
+| `tkt lint --check` | Style — frontmatter quoting and field order |
 
-Run the 8-point checklist in ticket-standards.md before committing. A ticket that fails the checklist wastes the implementer's context window.
+Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` to auto-repair (validate and sync-plan). Full options in [commands.md](references/commands.md).
 
-## Updating tickets
-
-As work progresses, keep the ticket current:
-
-- **Add context discovered during work** — files that turned out to be relevant, constraints found
-- **Narrow scope if it grew** — split new work into a new ticket, add it to `blocked_by` if needed
-- **Update validation_criteria** — if implementation reveals the original criteria were wrong or incomplete, fix them BEFORE closing (don't close against stale criteria)
-
-Use `tkt edit <id>` for frontmatter changes. Edit the file directly for body changes. Commit either way.
-
-## Closing tickets
-
-Closure is a quality gate, not a status flip. Before closing:
-
-1. **Verify each acceptance criterion independently** — run the check, read the output, confirm pass. Don't check boxes you haven't verified.
-2. **Provide evidence** — `tkt close <id> --check-all --evidence "..."` for each validation criterion. Evidence must cite actual output (test results, command output, file state), not "should work" or "looks good."
-3. **Write a resolution** — `--resolution "what was done"` summarizes the approach for future readers.
-4. **Run project checks** — the verification gate (build, test, lint) must pass before closure.
-
-`tkt close` enforces:
-- All acceptance criteria checked (or `--force` with justification)
-- Evidence provided for each validation criterion (if `require_validation_evidence = "true"`)
-- Criteria exist (if `require_validation_criteria = true`)
-
-A ticket closed without evidence is a ticket that might not actually be done.
+---
 
 ## Key behaviors
 
-- `tkt ready` sorts by priority (urgent > high > medium > low) then by ID
-- Tasks with unsatisfied `blocked_by` dependencies don't appear in ready
-- `--dry-run` on any mutation shows what would happen without writing
-- All writes push to remote immediately (disable with `push.enabled = false` in config)
-- `--force` bypasses validation gates when you need to override
+- **Push on write:** All mutations push to remote immediately. Disable with `push.enabled = false` in `.tickets/config.toml`.
+- **Race detection:** Push rejected → tkt retries with new ID (new/batch) or reports the conflict.
+- **Priority sort:** `tkt ready` sorts by priority bucket (urgent > high > medium > low) then by ID.
+- **Surgical edits:** `tkt edit` only touches the field you specify — everything else preserved.
+- **Env filtering:** Tickets with `env: corp` only appear in `tkt ready` when `CREW_ENV=corp`. No env field = visible everywhere.
 
-## Task format
-
-```yaml
 ---
-id: "01"
-title: "Implement authentication"
-status: open              # backlog | open | in_progress | done
-blocked_by: []            # IDs that must be done first
-priority: high            # optional: urgent > high > medium > low
-validation_criteria:      # optional: what "done" means
-  - "tests pass"
-  - "login works"
----
-```
 
-Tasks are markdown files in `.tickets/`. Edit by hand anytime.
+## Creating tickets (content quality)
+
+Before writing ticket body content, read [ticket-standards.md](references/ticket-standards.md). Every ticket needs:
+
+1. Intent source (why does this exist?)
+2. Context for a fresh agent (files to read, decisions made)
+3. Behavioral outcome (what changes for the user)
+4. Testable validation (acceptance criteria an agent can verify)
+
+---
 
 ## References
 
-- [commands.md](references/commands.md) — full command reference
-- [ticket-format.md](references/ticket-format.md) — ticket file format, required/optional fields, formatting rules
-- [ticket-standards.md](references/ticket-standards.md) — quality gate for ticket content (intent links, context, outcomes, validation)
-- [wide-refactors.md](references/wide-refactors.md) — expand-contract sequencing for wide changes
-- [migration-assist.md](references/migration-assist.md) — converting foreign ticket schemas to tkt format
+- [commands.md](references/commands.md) — full command reference, all flags, enforcement config
+- [ticket-format.md](references/ticket-format.md) — file format, required/optional fields
+- [ticket-standards.md](references/ticket-standards.md) — quality gate for ticket content
+- [wide-refactors.md](references/wide-refactors.md) — expand-contract sequencing
+- [migration-assist.md](references/migration-assist.md) — converting foreign ticket schemas

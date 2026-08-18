@@ -53,7 +53,7 @@ When a ticket's acceptance criteria are all met:
 
 Ticket creation is a race when 2+ sessions work the same repo (observed twice: archwright 005 pair, crew-research 12/13 collision — both required reconciliation merges).
 
-**With tkt (default):** `tkt new <slug> --title "..." [--blocked-by IDS] [--priority high]` does the whole claim protocol in one step — fetch, true-max scan (local + origin), create, commit, push, with automatic renumber on a lost race. Get `--blocked-by` right at creation; fix later with `tkt edit <id>`. Reconcile out-of-band collisions with `tkt renumber <old> <new>` (birth-window only — cited ids are contracts).
+**With tkt (default):** `tkt new <slug> --title "..." [--blocked-by IDS] [--priority high]` does the whole claim protocol in one step — fetch, true-max scan (local + origin), create, commit, push, with automatic renumber on a lost race. Get `--blocked-by` right at creation; fix later with `tkt edit <id>`. Use `--status backlog` for discovered work that shouldn't enter the frontier yet. Reconcile out-of-band collisions with `tkt renumber <old> <new>` (birth-window only — cited ids are contracts).
 
 **Manual fallback (tkt absent):**
 1. **Claim before allocating:** `git fetch`, then rescan `.tickets/` (local + `origin/main`) for the true max ID
@@ -67,7 +67,7 @@ Ticket creation is a race when 2+ sessions work the same repo (observed twice: a
 
 - Do NOT carry implementation context from one ticket to another
 - Each ticket starts from its file + referenced context
-- If a ticket reveals new work: create a new ticket file, don't expand the current one
+- If a ticket reveals new work: create a new ticket with `--status backlog` (keeps it off the frontier), don't expand the current one
 - If context is exhausted: `/handoff` and start fresh for the next ticket
 
 ## PLAN.md is Authoritative

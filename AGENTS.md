@@ -70,9 +70,9 @@ All three gate checks must pass with zero warnings before presenting work as don
 tkt --version                                     # print version
 tkt ready [--json]                                # frontier: open + deps done + env match
 tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority P] [--env E] [--status S]
-tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E]
+tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E] [--status S]
 tkt claim <id>                                    # status→in_progress, pushed
-tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force]
+tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..."]
 tkt edit <id> [--title T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
 tkt query [--status S] [--priority P]             # full corpus as JSON Lines (filterable)
@@ -111,7 +111,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 
 - **User config**: `~/.config/tkt/config.toml` — debug mode, format preferences
 - **Project config**: `.tickets/config.toml` — committed to repo, shared by contributors
-  - `[close]` require_resolution, require_checked_acs
+  - `[close]` require_resolution, require_checked_acs, require_validation_criteria, require_validation_evidence, allow_force
   - `[validate]` strict
   - `[ready]` default_env
   - `[priority]` warn_unknown

@@ -13,6 +13,9 @@ title: "Short behavioral title"
 status: open
 blocked_by: []
 priority: medium
+validation_criteria:
+  - "criterion 1"
+  - "criterion 2"
 ---
 
 # {Title}
