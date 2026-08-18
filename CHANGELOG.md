@@ -28,12 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `close.allow_force` config — disable the `--force` escape hatch project-wide or globally
 - Git hash in `--version` output for dev build traceability (e.g., `tkt 0.2.0 (ea047fb)`)
 - Agent Plugins conformance — ships `plugin.json` and `skills/tkt/SKILL.md` per agentskills.io spec
+- `tkt doctor <path>` now flags non-tkt git repos and supports `--strict` and `-o json`
 
 ### Changed
 
 - `tkt config --show` now reports the source of each resolved value (env/project/user/default)
 - `ready --json` still works but `-o json ready` is now the canonical form
 - Clearer README and crate description
+
+### Fixed
+
+- Evidence gate: duplicate named evidence indices (e.g., `1=foo 1=bar`) no longer bypass the complete-evidence requirement
 
 ## [0.1.0] - 2026-08-09
 
