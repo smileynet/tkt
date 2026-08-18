@@ -118,6 +118,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 | `NO_COLOR=1` | Disable ANSI color |
 | `CREW_ENV` | Filter frontier by env (corp/personal) |
 | `DO_NOT_TRACK=1` | Disable telemetry |
+| `TKT_NO_USER_CONFIG=1` | Skip user config file (for testing — prevents ambient config leaking into child processes) |
 
 ## Architecture Decisions
 
