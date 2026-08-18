@@ -1,7 +1,7 @@
 ---
 id: "84"
 title: "Enrich capabilities with JSON Schema input definitions"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 ---
