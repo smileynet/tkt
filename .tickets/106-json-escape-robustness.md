@@ -4,6 +4,10 @@ title: "Harden hand-rolled json_escape or replace with serde_json::to_string"
 status: in_progress
 blocked_by: []
 priority: low
+validation_criteria: 
+  - "json_escape uses serde_json::to_string"
+  - "cargo test passes"
+  - "output format unchanged"
 ---
 
 # Harden hand-rolled json_escape or replace with serde_json::to_string
