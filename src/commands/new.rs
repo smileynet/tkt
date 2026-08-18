@@ -3,7 +3,7 @@
 use anyhow::Result;
 
 use crate::commands::common::{
-    domain_bail, is_dry_run, is_quiet, project_config, success_msg, tickets_dir,
+    domain_bail, is_dry_run, is_quiet, print_success, project_config, tickets_dir,
 };
 use crate::core::{self, validate};
 use crate::git;
@@ -120,7 +120,7 @@ pub fn run(
                     crate::transaction::PublishOutcome::LocalOnly => "local only",
                     _ => "pushed",
                 };
-                println!("{}", success_msg("created", &tid, slug, detail));
+                print_success("created", &tid, slug, detail);
             }
             Ok(0)
         }
@@ -148,14 +148,11 @@ pub fn run(
             if is_quiet() {
                 println!("{}", tid2);
             } else {
-                println!(
-                    "{}",
-                    success_msg(
-                        "created",
-                        &tid2,
-                        slug,
-                        &format!("pushed, renumbered {}→{}", tid, tid2)
-                    )
+                print_success(
+                    "created",
+                    &tid2,
+                    slug,
+                    &format!("pushed, renumbered {}→{}", tid, tid2),
                 );
             }
             Ok(0)

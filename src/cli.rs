@@ -573,7 +573,6 @@ fn json_escape(s: &str) -> String {
 }
 
 /// Emit a structured JSON success envelope to stdout.
-#[allow(dead_code)]
 pub(crate) fn emit_json_success(result: &str) {
     println!("{{\"ok\":true,\"result\":{}}}", json_escape(result));
 }

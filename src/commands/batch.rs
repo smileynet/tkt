@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, success_msg, tickets_dir};
+use crate::commands::common::{domain_bail, is_dry_run, is_quiet, print_success, tickets_dir};
 use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
@@ -139,7 +139,7 @@ pub fn run(
         if is_quiet() {
             println!("{}", tid);
         } else {
-            println!("{}", success_msg("created", &tid, slug, "pushed"));
+            print_success("created", &tid, slug, "pushed");
         }
     }
     Ok(0)

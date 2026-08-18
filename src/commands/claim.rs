@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, slug_from_filename, success_msg};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_quiet, print_success, slug_from_filename,
+};
 use crate::core::Status;
 use crate::mutation::MutationContext;
 
@@ -42,14 +44,11 @@ pub fn run(id: &str) -> Result<i32> {
     ctx.publish(&[&rel_path], &format!("chore(tickets): claim {}", id))?;
 
     if !is_quiet() {
-        println!(
-            "{}",
-            success_msg(
-                "claimed",
-                &t.id,
-                &slug_from_filename(&file.path),
-                &format!("{} in_progress", crate::color::sym_arrow())
-            )
+        print_success(
+            "claimed",
+            &t.id,
+            &slug_from_filename(&file.path),
+            &format!("{} in_progress", crate::color::sym_arrow()),
         );
     }
     Ok(0)

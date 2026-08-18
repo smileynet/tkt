@@ -40,7 +40,6 @@ pub(crate) fn is_quiet() -> bool {
 }
 
 /// Global JSON output flag — set once at startup.
-#[allow(dead_code)]
 pub(crate) fn is_json_output() -> bool {
     crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed)
 }
@@ -86,7 +85,6 @@ pub(crate) fn success_msg(verb: &str, id: &str, slug: &str, detail: &str) -> Str
 }
 
 /// Print a success message — emits JSON envelope when -o json, human text otherwise.
-#[allow(dead_code)]
 pub(crate) fn print_success(verb: &str, id: &str, slug: &str, detail: &str) {
     if is_json_output() {
         let result = format!("{} {} {} ({})", verb, id, slug, detail);

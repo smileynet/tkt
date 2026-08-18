@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, slug_from_filename, success_msg};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_quiet, print_success, slug_from_filename,
+};
 use crate::core::{self, AcSelection, Env, Priority, Status};
 use crate::mutation::MutationContext;
 
@@ -154,14 +156,11 @@ pub fn run(
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
     )?;
     if !is_quiet() {
-        println!(
-            "{}",
-            success_msg(
-                "edited",
-                id,
-                &slug_from_filename(&file.path),
-                &changed.join(", ")
-            )
+        print_success(
+            "edited",
+            id,
+            &slug_from_filename(&file.path),
+            &changed.join(", "),
         );
     }
     Ok(0)

@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_quiet, success_msg};
+use crate::commands::common::{domain_bail, is_quiet, print_success};
 use crate::core::validate;
 use crate::mutation::MutationContext;
 use crate::renumber::{apply_renumber, RenumberPlan};
@@ -35,10 +35,7 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
         } else {
             String::new()
         };
-        println!(
-            "{}",
-            success_msg("renumbered", old_id, &format!("→ {}", new_id), &detail)
-        );
+        print_success("renumbered", old_id, &format!("→ {}", new_id), &detail);
     }
     Ok(0)
 }
