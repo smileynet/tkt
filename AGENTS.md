@@ -129,6 +129,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 - **Local-only telemetry**: opt-in JSONL file sink, per-project segmentation, session-aware rotation, never blocks CLI
 - **LazyLock regex statics**: fixed patterns compiled once via `std::sync::LazyLock`
 - **No color crate**: raw ANSI codes + `std::io::IsTerminal` — zero additional dependencies
+- **Structured errors**: `DomainError { kind: ErrorKind, message, hint }` with 8-variant `ErrorKind` enum. `domain_bail!(Kind, "msg")` or `domain_bail!(Kind, "msg", hint: "fix")` or `domain_bail!("msg")` (defaults to Validation). JSON envelope emitted to stderr when `-o json`.
 - **Facade re-exports**: only re-export types from `core/mod.rs` that callers name directly; types returned by methods but never named (e.g., `AcStats`) stay unexported from the facade to avoid unused-import warnings
 
 ## Contract
