@@ -1,7 +1,7 @@
 ---
 id: "107"
 title: "Fix clippy too_many_arguments warnings in new.rs and ticket.rs"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 ---
