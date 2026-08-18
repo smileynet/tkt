@@ -1,7 +1,7 @@
 ---
 id: "107"
 title: "Fix clippy too_many_arguments warnings in new.rs and ticket.rs"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria: 
@@ -23,6 +23,15 @@ Fix by introducing a params struct or builder pattern for the offending signatur
 
 ## Acceptance criteria
 
-- [ ] `cargo clippy --all-targets` produces 0 warnings
-- [ ] No behavioral change to the commands
-- [ ] API remains internal (no public surface change)
+- [x] `cargo clippy --all-targets` produces 0 warnings
+- [x] No behavioral change to the commands
+- [x] API remains internal (no public surface change)
+
+## Resolution (2026-08-18)
+
+NewTicketParams struct eliminates too_many_arguments. Zero clippy warnings.
+
+### Verification
+1. ✓ cargo clippy 0 warnings — "cargo clippy --all-targets: 0 warnings (verified)"
+2. ✓ cargo test passes — "cargo test: 55 passed, 0 failed"
+3. ✓ no behavioral change — "no behavioral change: tkt new output identical"
