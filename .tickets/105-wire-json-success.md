@@ -4,6 +4,10 @@ title: "Wire emit_json_success/print_success into mutation commands"
 status: in_progress
 blocked_by: []
 priority: low
+validation_criteria: 
+  - "tkt -o json emits JSON success on mutations"
+  - "dead_code annotations removed"
+  - "cargo test passes"
 ---
 
 # Wire emit_json_success/print_success into mutation commands
