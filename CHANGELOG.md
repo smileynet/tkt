@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-18
+
 ### Added
 
 - `tkt init` command to set up a project and deploy AI agent instructions in one step
@@ -66,5 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local-only telemetry: opt-in JSONL recording, never leaves your machine
 - Debug mode: `TKT_DEBUG=1|json` for real-time diagnostics to stderr
 
-[Unreleased]: https://github.com/smileynet/tkt/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/smileynet/tkt/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/smileynet/tkt/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/smileynet/tkt/releases/tag/v0.1.0
