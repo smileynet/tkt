@@ -553,23 +553,7 @@ fn emit_json_error(de: &crate::DomainError) {
 
 /// Escape a string as a JSON string literal (with quotes).
 fn json_escape(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 2);
-    out.push('"');
-    for c in s.chars() {
-        match c {
-            '"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c.is_control() => {
-                out.push_str(&format!("\\u{:04x}", c as u32));
-            }
-            c => out.push(c),
-        }
-    }
-    out.push('"');
-    out
+    serde_json::to_string(s).unwrap_or_else(|_| format!("\"{}\"", s))
 }
 
 /// Emit a structured JSON success envelope to stdout.
