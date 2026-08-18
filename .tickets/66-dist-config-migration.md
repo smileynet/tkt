@@ -1,7 +1,7 @@
 ---
 id: "66"
 title: "Migrate [workspace.metadata.dist] to dist-workspace.toml"
-status: open
+status: backlog
 blocked_by: ["01"]
 priority: low
 ---
