@@ -71,6 +71,48 @@ at close time without a separate sed step.
 
 ## Recommendation
 
-**Option D** (allow criteria at close time) removes the friction without forcing upfront
-planning. Optionally combine with **B** (warn at creation) to nudge agents toward
-providing criteria early.
+**Option A** (require at creation). Reasoning:
+
+### When is the best time to define criteria?
+
+The quality of validation criteria degrades as you move through the lifecycle:
+
+| Moment | Mindset | Criteria quality |
+|--------|---------|-----------------|
+| **Creation** | Requester (feels the pain) | Outcome-focused: "user can X", "Y no longer happens" |
+| Before claim | Still understanding the problem | Same quality — equivalent to creation |
+| **After claim** | Implementer (has a solution in mind) | Solution-focused: "class X exists", "test covers Y" |
+| At close | Proving you're done | Writes criteria that match what was built — gaming |
+
+### The anti-gaming argument
+
+After claiming, the implementer is incentivized to write criteria that match what they
+already built (or plan to build), not what would actually prove the work is done from
+the requester's perspective. This defeats the purpose of validation criteria entirely.
+
+For agents specifically: an agent claiming a ticket has already read it and is planning
+implementation. If allowed to write criteria at that point, it'll write criteria it knows
+it can satisfy.
+
+### "I don't know the criteria yet" is usually underspecification
+
+When someone can't write criteria at creation, it signals the ticket is underspecified —
+it's a spike or research ticket. Even then, valid criteria exist:
+- "Decision documented with tradeoffs"
+- "Spike produces measurable result"
+- "mise run verify passes"
+
+The "I genuinely don't know" case is rarer than it seems. It usually means "I haven't
+thought about what done looks like" — which is exactly the thinking `tkt new` should force.
+
+### Implementation
+
+`tkt new` should fail with a helpful message when `require_validation_criteria = true`
+and no criteria are provided:
+
+```
+tkt: ✗ project requires validation_criteria (define what "done" looks like)
+     Add: --criteria "mise run verify passes"
+     Or:  --criteria "decision documented"
+     Tip: write criteria from the requester's perspective, not the implementer's
+```
