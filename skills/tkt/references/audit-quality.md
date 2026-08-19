@@ -91,12 +91,15 @@ A ticket closed with only template text = work happened but wasn't documented.
 
 ## Integration with tkt audit --deep
 
-The CLI catches patterns mechanically:
-- Evidence < 15 chars → `thin-evidence`
-- Force-close without justification → `force-without-justification`
+The CLI catches ONLY purely mechanical problems:
+- Evidence count < criteria count → `evidence-count-mismatch`
 - Template placeholders still present → `template-only-closure`
 
-The skill adds what the CLI can't:
-- Semantic mismatch between evidence and criteria
-- Resolution that technically meets length requirements but says nothing
-- Bulk-close patterns where the same generic text is reused
+**Everything else is YOUR job as the reviewing agent:**
+- Evidence quality (thin, generic, or gaming)
+- Evidence↔criteria semantic alignment
+- Force-close justification adequacy
+- Resolution substance assessment
+- Bulk-close patterns with identical resolutions
+
+The CLI cannot make these calls because they require reading prose and reasoning about context. A 13-character evidence string ("56 tests pass") might be excellent. A 200-character evidence string might be copied from the wrong test. Only you can tell.
