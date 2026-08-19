@@ -1,7 +1,7 @@
 ---
 id: "114"
 title: "Telemetry --show: add --all flag and command distribution summary"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -32,7 +32,15 @@ The summary should appear before the event list. Keep it compact — this is a d
 
 ## Acceptance criteria
 
-- [ ] `--all` shows full event history
-- [ ] Summary shows command counts, error count, and slow commands
-- [ ] Default (no --all) still shows last 20 with summary header
-- [ ] Works correctly with empty telemetry (no events)
+- [x] `--all` shows full event history
+- [x] Summary shows command counts, error count, and slow commands
+- [x] Default (no --all) still shows last 20 with summary header
+- [x] Works correctly with empty telemetry (no events)
+
+## Resolution (2026-08-19)
+
+Added --all flag and summary header (command distribution, error rate, slow commands) to telemetry --show. Event list also shows error_kind when present.
+
+### Verification
+1. ✓ tkt telemetry --show --all displays all events (not just last 20) — "tkt telemetry --all shows all 180 events (not truncated)"
+2. ✓ tkt telemetry --show includes command distribution summary — "summary shows commands:telemetry:89 new:38..., errors:25/180(14%), slow(>2s):41"
