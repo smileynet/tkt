@@ -1,7 +1,7 @@
 ---
 id: "116"
 title: "Capture flag names in telemetry events (no values)"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
