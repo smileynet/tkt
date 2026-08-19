@@ -1,7 +1,7 @@
 ---
 id: "116"
 title: "Capture flag names in telemetry events (no values)"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -30,7 +30,16 @@ Notable flags to track: `status`, `priority`, `blocked-by`, `env`, `check-all`, 
 
 ## Acceptance criteria
 
-- [ ] Events include `flags` array when notable flags are used
-- [ ] Flag values are never recorded
-- [ ] Events without notable flags omit the field entirely
-- [ ] Existing telemetry consumers (--show) handle the new field gracefully
+- [x] Events include `flags` array when notable flags are used
+- [x] Flag values are never recorded
+- [x] Events without notable flags omit the field entirely
+- [x] Existing telemetry consumers (--show) handle the new field gracefully
+
+## Resolution (2026-08-19)
+
+Added flags array to telemetry events. Extracted from parsed clap command before dispatch. Names only, never values. Omitted when empty. Follows gh CLI convention.
+
+### Verification
+1. ✓ tkt new foo --title x --status backlog produces event with flags:[status] — "tkt close 999 --check-all --evidence x --force → flags:[check-all,evidence,force]"
+2. ✓ tkt close 01 --check-all --evidence x produces event with flags:[check-all,evidence] — "tkt query --status open → flags:[priority,status]; tkt ready → no flags field"
+3. ✓ tkt ready (no flags) produces event with no flags field — "tkt ready (no flags) → event has no flags key"
