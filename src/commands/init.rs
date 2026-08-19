@@ -1,4 +1,8 @@
 //! `tkt init` — scaffold .tickets/ and deploy agent integration files.
+//!
+//! The snippets below are baked into the binary and deployed to users' projects.
+//! When updating them, also update the other agent guidance surfaces:
+//! see `.memory/agent-guidance-surfaces.md` for the full sync checklist.
 
 use anyhow::Result;
 
@@ -19,14 +23,21 @@ This project uses [tkt](https://github.com/smileynet/tkt) for work tracking. Tic
 ```
 tkt ready                                         # what to work on next
 tkt claim <id>                                    # mark as in_progress (shared repos)
-tkt close <id> --check-all --resolution "..."     # mark done
+tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done
+tkt new <slug> --title "..." --status backlog     # park future work off the frontier
+tkt edit <id> --status open                       # promote backlog to frontier
 tkt validate --brief                              # check for issues
 ```
+
+### Status lifecycle
+
+`backlog` (parked, invisible to ready) → `open` (frontier-eligible) → `in_progress` → `done`
 
 ### Workflow
 
 Single-agent: `tkt ready` → `tkt close <id> --check-all --resolution "..."`
 Shared-repo: `tkt ready` → `tkt claim <id>` → work → `tkt close <id> --check-all --resolution "..."`
+Discovered work: `tkt new <slug> --title "..." --status backlog` (keeps it off the frontier)
 
 If a claim push is rejected, someone else got there first — pick the next frontier ticket.
 "#;
@@ -37,10 +48,15 @@ const SNIPPET_CLAUDE: &str = r#"## Tickets
 
 This project uses tkt for work tracking. Run `tkt ready` to see what's available.
 
-Commands: ready, claim <id>, close <id> --check-all --resolution "...", validate --brief
+Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "...", validate --brief
+Create: new <slug> --title "..." [--status backlog] [--blocked-by N,N] [--priority P]
+Edit: edit <id> --status open (promote from backlog), --status backlog (park)
+
+Status: backlog (hidden) → open (frontier) → in_progress → done
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: what was shipped"
 For shared repos: tkt ready → claim <id> → work → close <id> --check-all --resolution "..."
+Discovered work: tkt new <slug> --title "..." --status backlog
 "#;
 
 const SNIPPET_CURSOR: &str = r#"---
@@ -52,10 +68,15 @@ alwaysApply: true
 
 This project uses tkt for work tracking (.tickets/ directory).
 
+## Status lifecycle
+backlog (parked, invisible to ready) → open (frontier-eligible) → in_progress → done
+
 ## Commands
 - `tkt ready` — see unblocked tickets (frontier)
 - `tkt claim <id>` — mark in_progress (shared repos only)
-- `tkt close <id> --check-all --resolution "..."` — mark done
+- `tkt close <id> --check-all --evidence "..." --resolution "..."` — mark done
+- `tkt new <slug> --title "..." --status backlog` — park future work
+- `tkt edit <id> --status open` — promote from backlog to frontier
 - `tkt validate --brief` — check for issues
 
 ## Workflow
@@ -63,22 +84,32 @@ This project uses tkt for work tracking (.tickets/ directory).
 2. Read the ticket file completely
 3. Do the work described
 4. Verify acceptance criteria
-5. `tkt close <id> --check-all --resolution "what was done"`
+5. `tkt close <id> --check-all --evidence "proof" --resolution "what was done"`
+
+## Discovered work
+Create with `--status backlog` to keep it off the frontier:
+`tkt new <slug> --title "..." --status backlog`
 "#;
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
 
 When .tickets/ exists, work the frontier.
 
+## Status lifecycle
+backlog (parked, hidden from ready) → open (frontier) → in_progress → done
+
 ## Commands
 tkt ready              # frontier (open + deps done + env match)
 tkt claim <id>         # status → in_progress, pushed
-tkt close <id> --check-all --resolution "..."  # mark done
+tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done
+tkt new <slug> --title "..." --status backlog  # park future work
+tkt edit <id> --status open   # promote backlog → frontier
 tkt validate --brief   # check for issues
 
 ## Workflow
 Single-agent: tkt ready → close <id> --check-all --resolution "..."
 Shared-repo: tkt ready → claim <id> → work → close <id>
+Discovered work: tkt new <slug> --title "..." --status backlog
 
 ## Frontier Rule
 Pick the first ticket `tkt ready` lists — it already applies priority sorting
@@ -93,8 +124,14 @@ trigger: always_on
 
 This project uses tkt for work tracking. Tickets in .tickets/.
 
-Commands: ready, claim <id>, close <id> --check-all --resolution "...", validate --brief
+Status: backlog (hidden) → open (frontier) → in_progress → done
+
+Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "...", validate --brief
+Create: new <slug> --title "..." [--status backlog] [--blocked-by N,N]
+Promote: edit <id> --status open
+
 Workflow: tkt ready → close <id> --check-all --resolution "done: description"
+Discovered work: tkt new <slug> --title "..." --status backlog
 "#;
 
 const DEFAULT_CONFIG: &str = r#"[push]

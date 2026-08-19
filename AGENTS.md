@@ -154,6 +154,7 @@ tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telem
 ## Constraints
 
 - Do NOT change the frontmatter contract without updating frontier-work steering
+- Do NOT change CLI flags or agent-facing behavior without updating all guidance surfaces (see `.memory/agent-guidance-surfaces.md` for checklist — init snippets, skill, steering, AGENTS.md, README)
 - Do NOT add dependencies beyond what's in Cargo.toml without justification
 - Do NOT use libgit2/gix for v1 — shell out to git binary
 - Do NOT suggest releasing with open tickets — all tickets ship first, or the user explicitly defers them
