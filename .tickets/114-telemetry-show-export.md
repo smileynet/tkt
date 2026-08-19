@@ -1,7 +1,7 @@
 ---
 id: "114"
 title: "Telemetry --show: add --all flag and command distribution summary"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
