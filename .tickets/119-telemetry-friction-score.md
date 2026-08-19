@@ -1,7 +1,7 @@
 ---
 id: "119"
 title: "Friction score per command in telemetry summary"
-status: in_progress
+status: done
 blocked_by: ["118"]
 priority: high
 validation_criteria:
@@ -38,7 +38,15 @@ Only show commands with friction > 0%. Sort by friction descending.
 
 ## Acceptance criteria
 
-- [ ] Each command with friction > 0% is listed with score and breakdown
-- [ ] Retries are detected (same cmd within 30s of failure)
-- [ ] Commands with 0% friction are omitted
-- [ ] Handles small datasets (< 10 events) gracefully
+- [x] Each command with friction > 0% is listed with score and breakdown
+- [x] Retries are detected (same cmd within 30s of failure)
+- [x] Commands with 0% friction are omitted
+- [x] Handles small datasets (< 10 events) gracefully
+
+## Resolution (2026-08-19)
+
+Added print_friction function. Scores each command by (errors + retries + slow) / total. Retries = same cmd <30s after failure. Slow = >2× median. Sorted by friction desc, omits 0% commands. Small datasets (<10 events) skipped.
+
+### Verification
+1. ✓ tkt telemetry --show displays friction score per command — "friction line shows: close 46/33 (24 fail, 14 retry, 8 slow) | edit 2/2 | ready 3/12 | new 2/38"
+2. ✓ friction formula accounts for errors, retries, and slow executions — "retries detected via same cmd/project within 30s of failure; slow via >2x median duration"
