@@ -1,7 +1,7 @@
 ---
 id: "117"
 title: "Add result_count to telemetry for read commands"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
