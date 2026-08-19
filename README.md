@@ -1,61 +1,42 @@
-# tkt
+# Tkt
 
-Track tasks as markdown files in your git repo.
+A git-native ticket tracker where tasks are markdown files and `git push` is the claim protocol.
 
-[![Crates.io](https://img.shields.io/crates/v/tkt.svg)](https://crates.io/crates/tkt)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-## What It Does
-
-One markdown file per task, with status and dependencies in the header. tkt tells you what's ready to work on next.
-
-```
-.tickets/
-├── 01-auth-system.md        # done
-├── 02-api-endpoints.md      # open, waiting on 01
-└── 03-deploy-pipeline.md    # open, waiting on 02
-```
-
-| When I'm... | I want to... | So I can... |
-|---|---|---|
-| Starting a work session | see what's unblocked | pick the right thing to work on |
-| Grabbing a task | know nobody else took it | avoid duplicate effort |
-| Finishing something | mark it done and unblock the next tasks | keep things moving |
-| Working with others | create tasks without ID collisions | push tickets at the same time |
-| Checking project health | find cycles or broken references | catch problems early |
+- **~50ms reads** — tickets are local files, not API calls
+- **Single binary** — no runtime dependencies beyond `git`
+- **Race-safe** — concurrent sessions get unique IDs automatically
+- **Dependency graph** — only shows you what's actually unblocked
+- **AI-agent friendly** — structured output, deterministic frontier
+- **Zero config** — just `tkt new` in any git repo
 
 ## Quick Start
 
-**You need:** `git` installed, inside a git repo.
-
 ```bash
-# Install
-curl -fsSL https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.sh | sh
+cargo install tkt
 
-# Set up your tickets directory
-mkdir .tickets && git add .tickets && git commit -m "init tickets"
+tkt new auth --title "Implement authentication"
+# → ✓ created 01 auth (pushed)
 
-# Create your first task
-tkt new auth-system --title "Implement authentication"
-# → ✓ created 01 auth-system (pushed)
+tkt new api --title "Build API" --blocked-by 01
+# → ✓ created 02 api (pushed)
 
-# See what's ready
 tkt ready
 # → Ready (1):
 # →   01  Implement authentication
 
-# Claim it (marks in-progress, tells others it's taken)
-tkt claim 01
-# → ✓ claimed 01 auth-system (→ in_progress)
-
-# Close it when done
 tkt close 01 --note "JWT + refresh tokens shipped"
-# → ✓ closed 01 auth-system (Resolution written)
+# → ✓ closed 01 auth
+
+tkt ready
+# → Ready (1):
+# →   02  Build API
 ```
+
+Dependencies resolve automatically. Close a task and its dependents appear in the frontier.
 
 ## Install
 
-Pre-built binaries (fastest):
+### Pre-built binaries (fastest)
 
 ```bash
 # macOS / Linux
@@ -65,84 +46,98 @@ curl -fsSL https://github.com/smileynet/tkt/releases/latest/download/tkt-install
 irm https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.ps1 | iex
 ```
 
-From crates.io:
+### From crates.io
 
 ```bash
 cargo install tkt
+```
 
-# Or with cargo-binstall (downloads pre-built binary, no compile)
+### With cargo-binstall (pre-built, no compile)
+
+```bash
 cargo binstall tkt
 ```
 
-From source:
+### From source
 
 ```bash
-cargo install --path .
+git clone https://github.com/smileynet/tkt.git
+cargo install --path tkt
 ```
 
-Single binary, no runtime dependencies beyond `git`.
+### Verify
+
+```bash
+tkt --version
+# → tkt 0.2.1 (ea047fb)
+```
+
+**Requirement:** `git` on PATH (any version).
 
 ## Usage
 
-### See what's ready
+### See what's ready to work on
 
 ```bash
-tkt ready              # human-friendly list
-tkt ready --json       # machine-readable (JSON Lines)
+tkt ready                # human-friendly
+tkt ready --json         # machine-readable (JSON Lines)
 ```
 
-Shows tasks that are open and have all their dependencies done, sorted by priority.
+Shows open tasks with all dependencies satisfied, sorted by priority then ID.
 
 ### Create tasks
 
 ```bash
+tkt new fix-login --title "Fix login timeout"
 tkt new fix-login --title "Fix login timeout" --priority high
 tkt new deploy --title "Deploy to staging" --blocked-by 01,02
-tkt batch "api:Build API" "docs:Write docs" --blocked-by 01
+tkt new spike --title "Research caching" --status backlog
 ```
 
-IDs are assigned automatically. In shared repos, tkt checks both local and remote files to avoid collisions.
-
-### Work on tasks
+Batch creation for related work:
 
 ```bash
-tkt claim 03           # mark as in-progress (visible to others)
-tkt close 03 --note "Deployed" --ac 1,2   # mark done, check acceptance criteria
+tkt batch "api:Build API" "docs:Write docs" "tests:Add tests" --blocked-by 01
 ```
 
-`claim` is optional — `close` works directly on open tasks. Use `claim` in shared repos so others know what you're working on.
-
-### Edit and maintain
+### Claim and close
 
 ```bash
-tkt edit 02 --title "New title" --blocked-by 01,03 --priority high
-tkt validate           # check for cycles, broken references, contract issues
-tkt validate --fix     # auto-repair fixable problems
-tkt lint               # normalize frontmatter style (quoting, field order)
-tkt lint --check       # CI mode: exit 1 if anything needs fixing
-tkt doctor             # health check for current project
-tkt doctor ~/code      # scan all projects, flag non-tkt repos
-tkt sync-plan --check  # compare ticket status vs a plan document
-tkt query              # dump everything as JSON Lines
-tkt blocked            # show tasks stuck waiting on dependencies
+tkt claim 03             # mark in-progress (visible to collaborators)
+tkt close 03 --note "Deployed to prod"
+tkt close 03 --check-all --evidence "All tests pass" --resolution "Shipped"
 ```
 
-### Flags reference
+`claim` is optional for solo work — `close` works directly on open tasks. Use `claim` in shared repos so others see what's taken.
 
-| Flag | Used by | Effect |
-|------|---------|--------|
-| `-o json` | all | structured JSON output (errors to stderr, data to stdout) |
-| `--dry-run` | new, claim, close, edit | preview what would happen without writing |
-| `--json` | ready | machine-readable output (alias for `-o json ready`) |
-| `--strict` | validate, sync-plan, doctor | treat warnings as errors |
-| `--brief` | validate, sync-plan | short human output |
-| `--blocked-by N,N` | new, batch, edit | set dependencies |
-| `--priority P` | new, batch, edit | urgent, high, medium (default), low |
-| `--note "..."` | close | explain what was done |
-| `--ac N,N` | close, edit | check acceptance criteria boxes |
-| `--check-all` | close | check all acceptance criteria at once |
-| `--evidence "..."` | close | link proof to validation criteria |
-| `--vc "..."` | new, edit | set validation criteria (repeatable) |
+### Edit tasks
+
+```bash
+tkt edit 02 --title "New title"
+tkt edit 02 --blocked-by 01,03
+tkt edit 02 --priority high
+tkt edit 02 --status backlog       # pull from frontier
+```
+
+### Project health
+
+```bash
+tkt validate             # check for cycles, broken refs, contract issues
+tkt validate --fix       # auto-repair fixable problems
+tkt lint                 # normalize frontmatter style
+tkt lint --check         # CI mode: exit 1 if lint needed
+tkt doctor               # full health check
+tkt blocked              # show tasks stuck on dependencies
+tkt sync-plan --check    # compare ticket status vs PLAN.md
+```
+
+### Query
+
+```bash
+tkt query                        # all tickets as JSON Lines
+tkt query --status open          # filter by status
+tkt query --priority high        # filter by priority
+```
 
 ## Task Format
 
@@ -150,105 +145,78 @@ tkt blocked            # show tasks stuck waiting on dependencies
 ---
 id: "01"
 title: "Implement authentication"
-status: open          # backlog | open | in_progress | done
-blocked_by: []        # IDs that must be done first
-priority: high        # optional: urgent > high > medium > low
+status: open
+blocked_by: []
+priority: high
 ---
 
-# Implement authentication
-
 ## What to build
-JWT-based auth with refresh token rotation...
+JWT-based auth with refresh token rotation.
 
 ## Acceptance criteria
 - [ ] JWT tokens issued on login
 - [ ] Refresh token rotation works
 ```
 
-Tasks are just files. Edit them by hand anytime — tkt reads whatever's there.
+Tasks are just files in `.tickets/`. Edit them by hand anytime — tkt reads whatever's there.
 
 ## Configuration
 
-Project config in `.tickets/config.toml` (committed with your repo):
+Optional. Create `.tickets/config.toml` to customize behavior:
 
 ```toml
 [push]
-enabled = true            # false for local-only repos (no network calls)
+enabled = true              # false for local-only repos (no network on writes)
 
 [close]
-require_resolution = false  # require a --note when closing
-require_checked_acs = true  # require all acceptance criteria checked (default: true)
-require_validation_criteria = false  # require validation_criteria field
-require_validation_evidence = "warn"  # "true" | "warn" | "false"
-allow_force = true          # false to disable --force escape hatch
-
-[validate]
-strict = false            # treat warnings as errors
+require_checked_acs = true  # require acceptance criteria checked before close
+require_resolution = false  # require --note when closing
 
 [ready]
-default_env = ""          # filter tasks by environment
+default_env = ""            # filter frontier by environment
 
 [new]
-default_priority = "medium"
+default_priority = "medium" # default priority for new tasks
 ```
 
-Manage with `tkt config --list` or `tkt config --set push.enabled=false`.
+User-level defaults in `~/.config/tkt/config.toml`. Project config overrides.
 
-User config (`~/.config/tkt/config.toml`) provides global defaults; project config overrides per-repo. See `tkt config --show` for resolved values with sources.
-
-## How It Works
-
-- Tasks that depend on other tasks won't show up in `tkt ready` until those dependencies are done
-- When you create or claim a task, tkt pushes immediately — if someone else pushed first, it retries with a new ID
-- Edits only touch the specific field you changed, leaving everything else untouched
-- All reads are local and fast (~50ms). Writes include a git push round-trip (~2s) — disable with `push.enabled = false` for local-only workflows
+```bash
+tkt config --list          # show project config
+tkt config --show          # show resolved config with sources
+tkt config --set push.enabled=false
+```
 
 ## AI Agent Integration
 
-tkt works well with AI coding agents. Add to your AGENTS.md:
+Add to your project's AGENTS.md:
 
 ```markdown
-## Tasks
-
-tkt ready                                         # what to work on next
-tkt claim <id>                                    # mark as in-progress
-tkt close <id> --check-all --resolution "..."     # mark done
-tkt validate --brief                              # check for problems
+tkt ready              # see what's unblocked
+tkt claim <id>         # mark in-progress
+tkt close <id> --check-all --resolution "what was done"
 ```
 
-Solo workflow: `tkt ready` → pick one → `tkt close <id> --check-all --resolution "..."`.
+Solo agent: `tkt ready` → pick first → `tkt close <id> --check-all --resolution "..."`.
 
-Multi-agent workflow: `tkt ready` → `tkt claim <id>` → work → `tkt close <id>`.
+Multi-agent: `tkt ready` → `tkt claim <id>` → work → `tkt close <id>`.
 
-## Development
+Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --brief`.
 
-If you've cloned this repo, you're a maintainer. Regular users install from crates.io or pre-built binaries.
+## Environment Variables
 
-```bash
-# Build and deploy to PATH (run after pulling or making changes)
-cargo build --release && cargo install --path . && bash tools/deploy-skills.sh
-
-# Verify
-tkt --version          # shows version + git hash, e.g. "tkt 0.1.0 (ea047fb)"
-
-# Gate (run before every commit)
-cargo fmt && cargo clippy --all-targets && cargo test
-```
-
-## Telemetry
-
-Optional, local-only telemetry (disabled by default). Nothing leaves your machine. See [TELEMETRY.md](TELEMETRY.md).
-
-```bash
-tkt telemetry --enable   # opt in
-tkt telemetry --status   # check what's stored
-tkt telemetry --disable  # opt out
-```
+| Variable | Effect |
+|----------|--------|
+| `CREW_ENV` | Filter frontier by environment (corp/personal) |
+| `TKT_ASCII=1` | ASCII-only symbols (✓→\[ok\], ✗→\[err\]) |
+| `NO_COLOR=1` | Disable ANSI color |
+| `TKT_DEBUG=1` | Debug output to stderr |
 
 ## Contributing
 
-Found a bug? [File a report](https://github.com/smileynet/tkt/issues/new?template=bug_report.md). Want a feature? [Request it](https://github.com/smileynet/tkt/issues/new?template=feature_request.md).
+Found a bug? [File a report](https://github.com/smileynet/tkt/issues/new?template=bug_report.md).
+Want a feature? [Request it](https://github.com/smileynet/tkt/issues/new?template=feature_request.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)
