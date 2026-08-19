@@ -205,23 +205,43 @@ pub struct Event {
     pub version: String,
     pub os: String,
     pub arch: String,
+    /// Error classification (omitted on success). Low-cardinality ErrorKind variant name.
+    pub error_kind: Option<&'static str>,
 }
 
 impl Event {
     /// Serialize to a JSON string (one line, no trailing newline).
+    /// `error_kind` is omitted entirely on success (OTel convention: don't set on success).
     pub fn to_json(&self) -> String {
-        serde_json::json!({
-            "ts": self.ts,
-            "session": self.session,
-            "project": self.project,
-            "cmd": self.cmd,
-            "exit_code": self.exit_code,
-            "duration_ms": self.duration_ms,
-            "version": self.version,
-            "os": self.os,
-            "arch": self.arch,
-        })
-        .to_string()
+        let mut map = serde_json::Map::new();
+        map.insert("arch".into(), serde_json::Value::String(self.arch.clone()));
+        map.insert("cmd".into(), serde_json::Value::String(self.cmd.clone()));
+        map.insert(
+            "duration_ms".into(),
+            serde_json::Value::Number(self.duration_ms.into()),
+        );
+        if let Some(kind) = self.error_kind {
+            map.insert("error_kind".into(), serde_json::Value::String(kind.into()));
+        }
+        map.insert(
+            "exit_code".into(),
+            serde_json::Value::Number(self.exit_code.into()),
+        );
+        map.insert("os".into(), serde_json::Value::String(self.os.clone()));
+        map.insert(
+            "project".into(),
+            serde_json::Value::String(self.project.clone()),
+        );
+        map.insert(
+            "session".into(),
+            serde_json::Value::String(self.session.clone()),
+        );
+        map.insert("ts".into(), serde_json::Value::String(self.ts.clone()));
+        map.insert(
+            "version".into(),
+            serde_json::Value::String(self.version.clone()),
+        );
+        serde_json::Value::Object(map).to_string()
     }
 }
 
@@ -631,15 +651,41 @@ mod tests {
             version: "0.1.0".to_string(),
             os: "windows".to_string(),
             arch: "x86_64".to_string(),
+            error_kind: None,
         };
         let json = event.to_json();
         assert!(json.contains("\"cmd\":\"ready\""));
         assert!(json.contains("\"exit_code\":0"));
         assert!(json.contains("\"project\":\"tkt\""));
         assert!(json.contains("\"session\":\"0192a3b4c5d6-1234\""));
+        // error_kind should be omitted on success
+        assert!(!json.contains("error_kind"));
         // Should be valid JSON
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed["cmd"], "ready");
+    }
+
+    #[test]
+    fn event_serialization_with_error() {
+        let event = Event {
+            ts: "2026-07-30T10:00:00Z".to_string(),
+            session: "0192a3b4c5d6-1234".to_string(),
+            project: "tkt".to_string(),
+            cmd: "close".to_string(),
+            exit_code: 1,
+            duration_ms: 50,
+            version: "0.2.1".to_string(),
+            os: "macos".to_string(),
+            arch: "aarch64".to_string(),
+            error_kind: Some("not_found"),
+        };
+        let json = event.to_json();
+        assert!(json.contains("\"error_kind\":\"not_found\""));
+        assert!(json.contains("\"exit_code\":1"));
+        // Should be valid JSON with error_kind field present
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed["error_kind"], "not_found");
+        assert_eq!(parsed["cmd"], "close");
     }
 
     #[test]

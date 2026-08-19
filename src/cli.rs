@@ -438,8 +438,8 @@ pub fn run() -> i32 {
             clear,
         } => crate::commands::telemetry::run(enable, disable, status, show, clear),
     };
-    let exit_code = match result {
-        Ok(code) => code,
+    let (exit_code, error_kind) = match result {
+        Ok(code) => (code, None),
         Err(e) => {
             if let Some(de) = e.downcast_ref::<crate::DomainError>() {
                 let code = de.kind.exit_code();
@@ -447,7 +447,7 @@ pub fn run() -> i32 {
                     emit_json_error(de);
                 }
                 eprintln!("tkt: {} {}", crate::color::sym_err(), de.message);
-                code
+                (code, Some(de.kind.as_str()))
             } else {
                 if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
                     let envelope = format!(
@@ -457,13 +457,18 @@ pub fn run() -> i32 {
                     eprintln!("{}", envelope);
                 }
                 eprintln!("tkt: {} crash: {}", crate::color::sym_err(), e);
-                2
+                (2, Some("io"))
             }
         }
     };
 
     // Record telemetry event (silently — never affects CLI behavior)
-    record_telemetry(&cmd_name, exit_code, start.elapsed().as_millis() as u64);
+    record_telemetry(
+        &cmd_name,
+        exit_code,
+        start.elapsed().as_millis() as u64,
+        error_kind,
+    );
 
     crate::telemetry::debug_event(
         dbg,
@@ -506,7 +511,7 @@ fn command_name(cmd: &Commands) -> String {
     .to_string()
 }
 
-fn record_telemetry(cmd: &str, exit_code: i32, duration_ms: u64) {
+fn record_telemetry(cmd: &str, exit_code: i32, duration_ms: u64, error_kind: Option<&'static str>) {
     use crate::telemetry;
 
     let (consent, _) = telemetry::check_consent();
@@ -535,6 +540,7 @@ fn record_telemetry(cmd: &str, exit_code: i32, duration_ms: u64) {
         version: env!("CARGO_PKG_VERSION").to_string(),
         os: telemetry::os_string().to_string(),
         arch: telemetry::arch_string().to_string(),
+        error_kind,
     };
 
     telemetry::record_event(&event);
