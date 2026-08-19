@@ -217,6 +217,9 @@ enum Commands {
         strict: bool,
         #[arg(long)]
         brief: bool,
+        /// Run deep content analysis (evidence quality, template detection)
+        #[arg(long)]
+        deep: bool,
     },
     /// Manage user-level configuration (~/.config/tkt/config.toml)
     Config {
@@ -434,7 +437,11 @@ pub fn run() -> i32 {
         Commands::Blocked => crate::commands::blocked::run(),
         Commands::Capabilities => crate::commands::capabilities::run(),
         Commands::Rebase { dry_run } => crate::commands::rebase::run(dry_run),
-        Commands::Audit { strict, brief } => crate::commands::audit::run(strict, brief),
+        Commands::Audit {
+            strict,
+            brief,
+            deep,
+        } => crate::commands::audit::run(strict, brief, deep),
         Commands::Config {
             set,
             get,
@@ -670,9 +677,16 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
                 flags.push("strict");
             }
         }
-        Commands::Audit { strict, brief } => {
+        Commands::Audit {
+            strict,
+            brief,
+            deep,
+        } => {
             if *brief {
                 flags.push("brief");
+            }
+            if *deep {
+                flags.push("deep");
             }
             if *strict {
                 flags.push("strict");

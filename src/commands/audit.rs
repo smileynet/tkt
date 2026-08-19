@@ -8,7 +8,7 @@ use crate::core;
 use crate::findings;
 use crate::git;
 
-pub fn run(strict: bool, brief: bool) -> Result<i32> {
+pub fn run(strict: bool, brief: bool, deep: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
     let repo = dir.parent().unwrap_or(&dir).to_path_buf();
@@ -22,6 +22,13 @@ pub fn run(strict: bool, brief: bool) -> Result<i32> {
     }));
     all_findings.extend(audit::check_frontier_health(&corpus));
     all_findings.extend(audit::check_validation_evidence(&corpus));
+
+    // Deep analysis: evidence quality, force-close justification, template detection
+    if deep {
+        all_findings.extend(audit::check_evidence_specificity(&corpus));
+        all_findings.extend(audit::check_force_close_justification(&corpus));
+        all_findings.extend(audit::check_template_only(&corpus));
+    }
 
     let status = findings::status_from_findings(&all_findings, strict);
     findings::print_findings(&all_findings, brief, status);

@@ -156,6 +156,138 @@ fn filename(t: &Ticket) -> String {
         .to_string()
 }
 
+// --- Deep audit rules (--deep) ---
+
+/// Generic phrases that indicate low-effort evidence.
+const THIN_EVIDENCE_PHRASES: &[&str] = &[
+    "done",
+    "looks good",
+    "works",
+    "fixed",
+    "lgtm",
+    "completed",
+    "should work",
+    "all good",
+    "tested",
+    "verified",
+    "ok",
+    "pass",
+    "passed",
+];
+
+/// Check evidence specificity on done tickets with validation_criteria.
+/// Flags evidence strings that are too short or use generic phrases.
+pub fn check_evidence_specificity(corpus: &[Ticket]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+
+    for t in corpus.iter().filter(|t| t.status == Status::Done) {
+        if t.validation_criteria.is_empty() {
+            continue;
+        }
+
+        // Look for evidence in the Verification section
+        let evidence_lines: Vec<&str> = t
+            .body
+            .lines()
+            .skip_while(|l| !l.contains("### Verification"))
+            .skip(1)
+            .take_while(|l| !l.starts_with("## ") && !l.starts_with("### "))
+            .filter(|l| l.starts_with("- ") || l.starts_with("✓"))
+            .collect();
+
+        for line in &evidence_lines {
+            let text = line
+                .trim_start_matches("- ")
+                .trim_start_matches("✓ ")
+                .trim();
+            if text.len() < 15 {
+                let is_generic = THIN_EVIDENCE_PHRASES
+                    .iter()
+                    .any(|p| text.eq_ignore_ascii_case(p));
+                if is_generic || text.len() < 10 {
+                    findings.push(Finding {
+                        file: filename(t),
+                        rule: "thin-evidence".into(),
+                        message: format!("evidence too brief or generic: \"{}\"", text),
+                        severity: "warning".into(),
+                    });
+                }
+            }
+        }
+
+        // Check evidence count vs criteria count
+        if !evidence_lines.is_empty() && evidence_lines.len() < t.validation_criteria.len() {
+            findings.push(Finding {
+                file: filename(t),
+                rule: "evidence-count-mismatch".into(),
+                message: format!(
+                    "{} validation criteria but only {} evidence items",
+                    t.validation_criteria.len(),
+                    evidence_lines.len()
+                ),
+                severity: "warning".into(),
+            });
+        }
+    }
+
+    findings
+}
+
+/// Check for force-close without substantial resolution.
+/// Looks for `--force` marker in the Resolution section (tkt appends it).
+pub fn check_force_close_justification(corpus: &[Ticket]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+
+    for t in corpus.iter().filter(|t| t.status == Status::Done) {
+        let resolution_text = t
+            .body
+            .split_once("## Resolution")
+            .map(|(_, after)| after.lines().skip(1).collect::<Vec<_>>().join("\n"))
+            .unwrap_or_default();
+
+        let is_forced = resolution_text.contains("(forced)") || resolution_text.contains("--force");
+
+        if is_forced {
+            let substance = resolution_text
+                .lines()
+                .filter(|l| !l.trim().is_empty() && !l.contains("(forced)"))
+                .count();
+            if substance < 2 {
+                findings.push(Finding {
+                    file: filename(t),
+                    rule: "force-without-justification".into(),
+                    message: "force-closed with little or no justification".into(),
+                    severity: "warning".into(),
+                });
+            }
+        }
+    }
+
+    findings
+}
+
+/// Check for template-only tickets (closed with no real content added).
+pub fn check_template_only(corpus: &[Ticket]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+
+    for t in corpus.iter().filter(|t| t.status == Status::Done) {
+        let has_tbd_body =
+            t.body.contains("## What to build\n\nTBD") || t.body.contains("## What to build\n\n\n");
+        let has_tbd_ac = t.body.contains("- [ ] TBD");
+
+        if has_tbd_body || has_tbd_ac {
+            findings.push(Finding {
+                file: filename(t),
+                rule: "template-only-closure".into(),
+                message: "closed with template placeholders still present".into(),
+                severity: "warning".into(),
+            });
+        }
+    }
+
+    findings
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
