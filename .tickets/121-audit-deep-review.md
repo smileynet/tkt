@@ -1,7 +1,7 @@
 ---
 id: "121"
 title: "Deep contextual audit: evidence vs criteria, closure quality analysis"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -65,9 +65,17 @@ This is a SKILL (agent-driven, reads files, produces recommendations) not just a
 
 ## Acceptance criteria
 
-- [ ] `tkt audit --deep` reports per-ticket quality findings
-- [ ] Thin evidence (< 10 chars, generic phrases) flagged
-- [ ] Force-close without substantial resolution flagged
-- [ ] Unchanged ticket body flagged (template-only)
-- [ ] Companion skill can invoke and interpret the audit
-- [ ] Exit code 1 if any findings at warn+ level (with --strict: info+ level)
+- [x] `tkt audit --deep` reports per-ticket quality findings
+- [x] Thin evidence (< 10 chars, generic phrases) flagged
+- [x] Force-close without substantial resolution flagged
+- [x] Unchanged ticket body flagged (template-only)
+- [x] Companion skill can invoke and interpret the audit
+- [x] Exit code 1 if any findings at warn+ level (with --strict: info+ level)
+
+## Resolution (2026-08-19)
+
+Added --deep flag with 3 new rules (thin-evidence, force-without-justification, template-only-closure). Companion skill reference at references/audit-quality.md guides agents on semantic quality review.
+
+### Verification
+1. ✓ tkt audit --deep produces per-ticket analysis of evidence against acceptance criteria — "tkt audit --deep finds template-only-closure (8 findings) and thin-evidence rules active"
+2. ✓ companion skill enables agents to perform contextual ticket review — "audit-quality.md skill reference created and deployed to all agent environments"
