@@ -1,7 +1,7 @@
 ---
 id: "120"
 title: "Capture parse/syntax errors in telemetry (clap rejection path)"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
