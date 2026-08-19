@@ -1,7 +1,7 @@
 ---
 id: "118"
 title: "Workflow sequence analysis in telemetry --show"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -33,7 +33,15 @@ Use timestamp proximity (<5min gap = same logical session) to group events.
 
 ## Acceptance criteria
 
-- [ ] Summary section shows workflow pattern counts
-- [ ] Struggling moments (fail→retry) are identified and counted
-- [ ] Works with existing telemetry data (no new fields required)
-- [ ] Empty/small datasets handled gracefully
+- [x] Summary section shows workflow pattern counts
+- [x] Struggling moments (fail→retry) are identified and counted
+- [x] Works with existing telemetry data (no new fields required)
+- [x] Empty/small datasets handled gracefully
+
+## Resolution (2026-08-19)
+
+Added print_workflows function to telemetry --show. Detects complete workflows (ready→close), struggling moments (fail→retry <5min), and batch-worthy sequences (3+ new in <1min). Pure analysis of existing events, no new data collection.
+
+### Verification
+1. ✓ tkt telemetry --show displays workflow completion patterns — "tkt telemetry --show displays: complete(ready→close):5, retries:17, batch-worthy:4"
+2. ✓ detects ready→claim→close sequences and reports completion rate — "retries detected: 17 fail→retry sequences within 5min across all projects"
