@@ -1,7 +1,7 @@
 ---
 id: "113"
 title: "Add error_kind field to telemetry events on failure"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
