@@ -2,16 +2,43 @@
 id: "119"
 title: "Friction score per command in telemetry summary"
 status: open
-blocked_by: []
+blocked_by: ["118"]
 priority: high
+validation_criteria:
+  - "tkt telemetry --show displays friction score per command"
+  - "friction formula accounts for errors, retries, and slow executions"
 ---
 
 # Friction score per command in telemetry summary
 
+## Problem
+
+The current error rate (25/180 = 14%) is a blunt instrument. We need per-command friction scores to know WHERE users struggle most, not just that they struggle.
+
 ## What to build
 
-TBD
+Add a "friction" line to `--show` summary that scores each command:
+
+```
+friction: close 23% (12 fail, 3 retry, 2 slow) | new 8% (2 fail, 1 slow) | ready 0%
+```
+
+Formula: `friction = (errors + retries + slow) / total_for_command`
+- **error:** exit_code != 0
+- **retry:** same command, same project, <30s after a failure
+- **slow:** duration > 2× median for that command
+
+Only show commands with friction > 0%. Sort by friction descending.
+
+## Context
+
+- **Relevant files:** `src/commands/telemetry.rs` (print_summary)
+- **Depends on:** sequence analysis (#118) for retry detection logic
+- **Note:** Retry detection needs timestamp proximity — "same cmd, same project, <30s after exit≠0"
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] Each command with friction > 0% is listed with score and breakdown
+- [ ] Retries are detected (same cmd within 30s of failure)
+- [ ] Commands with 0% friction are omitted
+- [ ] Handles small datasets (< 10 events) gracefully
