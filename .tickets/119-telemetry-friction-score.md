@@ -1,7 +1,7 @@
 ---
 id: "119"
 title: "Friction score per command in telemetry summary"
-status: open
+status: in_progress
 blocked_by: ["118"]
 priority: high
 validation_criteria:
