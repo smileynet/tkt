@@ -1,7 +1,7 @@
 ---
 id: "112"
 title: "Fix telemetry double-emit: every command records two events"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
