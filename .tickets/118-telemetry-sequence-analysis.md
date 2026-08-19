@@ -1,7 +1,7 @@
 ---
 id: "118"
 title: "Workflow sequence analysis in telemetry --show"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
