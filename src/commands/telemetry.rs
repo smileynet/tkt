@@ -161,6 +161,7 @@ fn telemetry_show(show_all: bool) -> Result<i32> {
 
     // --- Summary header ---
     print_summary(&all_lines);
+    print_workflows(&all_lines);
     println!();
 
     // --- Event list ---
@@ -256,6 +257,146 @@ fn print_summary(lines: &[String]) {
             println!("  {} {} {:.1}s", ts, cmd, *ms as f64 / 1000.0);
         }
     }
+}
+
+/// Detect workflow patterns: struggling moments, complete workflows, batch-worthy sequences.
+fn print_workflows(lines: &[String]) {
+    if lines.len() < 3 {
+        return;
+    }
+
+    // Parse events into lightweight structs for analysis
+    struct Ev {
+        ts: String,
+        project: String,
+        cmd: String,
+        exit_code: i64,
+    }
+
+    let events: Vec<Ev> = lines
+        .iter()
+        .filter_map(|line| {
+            serde_json::from_str::<serde_json::Value>(line)
+                .ok()
+                .map(|v| Ev {
+                    ts: v["ts"].as_str().unwrap_or("").to_string(),
+                    project: v["project"].as_str().unwrap_or("").to_string(),
+                    cmd: v["cmd"].as_str().unwrap_or("").to_string(),
+                    exit_code: v["exit_code"].as_i64().unwrap_or(0),
+                })
+        })
+        .collect();
+
+    let mut retries: usize = 0;
+    let mut complete_workflows: usize = 0;
+    let mut batch_worthy: usize = 0;
+
+    // Detect retries: same cmd, same project, <5min, previous exit != 0
+    for i in 1..events.len() {
+        let prev = &events[i - 1];
+        let cur = &events[i];
+        if prev.cmd == cur.cmd
+            && prev.project == cur.project
+            && prev.exit_code != 0
+            && within_seconds(&prev.ts, &cur.ts, 300)
+        {
+            retries += 1;
+        }
+    }
+
+    // Detect complete workflows: ready → close (with optional claim between) per project
+    // Scan for ready events, then look ahead for close in same project within 1 hour
+    for (i, ev) in events.iter().enumerate() {
+        if ev.cmd != "ready" {
+            continue;
+        }
+        // Look ahead for a close in same project within next events (max 1 hour)
+        for later in &events[(i + 1)..] {
+            if later.project != ev.project {
+                continue;
+            }
+            if !within_seconds(&ev.ts, &later.ts, 3600) {
+                break;
+            }
+            if later.cmd == "close" && later.exit_code == 0 {
+                complete_workflows += 1;
+                break;
+            }
+        }
+    }
+
+    // Detect batch-worthy: 3+ new commands in same project within 1 minute
+    let mut i = 0;
+    while i < events.len() {
+        if events[i].cmd == "new" && events[i].exit_code == 0 {
+            let mut streak = 1;
+            let start_ts = &events[i].ts;
+            let start_project = &events[i].project;
+            let mut next = i + 1;
+            while next < events.len()
+                && events[next].cmd == "new"
+                && events[next].project == *start_project
+                && events[next].exit_code == 0
+                && within_seconds(start_ts, &events[next].ts, 60)
+            {
+                streak += 1;
+                next += 1;
+            }
+            if streak >= 3 {
+                batch_worthy += 1;
+                i = next;
+                continue;
+            }
+        }
+        i += 1;
+    }
+
+    // Only print if there's something to report
+    if retries == 0 && complete_workflows == 0 && batch_worthy == 0 {
+        return;
+    }
+
+    println!("workflows:");
+    if complete_workflows > 0 {
+        println!("  complete (ready→close): {}", complete_workflows);
+    }
+    if retries > 0 {
+        println!("  retries (fail→retry <5min): {}", retries);
+    }
+    if batch_worthy > 0 {
+        println!(
+            "  batch-worthy (3+ new in <1min): {} (consider tkt batch)",
+            batch_worthy
+        );
+    }
+}
+
+/// Check if two ISO timestamps are within `max_secs` of each other.
+/// Simple string comparison + parse of the time portion.
+fn within_seconds(ts1: &str, ts2: &str, max_secs: u64) -> bool {
+    // Timestamps are YYYY-MM-DDTHH:MM:SSZ — parse to seconds-since-epoch (approximate)
+    let s1 = ts_to_secs(ts1);
+    let s2 = ts_to_secs(ts2);
+    match (s1, s2) {
+        (Some(a), Some(b)) => a.abs_diff(b) <= max_secs,
+        _ => false,
+    }
+}
+
+/// Convert ISO timestamp to approximate seconds since epoch (good enough for proximity).
+fn ts_to_secs(ts: &str) -> Option<u64> {
+    // YYYY-MM-DDTHH:MM:SSZ — minimal parse
+    if ts.len() < 19 {
+        return None;
+    }
+    let year: u64 = ts[0..4].parse().ok()?;
+    let month: u64 = ts[5..7].parse().ok()?;
+    let day: u64 = ts[8..10].parse().ok()?;
+    let hour: u64 = ts[11..13].parse().ok()?;
+    let min: u64 = ts[14..16].parse().ok()?;
+    let sec: u64 = ts[17..19].parse().ok()?;
+    // Approximate: don't need exact epoch, just relative distances
+    Some(((year * 365 + month * 30 + day) * 86400) + hour * 3600 + min * 60 + sec)
 }
 
 fn extract_ts(line: &str) -> &str {
