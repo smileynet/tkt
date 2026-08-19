@@ -1,7 +1,7 @@
 ---
 id: "121"
 title: "Deep contextual audit: evidence vs criteria, closure quality analysis"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
