@@ -261,7 +261,19 @@ enum Commands {
 
 pub fn run() -> i32 {
     let start = std::time::Instant::now();
-    let cli = Cli::parse();
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            // Record parse failures in telemetry (agents using wrong syntax)
+            // Skip help/version requests — those are intentional, not errors
+            use clap::error::ErrorKind;
+            let is_error = !matches!(e.kind(), ErrorKind::DisplayHelp | ErrorKind::DisplayVersion);
+            if is_error {
+                record_parse_error(&start);
+            }
+            e.exit();
+        }
+    };
     let cmd_name = command_name(&cli.command);
 
     // Debug mode setup
@@ -714,6 +726,44 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
 
     // flags are already inserted alphabetically due to match arm ordering
     flags
+}
+
+/// Record a telemetry event for parse/syntax errors (clap rejection path).
+/// Called when clap rejects input before dispatch. We can't know the exact command
+/// or flags — just that something failed to parse.
+fn record_parse_error(start: &std::time::Instant) {
+    use crate::telemetry;
+
+    let (consent, _) = telemetry::check_consent();
+    if consent != telemetry::Consent::Enabled {
+        return;
+    }
+
+    let project = std::env::current_dir()
+        .ok()
+        .and_then(|cwd| crate::git::repo_root(&cwd).ok())
+        .map(|root| telemetry::project_slug(&root))
+        .unwrap_or_else(|| "unknown".to_string());
+
+    static SESSION: std::sync::LazyLock<String> =
+        std::sync::LazyLock::new(telemetry::generate_session_id);
+
+    let event = telemetry::Event {
+        ts: telemetry::iso_timestamp(),
+        session: SESSION.clone(),
+        project,
+        cmd: "?".to_string(),
+        exit_code: 2,
+        duration_ms: start.elapsed().as_millis() as u64,
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        os: telemetry::os_string().to_string(),
+        arch: telemetry::arch_string().to_string(),
+        error_kind: Some("parse"),
+        flags: vec![],
+        result_count: None,
+    };
+
+    telemetry::record_event(&event);
 }
 
 fn record_telemetry(
