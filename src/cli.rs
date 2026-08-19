@@ -296,6 +296,9 @@ pub fn run() -> i32 {
     // Initialize color mode from --color flag and environment
     crate::color::init(cli.color.as_deref());
 
+    // Extract notable flags before dispatch (command is moved into match)
+    let flags = notable_flags(&cli.command);
+
     let result = match cli.command {
         Commands::Ready { json } => crate::commands::ready::run(json || json_output),
         Commands::Init {
@@ -472,6 +475,7 @@ pub fn run() -> i32 {
         exit_code,
         start.elapsed().as_millis() as u64,
         error_kind,
+        flags,
     );
 
     crate::telemetry::debug_event(
@@ -515,7 +519,210 @@ fn command_name(cmd: &Commands) -> String {
     .to_string()
 }
 
-fn record_telemetry(cmd: &str, exit_code: i32, duration_ms: u64, error_kind: Option<&'static str>) {
+/// Extract names of notable flags that were explicitly provided.
+/// Never includes flag values — just names. Sorted alphabetically.
+fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
+    let mut flags = Vec::new();
+
+    match cmd {
+        Commands::New {
+            spec,
+            env,
+            priority,
+            status,
+            blocked_by,
+            validation_criteria,
+            ..
+        } => {
+            if blocked_by.is_some() {
+                flags.push("blocked-by");
+            }
+            if env.is_some() {
+                flags.push("env");
+            }
+            if priority.is_some() {
+                flags.push("priority");
+            }
+            if spec.is_some() {
+                flags.push("spec");
+            }
+            if status.is_some() {
+                flags.push("status");
+            }
+            if !validation_criteria.is_empty() {
+                flags.push("validation");
+            }
+        }
+        Commands::Batch {
+            spec,
+            env,
+            priority,
+            status,
+            blocked_by,
+            validation_criteria,
+            ..
+        } => {
+            if blocked_by.is_some() {
+                flags.push("blocked-by");
+            }
+            if env.is_some() {
+                flags.push("env");
+            }
+            if priority.is_some() {
+                flags.push("priority");
+            }
+            if spec.is_some() {
+                flags.push("spec");
+            }
+            if status.is_some() {
+                flags.push("status");
+            }
+            if !validation_criteria.is_empty() {
+                flags.push("validation");
+            }
+        }
+        Commands::Close {
+            note,
+            resolution,
+            ac,
+            check_all,
+            force,
+            evidence,
+            ..
+        } => {
+            if ac.is_some() {
+                flags.push("ac");
+            }
+            if *check_all {
+                flags.push("check-all");
+            }
+            if !evidence.is_empty() {
+                flags.push("evidence");
+            }
+            if *force {
+                flags.push("force");
+            }
+            if note.is_some() {
+                flags.push("note");
+            }
+            if resolution.is_some() {
+                flags.push("resolution");
+            }
+        }
+        Commands::Edit {
+            title,
+            blocked_by,
+            env,
+            spec,
+            priority,
+            status,
+            ac,
+            validation_criteria,
+            ..
+        } => {
+            if ac.is_some() {
+                flags.push("ac");
+            }
+            if blocked_by.is_some() {
+                flags.push("blocked-by");
+            }
+            if env.is_some() {
+                flags.push("env");
+            }
+            if priority.is_some() {
+                flags.push("priority");
+            }
+            if spec.is_some() {
+                flags.push("spec");
+            }
+            if status.is_some() {
+                flags.push("status");
+            }
+            if title.is_some() {
+                flags.push("title");
+            }
+            if !validation_criteria.is_empty() {
+                flags.push("validation");
+            }
+        }
+        Commands::Validate {
+            strict, brief, fix, ..
+        } => {
+            if *brief {
+                flags.push("brief");
+            }
+            if *fix {
+                flags.push("fix");
+            }
+            if *strict {
+                flags.push("strict");
+            }
+        }
+        Commands::Audit { strict, brief } => {
+            if *brief {
+                flags.push("brief");
+            }
+            if *strict {
+                flags.push("strict");
+            }
+        }
+        Commands::Query { status, priority } => {
+            if priority.is_some() {
+                flags.push("priority");
+            }
+            if status.is_some() {
+                flags.push("status");
+            }
+        }
+        Commands::SyncPlan {
+            check,
+            fix,
+            strict,
+            brief,
+            ..
+        } => {
+            if *brief {
+                flags.push("brief");
+            }
+            if *check {
+                flags.push("check");
+            }
+            if *fix {
+                flags.push("fix");
+            }
+            if *strict {
+                flags.push("strict");
+            }
+        }
+        Commands::Ready { json } => {
+            if *json {
+                flags.push("json");
+            }
+        }
+        // Commands with no notable optional flags
+        Commands::Claim { .. }
+        | Commands::Blocked
+        | Commands::Capabilities
+        | Commands::Renumber { .. }
+        | Commands::Rebase { .. }
+        | Commands::Config { .. }
+        | Commands::Telemetry { .. }
+        | Commands::Init { .. }
+        | Commands::Doctor { .. }
+        | Commands::Lint { .. } => {}
+    }
+
+    // flags are already inserted alphabetically due to match arm ordering
+    flags
+}
+
+fn record_telemetry(
+    cmd: &str,
+    exit_code: i32,
+    duration_ms: u64,
+    error_kind: Option<&'static str>,
+    flags: Vec<&'static str>,
+) {
     use crate::telemetry;
 
     let (consent, _) = telemetry::check_consent();
@@ -545,6 +752,7 @@ fn record_telemetry(cmd: &str, exit_code: i32, duration_ms: u64, error_kind: Opt
         os: telemetry::os_string().to_string(),
         arch: telemetry::arch_string().to_string(),
         error_kind,
+        flags,
     };
 
     telemetry::record_event(&event);

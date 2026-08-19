@@ -207,11 +207,14 @@ pub struct Event {
     pub arch: String,
     /// Error classification (omitted on success). Low-cardinality ErrorKind variant name.
     pub error_kind: Option<&'static str>,
+    /// Flag names explicitly provided by the user (omitted when empty). Never includes values.
+    pub flags: Vec<&'static str>,
 }
 
 impl Event {
     /// Serialize to a JSON string (one line, no trailing newline).
     /// `error_kind` is omitted entirely on success (OTel convention: don't set on success).
+    /// `flags` is omitted when empty.
     pub fn to_json(&self) -> String {
         let mut map = serde_json::Map::new();
         map.insert("arch".into(), serde_json::Value::String(self.arch.clone()));
@@ -227,6 +230,14 @@ impl Event {
             "exit_code".into(),
             serde_json::Value::Number(self.exit_code.into()),
         );
+        if !self.flags.is_empty() {
+            let arr: Vec<serde_json::Value> = self
+                .flags
+                .iter()
+                .map(|f| serde_json::Value::String((*f).into()))
+                .collect();
+            map.insert("flags".into(), serde_json::Value::Array(arr));
+        }
         map.insert("os".into(), serde_json::Value::String(self.os.clone()));
         map.insert(
             "project".into(),
@@ -652,6 +663,7 @@ mod tests {
             os: "windows".to_string(),
             arch: "x86_64".to_string(),
             error_kind: None,
+            flags: vec![],
         };
         let json = event.to_json();
         assert!(json.contains("\"cmd\":\"ready\""));
@@ -660,6 +672,8 @@ mod tests {
         assert!(json.contains("\"session\":\"0192a3b4c5d6-1234\""));
         // error_kind should be omitted on success
         assert!(!json.contains("error_kind"));
+        // flags should be omitted when empty
+        assert!(!json.contains("flags"));
         // Should be valid JSON
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed["cmd"], "ready");
@@ -678,14 +692,18 @@ mod tests {
             os: "macos".to_string(),
             arch: "aarch64".to_string(),
             error_kind: Some("not_found"),
+            flags: vec!["check-all", "evidence"],
         };
         let json = event.to_json();
         assert!(json.contains("\"error_kind\":\"not_found\""));
         assert!(json.contains("\"exit_code\":1"));
-        // Should be valid JSON with error_kind field present
+        assert!(json.contains("\"flags\":[\"check-all\",\"evidence\"]"));
+        // Should be valid JSON with error_kind and flags present
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed["error_kind"], "not_found");
         assert_eq!(parsed["cmd"], "close");
+        assert_eq!(parsed["flags"][0], "check-all");
+        assert_eq!(parsed["flags"][1], "evidence");
     }
 
     #[test]
