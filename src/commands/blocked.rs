@@ -26,6 +26,9 @@ pub fn run() -> Result<i32> {
 
     blocked.sort_by_key(|t| t.numeric_key());
 
+    // Record count for telemetry
+    crate::RESULT_COUNT.store(blocked.len() as i32, std::sync::atomic::Ordering::Relaxed);
+
     if blocked.is_empty() {
         if !is_quiet() {
             println!("No blocked tickets.");

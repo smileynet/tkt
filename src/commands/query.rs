@@ -9,6 +9,7 @@ pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
 
+    let mut count: u32 = 0;
     for t in &corpus {
         if let Some(sf) = status_filter {
             if t.status.as_str() != sf {
@@ -21,6 +22,8 @@ pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result
                 _ => continue,
             }
         }
+
+        count += 1;
 
         let blocked_by: Vec<String> = t
             .blocked_by
@@ -56,5 +59,6 @@ pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result
 
         println!("{{{}}}", fields.join(","));
     }
+    crate::RESULT_COUNT.store(count as i32, std::sync::atomic::Ordering::Relaxed);
     Ok(0)
 }

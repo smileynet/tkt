@@ -11,6 +11,9 @@ pub fn run(json: bool) -> Result<i32> {
     let corpus = core::load_corpus(&dir)?;
     let front = core::frontier_with_default_env(&corpus, &pcfg.ready_default_env);
 
+    // Record frontier size for telemetry
+    crate::RESULT_COUNT.store(front.len() as i32, std::sync::atomic::Ordering::Relaxed);
+
     let dbg = crate::telemetry::debug_mode();
     let open = corpus.iter().filter(|t| t.status == Status::Open).count();
     let wip_count = corpus

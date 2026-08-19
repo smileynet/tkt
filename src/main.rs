@@ -103,6 +103,11 @@ pub(crate) static DRY_RUN: std::sync::atomic::AtomicBool =
 pub(crate) static JSON_OUTPUT: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
+/// Result count for telemetry — set by read commands (ready, query, blocked, validate).
+/// -1 = not applicable (default). Commands that produce countable results store the count here.
+pub(crate) static RESULT_COUNT: std::sync::atomic::AtomicI32 =
+    std::sync::atomic::AtomicI32::new(-1);
+
 fn main() -> ExitCode {
     let code = cli::run();
     update_check::check_for_update();

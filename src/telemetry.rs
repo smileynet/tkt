@@ -209,6 +209,8 @@ pub struct Event {
     pub error_kind: Option<&'static str>,
     /// Flag names explicitly provided by the user (omitted when empty). Never includes values.
     pub flags: Vec<&'static str>,
+    /// Number of results returned by read commands (omitted for mutations). 0 = empty result set.
+    pub result_count: Option<u32>,
 }
 
 impl Event {
@@ -243,6 +245,12 @@ impl Event {
             "project".into(),
             serde_json::Value::String(self.project.clone()),
         );
+        if let Some(count) = self.result_count {
+            map.insert(
+                "result_count".into(),
+                serde_json::Value::Number(count.into()),
+            );
+        }
         map.insert(
             "session".into(),
             serde_json::Value::String(self.session.clone()),
@@ -664,6 +672,7 @@ mod tests {
             arch: "x86_64".to_string(),
             error_kind: None,
             flags: vec![],
+            result_count: None,
         };
         let json = event.to_json();
         assert!(json.contains("\"cmd\":\"ready\""));
@@ -674,6 +683,8 @@ mod tests {
         assert!(!json.contains("error_kind"));
         // flags should be omitted when empty
         assert!(!json.contains("flags"));
+        // result_count should be omitted when None
+        assert!(!json.contains("result_count"));
         // Should be valid JSON
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed["cmd"], "ready");
@@ -693,17 +704,20 @@ mod tests {
             arch: "aarch64".to_string(),
             error_kind: Some("not_found"),
             flags: vec!["check-all", "evidence"],
+            result_count: Some(5),
         };
         let json = event.to_json();
         assert!(json.contains("\"error_kind\":\"not_found\""));
         assert!(json.contains("\"exit_code\":1"));
         assert!(json.contains("\"flags\":[\"check-all\",\"evidence\"]"));
+        assert!(json.contains("\"result_count\":5"));
         // Should be valid JSON with error_kind and flags present
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed["error_kind"], "not_found");
         assert_eq!(parsed["cmd"], "close");
         assert_eq!(parsed["flags"][0], "check-all");
         assert_eq!(parsed["flags"][1], "evidence");
+        assert_eq!(parsed["result_count"], 5);
     }
 
     #[test]

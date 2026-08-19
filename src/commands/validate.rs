@@ -36,6 +36,10 @@ pub fn run(strict: bool, brief: bool) -> Result<i32> {
     all_findings.extend(findings::check_unchecked_acs(&corpus));
 
     let status = findings::status_from_findings(&all_findings, effective_strict);
+    crate::RESULT_COUNT.store(
+        all_findings.len() as i32,
+        std::sync::atomic::Ordering::Relaxed,
+    );
     findings::print_findings(&all_findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
 }

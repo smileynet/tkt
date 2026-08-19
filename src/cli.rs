@@ -753,6 +753,14 @@ fn record_telemetry(
         arch: telemetry::arch_string().to_string(),
         error_kind,
         flags,
+        result_count: {
+            let rc = crate::RESULT_COUNT.load(std::sync::atomic::Ordering::Relaxed);
+            if rc >= 0 {
+                Some(rc as u32)
+            } else {
+                None
+            }
+        },
     };
 
     telemetry::record_event(&event);
