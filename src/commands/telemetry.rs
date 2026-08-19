@@ -162,6 +162,7 @@ fn telemetry_show(show_all: bool) -> Result<i32> {
     // --- Summary header ---
     print_summary(&all_lines);
     print_workflows(&all_lines);
+    print_friction(&all_lines);
     println!();
 
     // --- Event list ---
@@ -369,6 +370,142 @@ fn print_workflows(lines: &[String]) {
             batch_worthy
         );
     }
+}
+
+/// Per-command friction score: (errors + retries + slow) / total.
+fn print_friction(lines: &[String]) {
+    if lines.len() < 10 {
+        return;
+    }
+
+    struct Ev {
+        ts: String,
+        project: String,
+        cmd: String,
+        exit_code: i64,
+        duration_ms: u64,
+    }
+
+    let events: Vec<Ev> = lines
+        .iter()
+        .filter_map(|line| {
+            serde_json::from_str::<serde_json::Value>(line)
+                .ok()
+                .map(|v| Ev {
+                    ts: v["ts"].as_str().unwrap_or("").to_string(),
+                    project: v["project"].as_str().unwrap_or("").to_string(),
+                    cmd: v["cmd"].as_str().unwrap_or("").to_string(),
+                    exit_code: v["exit_code"].as_i64().unwrap_or(0),
+                    duration_ms: v["duration_ms"].as_u64().unwrap_or(0),
+                })
+        })
+        .collect();
+
+    // Group durations by command for median calculation
+    let mut durations_by_cmd: HashMap<String, Vec<u64>> = HashMap::new();
+    for ev in &events {
+        durations_by_cmd
+            .entry(ev.cmd.clone())
+            .or_default()
+            .push(ev.duration_ms);
+    }
+
+    // Compute median per command
+    let median_by_cmd: HashMap<&str, u64> = durations_by_cmd
+        .iter_mut()
+        .map(|(cmd, durs)| {
+            durs.sort_unstable();
+            let med = durs[durs.len() / 2];
+            (cmd.as_str(), med)
+        })
+        .collect();
+
+    // Count friction signals per command
+    struct FrictionStats {
+        total: usize,
+        errors: usize,
+        retries: usize,
+        slow: usize,
+    }
+
+    let mut stats: HashMap<String, FrictionStats> = HashMap::new();
+
+    for (i, ev) in events.iter().enumerate() {
+        let entry = stats.entry(ev.cmd.clone()).or_insert(FrictionStats {
+            total: 0,
+            errors: 0,
+            retries: 0,
+            slow: 0,
+        });
+        entry.total += 1;
+
+        // Error
+        if ev.exit_code != 0 {
+            entry.errors += 1;
+        }
+
+        // Retry: same cmd, same project, <30s after a failure
+        if i > 0 {
+            let prev = &events[i - 1];
+            if prev.cmd == ev.cmd
+                && prev.project == ev.project
+                && prev.exit_code != 0
+                && within_seconds(&prev.ts, &ev.ts, 30)
+            {
+                entry.retries += 1;
+            }
+        }
+
+        // Slow: > 2× median for this command (only if median > 100ms to avoid noise)
+        let med = median_by_cmd.get(ev.cmd.as_str()).copied().unwrap_or(0);
+        if med > 100 && ev.duration_ms > med * 2 {
+            entry.slow += 1;
+        }
+    }
+
+    // Collect commands with friction > 0, sorted by friction descending
+    let mut friction_list: Vec<(&str, f64, &FrictionStats)> = stats
+        .iter()
+        .filter_map(|(cmd, s)| {
+            if s.total == 0 {
+                return None;
+            }
+            let friction_events = s.errors + s.retries + s.slow;
+            if friction_events == 0 {
+                return None;
+            }
+            let score = friction_events as f64 / s.total as f64;
+            Some((cmd.as_str(), score, s))
+        })
+        .collect();
+
+    friction_list.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+    if friction_list.is_empty() {
+        return;
+    }
+
+    print!("friction:");
+    for (cmd, _score, s) in &friction_list {
+        let friction_events = s.errors + s.retries + s.slow;
+        let parts: Vec<String> = [
+            (s.errors > 0).then(|| format!("{} fail", s.errors)),
+            (s.retries > 0).then(|| format!("{} retry", s.retries)),
+            (s.slow > 0).then(|| format!("{} slow", s.slow)),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+        print!(
+            " {} {}/{} ({})",
+            cmd,
+            friction_events,
+            s.total,
+            parts.join(", ")
+        );
+        print!(" |");
+    }
+    println!();
 }
 
 /// Check if two ISO timestamps are within `max_secs` of each other.
