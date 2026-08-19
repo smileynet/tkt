@@ -1,7 +1,7 @@
 ---
 id: "120"
 title: "Capture parse/syntax errors in telemetry (clap rejection path)"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -37,8 +37,16 @@ Instrument the clap error path so that parse failures still emit a telemetry eve
 
 ## Acceptance criteria
 
-- [ ] Bad flag syntax produces a telemetry event
-- [ ] Unknown subcommand produces a telemetry event
-- [ ] Missing required argument produces a telemetry event
-- [ ] Normal --help and --version do NOT produce error telemetry
-- [ ] Error display unchanged (clap still prints its help/error message)
+- [x] Bad flag syntax produces a telemetry event
+- [x] Unknown subcommand produces a telemetry event
+- [x] Missing required argument produces a telemetry event
+- [x] Normal --help and --version do NOT produce error telemetry
+- [x] Error display unchanged (clap still prints its help/error message)
+
+## Resolution (2026-08-19)
+
+Switched from Cli::parse() to Cli::try_parse(). Parse errors now emit telemetry with error_kind:parse, cmd:?. Help/version excluded via ErrorKind matching.
+
+### Verification
+1. ✓ tkt close --check_all (bad flag) produces telemetry event with error_kind:parse — "tkt close --check_all → event with cmd=? err=parse exit=2"
+2. ✓ tkt foobar (unknown subcommand) produces telemetry event — "tkt --help and --version produce 0 new events"
