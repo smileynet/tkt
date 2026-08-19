@@ -250,6 +250,9 @@ enum Commands {
         /// Print recent telemetry events
         #[arg(long)]
         show: bool,
+        /// Show all events (default: last 20)
+        #[arg(long)]
+        all: bool,
         /// Delete all local telemetry data
         #[arg(long)]
         clear: bool,
@@ -435,8 +438,9 @@ pub fn run() -> i32 {
             disable,
             status,
             show,
+            all,
             clear,
-        } => crate::commands::telemetry::run(enable, disable, status, show, clear),
+        } => crate::commands::telemetry::run(enable, disable, status, show, all, clear),
     };
     let (exit_code, error_kind) = match result {
         Ok(code) => (code, None),

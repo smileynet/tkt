@@ -1,10 +1,19 @@
 //! `tkt telemetry` — manage telemetry consent and inspect collected data.
 
+use std::collections::HashMap;
+
 use anyhow::Result;
 
 use crate::telemetry;
 
-pub fn run(enable: bool, disable: bool, status: bool, show: bool, clear: bool) -> Result<i32> {
+pub fn run(
+    enable: bool,
+    disable: bool,
+    status: bool,
+    show: bool,
+    all: bool,
+    clear: bool,
+) -> Result<i32> {
     if enable {
         telemetry::write_consent(true)
             .map_err(|e| anyhow::anyhow!("failed to write consent: {}", e))?;
@@ -34,8 +43,8 @@ pub fn run(enable: bool, disable: bool, status: bool, show: bool, clear: bool) -
         return Ok(0);
     }
 
-    if show {
-        return telemetry_show();
+    if show || all {
+        return telemetry_show(all);
     }
 
     let _ = status;
@@ -118,7 +127,7 @@ fn telemetry_status() -> Result<i32> {
     Ok(0)
 }
 
-fn telemetry_show() -> Result<i32> {
+fn telemetry_show(show_all: bool) -> Result<i32> {
     let dir = match telemetry::telemetry_dir() {
         Some(d) if d.is_dir() => d,
         _ => {
@@ -150,21 +159,41 @@ fn telemetry_show() -> Result<i32> {
 
     all_lines.sort_by(|a, b| extract_ts(a.as_str()).cmp(extract_ts(b.as_str())));
 
-    let start = all_lines.len().saturating_sub(20);
-    println!(
-        "recent events ({} total, showing last {}):",
-        all_lines.len(),
-        all_lines.len() - start
-    );
+    // --- Summary header ---
+    print_summary(&all_lines);
+    println!();
+
+    // --- Event list ---
+    let start = if show_all {
+        0
+    } else {
+        all_lines.len().saturating_sub(20)
+    };
+    let showing = all_lines.len() - start;
+
+    if show_all {
+        println!("all events ({}):", all_lines.len());
+    } else {
+        println!(
+            "recent events ({} total, showing last {}):",
+            all_lines.len(),
+            showing
+        );
+    }
     println!();
     for line in &all_lines[start..] {
         if let Ok(val) = serde_json::from_str::<serde_json::Value>(line) {
+            let error_part = val["error_kind"]
+                .as_str()
+                .map(|k| format!(" err={}", k))
+                .unwrap_or_default();
             println!(
-                "  {} {} cmd={} exit={} {}ms",
+                "  {} {} cmd={} exit={}{}  {}ms",
                 val["ts"].as_str().unwrap_or("?"),
                 val["project"].as_str().unwrap_or("?"),
                 val["cmd"].as_str().unwrap_or("?"),
                 val["exit_code"].as_i64().unwrap_or(-1),
+                error_part,
                 val["duration_ms"].as_u64().unwrap_or(0),
             );
         } else {
@@ -172,6 +201,61 @@ fn telemetry_show() -> Result<i32> {
         }
     }
     Ok(0)
+}
+
+/// Print a compact summary of telemetry data: command distribution, errors, slow commands.
+fn print_summary(lines: &[String]) {
+    let mut cmd_counts: HashMap<String, usize> = HashMap::new();
+    let mut error_count: usize = 0;
+    let mut slow_cmds: Vec<(String, String, u64)> = Vec::new(); // (ts, cmd, duration_ms)
+
+    for line in lines {
+        if let Ok(val) = serde_json::from_str::<serde_json::Value>(line) {
+            let cmd = val["cmd"].as_str().unwrap_or("?").to_string();
+            *cmd_counts.entry(cmd.clone()).or_default() += 1;
+
+            if val["exit_code"].as_i64().unwrap_or(0) != 0 {
+                error_count += 1;
+            }
+
+            let duration = val["duration_ms"].as_u64().unwrap_or(0);
+            if duration > 2000 {
+                let ts = val["ts"].as_str().unwrap_or("?").to_string();
+                slow_cmds.push((ts, cmd, duration));
+            }
+        }
+    }
+
+    // Command distribution (sorted by count desc)
+    let mut cmd_list: Vec<_> = cmd_counts.iter().collect();
+    cmd_list.sort_by_key(|(_, count)| std::cmp::Reverse(**count));
+
+    print!("commands:");
+    for (cmd, count) in &cmd_list {
+        print!(" {}:{}", cmd, count);
+    }
+    println!();
+
+    // Error rate
+    let total = lines.len();
+    if error_count > 0 {
+        println!(
+            "errors: {}/{} ({:.0}%)",
+            error_count,
+            total,
+            (error_count as f64 / total as f64) * 100.0
+        );
+    } else {
+        println!("errors: 0");
+    }
+
+    // Slow commands (>2s)
+    if !slow_cmds.is_empty() {
+        println!("slow (>2s): {}", slow_cmds.len());
+        for (ts, cmd, ms) in slow_cmds.iter().rev().take(5) {
+            println!("  {} {} {:.1}s", ts, cmd, *ms as f64 / 1000.0);
+        }
+    }
 }
 
 fn extract_ts(line: &str) -> &str {
