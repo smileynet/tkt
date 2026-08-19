@@ -1,7 +1,7 @@
 ---
 id: "113"
 title: "Add error_kind field to telemetry events on failure"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -26,7 +26,15 @@ Add an `error_kind` field to telemetry events when the command exits non-zero. T
 
 ## Acceptance criteria
 
-- [ ] Failed commands include `error_kind` in the JSONL event
-- [ ] Successful commands do not include `error_kind` (or it's null)
-- [ ] All 8 ErrorKind variants map to string names correctly
-- [ ] Exit code 2 (operational) captures the kind (Io or Parse)
+- [x] Failed commands include `error_kind` in the JSONL event
+- [x] Successful commands do not include `error_kind` (or it's null)
+- [x] All 8 ErrorKind variants map to string names correctly
+- [x] Exit code 2 (operational) captures the kind (Io or Parse)
+
+## Resolution (2026-08-19)
+
+Added error_kind: Option<&str> to Event, omitted on success (OTel convention), populated from ErrorKind::as_str() on failure. Zero new deps.
+
+### Verification
+1. ✓ tkt close 999 produces event with error_kind: NotFound — "tkt close 999 produces event with error_kind:not_found"
+2. ✓ successful commands have no error_kind field (or null) — "tkt ready produces event with no error_kind field"
