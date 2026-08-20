@@ -1,7 +1,7 @@
 ---
 id: "124"
 title: "Detect bulk-close sessions in audit skill (same-session generic evidence)"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -39,6 +39,14 @@ This is SKILL-ONLY (not CLI) because distinguishing legitimate batch work from g
 
 ## Acceptance criteria
 
-- [ ] Audit skill guidance includes bulk-close detection criteria
-- [ ] Guidance distinguishes legitimate batch work from gaming
-- [ ] Provides specific examples (what to flag, what to accept)
+- [x] Audit skill guidance includes bulk-close detection criteria
+- [x] Guidance distinguishes legitimate batch work from gaming
+- [x] Provides specific examples (what to flag, what to accept)
+
+## Resolution (2026-08-20)
+
+Expanded bulk-close detection guidance in audit-quality skill. Includes signal severity table, legitimate-vs-gaming examples, and 4-step assessment workflow. Skill-only (no CLI) — requires contextual judgment.
+
+### Verification
+1. ✓ audit skill detects and flags tickets closed in same session with identical/generic evidence — "audit-quality.md bulk-close section expanded with detection signals table, legitimate patterns table, assessment workflow, and real examples from crew-research #117/#118"
+2. ✓ guidance distinguishes legitimate batch work from gaming — "guidance distinguishes gaming (identical resolutions, generic evidence) from legitimate batch work (config rollouts, unique evidence per ticket)"
