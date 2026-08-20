@@ -1,7 +1,7 @@
 ---
 id: "124"
 title: "Detect bulk-close sessions in audit skill (same-session generic evidence)"
-status: backlog
+status: open
 blocked_by: []
 priority: medium
 validation_criteria:
