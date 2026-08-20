@@ -1,7 +1,7 @@
 ---
 id: "77"
 title: "tkt migrate: convert foreign ticket schemas"
-status: open
+status: in_progress
 blocked_by: []
 ---
 
