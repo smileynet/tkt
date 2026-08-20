@@ -38,6 +38,7 @@ tkt validate --brief                              # check for issues
 Single-agent: `tkt ready` → `tkt close <id> --check-all --resolution "..."`
 Shared-repo: `tkt ready` → `tkt claim <id>` → work → `tkt close <id> --check-all --resolution "..."`
 Discovered work: `tkt new <slug> --title "..." --status backlog` (keeps it off the frontier)
+Migrated work: `tkt close <id> --force --resolution "Migrated to <project> #<id>"` (don't check ACs)
 
 If a claim push is rejected, someone else got there first — pick the next frontier ticket.
 "#;

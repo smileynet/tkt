@@ -200,10 +200,24 @@ pub fn check_evidence_count(corpus: &[Ticket]) -> Vec<Finding> {
 
 /// Check for template-only tickets (closed with no real content added).
 /// Purely mechanical: exact string match for placeholder text.
+/// Skips tickets with migration/superseded resolutions (legitimate force-close pattern).
 pub fn check_template_only(corpus: &[Ticket]) -> Vec<Finding> {
     let mut findings = Vec::new();
 
     for t in corpus.iter().filter(|t| t.status == Status::Done) {
+        // Skip tickets with migration resolutions — template body is expected
+        let resolution_lower = t
+            .body
+            .split_once("## Resolution")
+            .map(|(_, after)| after.to_lowercase())
+            .unwrap_or_default();
+        if resolution_lower.contains("migrated to")
+            || resolution_lower.contains("superseded by")
+            || resolution_lower.contains("moved to")
+        {
+            continue;
+        }
+
         let has_tbd_body =
             t.body.contains("## What to build\n\nTBD") || t.body.contains("## What to build\n\n\n");
         let has_tbd_ac = t.body.contains("- [ ] TBD");

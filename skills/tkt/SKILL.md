@@ -129,6 +129,9 @@ tkt close 03 --check-all --resolution "JWT auth with refresh tokens" \
 
 # Force close (bypasses AC checks — use sparingly, justify)
 tkt close 03 --force --resolution "Superseded by ticket 12"
+
+# Migration close (work moved elsewhere — don't game ACs)
+tkt close 05 --force --resolution "Migrated to other-project #22"
 ```
 
 Project config controls what's required at close time (resolution, checked ACs, validation evidence). See enforcement config in [commands.md](references/commands.md).

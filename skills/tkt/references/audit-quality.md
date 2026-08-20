@@ -89,6 +89,33 @@ A ticket closed with only template text = work happened but wasn't documented.
 - Assess whether the work itself is correct (only whether documentation meets standards)
 - Replace human judgment on borderline cases
 
+## Migration-close protocol
+
+When work is moved to another repo or superseded by a different ticket, do NOT game acceptance criteria. Use this pattern:
+
+```bash
+tkt close <id> --force --resolution "Migrated to <project> #<id>"
+# or
+tkt close <id> --force --resolution "Superseded by #<id>: <reason>"
+```
+
+**Rules:**
+- Do NOT check ACs that weren't functionally met in this repo
+- Do NOT provide evidence that describes logistics ("ticket created elsewhere") for functional criteria
+- DO use `--force` (ACs are intentionally unchecked — the work wasn't done here)
+- DO provide a clear resolution pointing to where the work will happen
+- The receiving project's ticket SHOULD reference the origin ("Migrated from <project> #<id>")
+
+**How to recognize legitimate migration closures during review:**
+- Resolution contains "Migrated to" or "Superseded by" with a project/ticket reference
+- ACs are NOT checked (or only logistics ACs are checked)
+- `--force` was used (visible in resolution section)
+
+**Gaming signals to flag:**
+- All ACs checked but evidence says "moved to X" — the criteria weren't met here
+- Evidence describes ticket administration, not functional verification
+- Resolution is "Done" but body mentions migration
+
 ## Integration with tkt audit --deep
 
 The CLI catches ONLY purely mechanical problems:

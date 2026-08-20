@@ -519,6 +519,8 @@ mod tests {
 
     #[test]
     fn test_project_config_defaults() {
+        // Prevent ambient user config from affecting defaults
+        std::env::set_var("TKT_NO_USER_CONFIG", "1");
         let dir = tempfile::tempdir().unwrap();
         let cfg = ProjectConfig::load(dir.path());
         assert!(!cfg.close_require_resolution);
@@ -529,6 +531,7 @@ mod tests {
         assert!(cfg.new_default_priority.is_empty());
         assert!(cfg.push_enabled);
         assert!(cfg.unknown_keys.is_empty());
+        std::env::remove_var("TKT_NO_USER_CONFIG");
     }
 
     #[test]
