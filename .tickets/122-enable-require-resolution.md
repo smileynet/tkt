@@ -1,7 +1,7 @@
 ---
 id: "122"
 title: "Enable require_resolution across all projects"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
