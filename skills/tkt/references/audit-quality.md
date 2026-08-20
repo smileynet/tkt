@@ -47,10 +47,56 @@ Thin resolutions: "Done", "Fixed", "Shipped", single sentence with no specifics.
 
 ### Bulk-close patterns
 
-When multiple tickets are closed in the same session:
-- Are resolutions copy-pasted or unique per ticket?
-- Does evidence reference actual different outputs per ticket?
-- Are acceptance criteria genuinely different between tickets?
+When multiple tickets are closed in the same session, scrutinize for gaming.
+
+**Detection signals (flag for review):**
+
+| Signal | How to detect | Severity |
+|--------|--------------|----------|
+| Identical resolutions | 2+ tickets with same resolution text | High — almost always gaming |
+| Generic evidence reuse | Same evidence string across tickets with different criteria | High |
+| System-health evidence for feature claims | "tests pass" / "validate: 0 errors" for tickets claiming specific feature work | High |
+| All closed within minutes | 3+ tickets done in <5min with substantial claimed scope | Medium — check if work is trivial |
+| Single-word resolutions | "Done" / "Fixed" / "Shipped" across multiple tickets | Medium |
+| Template bodies + checked ACs | Body still says TBD but all ACs marked done | High — contradictory |
+
+**Legitimate batch work (do NOT flag):**
+
+| Pattern | Why it's OK |
+|---------|-------------|
+| Config/infra tickets with "applied X to N projects" | Genuinely repetitive work |
+| Research spikes closed with unique findings per ticket | Different content, same session |
+| Tickets closed with `--force` + "Superseded by #N" | Explicit lifecycle management |
+| Tickets with unique, specific evidence per ticket | Work was done, just done quickly |
+| Trivial tickets (rename, typo fix) closed rapidly | Scope matches speed |
+
+**Assessment workflow:**
+
+1. Identify tickets closed within the same ~5min window (use `tkt telemetry --show` or git log timestamps)
+2. For each cluster: read resolutions — are they unique and specific?
+3. For each ticket in the cluster: does evidence actually prove the SPECIFIC criteria for THAT ticket?
+4. Key question: "If I only had the evidence, would I believe this specific work was done?"
+
+**Real example (gaming):**
+```
+Ticket 117: "Convert 7 FLAKY evals to binary checklist criteria"
+  Resolution: "Done"
+  Evidence: "dry-run passes (39 run, 3 skip)"
+  → FAIL: Evidence proves system didn't break, not that 7 specific evals were converted
+
+Ticket 118: "Fix 5 activation eval boundary issues"
+  Resolution: "Done"  
+  Evidence: "mise run validate: 0 errors"
+  → FAIL: Identical pattern. Same generic evidence. Closed same session as 117.
+```
+
+**Real example (legitimate):**
+```
+Ticket 22: "Enable telemetry docs"
+  Resolution: "Added TELEMETRY.md transparency document"
+  Evidence: "file exists, covers collection/storage/deletion"
+  Closed same session as 23, but resolution and evidence are ticket-specific.
+```
 
 ### Ticket body evolution
 
