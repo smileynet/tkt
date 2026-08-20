@@ -1,7 +1,7 @@
 ---
 id: "123"
 title: "Define migration-close protocol: --force with note, don't game ACs"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -34,7 +34,15 @@ When work is moved to another repo (e.g., godot-helper #175 migrated to lacrosse
 
 ## Acceptance criteria
 
-- [ ] Migration-close protocol documented in skill reference
-- [ ] Init snippets mention the pattern
-- [ ] Agents following the protocol produce clean audit results
-- [ ] Audit skill guidance explains how to recognize legitimate vs gaming migration closures
+- [x] Migration-close protocol documented in skill reference
+- [x] Init snippets mention the pattern
+- [x] Agents following the protocol produce clean audit results
+- [x] Audit skill guidance explains how to recognize legitimate vs gaming migration closures
+
+## Resolution (2026-08-20)
+
+Documented migration-close protocol (--force --resolution 'Migrated to X'). Updated SKILL.md, init snippets, audit-quality reference. CLI check_template_only now skips tickets with Migrated/Superseded resolutions. Fixed config test (TKT_NO_USER_CONFIG).
+
+### Verification
+1. ✓ protocol documented in skill and init snippets — "protocol in audit-quality.md: migration-close section with rules, examples, gaming signals"
+2. ✓ tkt audit --deep does not flag properly-migrated tickets — "godot-helper #175 (migrated ticket) no longer flagged by tkt audit --deep (was 7 template-only, now 6)"
