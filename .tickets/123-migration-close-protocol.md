@@ -1,7 +1,7 @@
 ---
 id: "123"
 title: "Define migration-close protocol: --force with note, don't game ACs"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
