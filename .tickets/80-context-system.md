@@ -4,6 +4,9 @@ title: "Context system: auto-scope reads and writes by tag"
 status: in_progress
 blocked_by: []
 priority: medium
+validation_criteria: 
+  - "tkt context +tag sets and filters ready output"
+  - "tkt new auto-tags from active context"
 ---
 
 # Context system: auto-scope reads and writes by tag
