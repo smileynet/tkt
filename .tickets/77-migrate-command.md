@@ -3,6 +3,9 @@ id: "77"
 title: "tkt migrate: convert foreign ticket schemas"
 status: in_progress
 blocked_by: []
+validation_criteria: 
+  - "tkt migrate --from tk converts tk-style tickets to tkt format"
+  - "tkt validate passes after migration"
 ---
 
 # tkt migrate: convert foreign ticket schemas
