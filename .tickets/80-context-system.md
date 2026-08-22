@@ -1,7 +1,7 @@
 ---
 id: "80"
 title: "Context system: auto-scope reads and writes by tag"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria: 
@@ -35,14 +35,14 @@ Implementation options:
 
 ## Acceptance criteria
 
-- [ ] `tkt context +tag` sets active context
-- [ ] `tkt context --clear` removes it
-- [ ] `tkt context` (no args) shows current context
-- [ ] `tkt ready` filters by context tags
-- [ ] `tkt new` auto-applies context tags to new tickets
-- [ ] `TKT_CONTEXT` env var overrides stored context
-- [ ] Works alongside existing `CREW_ENV` filtering (additive)
-- [ ] Integration test for context read/write scoping
+- [x] `tkt context +tag` sets active context
+- [x] `tkt context --clear` removes it
+- [x] `tkt context` (no args) shows current context
+- [x] `tkt ready` filters by context tags
+- [x] `tkt new` auto-applies context tags to new tickets
+- [x] `TKT_CONTEXT` env var overrides stored context
+- [x] Works alongside existing `CREW_ENV` filtering (additive)
+- [x] Integration test for context read/write scoping
 
 # Context system: auto-scope reads and writes by tag
 
@@ -53,3 +53,11 @@ TBD
 ## Acceptance criteria
 
 - [ ] TBD
+
+## Resolution (2026-08-22)
+
+Implemented full context system: tags field on tickets, .tickets/.context storage, TKT_CONTEXT env override, filtering on ready/query/blocked, auto-tagging on new/batch. 9 unit tests + e2e verified.
+
+### Verification
+1. ✓ tkt context +tag sets and filters ready output — "tkt context +backend → ready shows only backend-tagged + untagged; tkt new creates ticket with tags:[backend]"
+2. ✓ tkt new auto-tags from active context — "TKT_CONTEXT env override works; --clear removes context; -tag exclude works"
