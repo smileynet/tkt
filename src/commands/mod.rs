@@ -6,6 +6,7 @@ pub mod claim;
 pub mod close;
 pub mod common;
 pub mod config;
+pub mod context;
 pub mod doctor;
 pub mod edit;
 pub mod init;

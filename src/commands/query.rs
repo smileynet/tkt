@@ -8,9 +8,13 @@ use crate::core;
 pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
+    let ctx = crate::context::load(&dir);
 
     let mut count: u32 = 0;
     for t in &corpus {
+        if !ctx.matches(&t.tags) {
+            continue;
+        }
         if let Some(sf) = status_filter {
             if t.status.as_str() != sf {
                 continue;

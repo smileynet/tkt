@@ -11,6 +11,10 @@ pub fn run(json: bool) -> Result<i32> {
     let corpus = core::load_corpus(&dir)?;
     let front = core::frontier_with_default_env(&corpus, &pcfg.ready_default_env);
 
+    // Apply context filter (unless bypass is active)
+    let ctx = crate::context::load(&dir);
+    let front: Vec<&Ticket> = front.into_iter().filter(|t| ctx.matches(&t.tags)).collect();
+
     // Record frontier size for telemetry
     crate::RESULT_COUNT.store(front.len() as i32, std::sync::atomic::Ordering::Relaxed);
 

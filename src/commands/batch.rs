@@ -7,6 +7,7 @@ use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     items: &[String],
     spec: Option<&str>,
@@ -15,6 +16,7 @@ pub fn run(
     status: Option<&str>,
     blocked_by: &[String],
     validation_criteria: &[String],
+    explicit_tags: &[String],
 ) -> Result<i32> {
     if let Some(s) = spec {
         if let Err(e) = validate::validate_free_text(s, "spec", 100) {
@@ -63,6 +65,19 @@ pub fn run(
     }
 
     let dir = tickets_dir()?;
+
+    // Merge explicit tags with context auto-tags
+    let effective_tags: Vec<String> = {
+        let ctx = crate::context::load(&dir);
+        let mut tags: Vec<String> = explicit_tags.to_vec();
+        for t in &ctx.include {
+            if !tags.contains(t) {
+                tags.push(t.clone());
+            }
+        }
+        tags
+    };
+
     let txn = GitTransaction::new(&dir)?;
     let names = txn.scan_names();
 
@@ -84,6 +99,7 @@ pub fn run(
                     priority,
                     status,
                     validation_criteria,
+                    tags: &effective_tags,
                 });
                 std::fs::write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));

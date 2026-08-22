@@ -19,6 +19,7 @@ pub fn run(
     status: Option<&str>,
     blocked_by: &[String],
     validation_criteria: &[String],
+    explicit_tags: &[String],
 ) -> Result<i32> {
     if let Err(e) = validate::validate_slug(slug) {
         domain_bail!("{}", e);
@@ -56,6 +57,18 @@ pub fn run(
     }
     let dir = tickets_dir()?;
     let pcfg = project_config(&dir);
+
+    // Merge explicit tags with context auto-tags (context include tags are inherited)
+    let effective_tags: Vec<String> = {
+        let ctx = crate::context::load(&dir);
+        let mut tags: Vec<String> = explicit_tags.to_vec();
+        for t in &ctx.include {
+            if !tags.contains(t) {
+                tags.push(t.clone());
+            }
+        }
+        tags
+    };
 
     let priority = if priority.is_none() && !pcfg.new_default_priority.is_empty() {
         Some(pcfg.new_default_priority.as_str())
@@ -104,6 +117,7 @@ pub fn run(
         priority,
         status,
         validation_criteria,
+        tags: &effective_tags,
     });
     std::fs::write(&path, &content)?;
 
@@ -138,6 +152,7 @@ pub fn run(
                 priority,
                 status,
                 validation_criteria,
+                tags: &effective_tags,
             });
             std::fs::write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);

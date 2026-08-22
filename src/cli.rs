@@ -104,6 +104,9 @@ enum Commands {
         /// Validation criteria (repeatable)
         #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
         validation_criteria: Vec<String>,
+        /// Tags for categorization (repeatable, also auto-applied from active context)
+        #[arg(long = "tags", value_delimiter = ',')]
+        tags: Vec<String>,
     },
     /// Allocate N sequential ids in one commit/push
     Batch {
@@ -122,6 +125,17 @@ enum Commands {
         /// Validation criteria (repeatable)
         #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
         validation_criteria: Vec<String>,
+        /// Tags for categorization (repeatable, also auto-applied from active context)
+        #[arg(long = "tags", value_delimiter = ',')]
+        tags: Vec<String>,
+    },
+    /// Set, show, or clear the active tag context for scoped work
+    Context {
+        /// Tags to set (+tag to include, -tag to exclude, bare word = include)
+        tags: Vec<String>,
+        /// Clear the active context
+        #[arg(long)]
+        clear: bool,
     },
     /// Mark open ticket in_progress (pushed = visible WIP)
     Claim { id: String },
@@ -347,6 +361,7 @@ pub fn run() -> i32 {
             status,
             blocked_by,
             validation_criteria,
+            tags,
         } => crate::commands::new::run(
             &slug,
             title.as_deref(),
@@ -356,6 +371,7 @@ pub fn run() -> i32 {
             status.as_deref(),
             &blocked_by.unwrap_or_default(),
             &validation_criteria,
+            &tags,
         ),
         Commands::Batch {
             items,
@@ -365,6 +381,7 @@ pub fn run() -> i32 {
             status,
             blocked_by,
             validation_criteria,
+            tags,
         } => crate::commands::batch::run(
             &items,
             spec.as_deref(),
@@ -373,7 +390,9 @@ pub fn run() -> i32 {
             status.as_deref(),
             &blocked_by.unwrap_or_default(),
             &validation_criteria,
+            &tags,
         ),
+        Commands::Context { tags, clear } => crate::commands::context::run(&tags, clear),
         Commands::Claim { id } => crate::commands::claim::run(&id),
         Commands::Close {
             id,
@@ -536,6 +555,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Batch { .. } => "batch",
         Commands::Claim { .. } => "claim",
         Commands::Close { .. } => "close",
+        Commands::Context { .. } => "context",
         Commands::Edit { .. } => "edit",
         Commands::Renumber { .. } => "renumber",
         Commands::SyncPlan { .. } => "sync-plan",
@@ -564,6 +584,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             status,
             blocked_by,
             validation_criteria,
+            tags,
             ..
         } => {
             if blocked_by.is_some() {
@@ -580,6 +601,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if status.is_some() {
                 flags.push("status");
+            }
+            if !tags.is_empty() {
+                flags.push("tags");
             }
             if !validation_criteria.is_empty() {
                 flags.push("validation");
@@ -592,6 +616,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             status,
             blocked_by,
             validation_criteria,
+            tags,
             ..
         } => {
             if blocked_by.is_some() {
@@ -608,6 +633,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if status.is_some() {
                 flags.push("status");
+            }
+            if !tags.is_empty() {
+                flags.push("tags");
             }
             if !validation_criteria.is_empty() {
                 flags.push("validation");
@@ -742,6 +770,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         Commands::Claim { .. }
         | Commands::Blocked
         | Commands::Capabilities
+        | Commands::Context { .. }
         | Commands::Migrate { .. }
         | Commands::Renumber { .. }
         | Commands::Rebase { .. }

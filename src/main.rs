@@ -3,6 +3,7 @@ mod cli;
 mod color;
 mod commands;
 mod config;
+mod context;
 mod core;
 mod findings;
 mod fix;

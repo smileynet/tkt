@@ -417,6 +417,7 @@ pub struct Ticket {
     pub priority: Option<Priority>,
     pub spec: Option<String>,
     pub validation_criteria: Vec<String>,
+    pub tags: Vec<String>,
     pub path: PathBuf,
     pub body: String,
     /// The underlying raw file for mutations.
@@ -471,6 +472,8 @@ impl Ticket {
         let validation_criteria =
             parse_validation_criteria(file.get("validation_criteria").unwrap_or(""));
 
+        let tags = parse_tags(file.get("tags").unwrap_or(""));
+
         Ok(Ticket {
             id,
             title,
@@ -480,6 +483,7 @@ impl Ticket {
             priority,
             spec,
             validation_criteria,
+            tags,
             path: file.path.clone(),
             body: file.body.clone(),
             file,
@@ -656,6 +660,34 @@ fn parse_validation_criteria(raw: &str) -> Vec<String> {
         .collect()
 }
 
+/// Parse tags from frontmatter. Same format as validation_criteria.
+fn parse_tags(raw: &str) -> Vec<String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Vec::new();
+    }
+    if trimmed.starts_with('[') && trimmed.ends_with(']') {
+        let inner = &trimmed[1..trimmed.len() - 1];
+        return inner
+            .split(',')
+            .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    raw.split('\n')
+        .map(|line| line.trim())
+        .filter(|line| line.starts_with('-'))
+        .map(|line| {
+            line[1..]
+                .trim()
+                .trim_matches('"')
+                .trim_matches('\'')
+                .to_string()
+        })
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
 // --- YAML/JSON escaping ---
 
 /// Escape a string for use inside YAML double-quoted scalars.
@@ -742,6 +774,7 @@ pub struct NewTicketParams<'a> {
     pub priority: Option<&'a str>,
     pub status: Option<&'a str>,
     pub validation_criteria: &'a [String],
+    pub tags: &'a [String],
 }
 
 /// Generate the text for a new ticket file.
@@ -773,6 +806,15 @@ pub fn new_ticket_text(p: &NewTicketParams) -> String {
         for vc in p.validation_criteria {
             fm_lines.push(format!("  - \"{}\"", yaml_scalar_escape(vc)));
         }
+    }
+    if !p.tags.is_empty() {
+        let tags_str = p
+            .tags
+            .iter()
+            .map(|t| format!("\"{}\"", yaml_scalar_escape(t)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        fm_lines.push(format!("tags: [{}]", tags_str));
     }
     let body = format!(
         "\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
@@ -934,6 +976,7 @@ mod tests {
             priority: None,
             status: None,
             validation_criteria: &[],
+            tags: &[],
         });
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();

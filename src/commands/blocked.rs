@@ -8,6 +8,7 @@ use crate::core::{self, Status, Ticket};
 pub fn run() -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
+    let ctx = crate::context::load(&dir);
 
     let done: std::collections::HashSet<&str> = corpus
         .iter()
@@ -21,6 +22,7 @@ pub fn run() -> Result<i32> {
             t.status == Status::Open
                 && !t.blocked_by.is_empty()
                 && !t.blocked_by.iter().all(|dep| done.contains(dep.as_str()))
+                && ctx.matches(&t.tags)
         })
         .collect();
 
