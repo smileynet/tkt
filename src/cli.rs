@@ -77,6 +77,15 @@ enum Commands {
         /// Specific ticket IDs to lint (omit for all)
         ids: Vec<String>,
     },
+    /// Convert foreign ticket schemas to tkt format
+    Migrate {
+        /// Source format to convert from (available: tk)
+        #[arg(long)]
+        from: Option<String>,
+        /// Detect and report the current ticket format
+        #[arg(long)]
+        detect: bool,
+    },
     /// Allocate a new ticket id (fetch, scan, create, commit, push)
     New {
         slug: String,
@@ -326,6 +335,9 @@ pub fn run() -> i32 {
             crate::commands::doctor::run(path.as_deref(), fix, strict)
         }
         Commands::Lint { check, ids } => crate::commands::lint::run(check, &ids),
+        Commands::Migrate { from, detect } => {
+            crate::commands::migrate::run(from.as_deref(), detect)
+        }
         Commands::New {
             slug,
             title,
@@ -519,6 +531,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Init { .. } => "init",
         Commands::Doctor { .. } => "doctor",
         Commands::Lint { .. } => "lint",
+        Commands::Migrate { .. } => "migrate",
         Commands::New { .. } => "new",
         Commands::Batch { .. } => "batch",
         Commands::Claim { .. } => "claim",
@@ -729,6 +742,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         Commands::Claim { .. }
         | Commands::Blocked
         | Commands::Capabilities
+        | Commands::Migrate { .. }
         | Commands::Renumber { .. }
         | Commands::Rebase { .. }
         | Commands::Config { .. }

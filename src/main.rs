@@ -7,6 +7,7 @@ mod core;
 mod findings;
 mod fix;
 mod git;
+mod migrate;
 mod mutation;
 mod renumber;
 mod telemetry;
