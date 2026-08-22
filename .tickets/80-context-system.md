@@ -1,7 +1,7 @@
 ---
 id: "80"
 title: "Context system: auto-scope reads and writes by tag"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 ---
