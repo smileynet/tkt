@@ -1,7 +1,7 @@
 ---
 id: "77"
 title: "tkt migrate: convert foreign ticket schemas"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria: 
   - "tkt migrate --from tk converts tk-style tickets to tkt format"
@@ -47,10 +47,18 @@ tkt migrate --dry-run         # preview without writing
 
 ## Acceptance criteria
 
-- [ ] `tkt migrate --from tk` converts tk-style tickets to tkt format
-- [ ] Numeric IDs assigned sequentially
-- [ ] deps → blocked_by with correct ID remapping
-- [ ] Title extracted from body H1
-- [ ] `--dry-run` shows conversion plan without modifying
-- [ ] Originals preserved until confirmed
-- [ ] `tkt validate` passes after migration
+- [x] `tkt migrate --from tk` converts tk-style tickets to tkt format
+- [x] Numeric IDs assigned sequentially
+- [x] deps → blocked_by with correct ID remapping
+- [x] Title extracted from body H1
+- [x] `--dry-run` shows conversion plan without modifying
+- [x] Originals preserved until confirmed
+- [x] `tkt validate` passes after migration
+
+## Resolution (2026-08-22)
+
+Implemented tkt migrate: schema detection, tk adapter (two-pass), dry-run, backup. 7 unit tests + e2e.
+
+### Verification
+1. ✓ tkt migrate --from tk converts tk-style tickets to tkt format — "3 tk tickets converted: correct IDs, deps remapped, status/priority translated, title extracted from H1"
+2. ✓ tkt validate passes after migration — "tkt validate --brief → pass (0 findings) on migrated corpus"
