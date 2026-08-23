@@ -4,6 +4,9 @@ title: "Modularize env field: flexible tag-based environment matching"
 status: in_progress
 blocked_by: ["92"]
 priority: medium
+validation_criteria: 
+  - "requires subset matching filters frontier correctly"
+  - "backward compat: env:corp still works via CREW_ENV"
 ---
 
 # Modularize env field: flexible tag-based environment matching
