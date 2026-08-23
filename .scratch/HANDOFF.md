@@ -1,47 +1,50 @@
 ---
-created_at: 2026-08-18T14:31:55-07:00
-base_commit: 87a1e39
-handoff_key: tkt-post-release
+created_at: 2026-08-23T16:46:25-07:00
+base_commit: cf9693c
+handoff_key: tkt-v031-bugfix
 ---
 
 # Handoff
 
 ## Objective
-v0.2.0 shipped. Next phase: work the remaining frontier (feature tickets) toward v0.3.0.
+Ship v0.3.1 — fix data-loss parsing bugs and contract violations before next release.
 
 ## Constraints
-- User config enforces: `allow_force=false`, `require_validation_criteria=true`, `require_validation_evidence=true` globally
-- `TKT_NO_USER_CONFIG=1` required in all integration test child processes
-- CI disabled (local gate only); release workflow triggers on tag push (cargo-dist builds binaries)
-- tkt owns its own skills — `bash tools/deploy-skills.sh` after changes to `skills/` or `steering/`
-- AGENTS.md is the authority for project conventions; SKILL.md for agent activation
+- v0.3.0 shipped (crates.io + GitHub releases live). Post-release bugfix work in progress.
+- User config enforces: require_resolution, require_validation_criteria, require_validation_evidence, allow_force=false
+- `TKT_DEBUG=1` now defaults to file output (`~/.local/state/tkt/debug.log`); use `TKT_DEBUG=stderr` for terminal
+- Telemetry currently disabled in consent.toml (keeps re-disabling; investigate if needed)
+- Release ticket 146 blocks on 10 tickets (131-137, 139, 141, 127)
 
 ## Prior Decisions
-- Errors on stderr (octo-cli pattern, not stdout) — `DomainError { kind, message, hint }`
-- Config cascade: CLI > env > project > user > default (`src/config.rs`)
-- `NewTicketParams` struct for ticket creation (eliminates clippy warning)
-- agentskills.io: `name` not `title` in SKILL.md; `plugin.json` has no `skills` array
-- clispec.dev is inspiration only (9⭐ solo author) — not a conformance target
+- `tags` = what work is about (context scoping); `requires` = what machine needs (capability constraint) — two distinct fields
+- Audit: CLI does only mechanical checks; judgment calls belong to agent skill (audit-quality.md)
+- Debug defaults to file (not stderr) for agent-friendly quiet output
+- Migration requires --dry-run preview before apply (marker file gate)
+- OpenCode supported via AGENTS.md + .claude/skills/ (already works, added as init target)
 
 ## Current State
-- v0.2.0 tagged and pushed (`496e9e8`), cargo-dist building binaries
-- 12 open tickets on frontier: 77, 80, 82, 95 (medium); 79, 83, 86-90, 93 (low)
-- 4 backlogged: 66, 69, 94, 99
-- All repos pass `tkt validate` and `tkt doctor ~/code` clean (11 pass, 8 non-tkt flagged)
-- 56 tests, 0 clippy warnings, README/AGENTS.md/SKILL.md audited this session
+- v0.3.0 released with: context, migrate, requires, telemetry observability, audit --deep
+- Architecture review (ticket 128) decomposed into 15 tickets (131-145)
+- Release ticket 146 tracks v0.3.1 gate — blocked by all urgent/high/medium fixes
+- Frontier: 2 urgent (131 parsing, 132 hand-edits), 6 high, 2 medium before release
+- Project cleanup done: scratch cleared, AGENTS.md trimmed to 143 lines
 
 ## Next Steps
-1. Verify cargo-dist built binaries and GitHub Release created (`gh release view v0.2.0`)
-2. Verify crates.io publish (`cargo search tkt` shows 0.2.0)
-3. Pick next frontier work — recommended: 77 (migrate) or 82 (urgency scoring)
-4. Consider backlog promotion: 99 (configurable update interval) is low-effort
+1. Fix 131 (urgent): block-style blocked_by parsed as empty + lint destroys deps
+2. Fix 132 (urgent): BOM/comments/space-colon eject tickets from corpus
+3. Fix 133-136 (high): unescape, renumber, JSON envelope, dry-run
+4. Fix 137, 139, 141 (medium): origin/main, evidence gates, uppercase checkboxes
+5. Fix 127 (high): capabilities manifest + help nudge (also blocks 138)
+6. Close 146 → cut v0.3.1 release
 
 ## Fog
-- v0.3.0 scope undefined — no plan document yet. Tickets 77/80/82/95 are candidates but priority not agreed.
-- `tkt migrate` (77) has a migration-assist skill but no implementation yet — foreign schema detection is research-dependent.
+- Ticket 128 findings are unconfirmed hypotheses (from ox-alpha review). Each needs independent reproduction before fixing — some may be rejected.
+- F6 (--dry-run ignored by 7 commands) is broad — may reveal design questions about which commands should respect global dry-run vs have local flags.
+- F7 (origin/main hardcoded) may be complex if repos have non-standard remote setups.
 
 ## Evidence
-- `tkt --version`: `tkt 0.2.0 (496e9e8)`
-- `git tag -l v0.2.0`: exists, pushed to origin
-- `tkt ready`: 12 tickets (5 medium, 7 low)
-- `tkt doctor ~/code`: 11 clean, 0 broken
+- `tkt ready`: 18 frontier tickets, release blocker 146 in `tkt blocked`
+- `tkt validate --brief`: pass (0 findings)
+- `tkt --version`: tkt 0.3.0 (2c0c021) — installed locally
+- All tests pass (56 integration + unit), 0 clippy warnings
