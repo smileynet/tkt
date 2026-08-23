@@ -4,6 +4,8 @@ title: "Urgency scoring: computed numeric sort for frontier"
 status: open
 blocked_by: []
 priority: medium
+validation_criteria: 
+  - "deliberate ordering reviewed"
 ---
 
 # Urgency scoring: computed numeric sort for frontier
