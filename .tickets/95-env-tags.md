@@ -1,7 +1,7 @@
 ---
 id: "95"
 title: "Modularize env field: flexible tag-based environment matching"
-status: in_progress
+status: done
 blocked_by: ["92"]
 priority: medium
 validation_criteria: 
@@ -61,15 +61,15 @@ tkt config --set environment.tags=linux,gpu,personal
 
 ## Acceptance criteria
 
-- [ ] `env_tags` field parsed as list of strings in frontmatter
-- [ ] Machine tags declared in user config `[environment] tags`
-- [ ] `tkt ready` filters by tag subset matching
-- [ ] `tkt new --env-tags` sets tags at creation
-- [ ] `tkt edit --env-tags` modifies tags
-- [ ] Backward compatible: `env: corp` still works (mapped internally)
-- [ ] `CREW_ENV` still works as legacy shorthand
-- [ ] `tkt validate` warns on unknown tags (configurable)
-- [ ] Migration path documented for existing tickets
+- [x] `env_tags` field parsed as list of strings in frontmatter
+- [x] Machine tags declared in user config `[environment] tags`
+- [x] `tkt ready` filters by tag subset matching
+- [x] `tkt new --env-tags` sets tags at creation
+- [x] `tkt edit --env-tags` modifies tags
+- [x] Backward compatible: `env: corp` still works (mapped internally)
+- [x] `CREW_ENV` still works as legacy shorthand
+- [x] `tkt validate` warns on unknown tags (configurable)
+- [x] Migration path documented for existing tickets
 
 # Modularize env field: flexible tag-based environment matching
 
@@ -80,3 +80,11 @@ TBD
 ## Acceptance criteria
 
 - [ ] TBD
+
+## Resolution (2026-08-23)
+
+Added requires field (machine capability matching). Tickets declare requirements, machines declare capabilities in config. Subset matching (AND). Backward compat: env:corp → requires:[corp], CREW_ENV as legacy capability.
+
+### Verification
+1. ✓ requires subset matching filters frontier correctly — "machine.capabilities=gpu,linux → shows tickets with requires:[gpu,linux]; hides requires:[corp]"
+2. ✓ backward compat: env:corp still works via CREW_ENV — "CREW_ENV=corp filters env:corp legacy tickets correctly; --requires flag creates tickets with requires field"
