@@ -19,6 +19,8 @@ validation_criteria:
 tags:
   - "backend"
   - "api"
+requires:
+  - "corp"
 ---
 
 # {Title}
@@ -70,6 +72,7 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 | `spec` | string | Links to originating spec slug |
 | `validation_criteria` | string array | Machine-checkable criteria for agent close gate |
 | `tags` | string array | Categorization tags for context filtering. Set via `--tags` or auto-applied from `tkt context`. |
+| `requires` | string array | Machine capabilities required (e.g., `gpu`, `linux`, `corp`). Ticket only appears in `tkt ready` if `machine.capabilities` config includes all listed values. Backward compat: if `env` is set and `requires` is empty, requires is synthesized from env. |
 
 ## Status Lifecycle
 

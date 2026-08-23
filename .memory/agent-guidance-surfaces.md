@@ -24,6 +24,7 @@ tkt teaches agents how to use it through multiple documents. When CLI behavior c
 | Enforcement config | — | — | ✓ | — | ✓ | ✓ |
 | Priority sort | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | Env filtering | — | ✓ | ✓ | — | ✓ | — |
+| Requires / capabilities | — | ✓ | ✓ | — | ✓ | ✓ |
 | Race detection | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | Ticket creation quality | — | link | — | — | — | — |
 | Health commands | — | ✓ | ✓ | — | ✓ | ✓ |

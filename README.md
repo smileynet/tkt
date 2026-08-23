@@ -92,6 +92,7 @@ tkt new fix-login --title "Fix login timeout"
 tkt new fix-login --title "Fix login timeout" --priority high
 tkt new deploy --title "Deploy to staging" --blocked-by 01,02
 tkt new spike --title "Research caching" --status backlog
+tkt new train-model --title "Train ML model" --requires gpu,linux
 ```
 
 Batch creation for related work:
@@ -166,6 +167,7 @@ status: open
 blocked_by: []
 priority: high
 tags: [backend, auth]
+requires: [gpu]
 validation_criteria:
   - "JWT tokens issue correctly (test: auth_test::jwt_issue)"
 ---
@@ -197,6 +199,9 @@ default_env = ""            # filter frontier by environment
 
 [new]
 default_priority = "medium" # default priority for new tasks
+
+[machine]
+capabilities = "gpu,linux"   # capabilities this workstation provides (filters tkt ready)
 ```
 
 User-level defaults in `~/.config/tkt/config.toml`. Project config overrides.
@@ -227,7 +232,7 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 
 | Variable | Effect |
 |----------|--------|
-| `CREW_ENV` | Filter frontier by environment (corp/personal) |
+| `CREW_ENV` | Filter frontier by environment (legacy; prefer `machine.capabilities` config for new projects) |
 | `TKT_ASCII=1` | ASCII-only symbols (✓→\[ok\], ✗→\[err\]) |
 | `NO_COLOR=1` | Disable ANSI color |
 | `TKT_DEBUG=1` | Debug output to stderr |

@@ -92,6 +92,7 @@ When a context is active:
 | `--spec S` | Originating spec slug | none |
 | `--tags T,T` | Tags for categorization (also auto-applied from active context) | none |
 | `--validation "..."` | Validation criteria (repeatable). Alias: `--vc` | none |
+| `--requires R,R` | Machine capabilities required (e.g., `gpu,linux,corp`) | none |
 
 ## Edit flags
 
@@ -140,5 +141,6 @@ These settings control what `tkt close` requires:
 | `validate.strict` | `true` / `false` | Warnings become errors |
 | `ready.default_env` | string | Default CREW_ENV filter for `tkt ready` |
 | `new.default_priority` | priority enum | Default priority for new tickets |
+| `machine.capabilities` | comma-separated string | Capabilities this workstation provides (matched against ticket `requires` field) |
 
 Manage with `tkt config --set close.require_resolution=true` or edit `.tickets/config.toml` directly.

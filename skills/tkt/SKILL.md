@@ -41,7 +41,7 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 | Discovering work during implementation | capture it without losing focus | `tkt new <slug> --title "..." --status backlog` |
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
 | Querying the full corpus | filter by status or priority | `tkt query --status open --priority high` |
-| Working in a specific environment | see only relevant work | Set `CREW_ENV=corp` → `tkt ready` filters by `env` |
+| Working in a specific environment | see only relevant work | Set `machine.capabilities` in config (or `CREW_ENV=corp` for legacy env filtering) → `tkt ready` filters by `requires` |
 | Keeping a plan in sync | detect drift between tickets and plan doc | `tkt sync-plan --check` |
 | Scoping work to a subsystem | filter frontier by tags | `tkt context backend` → `tkt ready` shows only matching |
 | Returning to unscoped view | clear tag filter | `tkt context --clear` |
@@ -179,7 +179,8 @@ Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` 
 - **Race detection:** Push rejected → tkt retries with new ID (new/batch) or reports the conflict.
 - **Priority sort:** `tkt ready` sorts by priority bucket (urgent > high > medium > low) then by ID.
 - **Surgical edits:** `tkt edit` only touches the field you specify — everything else preserved.
-- **Env filtering:** Tickets with `env: corp` only appear in `tkt ready` when `CREW_ENV=corp`. No env field = visible everywhere.
+- **Env filtering (legacy):** Tickets with `env: corp` only appear in `tkt ready` when `CREW_ENV=corp`. No env field = visible everywhere.
+- **Requires filtering:** Tickets with `requires: [gpu, linux]` only appear if `machine.capabilities` config includes all listed values. If a ticket has `env` but no `requires`, requires is synthesized from env for backward compat. Prefer `requires` over `env` for new tickets.
 - **Tag context:** `tkt context backend api` sets a session-scoped filter. `ready`, `query`, and `blocked` only show tickets whose `tags` include all context-include tags and none of the context-exclude tags. `new` and `batch` auto-inherit context tags.
 
 ---

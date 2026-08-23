@@ -15,7 +15,7 @@ Use the first source that returns results. Local always takes priority when `.ti
 
 ## The Rule
 
-The **frontier** = any ticket where `status: open` and all `blocked_by` are `done`.
+The **frontier** = any ticket where `status: open`, all `blocked_by` are `done`, AND machine `requires` are satisfied (ticket's `requires` is empty or a subset of `machine.capabilities` config).
 
 `tkt ready` may also be filtered by active tag context (set via `tkt context <tags>`). When a context is active, only tickets matching those tags appear in the frontier. Clear with `tkt context --clear`.
 
