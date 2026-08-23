@@ -1,7 +1,7 @@
 ---
 id: "111"
 title: "Explore: require or prompt for validation_criteria at tkt new time"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
