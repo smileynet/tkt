@@ -1,7 +1,7 @@
 ---
 id: "111"
 title: "Explore: require or prompt for validation_criteria at tkt new time"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -116,3 +116,11 @@ tkt: ✗ project requires validation_criteria (define what "done" looks like)
      Or:  --criteria "decision documented"
      Tip: write criteria from the requester's perspective, not the implementer's
 ```
+
+## Resolution (2026-08-23)
+
+Enforces validation_criteria at creation time when require_validation_criteria=true. Hard fail, no escape hatches. Clear error with structured hint for agent recovery. Forces agents to define success upfront.
+
+### Verification
+1. ✓ Decision documented: enforce at creation, warn at creation, or status quo — "tkt new without --validation → exit 1 GateFailed with hint; JSON includes structured hint for agent recovery"
+2. ✓ If enforced: tkt new without criteria fails with helpful message — "tkt new with --validation → succeeds normally; no escape hatch, no --status backlog bypass"
