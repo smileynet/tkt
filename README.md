@@ -119,6 +119,16 @@ tkt edit 02 --priority high
 tkt edit 02 --status backlog       # pull from frontier
 ```
 
+### Tags & context
+
+```bash
+tkt context frontend         # set active context (auto-tags new tickets)
+tkt new bugfix --title "Fix CSS" --tags frontend,urgent
+tkt context --clear          # clear active context
+```
+
+Tags categorize tickets. The active context auto-applies tags to new tickets and can scope `tkt ready` output.
+
 ### Project health
 
 ```bash
@@ -139,6 +149,13 @@ tkt query --status open          # filter by status
 tkt query --priority high        # filter by priority
 ```
 
+### Migrate from other tools
+
+```bash
+tkt migrate --detect          # detect current ticket format
+tkt migrate --from tk         # convert tk-format tickets to tkt
+```
+
 ## Task Format
 
 ```yaml
@@ -148,6 +165,9 @@ title: "Implement authentication"
 status: open
 blocked_by: []
 priority: high
+tags: [backend, auth]
+validation_criteria:
+  - "JWT tokens issue correctly (test: auth_test::jwt_issue)"
 ---
 
 ## What to build

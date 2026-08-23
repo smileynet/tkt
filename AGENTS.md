@@ -69,11 +69,13 @@ All three gate checks must pass with zero warnings before presenting work as don
 ```bash
 tkt --version                                     # print version
 tkt ready [--json]                                # frontier: open + deps done + env match
-tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority P] [--env E] [--status S]
-tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E] [--status S]
+tkt context [TAGS...] [--clear]                   # set/show/clear active tag context for scoped work
+tkt migrate [--from FORMAT] [--detect]            # convert foreign ticket schemas (tk → tkt)
+tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC]
+tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC]
 tkt claim <id>                                    # status→in_progress, pushed
 tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..."]
-tkt edit <id> [--title T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N]
+tkt edit <id> [--title T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
 tkt query [--status S] [--priority P]             # full corpus as JSON Lines (filterable)
 tkt blocked                                       # open tickets with unsatisfied deps
@@ -82,12 +84,12 @@ tkt rebase [--dry-run]                            # resolve ID collisions with u
 tkt audit [--strict] [--brief]                    # closure quality check
 tkt sync-plan --check [--strict] [--brief] [plan] # report drift
 tkt sync-plan --fix [--strict] [--brief] [plan]   # fix derivable columns
-tkt validate [--strict] [--brief]                 # contract + cycle + decay findings
+tkt validate [--strict] [--brief] [--fix [--dry-run]]  # contract + cycle + decay findings
 tkt lint [--check] [IDs...]                       # normalize frontmatter style
-tkt doctor [<path>] [--strict]                    # health check (single or cross-project)
-tkt init [--target T] [--all]                     # scaffold project + agent instructions
+tkt doctor [<path>] [--strict] [--fix]                    # health check (single or cross-project)
+tkt init [--target T] [--all] [--write [FILE]] [--agent-only]  # scaffold project + agent instructions
 tkt config [--set K=V] [--get K] [--unset K] [--list] [--show]  # user + project config
-tkt telemetry [--enable|--disable|--status|--show|--clear]  # manage local telemetry
+tkt telemetry [--enable|--disable|--status|--show [--all]|--clear]  # manage local telemetry
 ```
 
 ### Global flags

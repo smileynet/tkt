@@ -17,6 +17,8 @@ Use the first source that returns results. Local always takes priority when `.ti
 
 The **frontier** = any ticket where `status: open` and all `blocked_by` are `done`.
 
+`tkt ready` may also be filtered by active tag context (set via `tkt context <tags>`). When a context is active, only tickets matching those tags appear in the frontier. Clear with `tkt context --clear`.
+
 When tickets exist and no specific task is given:
 1. Identify the frontier: `tkt ready` (env-filtered, priority-aware). If `tkt` is not on PATH, fall back to scanning sources manually in priority order
 2. Pick the first ticket `tkt ready` lists — it already applies lowest-number-first with `priority: high` jumping the order

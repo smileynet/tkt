@@ -27,12 +27,15 @@ tkt teaches agents how to use it through multiple documents. When CLI behavior c
 | Race detection | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | Ticket creation quality | — | link | — | — | — | — |
 | Health commands | — | ✓ | ✓ | — | ✓ | ✓ |
+| Tag context | — | — | ✓ | ✓ | ✓ | ✓ |
+| Migration | — | — | ✓ | — | ✓ | ✓ |
+| Validation criteria | — | — | ✓ | — | ✓ | ✓ |
 
 ## Update checklist
 
 When changing CLI behavior that affects agent usage:
 
-1. ☐ Update `src/commands/init.rs` snippets (all 5: AGENTS, CLAUDE, CURSOR, KIRO, WINDSURF)
+1. ☐ Update `src/commands/init.rs` snippets (all 6: AGENTS, CLAUDE, COPILOT, CURSOR, KIRO, WINDSURF)
 2. ☐ Update `skills/tkt/SKILL.md` (JTBD table + relevant section)
 3. ☐ Update `skills/tkt/references/commands.md` (if flags/options changed)
 4. ☐ Update `steering/frontier-work.md` (if it affects ticket workflow)

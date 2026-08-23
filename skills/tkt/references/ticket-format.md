@@ -16,6 +16,9 @@ priority: medium
 validation_criteria:
   - "criterion 1"
   - "criterion 2"
+tags:
+  - "backend"
+  - "api"
 ---
 
 # {Title}
@@ -66,6 +69,7 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 | `env` | enum | `corp \| personal \| either` — filters `tkt ready` via `CREW_ENV` |
 | `spec` | string | Links to originating spec slug |
 | `validation_criteria` | string array | Machine-checkable criteria for agent close gate |
+| `tags` | string array | Categorization tags for context filtering. Set via `--tags` or auto-applied from `tkt context`. |
 
 ## Status Lifecycle
 

@@ -53,7 +53,32 @@
 | `tkt telemetry --status` | Check telemetry state | Privacy audit |
 | `tkt telemetry --enable` / `--disable` | Toggle telemetry consent | Opt in/out |
 | `tkt capabilities` | JSON feature manifest | Agent/automation discovery |
-| `tkt init` | Scaffold `.tickets/` | New project setup |
+| `tkt init` | Initialize `.tickets/` and deploy agent integration files | New project setup |
+| `tkt init --write` | Write agent snippet into AGENTS.md using markers | Embedding instructions |
+| `tkt init --write FILE` | Write snippet to a specific file | Custom agent file |
+| `tkt init --agent-only` | Output agent snippet only (skip dir/config creation) | Existing projects |
+
+## Context (tag scoping)
+
+| Command | Effect |
+|---------|--------|
+| `tkt context` | Show active context (include/exclude tags) |
+| `tkt context backend api` | Set context: include backend + api tags |
+| `tkt context +backend -frontend` | Include backend, exclude frontend |
+| `tkt context --clear` | Clear active context |
+
+When a context is active:
+- `tkt new` and `tkt batch` auto-apply include-tags to new tickets
+- `tkt ready`, `tkt query`, and `tkt blocked` filter results to matching tickets
+- Tags use AND logic: ticket must have ALL include-tags and NONE of the exclude-tags
+
+## Migration
+
+| Command | Effect |
+|---------|--------|
+| `tkt migrate --detect` | Report detected ticket format and confidence |
+| `tkt migrate --from tk` | Convert tk-format tickets to tkt format |
+| `tkt migrate --from tk --dry-run` | Preview migration without writing |
 
 ## Creation flags (new, batch)
 
@@ -65,6 +90,7 @@
 | `--blocked-by N,N` | IDs that must be done first | none |
 | `--env E` | Environment filter (`corp`, `personal`) | none |
 | `--spec S` | Originating spec slug | none |
+| `--tags T,T` | Tags for categorization (also auto-applied from active context) | none |
 | `--validation "..."` | Validation criteria (repeatable). Alias: `--vc` | none |
 
 ## Edit flags

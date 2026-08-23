@@ -146,15 +146,17 @@ Highlight:
 
 ## Agent integration
 
-For non-interactive use (agent builds the map):
+For non-interactive use:
 
 ```bash
-# Agent reads samples, generates the map
-tkt migrate --generate-map       # outputs migrate.toml from corpus analysis
+# Detect what format is present
+tkt migrate --detect
 
-# Agent reviews the map, then applies
-tkt migrate --map migrate.toml --dry-run   # preview
-tkt migrate --map migrate.toml --apply     # execute
+# Preview migration (auto-detects or specify format)
+tkt migrate --from tk --dry-run
+
+# Apply migration
+tkt migrate --from tk
 ```
 
-The map file is the seam between judgment (proposing mappings) and execution (applying them mechanically).
+Note: The map-file workflow (`--map`, `--generate-map`, `--apply`) is planned but not yet implemented. For complex migrations requiring custom field mappings, use the manual analysis workflow described above and apply edits via scripting or `tkt edit`.
