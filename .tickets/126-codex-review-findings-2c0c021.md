@@ -1,7 +1,7 @@
 ---
 id: "126"
 title: "Confirm and address Codex review findings through 2c0c021"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
