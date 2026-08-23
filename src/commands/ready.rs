@@ -15,6 +15,21 @@ pub fn run(json: bool) -> Result<i32> {
     let ctx = crate::context::load(&dir);
     let front: Vec<&Ticket> = front.into_iter().filter(|t| ctx.matches(&t.tags)).collect();
 
+    // Apply machine capabilities filter (requires subset matching)
+    let front: Vec<&Ticket> = if pcfg.machine_capabilities.is_empty() {
+        front
+    } else {
+        front
+            .into_iter()
+            .filter(|t| {
+                t.requires.is_empty()
+                    || t.requires
+                        .iter()
+                        .all(|r| pcfg.machine_capabilities.contains(r))
+            })
+            .collect()
+    };
+
     // Record frontier size for telemetry
     crate::RESULT_COUNT.store(front.len() as i32, std::sync::atomic::Ordering::Relaxed);
 

@@ -17,6 +17,7 @@ pub fn run(
     blocked_by: &[String],
     validation_criteria: &[String],
     explicit_tags: &[String],
+    requires: &[String],
 ) -> Result<i32> {
     if let Some(s) = spec {
         if let Err(e) = validate::validate_free_text(s, "spec", 100) {
@@ -100,6 +101,7 @@ pub fn run(
                     status,
                     validation_criteria,
                     tags: &effective_tags,
+                    requires,
                 });
                 std::fs::write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));

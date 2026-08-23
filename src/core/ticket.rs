@@ -418,6 +418,9 @@ pub struct Ticket {
     pub spec: Option<String>,
     pub validation_criteria: Vec<String>,
     pub tags: Vec<String>,
+    /// Machine capability requirements. Ticket only appears on frontier
+    /// if the machine's capabilities are a superset of this list.
+    pub requires: Vec<String>,
     pub path: PathBuf,
     pub body: String,
     /// The underlying raw file for mutations.
@@ -474,6 +477,13 @@ impl Ticket {
 
         let tags = parse_tags(file.get("tags").unwrap_or(""));
 
+        // Parse requires field (machine capability requirements)
+        // Backward compat: if env is set and requires is empty, synthesize from env
+        let mut requires = parse_tags(file.get("requires").unwrap_or(""));
+        if requires.is_empty() && env != Env::Either {
+            requires.push(env.as_str().to_string());
+        }
+
         Ok(Ticket {
             id,
             title,
@@ -484,6 +494,7 @@ impl Ticket {
             spec,
             validation_criteria,
             tags,
+            requires,
             path: file.path.clone(),
             body: file.body.clone(),
             file,
@@ -541,12 +552,24 @@ pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
 /// Compute the frontier with a fallback default_env (from project config).
 /// CREW_ENV env var takes priority over the default.
 pub fn frontier_with_default_env<'a>(corpus: &'a [Ticket], default_env: &str) -> Vec<&'a Ticket> {
+    // Build machine capabilities: CREW_ENV (legacy) + config machine.capabilities
     let crew_env = std::env::var("CREW_ENV").unwrap_or_default();
     let effective_env = if crew_env.is_empty() {
-        default_env
+        default_env.to_string()
     } else {
-        &crew_env
+        crew_env
     };
+
+    // Machine capabilities come from config (loaded by caller and passed via default_env for legacy).
+    // For requires matching, we build a simple set from CREW_ENV as a capability.
+    // The full machine.capabilities set is checked in ready.rs which has access to ProjectConfig.
+    // Here we handle the legacy path: CREW_ENV as a single capability.
+    let legacy_caps: Vec<&str> = if effective_env.is_empty() {
+        vec![]
+    } else {
+        vec![effective_env.as_str()]
+    };
+
     let done: std::collections::HashSet<&str> = corpus
         .iter()
         .filter(|t| t.status == Status::Done)
@@ -562,10 +585,16 @@ pub fn frontier_with_default_env<'a>(corpus: &'a [Ticket], default_env: &str) ->
             if !t.blocked_by.iter().all(|dep| done.contains(dep.as_str())) {
                 return false;
             }
-            if !effective_env.is_empty() && t.env != Env::Either && t.env.as_str() != effective_env
+            // Requires check: ticket requires must be subset of machine capabilities
+            // Empty requires = runs anywhere (always passes)
+            if !t.requires.is_empty()
+                && !legacy_caps.is_empty()
+                && !t.requires.iter().all(|r| legacy_caps.contains(&r.as_str()))
             {
                 return false;
             }
+            // If machine declares no capabilities (legacy_caps empty) and ticket has requires,
+            // we still show it — the full capability check happens in ready.rs with ProjectConfig
             true
         })
         .collect();
@@ -775,6 +804,7 @@ pub struct NewTicketParams<'a> {
     pub status: Option<&'a str>,
     pub validation_criteria: &'a [String],
     pub tags: &'a [String],
+    pub requires: &'a [String],
 }
 
 /// Generate the text for a new ticket file.
@@ -815,6 +845,15 @@ pub fn new_ticket_text(p: &NewTicketParams) -> String {
             .collect::<Vec<_>>()
             .join(", ");
         fm_lines.push(format!("tags: [{}]", tags_str));
+    }
+    if !p.requires.is_empty() {
+        let req_str = p
+            .requires
+            .iter()
+            .map(|r| format!("\"{}\"", yaml_scalar_escape(r)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        fm_lines.push(format!("requires: [{}]", req_str));
     }
     let body = format!(
         "\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
@@ -977,6 +1016,7 @@ mod tests {
             status: None,
             validation_criteria: &[],
             tags: &[],
+            requires: &[],
         });
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();

@@ -22,6 +22,7 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
     ("priority.warn_unknown", "true"),
     ("new.default_priority", ""),
     ("push.enabled", "true"),
+    ("machine.capabilities", ""),
 ];
 
 /// User-only keys (debug settings, not applicable at project level).
@@ -45,6 +46,8 @@ pub struct ProjectConfig {
     pub priority_warn_unknown: bool,
     pub new_default_priority: String,
     pub push_enabled: bool,
+    /// Machine capabilities declared by this workstation (for requires matching).
+    pub machine_capabilities: Vec<String>,
     /// Unknown keys found in the config file (for warning).
     pub unknown_keys: Vec<String>,
     /// Track which keys came from which source for --show.
@@ -64,6 +67,7 @@ impl Default for ProjectConfig {
             priority_warn_unknown: true,
             new_default_priority: String::new(),
             push_enabled: true,
+            machine_capabilities: Vec::new(),
             unknown_keys: Vec::new(),
             sources: BTreeMap::new(),
         }
@@ -156,6 +160,7 @@ impl ProjectConfig {
             ),
             ("new.default_priority", self.new_default_priority.clone()),
             ("push.enabled", self.push_enabled.to_string()),
+            ("machine.capabilities", self.machine_capabilities.join(",")),
         ];
 
         for (key, value) in fields {
@@ -187,6 +192,13 @@ fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> bool {
         "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
         "new.default_priority" => cfg.new_default_priority = value.to_string(),
         "push.enabled" => cfg.push_enabled = is_truthy(value),
+        "machine.capabilities" => {
+            cfg.machine_capabilities = value
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+        }
         _ => return false,
     }
     true

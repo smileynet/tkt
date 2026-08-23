@@ -20,6 +20,7 @@ pub fn run(
     blocked_by: &[String],
     validation_criteria: &[String],
     explicit_tags: &[String],
+    requires: &[String],
 ) -> Result<i32> {
     if let Err(e) = validate::validate_slug(slug) {
         domain_bail!("{}", e);
@@ -118,6 +119,7 @@ pub fn run(
         status,
         validation_criteria,
         tags: &effective_tags,
+        requires,
     });
     std::fs::write(&path, &content)?;
 
@@ -153,6 +155,7 @@ pub fn run(
                 status,
                 validation_criteria,
                 tags: &effective_tags,
+                requires,
             });
             std::fs::write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);

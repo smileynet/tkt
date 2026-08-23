@@ -107,6 +107,9 @@ enum Commands {
         /// Tags for categorization (repeatable, also auto-applied from active context)
         #[arg(long = "tags", value_delimiter = ',')]
         tags: Vec<String>,
+        /// Machine capabilities required (e.g., gpu,linux,corp)
+        #[arg(long = "requires", value_delimiter = ',')]
+        requires: Vec<String>,
     },
     /// Allocate N sequential ids in one commit/push
     Batch {
@@ -128,6 +131,9 @@ enum Commands {
         /// Tags for categorization (repeatable, also auto-applied from active context)
         #[arg(long = "tags", value_delimiter = ',')]
         tags: Vec<String>,
+        /// Machine capabilities required (e.g., gpu,linux,corp)
+        #[arg(long = "requires", value_delimiter = ',')]
+        requires: Vec<String>,
     },
     /// Set, show, or clear the active tag context for scoped work
     Context {
@@ -362,6 +368,7 @@ pub fn run() -> i32 {
             blocked_by,
             validation_criteria,
             tags,
+            requires,
         } => crate::commands::new::run(
             &slug,
             title.as_deref(),
@@ -372,6 +379,7 @@ pub fn run() -> i32 {
             &blocked_by.unwrap_or_default(),
             &validation_criteria,
             &tags,
+            &requires,
         ),
         Commands::Batch {
             items,
@@ -382,6 +390,7 @@ pub fn run() -> i32 {
             blocked_by,
             validation_criteria,
             tags,
+            requires,
         } => crate::commands::batch::run(
             &items,
             spec.as_deref(),
@@ -391,6 +400,7 @@ pub fn run() -> i32 {
             &blocked_by.unwrap_or_default(),
             &validation_criteria,
             &tags,
+            &requires,
         ),
         Commands::Context { tags, clear } => crate::commands::context::run(&tags, clear),
         Commands::Claim { id } => crate::commands::claim::run(&id),
