@@ -1,7 +1,7 @@
 ---
 id: "126"
 title: "Confirm and address Codex review findings through 2c0c021"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -60,9 +60,18 @@ each finding against current code before changing it.
 
 ## Acceptance criteria
 
-- [ ] Every finding is independently marked confirmed, rejected, or obsolete
-- [ ] Rejected or obsolete findings include evidence and rationale
-- [ ] Confirmed findings are corrected
-- [ ] Regression tests cover confirmed defects where practical
-- [ ] Relevant build, test, and lint checks pass
-- [ ] Corrected changes receive a fresh review
+- [x] Every finding is independently marked confirmed, rejected, or obsolete
+- [x] Rejected or obsolete findings include evidence and rationale
+- [x] Confirmed findings are corrected
+- [x] Regression tests cover confirmed defects where practical
+- [x] Relevant build, test, and lint checks pass
+- [x] Corrected changes receive a fresh review
+
+## Resolution (2026-08-23)
+
+All 4 Codex findings confirmed and fixed: F1 legacy env filter skipped for explicit requires, F2 .gitignore in init, F3 dry-run marker gate for migrate, F4 requires+all+dry-run in notable_flags.
+
+### Verification
+1. ✓ Every finding is independently confirmed, rejected, or obsolete — "All 4 findings independently confirmed and fixed: F1 ready now shows requires-matching tickets, F2 .gitignore created, F3 migrate refuses without dry-run, F4 requires/dry-run/all in telemetry"
+2. ✓ Confirmed findings are corrected with regression coverage — "Gate passes: 0 warnings, 56 tests. End-to-end verification of each fix against original reproduction."
+3. ✓ Relevant build, test, and lint checks pass — "Build verified: all fixes work in installed binary"
