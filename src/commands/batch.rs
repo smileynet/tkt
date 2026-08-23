@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, print_success, tickets_dir};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_quiet, print_success, project_config, tickets_dir,
+};
 use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
@@ -66,6 +68,17 @@ pub fn run(
     }
 
     let dir = tickets_dir()?;
+
+    // Enforce validation_criteria at creation if configured
+    let pcfg = project_config(&dir);
+    if pcfg.close_require_validation_criteria && validation_criteria.is_empty() {
+        return Err(crate::DomainError::with_hint(
+            crate::ErrorKind::GateFailed,
+            "project requires validation_criteria (define what \"done\" means)".to_string(),
+            "add --validation \"criteria\" for each success condition".to_string(),
+        )
+        .into());
+    }
 
     // Merge explicit tags with context auto-tags
     let effective_tags: Vec<String> = {

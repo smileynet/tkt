@@ -59,6 +59,16 @@ pub fn run(
     let dir = tickets_dir()?;
     let pcfg = project_config(&dir);
 
+    // Enforce validation_criteria at creation if configured
+    if pcfg.close_require_validation_criteria && validation_criteria.is_empty() {
+        return Err(crate::DomainError::with_hint(
+            crate::ErrorKind::GateFailed,
+            "project requires validation_criteria (define what \"done\" means)".to_string(),
+            "add --validation \"criteria\" for each success condition".to_string(),
+        )
+        .into());
+    }
+
     // Merge explicit tags with context auto-tags (context include tags are inherited)
     let effective_tags: Vec<String> = {
         let ctx = crate::context::load(&dir);
