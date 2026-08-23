@@ -206,6 +206,30 @@ fn bootstrap_project(repo_root: &std::path::Path) -> Result<()> {
         }
     }
 
+    // Ensure .context is gitignored (session state, not committed)
+    let gitignore_path = tickets_dir.join(".gitignore");
+    let needs_context_ignore = if gitignore_path.exists() {
+        let content = std::fs::read_to_string(&gitignore_path).unwrap_or_default();
+        !content.contains(".context")
+    } else {
+        true
+    };
+    if needs_context_ignore {
+        let mut content = if gitignore_path.exists() {
+            std::fs::read_to_string(&gitignore_path).unwrap_or_default()
+        } else {
+            String::new()
+        };
+        if !content.is_empty() && !content.ends_with('\n') {
+            content.push('\n');
+        }
+        content.push_str(".context\n");
+        std::fs::write(&gitignore_path, content)?;
+        if !is_quiet() {
+            println!("  {} .tickets/.gitignore (.context excluded)", sym_ok());
+        }
+    }
+
     Ok(())
 }
 

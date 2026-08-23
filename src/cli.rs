@@ -595,6 +595,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             blocked_by,
             validation_criteria,
             tags,
+            requires,
             ..
         } => {
             if blocked_by.is_some() {
@@ -605,6 +606,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if priority.is_some() {
                 flags.push("priority");
+            }
+            if !requires.is_empty() {
+                flags.push("requires");
             }
             if spec.is_some() {
                 flags.push("spec");
@@ -627,6 +631,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             blocked_by,
             validation_criteria,
             tags,
+            requires,
             ..
         } => {
             if blocked_by.is_some() {
@@ -637,6 +642,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if priority.is_some() {
                 flags.push("priority");
+            }
+            if !requires.is_empty() {
+                flags.push("requires");
             }
             if spec.is_some() {
                 flags.push("spec");
@@ -785,10 +793,19 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         | Commands::Renumber { .. }
         | Commands::Rebase { .. }
         | Commands::Config { .. }
-        | Commands::Telemetry { .. }
         | Commands::Init { .. }
         | Commands::Doctor { .. }
         | Commands::Lint { .. } => {}
+        Commands::Telemetry { all, .. } => {
+            if *all {
+                flags.push("all");
+            }
+        }
+    }
+
+    // Global --dry-run flag (applies to all commands)
+    if crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
+        flags.push("dry-run");
     }
 
     // flags are already inserted alphabetically due to match arm ordering

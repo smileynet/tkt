@@ -585,9 +585,10 @@ pub fn frontier_with_default_env<'a>(corpus: &'a [Ticket], default_env: &str) ->
             if !t.blocked_by.iter().all(|dep| done.contains(dep.as_str())) {
                 return false;
             }
-            // Requires check: ticket requires must be subset of machine capabilities
-            // Empty requires = runs anywhere (always passes)
-            if !t.requires.is_empty()
+            // Legacy env filter: only applies to tickets using the old env field.
+            // Tickets with explicit `requires` (env == Either) are filtered by
+            // machine.capabilities in ready.rs, not here.
+            if t.env != Env::Either
                 && !legacy_caps.is_empty()
                 && !t.requires.iter().all(|r| legacy_caps.contains(&r.as_str()))
             {

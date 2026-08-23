@@ -124,11 +124,28 @@ fn run_tk_migration(dir: &std::path::Path) -> Result<i32> {
     }
 
     if dry_run {
+        // Write a marker so apply knows the plan was reviewed
+        let marker = dir.join(".migrate-reviewed");
+        std::fs::write(&marker, format!("{}\n", plan.total))?;
         if !is_quiet() {
             println!("Run without --dry-run to apply.");
         }
         return Ok(0);
     }
+
+    // Safety: require --dry-run preview before first apply.
+    let marker = dir.join(".migrate-reviewed");
+    if !marker.exists() {
+        return Err(crate::DomainError::with_hint(
+            crate::ErrorKind::GateFailed,
+            "migration requires --dry-run preview before applying".to_string(),
+            "run: tkt migrate --from tk --dry-run (review the plan, then re-run without --dry-run)"
+                .to_string(),
+        )
+        .into());
+    }
+    // Remove marker after reading (one-shot confirmation)
+    let _ = std::fs::remove_file(&marker);
 
     // Apply
     let result = migrate::apply(dir, &plan)?;
