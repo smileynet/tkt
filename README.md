@@ -214,12 +214,20 @@ tkt config --set push.enabled=false
 
 ## AI Agent Integration
 
-Add to your project's AGENTS.md:
+Works with **Kiro**, **OpenCode**, **Claude Code**, **Codex**, **Cursor**, **Copilot**, and **Windsurf**.
+
+Add to your project's AGENTS.md (or use `tkt init --write` to inject automatically):
 
 ```markdown
 tkt ready              # see what's unblocked
 tkt claim <id>         # mark in-progress
 tkt close <id> --check-all --resolution "what was done"
+```
+
+Deploy agent instructions for all supported tools at once:
+
+```bash
+tkt init --all         # writes AGENTS.md, CLAUDE.md, .cursor/rules/, .kiro/steering/, etc.
 ```
 
 Solo agent: `tkt ready` → pick first → `tkt close <id> --check-all --resolution "..."`.

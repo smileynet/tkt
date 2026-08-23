@@ -282,7 +282,7 @@ fn write_all_targets(repo_root: &std::path::Path) -> Result<()> {
 
 fn write_target(repo_root: &std::path::Path, target: &str) -> Result<()> {
     match target {
-        "agents" | "codex" => {
+        "agents" | "codex" | "opencode" => {
             let path = repo_root.join("AGENTS.md");
             write_with_markers(&path, SNIPPET_AGENTS)?;
             if !is_quiet() {

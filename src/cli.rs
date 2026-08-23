@@ -49,7 +49,7 @@ enum Commands {
         #[arg(long)]
         write: Option<Option<String>>,
         /// Generate for a specific agent tool
-        #[arg(long, value_parser = ["agents", "claude", "cursor", "kiro", "copilot", "windsurf"])]
+        #[arg(long, value_parser = ["agents", "claude", "cursor", "kiro", "copilot", "opencode", "windsurf"])]
         target: Option<String>,
         /// Generate for all known agent tools
         #[arg(long)]
