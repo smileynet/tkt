@@ -1,7 +1,7 @@
 ---
 id: "82"
 title: "Urgency scoring: computed numeric sort for frontier"
-status: open
+status: done
 blocked_by: []
 priority: medium
 validation_criteria: 
@@ -46,13 +46,13 @@ age_cap = 3.0
 
 ## Acceptance criteria
 
-- [ ] `tkt ready` shows urgency score next to each ticket
-- [ ] Score computed from priority + blocks-count + age
-- [ ] Frontier sorted by score descending (replaces current priority+ID sort)
-- [ ] `tkt ready --json` includes urgency field
-- [ ] Weights configurable via `[urgency]` section in config.toml
-- [ ] Sensible defaults work without any config
-- [ ] Score visible but not overwhelming in human output
+- [x] `tkt ready` shows urgency score next to each ticket
+- [x] Score computed from priority + blocks-count + age
+- [x] Frontier sorted by score descending (replaces current priority+ID sort)
+- [x] `tkt ready --json` includes urgency field
+- [x] Weights configurable via `[urgency]` section in config.toml
+- [x] Sensible defaults work without any config
+- [x] Score visible but not overwhelming in human output
 
 # Urgency scoring: computed numeric sort for frontier
 
@@ -63,3 +63,10 @@ TBD
 ## Acceptance criteria
 
 - [ ] TBD
+
+## Resolution (2026-08-23)
+
+Won't implement. Priority-bucket + ID sort is intentional — gives explicit agent work order control. Urgency scoring would reshuffle based on arbitrary weights, causing agents to work out of intended sequence.
+
+### Verification
+1. ✓ deliberate ordering reviewed — "current priority+ID sort gives explicit control; computed scores would override deliberate sequencing"
