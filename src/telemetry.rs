@@ -16,6 +16,8 @@ pub enum DebugMode {
     Human,
     /// JSONL to stderr
     Json,
+    /// Human-readable lines to log file (stderr stays clean)
+    Log,
     /// Debug mode disabled
     Off,
 }
@@ -23,12 +25,14 @@ pub enum DebugMode {
 /// Check TKT_DEBUG environment variable, then config file.
 /// - env "1" or "true" → Human
 /// - env "json" → Json
+/// - env "log" → Log (file output)
 /// - env unset → check config: debug=true uses debug.format to pick mode
 /// - otherwise → Off
 pub fn debug_mode() -> DebugMode {
     match std::env::var("TKT_DEBUG").as_deref() {
         Ok("1") | Ok("true") => DebugMode::Human,
         Ok("json") => DebugMode::Json,
+        Ok("log") | Ok("file") => DebugMode::Log,
         Ok(_) => DebugMode::Off,
         Err(_) => {
             // Env not set — check config file
@@ -36,6 +40,7 @@ pub fn debug_mode() -> DebugMode {
             if cfg.get_bool("debug") {
                 match cfg.get("debug.format").as_str() {
                     "json" => DebugMode::Json,
+                    "log" | "file" => DebugMode::Log,
                     _ => DebugMode::Human,
                 }
             } else {
@@ -45,12 +50,15 @@ pub fn debug_mode() -> DebugMode {
     }
 }
 
-/// Emit a debug event to stderr. No-op if debug mode is Off.
+/// Emit a debug event. Routes to stderr (Human/Json) or file (Log). No-op if Off.
 pub fn debug_event(mode: DebugMode, session: &str, project: &str, msg: &str) {
     match mode {
         DebugMode::Off => {}
         DebugMode::Human => {
             eprintln!("[tkt:debug] {}", msg);
+        }
+        DebugMode::Log => {
+            write_debug_log(msg);
         }
         DebugMode::Json => {
             let json = serde_json::json!({
@@ -63,6 +71,40 @@ pub fn debug_event(mode: DebugMode, session: &str, project: &str, msg: &str) {
             eprintln!("{}", json);
         }
     }
+}
+
+/// Write a debug line to the log file. Silently swallows errors.
+fn write_debug_log(msg: &str) {
+    use std::io::Write;
+    let path = debug_log_path();
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        let _ = writeln!(f, "[{}] {}", iso_timestamp(), msg);
+    }
+}
+
+/// Path to the debug log file.
+/// Uses XDG_STATE_HOME (~/.local/state/tkt/debug.log) on Linux/macOS.
+fn debug_log_path() -> std::path::PathBuf {
+    if let Ok(state) = std::env::var("XDG_STATE_HOME") {
+        return std::path::PathBuf::from(state)
+            .join("tkt")
+            .join("debug.log");
+    }
+    if let Some(home) = dirs::home_dir() {
+        return home
+            .join(".local")
+            .join("state")
+            .join("tkt")
+            .join("debug.log");
+    }
+    std::path::PathBuf::from("/tmp/tkt-debug.log")
 }
 
 // --- Session ID ---
