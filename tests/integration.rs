@@ -766,7 +766,7 @@ fn test_debug_mode_emits_to_stderr() {
     git(&clone, &["commit", "-m", "add open ticket"]);
     git(&clone, &["push"]);
 
-    let (code, stdout, stderr) = run_tkt_env(&clone, &["ready"], &[("TKT_DEBUG", "1")]);
+    let (code, stdout, stderr) = run_tkt_env(&clone, &["ready"], &[("TKT_DEBUG", "stderr")]);
     assert_eq!(code, 0);
     // Stdout has normal output
     assert!(

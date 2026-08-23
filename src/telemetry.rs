@@ -23,16 +23,16 @@ pub enum DebugMode {
 }
 
 /// Check TKT_DEBUG environment variable, then config file.
-/// - env "1" or "true" → Human
-/// - env "json" → Json
-/// - env "log" → Log (file output)
-/// - env unset → check config: debug=true uses debug.format to pick mode
+/// - env "1" or "true" or "log" or "file" → Log (file output, stderr clean)
+/// - env "stderr" or "human" → Human (stderr output)
+/// - env "json" → Json (stderr, JSON format)
+/// - env unset → check config: debug=true defaults to Log
 /// - otherwise → Off
 pub fn debug_mode() -> DebugMode {
     match std::env::var("TKT_DEBUG").as_deref() {
-        Ok("1") | Ok("true") => DebugMode::Human,
+        Ok("1") | Ok("true") | Ok("log") | Ok("file") => DebugMode::Log,
+        Ok("stderr") | Ok("human") => DebugMode::Human,
         Ok("json") => DebugMode::Json,
-        Ok("log") | Ok("file") => DebugMode::Log,
         Ok(_) => DebugMode::Off,
         Err(_) => {
             // Env not set — check config file
@@ -40,8 +40,8 @@ pub fn debug_mode() -> DebugMode {
             if cfg.get_bool("debug") {
                 match cfg.get("debug.format").as_str() {
                     "json" => DebugMode::Json,
-                    "log" | "file" => DebugMode::Log,
-                    _ => DebugMode::Human,
+                    "stderr" | "human" => DebugMode::Human,
+                    _ => DebugMode::Log,
                 }
             } else {
                 DebugMode::Off
