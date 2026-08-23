@@ -1,7 +1,7 @@
 ---
 id: "130"
 title: "Debug output: add log-to-file mode (suppress stderr, write to file instead)"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
