@@ -205,3 +205,35 @@ fn collect_files(tickets_dir: &Path, ids: &[String]) -> Result<Vec<std::path::Pa
     files.sort();
     Ok(files)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_inline_array_preserved() {
+        assert_eq!(normalize_blocked_by("[\"01\", \"04\"]"), "[\"01\", \"04\"]");
+    }
+
+    #[test]
+    fn normalize_empty_array() {
+        assert_eq!(normalize_blocked_by("[]"), "[]");
+        assert_eq!(normalize_blocked_by(""), "[]");
+    }
+
+    #[test]
+    fn normalize_bare_scalar_preserves_deps() {
+        // Regression (#131): bare scalar must not be destroyed as []
+        assert_eq!(normalize_blocked_by("01, 04"), "[\"01\", \"04\"]");
+    }
+
+    #[test]
+    fn normalize_single_bare_scalar() {
+        assert_eq!(normalize_blocked_by("01"), "[\"01\"]");
+    }
+
+    #[test]
+    fn normalize_unquoted_inline_array() {
+        assert_eq!(normalize_blocked_by("[01, 04]"), "[\"01\", \"04\"]");
+    }
+}
