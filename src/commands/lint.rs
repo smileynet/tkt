@@ -143,25 +143,38 @@ fn normalize_value(key: &str, raw: &str) -> String {
 }
 
 /// Normalize blocked_by array: ensure ["01", "04"] format.
+/// Handles inline arrays, bare scalars (01, 04), and empty values.
 fn normalize_blocked_by(raw: &str) -> String {
     let trimmed = raw.trim();
-    if !trimmed.starts_with('[') || !trimmed.ends_with(']') {
+    if trimmed.is_empty() {
         return "[]".to_string();
     }
-    let inner = &trimmed[1..trimmed.len() - 1];
-    if inner.trim().is_empty() {
-        return "[]".to_string();
+    if trimmed.starts_with('[') && trimmed.ends_with(']') {
+        let inner = &trimmed[1..trimmed.len() - 1];
+        if inner.trim().is_empty() {
+            return "[]".to_string();
+        }
+        let items: Vec<String> = inner
+            .split(',')
+            .map(|s| {
+                let clean = s.trim().trim_matches('"').trim_matches('\'');
+                format!("\"{}\"", clean)
+            })
+            .collect();
+        return format!("[{}]", items.join(", "));
     }
-
-    let items: Vec<String> = inner
+    // Bare scalar (e.g., "01, 04" or "01") — parse as comma-separated IDs
+    let items: Vec<String> = trimmed
         .split(',')
-        .map(|s| {
-            let clean = s.trim().trim_matches('"').trim_matches('\'');
-            format!("\"{}\"", clean)
-        })
+        .map(|s| s.trim().trim_matches('"').trim_matches('\''))
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("\"{}\"", s))
         .collect();
-
-    format!("[{}]", items.join(", "))
+    if items.is_empty() {
+        "[]".to_string()
+    } else {
+        format!("[{}]", items.join(", "))
+    }
 }
 
 /// Collect ticket file paths to lint.

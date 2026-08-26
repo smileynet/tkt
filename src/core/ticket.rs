@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use regex::Regex;
 
 // --- Constants ---
@@ -329,7 +329,7 @@ impl TicketFile {
                     checked: 0,
                     unchecked: 0,
                     total: 0,
-                }
+                };
             }
         };
 
@@ -368,7 +368,7 @@ impl TicketFile {
                     checked: 0,
                     unchecked: 0,
                     total: 0,
-                }
+                };
             }
         };
         let section = &self.body[range];
@@ -642,13 +642,38 @@ fn is_fence(line: &str) -> bool {
 }
 
 /// Parse a blocked_by field value into a Vec of IDs.
+/// Supports inline array `["01", "03"]`, block-style YAML list, and bare scalars.
 fn parse_blocked_by(raw: &str) -> Vec<String> {
     let trimmed = raw.trim();
-    if !trimmed.starts_with('[') || !trimmed.ends_with(']') {
+    if trimmed.is_empty() {
         return Vec::new();
     }
-    let inner = &trimmed[1..trimmed.len() - 1];
-    inner
+    // Inline array format: ["01", "03"]
+    if trimmed.starts_with('[') && trimmed.ends_with(']') {
+        let inner = &trimmed[1..trimmed.len() - 1];
+        return inner
+            .split(',')
+            .map(|s| yaml_scalar_unescape(s.trim().trim_matches('"').trim_matches('\'')))
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    // Multi-line YAML list format:
+    //   - "01"
+    //   - "03"
+    if raw.contains('\n') {
+        return raw
+            .split('\n')
+            .map(|line| line.trim())
+            .filter(|line| line.starts_with('-'))
+            .map(|line| {
+                let val = line[1..].trim();
+                yaml_scalar_unescape(val.trim_matches('"').trim_matches('\''))
+            })
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    // Bare scalar: "01, 04" or "01"
+    trimmed
         .split(',')
         .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
         .filter(|s| !s.is_empty())
@@ -892,6 +917,29 @@ mod tests {
     }
 
     #[test]
+    fn parse_blocked_by_block_style() {
+        let content = "---\nid: \"05\"\ntitle: \"Block deps\"\nstatus: open\nblocked_by:\n  - \"01\"\n  - \"03\"\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.blocked_by, vec!["01", "03"]);
+    }
+
+    #[test]
+    fn parse_blocked_by_bare_scalar() {
+        let content =
+            "---\nid: \"05\"\ntitle: \"Bare\"\nstatus: open\nblocked_by: 01, 04\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.blocked_by, vec!["01", "04"]);
+    }
+
+    #[test]
+    fn parse_blocked_by_single_bare() {
+        let content =
+            "---\nid: \"05\"\ntitle: \"Bare\"\nstatus: open\nblocked_by: 01\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.blocked_by, vec!["01"]);
+    }
+
+    #[test]
     fn frontier_filters_correctly() {
         let content_done = "---\nid: \"01\"\ntitle: \"Done\"\nstatus: done\nblocked_by: []\n---\n";
         let content_open =
@@ -1052,8 +1100,7 @@ mod tests {
 
     #[test]
     fn invalid_env_rejected_at_parse() {
-        let content =
-            "---\nid: \"01\"\ntitle: \"Bad\"\nstatus: open\nblocked_by: []\nenv: bogus\n---\n\n# Bad\n";
+        let content = "---\nid: \"01\"\ntitle: \"Bad\"\nstatus: open\nblocked_by: []\nenv: bogus\n---\n\n# Bad\n";
         let result = Ticket::parse_str(content, Path::new("test.md"));
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
