@@ -142,3 +142,6 @@ tkt telemetry [--enable|--disable|--status|--show [--all]|--clear]  # manage loc
 - Codex review dispatch: `codex exec --dangerously-bypass-approvals-and-sandbox` (bwrap namespace restriction on this machine; `codex review --base <SHA>` cannot combine --base with custom prompt)
 - cargo-dist binary name is `dist` (not `cargo dist`) — `cargo dist --version` will fail; use `dist --version`
 - New mutation commands MUST route push through a push-gated path (GitTransaction respects `push.enabled`; direct `git::push_with_retry` calls must check `pcfg.push_enabled` first)
+- Windows (this machine): mise shims are broken (`%1 is not a valid Win32 application`) — invoke tools via direct paths: `D:\dev-tools\cargo\bin\cargo.exe`, and rustfmt via `D:\dev-tools\rustup\toolchains\stable-x86_64-pc-windows-msvc\bin\rustfmt.exe`
+- After any code change, run `cargo install --path .` BEFORE end-to-end testing with the installed `tkt` binary — `tkt --version` git hash must match HEAD, or you are testing a stale binary (validated 2026-08-26: closed #131 against a stale binary that still reproduced the bug)
+- Windows: use `git commit -F <file>` for multi-line or bracket/quote-containing commit messages — inline `-m` gets mangled by PowerShell quoting
