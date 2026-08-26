@@ -57,11 +57,12 @@ Ticket creation is a race when 2+ sessions work the same repo (observed twice: a
 
 **With tkt (default):** `tkt new <slug> --title "..." [--blocked-by IDS] [--priority high]` does the whole claim protocol in one step — fetch, true-max scan (local + origin), create, commit, push, with automatic renumber on a lost race. Get `--blocked-by` right at creation; fix later with `tkt edit <id>`. Use `--status backlog` for discovered work that shouldn't enter the frontier yet. Reconcile out-of-band collisions with `tkt renumber <old> <new>` (birth-window only — cited ids are contracts).
 
+**Work stream tags:** In multi-stream projects, tag each ticket with its work stream: `--tags ink`, `--tags mktoon`, `--tags platform`. Use the project's established tag vocabulary (visible in existing tickets via `tkt query --tag <name>`). One tag per ticket is the norm — add a second only when work genuinely spans streams (e.g., `--tags mktoon,blender` for texture prep that bridges both). Omit tags in single-stream projects or for cross-cutting work.
+
 **Manual fallback (tkt absent):**
 1. **Claim before allocating:** `git fetch`, then rescan `.tickets/` (local + `origin/main`) for the true max ID
 2. **Push promptly:** commit + push the ticket file right after creating it — a pushed ticket is a claim; an unpushed ticket is invisible to other sessions
 3. **On collision:** reconcile immediately — merge content into the lower-numbered/pushed ticket (or renumber the newer one), never let both proceed
-4. Optional `lane:` frontmatter when sessions have declared work lanes
 
 `tk` on PATH is an UNRELATED third-party tool — never use it on `.tickets/` (reads `deps` not `blocked_by`, silently hides tickets it can't parse).
 
