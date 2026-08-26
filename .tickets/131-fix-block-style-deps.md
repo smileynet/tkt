@@ -1,7 +1,7 @@
 ---
 id: "131"
 title: "Fix block-style blocked_by parsed as empty + lint destroys deps"
-status: in_progress
+status: done
 blocked_by: []
 priority: urgent
 validation_criteria:
@@ -27,15 +27,24 @@ Fix two related data-loss paths in blocked_by handling:
 
 ## Acceptance criteria
 
-- [ ] `blocked_by:\n  - "01"\n  - "03"` parses as vec!["01", "03"]
-- [ ] `blocked_by: 01, 04` (bare scalar) parses as vec!["01", "04"]
-- [ ] `tkt lint` on block-style deps normalizes to inline `["01", "03"]`
-- [ ] `tkt lint` on bare scalar deps normalizes to inline `["01", "04"]`
-- [ ] Existing inline-format blocked_by parsing unchanged
-- [ ] All existing tests pass
+- [x] `blocked_by:\n  - "01"\n  - "03"` parses as vec!["01", "03"]
+- [x] `blocked_by: 01, 04` (bare scalar) parses as vec!["01", "04"]
+- [x] `tkt lint` on block-style deps normalizes to inline `["01", "03"]`
+- [x] `tkt lint` on bare scalar deps normalizes to inline `["01", "04"]`
+- [x] Existing inline-format blocked_by parsing unchanged
+- [x] All existing tests pass
 
 ## Out of scope
 
 - Tags/validation_criteria/requires parsing (already correct)
 - CST-level roundtrip preservation
 - New dependencies
+
+## Resolution (2026-08-26)
+
+parse_blocked_by handles inline, block-style, and bare scalar formats. normalize_blocked_by in lint parses bare scalars instead of discarding.
+
+### Verification
+1. ✓ blocked_by with YAML block list parsed correctly — "test parse_blocked_by_block_style passes"
+2. ✓ tkt lint does not destroy unparseable blocked_by — "test: lint normalizes bare scalar via normalize_blocked_by refactor"
+3. ✓ bare scalar blocked_by (e.g. '01, 04') parsed correctly — "test parse_blocked_by_bare_scalar passes"
