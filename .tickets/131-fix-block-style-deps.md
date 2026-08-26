@@ -1,7 +1,7 @@
 ---
 id: "131"
 title: "Fix block-style blocked_by parsed as empty + lint destroys deps"
-status: open
+status: in_progress
 blocked_by: []
 priority: urgent
 validation_criteria:
