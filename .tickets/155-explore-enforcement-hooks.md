@@ -1,7 +1,7 @@
 ---
 id: "155"
 title: "Explore commit and agent hooks to enforce close protocol (beads-style)"
-status: backlog
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -69,11 +69,11 @@ Spike is effectively answered (see conclusions above). Remaining deliverable: re
 
 ## Acceptance criteria
 
-- [ ] decision recorded: warn-default, config-to-block, opt-in logging (off by default) for both warn and block
-- [ ] recommendation on blocking direct agent writes to `.tickets/` (per-agent mechanism: Claude `Edit()` deny / PreToolUse; Codex apply_patch hook, version-fragile)
-- [ ] install strategy recorded (Strategy A shim + `--git-common-dir` worktree helper, Windows LF, zero new deps)
-- [ ] beads' approach documented as prior art (what to borrow, what to skip)
-- [ ] follow-up implementation tickets created (hooks subcommand; init write-nudge; CI docs)
+- [x] decision recorded: warn-default, config-to-block, opt-in logging (off by default) for both warn and block
+- [x] recommendation on blocking direct agent writes to `.tickets/` (per-agent mechanism: Claude `Edit()` deny / PreToolUse; Codex apply_patch hook, version-fragile)
+- [x] install strategy recorded (Strategy A shim + `--git-common-dir` worktree helper, Windows LF, zero new deps)
+- [x] beads' approach documented as prior art (what to borrow, what to skip)
+- [x] follow-up implementation tickets created (hooks subcommand; init write-nudge; CI docs)
 
 ## Out of scope
 
