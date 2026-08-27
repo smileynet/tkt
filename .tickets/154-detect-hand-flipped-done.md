@@ -1,7 +1,7 @@
 ---
 id: "154"
 title: "Detect hand-flipped done tickets in validate + guide against status editing"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
