@@ -56,7 +56,7 @@ Rule: "Never set `status: done` by editing the file — always `tkt close <id>`.
 - [ ] validate surfaces `missing-resolution`/`tbd-resolution` (warning default, error under `--strict`)
 - [ ] validate does NOT double-flag ACs (check_unchecked_acs already covers that; no audit AC check added)
 - [ ] `tkt validate --fix` flags hand-flipped done as an advisory (never fabricates a resolution)
-- [ ] All 6 guidance surfaces updated + deploy-skills run + version bumped
+- [ ] All 6 guidance surfaces updated + deploy-skills run (version bump deferred to #146 release cut — bumping mid-batch would fragment the coordinated v0.3.1 release)
 - [ ] commands.md `--status` edit row carries the "done bypasses gates" caveat
 - [ ] integration test: hand-flipped done (no Resolution) → `tkt validate --strict` exits 1; plain validate exits 0 with warning
 - [ ] unit test: properly-closed ticket (has Resolution) produces no new finding
