@@ -12,7 +12,7 @@ pub const ENV_VALUES: &[&str] = &["corp", "personal", "either"];
 // --- Compiled regex patterns ---
 
 static RE_FM_KEY: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*):(.*)$").unwrap());
+    LazyLock::new(|| Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*)\s*:(.*)$").unwrap());
 static RE_NUMERIC_PREFIX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)(.*)$").unwrap());
 static RE_FILENAME_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)-").unwrap());
 
@@ -182,6 +182,9 @@ impl TicketFile {
 
     /// Parse from a string (for testing).
     pub fn parse_str(content: &str, path: &Path) -> Result<Self> {
+        // Strip a leading UTF-8 BOM (YAML 1.2 §5.2: a conforming parser strips it).
+        // Some Windows editors add it, which would otherwise hide the opening fence.
+        let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
         let lines: Vec<&str> = content.split('\n').collect();
 
         if lines.is_empty() || !is_fence(lines[0]) {
@@ -203,6 +206,11 @@ impl TicketFile {
                 let last = fm.last_mut().unwrap();
                 last.1.push('\n');
                 last.1.push_str(line);
+            } else if line.trim_start().starts_with('#') {
+                // Comment line (YAML 1.2 §6.6): tolerate so the ticket isn't ejected.
+                // Stored as an empty-key passthrough (like blank lines) — preserved by
+                // serialize, dropped by lint's canonical rewrite (comments are non-data).
+                fm.push((String::new(), (*line).to_string()));
             } else if line.trim().is_empty() {
                 fm.push((String::new(), (*line).to_string()));
             } else {
@@ -937,6 +945,50 @@ mod tests {
             "---\nid: \"05\"\ntitle: \"Bare\"\nstatus: open\nblocked_by: 01\n---\n\n# Body\n";
         let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
         assert_eq!(t.blocked_by, vec!["01"]);
+    }
+
+    #[test]
+    fn parse_tolerates_utf8_bom() {
+        let content = "\u{FEFF}---\nid: \"05\"\ntitle: \"BOM\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.id, "05");
+        assert_eq!(t.title, "BOM");
+    }
+
+    #[test]
+    fn parse_tolerates_comment_lines() {
+        let content = "---\n# this is a note\nid: \"05\"\ntitle: \"Commented\"\n  # indented note\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.id, "05");
+        assert_eq!(t.status, Status::Open);
+    }
+
+    #[test]
+    fn parse_tolerates_space_before_colon() {
+        let content =
+            "---\nid : \"05\"\ntitle : \"Spaced\"\nstatus : open\nblocked_by : []\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.id, "05");
+        assert_eq!(t.title, "Spaced");
+        assert_eq!(t.status, Status::Open);
+    }
+
+    #[test]
+    fn parse_still_bails_on_missing_opening_fence() {
+        let content = "id: \"05\"\ntitle: \"No fence\"\nstatus: open\nblocked_by: []\n";
+        assert!(Ticket::parse_str(content, Path::new("t.md")).is_err());
+    }
+
+    #[test]
+    fn parse_still_bails_on_missing_closing_fence() {
+        let content = "---\nid: \"05\"\ntitle: \"No close\"\nstatus: open\nblocked_by: []\n\n# Body never closed\n";
+        assert!(Ticket::parse_str(content, Path::new("t.md")).is_err());
+    }
+
+    #[test]
+    fn parse_still_bails_on_garbage_line() {
+        let content = "---\nid: \"05\"\ntitle: \"Garbage\"\nthis is not valid frontmatter\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        assert!(Ticket::parse_str(content, Path::new("t.md")).is_err());
     }
 
     #[test]

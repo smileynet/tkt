@@ -1967,3 +1967,73 @@ fn test_init_write_creates_agents_md_with_markers() {
     let marker_count = content.matches("<!-- tkt:begin -->").count();
     assert_eq!(marker_count, 1, "should have exactly one marker block");
 }
+
+#[test]
+fn test_hand_edits_do_not_eject_tickets() {
+    // Ticket 132: BOM, comment lines, and space-before-colon must not eject tickets.
+    let (_tmp, clone) = setup_repo();
+
+    // BOM-prefixed file (bytes: EF BB BF then "---\n...")
+    std::fs::write(
+        clone.join(".tickets/02-bom.md"),
+        "\u{FEFF}---\nid: \"02\"\ntitle: \"BOM ticket\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n",
+    )
+    .unwrap();
+    // Comment line inside frontmatter
+    std::fs::write(
+        clone.join(".tickets/03-comment.md"),
+        "---\n# a hand note\nid: \"03\"\ntitle: \"Comment ticket\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n",
+    )
+    .unwrap();
+    // Space before colon
+    std::fs::write(
+        clone.join(".tickets/04-spaced.md"),
+        "---\nid : \"04\"\ntitle : \"Spaced ticket\"\nstatus : open\nblocked_by : []\n---\n\n# Body\n",
+    )
+    .unwrap();
+
+    let (code, out, _err) = run_tkt_env(&clone, &["query"], &[]);
+    assert_eq!(code, 0, "query should succeed: {}", out);
+    let ids: Vec<&str> = out.trim().lines().collect();
+    // seed (01) + 3 hand-edited = 4 tickets, none ejected
+    assert_eq!(ids.len(), 4, "all hand-edited tickets should load: {}", out);
+    assert!(out.contains("\"id\":\"02\""), "BOM ticket present: {}", out);
+    assert!(
+        out.contains("\"id\":\"03\""),
+        "comment ticket present: {}",
+        out
+    );
+    assert!(
+        out.contains("\"id\":\"04\""),
+        "space-colon ticket present: {}",
+        out
+    );
+}
+
+#[test]
+fn test_broken_file_still_skipped_with_warning() {
+    // Ticket 132: genuinely-broken files must still be skipped, with a stderr warning.
+    let (_tmp, clone) = setup_repo();
+
+    // No closing fence — unparseable
+    std::fs::write(
+        clone.join(".tickets/02-broken.md"),
+        "---\nid: \"02\"\ntitle: \"Broken\"\nstatus: open\nblocked_by: []\n\n# never closed\n",
+    )
+    .unwrap();
+
+    let (code, out, err) = run_tkt_env(&clone, &["query"], &[]);
+    assert_eq!(code, 0, "query should still succeed on survivors: {}", out);
+    // Only the seed ticket loads
+    assert_eq!(
+        out.trim().lines().count(),
+        1,
+        "broken file skipped: {}",
+        out
+    );
+    assert!(
+        err.contains("skipping") && err.contains("02-broken.md"),
+        "stderr should warn about skipped file: {}",
+        err
+    );
+}
