@@ -6,6 +6,7 @@ blocked_by: []
 priority: high
 validation_criteria:
   - "spike output: recommended hook architecture (pre-commit + agent lifecycle) with tradeoffs vs current detection-only approach"
+  - "recommendation on whether/how to block direct agent writes to .tickets/ (deny-rules vs frontmatter-only vs warn), per agent"
   - "decision recorded: which hooks tkt should ship, how tkt init installs them, opt-out story"
 tags: ["contract"]
 ---
@@ -14,7 +15,7 @@ tags: ["contract"]
 
 ## What to build
 
-Spike: evaluate git commit hooks and agent-lifecycle hooks as a stronger enforcement layer for the close protocol, beyond the detection-only approach in #154. Detection (validate/audit) catches a hand-flipped done ticket *after* it's committed; hooks could catch it *at* commit or *during* the agent session.
+Spike: evaluate git commit hooks and agent-lifecycle hooks/permissions as a stronger enforcement layer for the close protocol, beyond the detection-only approach in #154. Detection (validate/audit) catches a hand-flipped done ticket *after* it's committed; hooks could catch it *at* commit, *during* the agent session, or prevent the direct write entirely by routing all `.tickets/` frontmatter mutations through the `tkt` CLI.
 
 Reference implementation: **beads** (https://github.com/gastownhall/beads) ships this model:
 - `.githooks/` directory with committed hooks
@@ -26,9 +27,14 @@ Reference implementation: **beads** (https://github.com/gastownhall/beads) ships
 
 1. **Pre-commit hook:** on commit, scan staged `.tickets/*.md` for `status: done` changes that lack a `## Resolution` section (i.e., not produced by `tkt close`). Reject or warn? How does it interact with tkt's own commits (which ARE produced by close)?
 2. **Agent-lifecycle hooks:** what do Claude Code / Codex hook points offer (pre-tool-use, post-edit)? Could a hook intercept a Write to a `.tickets/` file that flips status?
-3. **Installation:** should `tkt init` install hooks (like `bd setup`)? Opt-in or opt-out? How to avoid clobbering existing hooks (chaining, `core.hooksPath`)?
-4. **Opt-out story:** local-only repos, CI, editors — mirror beads' `--stealth`/`no-git-ops`.
-5. **Cross-platform:** hooks must work on Windows (this project's primary env) — bash hook portability.
+3. **Block direct agent writes to `.tickets/`:** should agents be prevented from writing to `.tickets/*.md` at all via their editor tool, forcing all mutations through the `tkt` CLI? Explore per-agent permission mechanisms:
+   - Claude Code: `permissions.deny` / `Write(.tickets/**)` deny-rules in settings, or a `PreToolUse` hook that rejects Write/Edit tool calls targeting `.tickets/`
+   - Codex / Cursor / others: equivalent deny-list or pre-tool hooks
+   - **Nuance to resolve:** a blanket deny is too blunt — creating/editing ticket *bodies* by hand is legitimate and supported ("body is user-owned"). The target is specifically *frontmatter mutations* (status/blocked_by/priority) that have a CLI command. Options: (a) deny all `.tickets/` writes and require CLI for everything (simplest, most restrictive — breaks legit body edits); (b) deny only when the diff touches frontmatter fields tkt owns (precise, needs a smarter hook); (c) warn-not-block on any `.tickets/` write, nudging toward the CLI. Recommend which.
+   - How does `tkt init --<agent>` install these deny-rules/hooks alongside the AGENTS.md snippet (like `bd setup`)?
+4. **Installation:** should `tkt init` install hooks (like `bd setup`)? Opt-in or opt-out? How to avoid clobbering existing hooks (chaining, `core.hooksPath`)?
+5. **Opt-out story:** local-only repos, CI, editors — mirror beads' `--stealth`/`no-git-ops`.
+6. **Cross-platform:** hooks must work on Windows (this project's primary env) — bash hook portability.
 
 ## Deliverable
 
@@ -43,6 +49,7 @@ Spike write-up in `.scratch/` or a follow-up spec: recommended hook architecture
 ## Acceptance criteria
 
 - [ ] spike output: recommended hook architecture (pre-commit + agent lifecycle) with tradeoffs vs detection-only
+- [ ] recommendation on blocking direct agent writes to `.tickets/` (blanket deny vs frontmatter-only vs warn-only), with per-agent mechanism (Claude deny-rules/PreToolUse, Codex/Cursor equivalents)
 - [ ] decision recorded: which hooks tkt should ship, how tkt init installs them, opt-out story
 - [ ] beads' approach documented as prior art (what to borrow, what to skip)
 - [ ] Windows hook portability assessed
