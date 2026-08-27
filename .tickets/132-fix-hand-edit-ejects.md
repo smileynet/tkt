@@ -1,7 +1,7 @@
 ---
 id: "132"
 title: "Fix common hand-edits ejecting tickets from corpus (BOM, comments, space-colon)"
-status: in_progress
+status: done
 blocked_by: []
 priority: urgent
 validation_criteria:
@@ -33,17 +33,26 @@ The three edits collapse into two bail sites:
 
 ## Acceptance criteria
 
-- [ ] UTF-8 BOM file parses successfully (appears in corpus)
-- [ ] `# comment` line in frontmatter parses (ticket not ejected); indented `  # comment` tolerated
-- [ ] `status : open` (space before colon) parses; key read correctly
-- [ ] `tkt lint` normalizes space-before-colon to `key: value` and drops comments
-- [ ] Regression: missing opening fence / missing closing fence / missing required field / genuinely-garbage line still bail
-- [ ] Integration: corpus with clean + BOM + commented + space-colon tickets → all appear in `tkt ready`
-- [ ] Integration: broken file (no closing fence) still skipped, stderr shows skip warning
-- [ ] All existing tests pass
+- [x] UTF-8 BOM file parses successfully (appears in corpus)
+- [x] `# comment` line in frontmatter parses (ticket not ejected); indented `  # comment` tolerated
+- [x] `status : open` (space before colon) parses; key read correctly
+- [x] `tkt lint` normalizes space-before-colon to `key: value` and drops comments
+- [x] Regression: missing opening fence / missing closing fence / missing required field / genuinely-garbage line still bail
+- [x] Integration: corpus with clean + BOM + commented + space-colon tickets → all appear in `tkt ready`
+- [x] Integration: broken file (no closing fence) still skipped, stderr shows skip warning
+- [x] All existing tests pass
 
 ## Out of scope (file as separate tickets)
 
 - **doctor detection gap:** `doctor` uses load_corpus (silent skip) so it can report clean while a ticket is ejected; `validate` catches it. Inconsistent → separate ticket.
 - **load_corpus diagnostics:** ejection is stderr-only, bypasses sym_warn/TKT_ASCII/JSON envelope → separate ticket.
 - Comment round-trip preservation through lint (spec says comments are non-data)
+
+## Resolution (2026-08-27)
+
+parse_str strips leading BOM, tolerates comment lines (dropped on lint), and RE_FM_KEY relaxed for space-before-colon. Regression guards preserved. 6 unit + 2 integration tests.
+
+### Verification
+1. ✓ UTF-8 BOM files parse successfully — "test parse_tolerates_utf8_bom passes; e2e: BOM ticket appears in tkt ready"
+2. ✓ comment lines in frontmatter do not hard-bail — "test parse_tolerates_comment_lines passes; e2e: comment ticket loads, dropped on lint"
+3. ✓ space before colon in key: value tolerated — "test parse_tolerates_space_before_colon passes; e2e: lint normalizes id : to id:"
