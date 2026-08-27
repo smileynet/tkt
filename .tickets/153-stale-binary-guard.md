@@ -27,7 +27,7 @@ Two-part fix:
 ## Context
 
 - **Relevant files:** `build.rs` (bakes TKT_GIT_HASH), `src/cli.rs` (version_string), `tests/integration.rs` (tkt_bin uses target/), `AGENTS.md` (the failing prose constraint at "After any code change...")
-- **Incident evidence:** #131 closed against binary that still reproduced the bug; #132 resolution claim went stale when HEAD advanced past the installed binary
+- **Incident evidence:** #131 closed against binary that still reproduced the bug; #132 resolution claim went stale when HEAD advanced past the installed binary; #154 also validated against a stale binary before reinstalling. THREE recurrences across two sessions despite the AGENTS.md:148 prose constraint — bumped to high priority 2026-08-27 (prose failed; needs the mechanical practice-change).
 - **Guidance principle:** a correction that happened DESPITE a covering rule means the prose failed — promote to mechanical enforcement (guidance-sync P6)
 
 ## Acceptance criteria
