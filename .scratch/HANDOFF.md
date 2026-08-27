@@ -1,50 +1,41 @@
 ---
-created_at: 2026-08-23T16:46:25-07:00
-base_commit: cf9693c
+created_at: 2026-08-27T10:02:18-07:00
+base_commit: 00e717a
 handoff_key: tkt-v031-bugfix
 ---
 
 # Handoff
 
 ## Objective
-Ship v0.3.1 — fix data-loss parsing bugs and contract violations before next release.
+Ship v0.3.1 — close the data-loss/contract bugs blocking the release (#146 is the release-cut ticket, blocked by 131-141 + 127).
 
 ## Constraints
-- v0.3.0 shipped (crates.io + GitHub releases live). Post-release bugfix work in progress.
-- User config enforces: require_resolution, require_validation_criteria, require_validation_evidence, allow_force=false
-- `TKT_DEBUG=1` now defaults to file output (`~/.local/state/tkt/debug.log`); use `TKT_DEBUG=stderr` for terminal
-- Telemetry currently disabled in consent.toml (keeps re-disabling; investigate if needed)
-- Release ticket 146 blocks on 10 tickets (131-137, 139, 141, 127)
+- Windows: mise shims broken → use `D:\dev-tools\cargo\bin\cargo.exe` and toolchain rustfmt directly (AGENTS.md:145).
+- `git commit -F <file>` for multi-line messages (PowerShell mangles `-m`).
+- **Stale-binary trap (hit 3×):** the installed `tkt` drifts from HEAD after commits. Validate via `cargo test` integration tests (`tkt_bin()` = auto-rebuilt `target/` binary), NOT the PATH binary. See #153.
+- Project enforces `require_validation_criteria` at `tkt new` and one `--evidence` per criterion at close.
+- Never fabricate resolutions; never hand-flip `status: done` (enforced now — see #154).
 
 ## Prior Decisions
-- `tags` = what work is about (context scoping); `requires` = what machine needs (capability constraint) — two distinct fields
-- Audit: CLI does only mechanical checks; judgment calls belong to agent skill (audit-quality.md)
-- Debug defaults to file (not stderr) for agent-friendly quiet output
-- Migration requires --dry-run preview before apply (marker file gate)
-- OpenCode supported via AGENTS.md + .claude/skills/ (already works, added as init target)
+- Tags shipped in v0.3.0 (`--tags`, plural) — do NOT reimplement.
+- #155 decided hook-enforcement policy: warn-default, block opt-in via `[hooks]` config, logging opt-in (off by default). Client hooks are advisory; CI `validate --strict` is the only real gate.
 
 ## Current State
-- v0.3.0 released with: context, migrate, requires, telemetry observability, audit --deep
-- Architecture review (ticket 128) decomposed into 15 tickets (131-145)
-- Release ticket 146 tracks v0.3.1 gate — blocked by all urgent/high/medium fixes
-- Frontier: 2 urgent (131 parsing, 132 hand-edits), 6 high, 2 medium before release
-- Project cleanup done: scratch cleared, AGENTS.md trimmed to 143 lines
+Run `tkt ready` for the frontier. Closed this session: #131 (block-style/bare blocked_by), #132 (BOM/comment/space-colon parse tolerance), #154 (validate flags hand-flipped done + guidance), #155 (hook spike → decision record). Nothing left mid-flight — clean tree at 00e717a.
 
 ## Next Steps
-1. Fix 131 (urgent): block-style blocked_by parsed as empty + lint destroys deps
-2. Fix 132 (urgent): BOM/comments/space-colon eject tickets from corpus
-3. Fix 133-136 (high): unescape, renumber, JSON envelope, dry-run
-4. Fix 137, 139, 141 (medium): origin/main, evidence gates, uppercase checkboxes
-5. Fix 127 (high): capabilities manifest + help nudge (also blocks 138)
-6. Close 146 → cut v0.3.1 release
+- Continue the #146 blocker set: #133 (yaml_scalar_unescape corrupts plain scalars), #134, #135, #136 are the next HIGH-priority parser/contract fixes on the frontier.
+- #153 (bumped HIGH): implement the stale-binary practice-change — the recurring trap.
+- Follow the propose → dispatch research → update ticket → implement → verify-via-cargo-test → close loop that worked for 131/132/154.
 
 ## Fog
-- Ticket 128 findings are unconfirmed hypotheses (from ox-alpha review). Each needs independent reproduction before fixing — some may be rejected.
-- F6 (--dry-run ignored by 7 commands) is broad — may reveal design questions about which commands should respect global dry-run vs have local flags.
-- F7 (origin/main hardcoded) may be complex if repos have non-standard remote setups.
+- #160: 27 legacy tickets (#02-#35) now warn `missing-resolution` (side-effect of #154 firing on pre-#154 closes). Policy undecided: grandfather by close-date vs accept as documented. Do NOT backfill (fabrication).
+- #157/#158/#159 (hook impl follow-ups) not yet scoped for sequencing against the release.
 
 ## Evidence
-- `tkt ready`: 18 frontier tickets, release blocker 146 in `tkt blocked`
-- `tkt validate --brief`: pass (0 findings)
-- `tkt --version`: tkt 0.3.0 (2c0c021) — installed locally
-- All tests pass (56 integration + unit), 0 clippy warnings
+- Frontier: `tkt ready`. Health: `tkt validate --brief` (27 expected legacy warnings, else pass).
+- Hook research preserved: `.scratch/subagent-raw/{agent-hook-mechanisms,beads-hooks,git-hook-install-patterns,guardrail-warn-vs-block,codex-applypatch-hook,tkt-init-git-review}.md` (referenced by #155/#157/#158/#159).
+
+## Recommended Updates
+- [ ] #153 is the highest-leverage process fix — prose constraint (AGENTS.md:148) failed 3×; needs the mechanical `cargo test` practice-change.
+- [ ] AGENTS.md is at the 150-line ceiling — next Constraint addition should trigger a trim (`/agents-md-authoring`).
