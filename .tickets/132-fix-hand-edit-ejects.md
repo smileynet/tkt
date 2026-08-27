@@ -1,7 +1,7 @@
 ---
 id: "132"
 title: "Fix common hand-edits ejecting tickets from corpus (BOM, comments, space-colon)"
-status: open
+status: in_progress
 blocked_by: []
 priority: urgent
 validation_criteria:
