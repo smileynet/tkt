@@ -123,7 +123,7 @@ If `tkt claim` push is rejected → someone else got there first → pick next t
 
 ## Closing tickets (quality gate)
 
-Closure is a verification event, not a status flip. The close command enforces quality.
+Closure is a verification event, not a status flip. The close command enforces quality. Never edit a ticket file to set `status: done` — that bypasses the AC/resolution/evidence gates and the push protocol. Always use `tkt close`; `tkt validate` flags done tickets with no Resolution section.
 
 ```bash
 # Standard close with evidence

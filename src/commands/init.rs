@@ -33,6 +33,8 @@ tkt validate --brief                              # check for issues
 
 `backlog` (parked, invisible to ready) → `open` (frontier-eligible) → `in_progress` → `done`
 
+Reach `done` only via `tkt close` — never edit a ticket's status to `done` by hand (it skips the close gates).
+
 ### Workflow
 
 Single-agent: `tkt ready` → `tkt close <id> --check-all --resolution "..."`
@@ -54,6 +56,7 @@ Create: new <slug> --title "..." [--status backlog] [--blocked-by N,N] [--priori
 Edit: edit <id> --status open (promote from backlog), --status backlog (park)
 
 Status: backlog (hidden) → open (frontier) → in_progress → done
+Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: what was shipped"
 For shared repos: tkt ready → claim <id> → work → close <id> --check-all --resolution "..."
@@ -71,6 +74,7 @@ This project uses tkt for work tracking (.tickets/ directory).
 
 ## Status lifecycle
 backlog (parked, invisible to ready) → open (frontier-eligible) → in_progress → done
+Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 ## Commands
 - `tkt ready` — see unblocked tickets (frontier)
@@ -98,6 +102,7 @@ When .tickets/ exists, work the frontier.
 
 ## Status lifecycle
 backlog (parked, hidden from ready) → open (frontier) → in_progress → done
+Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 ## Commands
 tkt ready              # frontier (open + deps done + env match)
@@ -126,6 +131,7 @@ trigger: always_on
 This project uses tkt for work tracking. Tickets in .tickets/.
 
 Status: backlog (hidden) → open (frontier) → in_progress → done
+Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "...", validate --brief
 Create: new <slug> --title "..." [--status backlog] [--blocked-by N,N]

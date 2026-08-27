@@ -6,7 +6,7 @@
 
 use std::path::Path;
 
-use crate::core::{self, TicketFile, ENV_VALUES, STATUS_VALUES};
+use crate::core::{self, ENV_VALUES, STATUS_VALUES, TicketFile};
 
 /// A single repair action.
 #[derive(Debug)]
@@ -177,6 +177,24 @@ pub fn run_fix(dir: &Path, dry_run: bool) -> anyhow::Result<FixResult> {
                     });
                 }
             }
+        }
+
+        // --- Tier 3: done ticket with no resolution (likely hand-flipped) ---
+        // A ticket closed via `tkt close` always has a `## Resolution` section.
+        // Its absence on a done ticket signals a hand-edit that skipped the close
+        // gates. Advise only — never fabricate a resolution (body is user-owned).
+        let effective_status = modified_file
+            .get("status")
+            .map(|s| s.trim().trim_matches('"').to_string())
+            .unwrap_or_default();
+        if effective_status == "done" && !modified_file.body.contains("## Resolution") {
+            advisories.push(Advisory {
+                file: fname.clone(),
+                message: "done ticket has no resolution recorded".into(),
+                suggestion:
+                    "record how it was resolved: tkt close <id> --force --resolution \"...\""
+                        .into(),
+            });
         }
 
         // Write if there are repairs and not dry-run

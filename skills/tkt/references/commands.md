@@ -99,7 +99,7 @@ When a context is active:
 | Flag | Effect |
 |------|--------|
 | `--title "..."` | Change title |
-| `--status S` | Change status (`backlog`, `open`, `in_progress`, `done`) |
+| `--status S` | Change status (`backlog`, `open`, `in_progress`). For `done`, use `tkt close` — editing status to `done` bypasses the close gates and is flagged by validate |
 | `--priority P` | Change priority (pass `''` to clear) |
 | `--blocked-by N,N` | Replace dependencies |
 | `--env E` | Set environment (pass `''` to clear) |

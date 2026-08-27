@@ -38,6 +38,8 @@ When tickets exist and no specific task is given:
 
 ## Marking Done
 
+**Never set `status: done` by editing the ticket file.** Always run `tkt close <id>`. Hand-flipping the status skips the close gates (acceptance criteria, resolution, evidence) and the atomic push protocol — the frontmatter says done but nothing was verified. `tkt validate` flags a done ticket with no Resolution section (warning; error under `--strict`).
+
 When a ticket's acceptance criteria are all met:
 
 1. Verify each AC independently — run the check, confirm pass. Don't check boxes you haven't verified.

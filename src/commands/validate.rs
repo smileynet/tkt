@@ -34,6 +34,7 @@ pub fn run(strict: bool, brief: bool) -> Result<i32> {
     all_findings.extend(findings::check_dangling_deps(&corpus));
     all_findings.extend(findings::check_cycles(&corpus));
     all_findings.extend(findings::check_unchecked_acs(&corpus));
+    all_findings.extend(crate::audit::check_resolution_quality(&corpus));
 
     let status = findings::status_from_findings(&all_findings, effective_strict);
     crate::RESULT_COUNT.store(

@@ -77,7 +77,7 @@ fn setup_repo() -> (TempDir, PathBuf) {
     std::fs::create_dir_all(clone.join(".tickets")).unwrap();
     std::fs::write(
         clone.join(".tickets/01-seed.md"),
-        "---\nid: \"01\"\ntitle: \"Seed ticket\"\nstatus: done\nblocked_by: []\n---\n\n# Seed\n\n- [x] Done\n",
+        "---\nid: \"01\"\ntitle: \"Seed ticket\"\nstatus: done\nblocked_by: []\n---\n\n# Seed\n\n- [x] Done\n\n## Resolution (2026-01-01)\n\nSeeded for tests.\n",
     ).unwrap();
 
     git(&clone, &["add", "-A"]);
@@ -2035,5 +2035,70 @@ fn test_broken_file_still_skipped_with_warning() {
         err.contains("skipping") && err.contains("02-broken.md"),
         "stderr should warn about skipped file: {}",
         err
+    );
+}
+
+#[test]
+fn test_validate_flags_hand_flipped_done() {
+    // Ticket 154: a done ticket with no ## Resolution (hand-flipped, not closed via
+    // tkt close) is flagged by validate — warning by default, error under --strict.
+    let (_tmp, clone) = setup_repo();
+
+    // Hand-flipped: status done, no Resolution section
+    std::fs::write(
+        clone.join(".tickets/02-handflipped.md"),
+        "---\nid: \"02\"\ntitle: \"Hand flipped\"\nstatus: done\nblocked_by: []\n---\n\n# Body\n\n- [x] did it\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add hand-flipped"]);
+
+    // Default: warning, exit 0
+    let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
+    assert_eq!(code, 0, "warning should not fail default validate: {}", out);
+    assert!(
+        out.contains("missing-resolution"),
+        "should flag missing resolution: {}",
+        out
+    );
+
+    // Strict: warning promoted to failure, exit 1
+    let (code, out) = run_tkt(&clone, &["validate", "--brief", "--strict"]);
+    assert_eq!(code, 1, "strict should fail on missing resolution: {}", out);
+}
+
+#[test]
+fn test_validate_fix_advises_on_hand_flipped_done() {
+    // Ticket 154: --fix must NOT fabricate a resolution — it advises the agent to
+    // re-close properly.
+    let (_tmp, clone) = setup_repo();
+
+    std::fs::write(
+        clone.join(".tickets/02-handflipped.md"),
+        "---\nid: \"02\"\ntitle: \"Hand flipped\"\nstatus: done\nblocked_by: []\n---\n\n# Body\n\n- [x] did it\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add hand-flipped"]);
+
+    let (code, out) = run_tkt(&clone, &["validate", "--fix"]);
+    assert_eq!(code, 1, "advisory present → exit 1: {}", out);
+    assert!(
+        out.contains("no resolution recorded"),
+        "should advise on missing resolution: {}",
+        out
+    );
+    assert!(
+        out.contains("tkt close"),
+        "suggestion should name tkt close: {}",
+        out
+    );
+
+    // The file body must be UNCHANGED — no fabricated resolution
+    let content = std::fs::read_to_string(clone.join(".tickets/02-handflipped.md")).unwrap();
+    assert!(
+        !content.contains("## Resolution"),
+        "fix must not fabricate a resolution: {}",
+        content
     );
 }
