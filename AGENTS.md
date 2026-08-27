@@ -147,3 +147,4 @@ Reach `done` only via `tkt close` — editing a ticket's `status` to `done` by h
 - Windows (this machine): mise shims are broken (`%1 is not a valid Win32 application`) — invoke tools via direct paths: `D:\dev-tools\cargo\bin\cargo.exe`, and rustfmt via `D:\dev-tools\rustup\toolchains\stable-x86_64-pc-windows-msvc\bin\rustfmt.exe`
 - After any code change, run `cargo install --path .` BEFORE end-to-end testing with the installed `tkt` binary — `tkt --version` git hash must match HEAD, or you are testing a stale binary (validated 2026-08-26: closed #131 against a stale binary that still reproduced the bug)
 - Windows: use `git commit -F <file>` for multi-line or bracket/quote-containing commit messages — inline `-m` gets mangled by PowerShell quoting
+- crates.io name availability: use `cargo search <name>`, NOT raw `curl` to the API (returns 403 "violation of API data access policy" for automated requests); a 404 on the web page also confirms availability
