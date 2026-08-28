@@ -1,7 +1,7 @@
 ---
 id: "162"
 title: "lint/validate: normalize blocked_by id padding and slug refs"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
