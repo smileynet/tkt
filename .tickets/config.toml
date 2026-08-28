@@ -3,6 +3,7 @@
 # Contributors without user config get these as the minimum quality bar.
 
 [close]
+require_resolution = true
 require_validation_criteria = true
 require_validation_evidence = "true"
 allow_force = false
