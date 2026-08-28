@@ -1669,6 +1669,79 @@ fn test_validate_fix_quotes_ids_and_removes_invalid_env() {
 }
 
 #[test]
+fn test_fix_normalizes_blocked_by_padding_and_slug() {
+    // #162: validate --fix and lint --fix resolve underpadded + slug blocked_by
+    // refs against the corpus, and leave genuinely-dangling refs untouched.
+    let (_tmp, clone) = setup_repo();
+    // Corpus already seeds 01-seed.md (id "01").
+    std::fs::write(
+        clone.join(".tickets/05-target.md"),
+        "---\nid: \"05\"\ntitle: \"Target\"\nstatus: open\nblocked_by: []\n---\n\n# Target\n",
+    )
+    .unwrap();
+    // Underpadded ref "5" (should pad to "05") and a dangling "99" (left alone).
+    std::fs::write(
+        clone.join(".tickets/06-padref.md"),
+        "---\nid: \"06\"\ntitle: \"PadRef\"\nstatus: open\nblocked_by: [\"5\", \"99\"]\n---\n\n# PadRef\n",
+    )
+    .unwrap();
+    // Numeric-prefixed slug ref -> bare id "05".
+    std::fs::write(
+        clone.join(".tickets/07-slugref.md"),
+        "---\nid: \"07\"\ntitle: \"SlugRef\"\nstatus: open\nblocked_by: [\"05-target\"]\n---\n\n# SlugRef\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add ref tickets"]);
+
+    // Before: validate flags dangling-by-format.
+    let (code, out) = run_tkt(&clone, &["validate"]);
+    assert_eq!(code, 1, "validate should flag dangling refs: {}", out);
+    assert!(
+        out.contains("dangling-blocked-by"),
+        "expect dangling: {}",
+        out
+    );
+
+    // Apply the fix. Post-fix validation re-runs and still reports the genuinely
+    // dangling "99" (correctly left alone), so the overall exit is 1 — but the
+    // resolvable refs are repaired.
+    let (_code, out) = run_tkt(&clone, &["validate", "--fix"]);
+    assert!(out.contains("Fixed"), "should report fixes: {}", out);
+    assert!(
+        out.contains("dangling-blocked-by"),
+        "99 still dangling after fix: {}",
+        out
+    );
+
+    let padref = std::fs::read_to_string(clone.join(".tickets/06-padref.md")).unwrap();
+    assert!(
+        padref.contains("blocked_by: [\"05\", \"99\"]"),
+        "5 padded to 05, 99 left dangling: {}",
+        padref
+    );
+    let slugref = std::fs::read_to_string(clone.join(".tickets/07-slugref.md")).unwrap();
+    assert!(
+        slugref.contains("blocked_by: [\"05\"]"),
+        "slug ref resolved to 05: {}",
+        slugref
+    );
+
+    // Idempotence: a second fix makes no further change to the resolved refs.
+    let (_code, _) = run_tkt(&clone, &["validate", "--fix"]);
+    let padref2 = std::fs::read_to_string(clone.join(".tickets/06-padref.md")).unwrap();
+    assert!(
+        padref2.contains("blocked_by: [\"05\", \"99\"]"),
+        "idempotent: {}",
+        padref2
+    );
+
+    // lint --check should now agree there is nothing left to normalize on 07.
+    let (code, _) = run_tkt(&clone, &["lint", "--check", "07"]);
+    assert_eq!(code, 0, "07 should be canonical after fix");
+}
+
+#[test]
 fn test_validation_criteria_and_evidence_flow() {
     let (_tmp, clone) = setup_repo();
 

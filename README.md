@@ -135,7 +135,7 @@ Tags categorize tickets. The active context auto-applies tags to new tickets and
 ```bash
 tkt validate             # check for cycles, broken refs, contract issues
 tkt validate --fix       # auto-repair fixable problems
-tkt lint                 # normalize frontmatter style
+tkt lint                 # normalize frontmatter style + blocked_by id refs
 tkt lint --check         # CI mode: exit 1 if lint needed
 tkt doctor               # full health check
 tkt blocked              # show tasks stuck on dependencies

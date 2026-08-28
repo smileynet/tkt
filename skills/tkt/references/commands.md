@@ -27,14 +27,14 @@
 | `tkt validate` | Contract integrity: cycles, broken deps, invalid fields, decay |
 | `tkt validate --strict` | Warnings become errors |
 | `tkt validate --brief` | Human-readable summary |
-| `tkt validate --fix` | Auto-repair fixable problems (quoting, field cleanup) |
+| `tkt validate --fix` | Auto-repair fixable problems (quoting, field cleanup, blocked_by ref normalization) |
 | `tkt validate --fix --dry-run` | Preview what --fix would change |
 | `tkt audit` | Closure quality: unchecked ACs, TBD resolutions, stale WIP |
 | `tkt audit --strict` | Treat warnings as errors |
 | `tkt audit --brief` | Short summary |
 | `tkt sync-plan --check [PLAN]` | Compare tickets vs plan document (default: docs/plan.md) |
 | `tkt sync-plan --fix [PLAN]` | Update derivable columns in the plan |
-| `tkt lint` | Normalize frontmatter style (quoting, field order) |
+| `tkt lint` | Normalize frontmatter style (quoting, field order, blocked_by id padding + slug refs) |
 | `tkt lint --check` | CI mode: exit 1 if anything would change |
 | `tkt lint 03 07` | Lint specific tickets only |
 | `tkt doctor` | Verify current project setup |

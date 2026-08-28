@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use regex::Regex;
 
 // --- Constants ---
@@ -634,6 +634,104 @@ pub fn id_width(names: &[String]) -> usize {
         .unwrap_or(2)
 }
 
+/// Corpus index for resolving `blocked_by` references.
+///
+/// `ids` is the set of canonical ticket ids (filename numeric prefixes).
+/// `slug_to_id` maps a full filename stem (`004-spike-foo`) to its id (`004`),
+/// with slug collisions removed (an id whose stem is shared is left out to keep
+/// resolution unambiguous). `width` is the corpus zero-padding width.
+pub struct CorpusIndex {
+    pub ids: std::collections::HashSet<String>,
+    pub slug_to_id: std::collections::HashMap<String, String>,
+    pub width: usize,
+}
+
+/// Build a [`CorpusIndex`] from a list of `.md` ticket filenames.
+///
+/// Filenames are expected as `NNN-slug.md`; the numeric prefix is the id and the
+/// full stem `NNN-slug` maps back to it. Non-numeric filenames are ignored (their
+/// ids come from other schemes handled elsewhere — see #164).
+pub fn corpus_index(names: &[String]) -> CorpusIndex {
+    let mut ids = std::collections::HashSet::new();
+    // Detect stem collisions: a stem seen twice must not resolve (ambiguous).
+    let mut stem_counts: std::collections::HashMap<String, u32> = std::collections::HashMap::new();
+    let mut slug_to_id: std::collections::HashMap<String, String> =
+        std::collections::HashMap::new();
+
+    for name in names {
+        let stem = name.strip_suffix(".md").unwrap_or(name);
+        if let Some(caps) = RE_FILENAME_ID.captures(name) {
+            let id = caps[1].to_string();
+            ids.insert(id.clone());
+            *stem_counts.entry(stem.to_string()).or_insert(0) += 1;
+            slug_to_id.insert(stem.to_string(), id);
+        }
+    }
+    // Drop any stem that appeared more than once — ambiguous, do not resolve.
+    slug_to_id.retain(|stem, _| stem_counts.get(stem).copied().unwrap_or(0) == 1);
+
+    CorpusIndex {
+        ids,
+        slug_to_id,
+        width: id_width(names),
+    }
+}
+
+/// Resolve a single `blocked_by` reference to its canonical padded id.
+///
+/// Accepts: already-canonical ids (`"01"`), underpadded/bare numbers (`"1"`),
+/// and numeric-prefixed slug refs (`"004-spike-foo"`). Returns the canonical id
+/// **only when it resolves to exactly one existing ticket** (unique-match guard).
+///
+/// Returns `None` when the ref is already canonical (no change needed), or when
+/// it cannot be resolved to exactly one existing id — genuinely dangling and
+/// ambiguous refs are left untouched so `validate` still reports them.
+pub fn resolve_blocked_by_ref(raw: &str, index: &CorpusIndex) -> Option<String> {
+    let cleaned = raw.trim().trim_matches('"').trim_matches('\'').trim();
+    if cleaned.is_empty() {
+        return None;
+    }
+
+    // Already a known canonical id — no change.
+    if index.ids.contains(cleaned) {
+        return None;
+    }
+
+    // Numeric-prefixed slug ref: "004-spike-foo" -> stem match -> id.
+    // Only when the whole stem uniquely maps to an id.
+    if let Some(id) = index.slug_to_id.get(cleaned) {
+        if id != cleaned {
+            return Some(id.clone());
+        }
+        return None;
+    }
+
+    // Numeric (bare/underpadded): "5" -> pad to width -> "05", if that id exists.
+    if let Some(caps) = RE_NUMERIC_PREFIX.captures(cleaned) {
+        // Only a pure number (no slug suffix) is safe to re-pad by value.
+        let (digits, rest) = (&caps[1], &caps[2]);
+        if rest.is_empty() {
+            if let Ok(n) = digits.parse::<u64>() {
+                let padded = format!("{:0>width$}", n, width = index.width);
+                if padded != cleaned && index.ids.contains(&padded) {
+                    return Some(padded);
+                }
+                // Also try matching any known id by numeric value (mixed-width corpus).
+                let unique: Vec<&String> = index
+                    .ids
+                    .iter()
+                    .filter(|id| id.parse::<u64>().ok() == Some(n))
+                    .collect();
+                if unique.len() == 1 && *unique[0] != cleaned {
+                    return Some(unique[0].clone());
+                }
+            }
+        }
+    }
+
+    None
+}
+
 /// Find a ticket by id in the corpus.
 pub fn find_ticket<'a>(corpus: &'a [Ticket], id: &str) -> Result<&'a Ticket> {
     corpus
@@ -901,6 +999,71 @@ mod tests {
     use super::*;
     use std::io::Write;
     use tempfile::NamedTempFile;
+
+    fn idx(names: &[&str]) -> CorpusIndex {
+        corpus_index(&names.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+    }
+
+    #[test]
+    fn resolve_pads_underpadded_numeric() {
+        let i = idx(&["01-a.md", "05-b.md"]);
+        assert_eq!(resolve_blocked_by_ref("5", &i).as_deref(), Some("05"));
+        assert_eq!(resolve_blocked_by_ref("\"5\"", &i).as_deref(), Some("05"));
+    }
+
+    #[test]
+    fn resolve_strips_numeric_prefixed_slug() {
+        let i = idx(&["004-spike-foo.md", "007-bar.md"]);
+        assert_eq!(
+            resolve_blocked_by_ref("004-spike-foo", &i).as_deref(),
+            Some("004")
+        );
+    }
+
+    #[test]
+    fn resolve_noop_on_canonical() {
+        let i = idx(&["01-a.md", "05-b.md"]);
+        assert_eq!(resolve_blocked_by_ref("05", &i), None);
+    }
+
+    #[test]
+    fn resolve_leaves_dangling_untouched() {
+        // "99" pads to itself and no ticket exists -> unresolvable, leave it.
+        let i = idx(&["01-a.md", "05-b.md"]);
+        assert_eq!(resolve_blocked_by_ref("99", &i), None);
+        assert_eq!(resolve_blocked_by_ref("7", &i), None);
+    }
+
+    #[test]
+    fn resolve_width_three_corpus() {
+        let i = idx(&["001-a.md", "010-b.md"]);
+        assert_eq!(resolve_blocked_by_ref("1", &i).as_deref(), Some("001"));
+        assert_eq!(resolve_blocked_by_ref("10", &i).as_deref(), Some("010"));
+    }
+
+    #[test]
+    fn resolve_slug_collision_is_ambiguous_noop() {
+        // Two files sharing the same stem must not resolve.
+        let i = idx(&["01-dup.md", "01-dup.md"]);
+        // stem "01-dup" appeared twice -> dropped from slug_to_id; but "01" id still known,
+        // so a bare "01" is canonical (None), and the slug stem does not resolve.
+        assert_eq!(resolve_blocked_by_ref("01-dup", &i), None);
+    }
+
+    #[test]
+    fn resolve_empty_is_noop() {
+        let i = idx(&["01-a.md"]);
+        assert_eq!(resolve_blocked_by_ref("", &i), None);
+        assert_eq!(resolve_blocked_by_ref("  ", &i), None);
+    }
+
+    #[test]
+    fn resolve_idempotent() {
+        let i = idx(&["01-a.md", "05-b.md"]);
+        let once = resolve_blocked_by_ref("5", &i).unwrap();
+        // Resolving the resolved value is a no-op (already canonical).
+        assert_eq!(resolve_blocked_by_ref(&once, &i), None);
+    }
 
     #[test]
     fn parse_basic_ticket() {

@@ -6,7 +6,7 @@
 
 use std::path::Path;
 
-use crate::core::{self, ENV_VALUES, STATUS_VALUES, TicketFile};
+use crate::core::{self, TicketFile, ENV_VALUES, STATUS_VALUES};
 
 /// A single repair action.
 #[derive(Debug)]
@@ -49,6 +49,13 @@ pub fn run_fix(dir: &Path, dry_run: bool) -> anyhow::Result<FixResult> {
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
         .collect();
     entries.sort_by_key(|e| e.file_name());
+
+    // Build the corpus index once for blocked_by ref resolution (#162).
+    let all_names: Vec<String> = entries
+        .iter()
+        .filter_map(|e| e.file_name().to_str().map(|s| s.to_string()))
+        .collect();
+    let index = core::corpus_index(&all_names);
 
     for entry in &entries {
         let path = entry.path();
@@ -101,27 +108,43 @@ pub fn run_fix(dir: &Path, dry_run: bool) -> anyhow::Result<FixResult> {
             }
         }
 
-        // --- Tier 1: Quote unquoted blocked_by elements ---
+        // --- Tier 1: Normalize blocked_by elements (quote + resolve refs #162) ---
         if let Some(raw_deps) = modified_file.get("blocked_by") {
             let trimmed = raw_deps.trim().to_string();
             if trimmed.starts_with('[') && trimmed.ends_with(']') {
                 let inner = &trimmed[1..trimmed.len() - 1];
                 if !inner.trim().is_empty() {
                     let elements: Vec<&str> = inner.split(',').map(|s| s.trim()).collect();
-                    let needs_quoting = elements.iter().any(|e| !e.starts_with('"'));
-                    if needs_quoting {
-                        let quoted_elements: Vec<String> = elements
-                            .iter()
-                            .map(|e| {
-                                let clean = e.trim_matches('"');
-                                format!("\"{}\"", clean)
-                            })
-                            .collect();
-                        let new_val = format!("[{}]", quoted_elements.join(", "));
+                    let mut new_elements: Vec<String> = Vec::new();
+                    let mut resolved_any = false;
+                    let mut quoted_any = false;
+                    for e in &elements {
+                        let was_unquoted = !e.starts_with('"');
+                        let clean = e.trim_matches('"');
+                        // Resolve ref against the corpus (pad width / strip slug) when unique.
+                        let canonical = match core::resolve_blocked_by_ref(clean, &index) {
+                            Some(r) => {
+                                resolved_any = true;
+                                r
+                            }
+                            None => clean.to_string(),
+                        };
+                        if was_unquoted {
+                            quoted_any = true;
+                        }
+                        new_elements.push(format!("\"{}\"", canonical));
+                    }
+                    if resolved_any || quoted_any {
+                        let new_val = format!("[{}]", new_elements.join(", "));
                         modified_file.set_field("blocked_by", &new_val);
+                        let desc = if resolved_any {
+                            "normalized blocked_by refs (pad/slug)".to_string()
+                        } else {
+                            "quoted blocked_by elements".to_string()
+                        };
                         file_repairs.push(Repair {
                             file: fname.clone(),
-                            description: "quoted blocked_by elements".to_string(),
+                            description: desc,
                             tier: 1,
                         });
                     }

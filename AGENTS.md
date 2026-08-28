@@ -57,7 +57,7 @@ tkt audit [--strict] [--brief]                    # closure quality check
 tkt sync-plan --check [--strict] [--brief] [plan] # report drift
 tkt sync-plan --fix [--strict] [--brief] [plan]   # fix derivable columns
 tkt validate [--strict] [--brief] [--fix [--dry-run]]  # contract + cycle + decay findings
-tkt lint [--check] [IDs...]                       # normalize frontmatter style
+tkt lint [--check] [IDs...]                       # normalize frontmatter style + blocked_by id refs
 tkt doctor [<path>] [--strict] [--fix]                    # health check (single or cross-project)
 tkt init [--target T] [--all] [--write [FILE]] [--agent-only]  # scaffold project + agent instructions
 tkt config [--set K=V] [--get K] [--unset K] [--list] [--show]  # user + project config

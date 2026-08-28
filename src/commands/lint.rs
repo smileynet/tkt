@@ -4,7 +4,7 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use crate::core::TicketFile;
+use crate::core::{self, TicketFile};
 
 /// Canonical field order for frontmatter.
 const CANONICAL_ORDER: &[&str] = &[
@@ -31,6 +31,15 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
         return Ok(0);
     }
 
+    // Build the corpus index from the WHOLE directory (not the id-filtered subset)
+    // so blocked_by refs to un-linted tickets still resolve correctly.
+    let all_names: Vec<String> = std::fs::read_dir(&tickets_dir)?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "md").unwrap_or(false))
+        .filter_map(|e| e.file_name().to_str().map(|s| s.to_string()))
+        .collect();
+    let index = core::corpus_index(&all_names);
+
     let mut changed = 0u32;
     let mut errors = 0u32;
 
@@ -45,7 +54,7 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
         };
 
         let original = std::fs::read_to_string(path)?;
-        let canonical = render_canonical(&tf);
+        let canonical = render_canonical(&tf, &index);
 
         if original != canonical {
             changed += 1;
@@ -81,13 +90,13 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
 }
 
 /// Render a TicketFile in canonical format.
-fn render_canonical(tf: &TicketFile) -> String {
+fn render_canonical(tf: &TicketFile, index: &core::CorpusIndex) -> String {
     let mut ordered: Vec<(String, String)> = Vec::new();
 
     // First: known fields in canonical order
     for &field in CANONICAL_ORDER {
         if let Some(entry) = tf.fm.iter().find(|(k, _)| k == field) {
-            ordered.push((entry.0.clone(), normalize_value(field, &entry.1)));
+            ordered.push((entry.0.clone(), normalize_value(field, &entry.1, index)));
         }
     }
 
@@ -97,7 +106,7 @@ fn render_canonical(tf: &TicketFile) -> String {
             continue; // skip blank lines in frontmatter
         }
         if !CANONICAL_ORDER.contains(&k.as_str()) {
-            ordered.push((k.clone(), normalize_value(k, v)));
+            ordered.push((k.clone(), normalize_value(k, v, index)));
         }
     }
 
@@ -125,7 +134,7 @@ fn render_canonical(tf: &TicketFile) -> String {
 }
 
 /// Normalize a field value based on its key.
-fn normalize_value(key: &str, raw: &str) -> String {
+fn normalize_value(key: &str, raw: &str, index: &core::CorpusIndex) -> String {
     // Multi-line values: preserve as-is (they contain continuation lines)
     if raw.contains('\n') {
         return raw.to_string();
@@ -137,14 +146,24 @@ fn normalize_value(key: &str, raw: &str) -> String {
             let unquoted = trimmed.trim_matches('"').trim_matches('\'');
             format!("\"{}\"", unquoted)
         }
-        "blocked_by" => normalize_blocked_by(trimmed),
+        "blocked_by" => normalize_blocked_by(trimmed, index),
         _ => trimmed.to_string(),
     }
 }
 
-/// Normalize blocked_by array: ensure ["01", "04"] format.
-/// Handles inline arrays, bare scalars (01, 04), and empty values.
-fn normalize_blocked_by(raw: &str) -> String {
+/// Normalize a single blocked_by element: resolve to canonical id when a unique
+/// match exists (pad width, strip numeric-prefixed slug), else keep as-is.
+fn normalize_element(raw: &str, index: &core::CorpusIndex) -> String {
+    let clean = raw.trim().trim_matches('"').trim_matches('\'');
+    match core::resolve_blocked_by_ref(clean, index) {
+        Some(resolved) => format!("\"{}\"", resolved),
+        None => format!("\"{}\"", clean),
+    }
+}
+
+/// Normalize blocked_by array: ensure ["01", "04"] format, resolving each ref
+/// against the corpus (padding + slug-strip) when a unique match exists.
+fn normalize_blocked_by(raw: &str, index: &core::CorpusIndex) -> String {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
         return "[]".to_string();
@@ -156,19 +175,16 @@ fn normalize_blocked_by(raw: &str) -> String {
         }
         let items: Vec<String> = inner
             .split(',')
-            .map(|s| {
-                let clean = s.trim().trim_matches('"').trim_matches('\'');
-                format!("\"{}\"", clean)
-            })
+            .map(|s| normalize_element(s, index))
             .collect();
         return format!("[{}]", items.join(", "));
     }
     // Bare scalar (e.g., "01, 04" or "01") — parse as comma-separated IDs
     let items: Vec<String> = trimmed
         .split(',')
-        .map(|s| s.trim().trim_matches('"').trim_matches('\''))
+        .map(|s| s.trim())
         .filter(|s| !s.is_empty())
-        .map(|s| format!("\"{}\"", s))
+        .map(|s| normalize_element(s, index))
         .collect();
     if items.is_empty() {
         "[]".to_string()
@@ -210,30 +226,70 @@ fn collect_files(tickets_dir: &Path, ids: &[String]) -> Result<Vec<std::path::Pa
 mod tests {
     use super::*;
 
+    fn idx(names: &[&str]) -> core::CorpusIndex {
+        core::corpus_index(&names.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+    }
+
+    // Corpus with canonical ids 01 and 04 — resolution is a no-op for these.
+    fn canon_idx() -> core::CorpusIndex {
+        idx(&["01-a.md", "04-b.md"])
+    }
+
     #[test]
     fn normalize_inline_array_preserved() {
-        assert_eq!(normalize_blocked_by("[\"01\", \"04\"]"), "[\"01\", \"04\"]");
+        assert_eq!(
+            normalize_blocked_by("[\"01\", \"04\"]", &canon_idx()),
+            "[\"01\", \"04\"]"
+        );
     }
 
     #[test]
     fn normalize_empty_array() {
-        assert_eq!(normalize_blocked_by("[]"), "[]");
-        assert_eq!(normalize_blocked_by(""), "[]");
+        assert_eq!(normalize_blocked_by("[]", &canon_idx()), "[]");
+        assert_eq!(normalize_blocked_by("", &canon_idx()), "[]");
     }
 
     #[test]
     fn normalize_bare_scalar_preserves_deps() {
         // Regression (#131): bare scalar must not be destroyed as []
-        assert_eq!(normalize_blocked_by("01, 04"), "[\"01\", \"04\"]");
+        assert_eq!(
+            normalize_blocked_by("01, 04", &canon_idx()),
+            "[\"01\", \"04\"]"
+        );
     }
 
     #[test]
     fn normalize_single_bare_scalar() {
-        assert_eq!(normalize_blocked_by("01"), "[\"01\"]");
+        assert_eq!(normalize_blocked_by("01", &canon_idx()), "[\"01\"]");
     }
 
     #[test]
     fn normalize_unquoted_inline_array() {
-        assert_eq!(normalize_blocked_by("[01, 04]"), "[\"01\", \"04\"]");
+        assert_eq!(
+            normalize_blocked_by("[01, 04]", &canon_idx()),
+            "[\"01\", \"04\"]"
+        );
+    }
+
+    #[test]
+    fn normalize_blocked_by_padding() {
+        // #162: underpadded ref "5" pads to "05" when that ticket exists.
+        let i = idx(&["01-a.md", "05-b.md"]);
+        assert_eq!(normalize_blocked_by("[\"5\"]", &i), "[\"05\"]");
+        assert_eq!(normalize_blocked_by("5", &i), "[\"05\"]");
+    }
+
+    #[test]
+    fn normalize_blocked_by_slug_strip() {
+        // #162: numeric-prefixed slug ref resolves to bare id.
+        let i = idx(&["004-spike-foo.md", "007-bar.md"]);
+        assert_eq!(normalize_blocked_by("[\"004-spike-foo\"]", &i), "[\"004\"]");
+    }
+
+    #[test]
+    fn normalize_blocked_by_leaves_dangling() {
+        // #162: unresolvable ref is left untouched (validate still flags it).
+        let i = idx(&["01-a.md", "05-b.md"]);
+        assert_eq!(normalize_blocked_by("[\"99\"]", &i), "[\"99\"]");
     }
 }
