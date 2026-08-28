@@ -2,7 +2,7 @@
 id: "166"
 title: "validate --fix: abort if a fix introduces new findings (non-regressing gate)"
 status: open
-blocked_by: ["140"]
+blocked_by: []
 priority: high
 validation_criteria:
   - "validate --fix compares finding identities (file+rule) before/after; aborts exit 1 if any NEW finding appears (test: fix::regression_gate_trips)"
