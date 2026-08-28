@@ -1,7 +1,7 @@
 ---
 id: "162"
 title: "lint/validate: normalize blocked_by id padding and slug refs"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -39,14 +39,14 @@ Fix:
 
 ## Acceptance criteria
 
-- [ ] `tkt lint --fix` pads single-digit blocked_by ids to corpus id width
-- [ ] `tkt lint --fix` strips `-slug` suffix from `NNN-slug` blocked_by refs to bare `NNN`
-- [ ] normalization only applies when the result resolves to an existing ticket (unique match)
-- [ ] genuinely-dangling refs (0 matches) and ambiguous refs (>=2) are left untouched for validate to flag
-- [ ] `tkt lint --check` reports non-canonical blocked_by (lint/validate no longer disagree)
-- [ ] `tkt validate --fix` resolves the same dangling-by-format cases
-- [ ] `lint`/`validate --fix` run twice produces no second-run diff (idempotence)
-- [ ] regression test covers padding + slug-strip (lint::normalize_blocked_by_padding)
+- [x] `tkt lint --fix` pads single-digit blocked_by ids to corpus id width
+- [x] `tkt lint --fix` strips `-slug` suffix from `NNN-slug` blocked_by refs to bare `NNN`
+- [x] normalization only applies when the result resolves to an existing ticket (unique match)
+- [x] genuinely-dangling refs (0 matches) and ambiguous refs (>=2) are left untouched for validate to flag
+- [x] `tkt lint --check` reports non-canonical blocked_by (lint/validate no longer disagree)
+- [x] `tkt validate --fix` resolves the same dangling-by-format cases
+- [x] `lint`/`validate --fix` run twice produces no second-run diff (idempotence)
+- [x] regression test covers padding + slug-strip (lint::normalize_blocked_by_padding)
 
 ## Design (research + code-review refined, 2026-08-28)
 
@@ -99,3 +99,12 @@ Reuse existing helpers — do NOT reinvent:
 commands.md (lint/validate --fix rows), AGENTS.md (CLI section), README.md (Project health);
 then `bash tools/deploy-skills.sh`. No version bump (init snippets unchanged).
 Gate: `cargo fmt && cargo clippy --all-targets && cargo test`, then `cargo install --path .`.
+
+## Resolution (2026-08-28)
+
+Corpus-aware resolve_blocked_by_ref + corpus_index in core/ticket.rs, wired into lint (full-dir corpus) and validate --fix (Tier 1). Pads underpadded numeric refs to id_width and strips numeric-prefixed slug refs, only on unique match; dangling/ambiguous left for validate. Shared resolver = lint/validate parity.
+
+### Verification
+1. ✓ tkt lint --fix pads single-digit blocked_by ids to corpus width (test: lint::normalize_blocked_by_padding) — "unit lint::normalize_blocked_by_padding: ["5"]->["05"]; real-world installed tkt(3e950dd) padded ["1"]->["01"], validate fail(1)->pass(0)"
+2. ✓ tkt validate --fix resolves dangling-blocked-by when unique padding/slug-strip makes ref valid — "integration test_fix_normalizes_blocked_by_padding_and_slug: ["05-target"]->["05"] via validate --fix; unit resolve_strips_numeric_prefixed_slug"
+3. ✓ tkt lint --check reports non-canonical blocked_by (no longer disagrees with validate) — "lint --check on fixed ticket returns 0 (agrees with validate); shared resolver gives check/write parity; #131 regression green; gate: fmt clean, clippy 0 warns, 199 tests pass"
