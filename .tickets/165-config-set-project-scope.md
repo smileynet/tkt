@@ -45,3 +45,12 @@ but the CLI should write native TOML booleans.
 - [ ] default (no flag) keeps user-level behavior
 - [ ] help text documents both scopes and corrects the "user-level" description
 - [ ] test: config::set_project_scope
+
+## Additional finding (same session)
+
+The rollout also exposed a worktree hazard: `codex_runner`, `codex_runner-catalyst-mono`,
+and `codex_runner-lbp` are three worktrees of ONE repo. Only the main worktree tracks
+`main`; the other two sit on detached HEADs (parallel codex-review checkouts). Writing
+per-worktree `.tickets/config.toml` on a detached worktree creates an orphaned commit.
+Project config correctly lives once on `main`. A project-scope `--set` should detect
+detached-HEAD / worktree state and warn rather than silently commit to a detached HEAD.
