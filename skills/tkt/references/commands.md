@@ -27,7 +27,7 @@
 | `tkt validate` | Contract integrity: cycles, broken deps, invalid fields, decay |
 | `tkt validate --strict` | Warnings become errors |
 | `tkt validate --brief` | Human-readable summary |
-| `tkt validate --fix` | Auto-repair fixable problems (quoting, field cleanup, blocked_by ref normalization) |
+| `tkt validate --fix` | Auto-repair fixable problems (quoting, field cleanup, blocked_by ref normalization); aborts if a repair would introduce a new finding |
 | `tkt validate --fix --dry-run` | Preview what --fix would change |
 | `tkt audit` | Closure quality: unchecked ACs, TBD resolutions, stale WIP |
 | `tkt audit --strict` | Treat warnings as errors |

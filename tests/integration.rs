@@ -1742,6 +1742,34 @@ fn test_fix_normalizes_blocked_by_padding_and_slug() {
 }
 
 #[test]
+fn test_fix_regression_gate_aborts_on_new_finding() {
+    // #166: a fix that introduces a NEW finding must abort with exit 1 and advise revert.
+    // Natural case: status closed->done (Tier-2 map) introduces missing-resolution on a
+    // done ticket that has no Resolution section.
+    let (_tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/02-closed.md"),
+        "---\nid: \"02\"\ntitle: \"Closed\"\nstatus: closed\nblocked_by: []\n---\n\n# Closed\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add closed ticket"]);
+
+    let (code, out) = run_tkt(&clone, &["validate", "--fix"]);
+    assert_eq!(code, 1, "regression must abort with exit 1: {}", out);
+    assert!(
+        out.contains("introduced") && out.contains("new finding"),
+        "should report the regression: {}",
+        out
+    );
+    assert!(
+        out.contains("git checkout"),
+        "should advise revert: {}",
+        out
+    );
+}
+
+#[test]
 fn test_validation_criteria_and_evidence_flow() {
     let (_tmp, clone) = setup_repo();
 
