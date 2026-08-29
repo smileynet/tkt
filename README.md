@@ -90,10 +90,13 @@ Shows open tasks with all dependencies satisfied, sorted by priority then ID.
 ```bash
 tkt new fix-login --title "Fix login timeout"
 tkt new fix-login --title "Fix login timeout" --priority high
+tkt new fix-css --title "Fix CSS overflow" --tags frontend
 tkt new deploy --title "Deploy to staging" --blocked-by 01,02
 tkt new spike --title "Research caching" --status backlog
 tkt new train-model --title "Train ML model" --requires gpu,linux
 ```
+
+New tasks default to `open` (frontier-eligible). Use `--status backlog` only for work you're deliberately deferring — like the research spike above — not for actionable work you just discovered.
 
 Batch creation for related work:
 
@@ -128,7 +131,7 @@ tkt new bugfix --title "Fix CSS" --tags frontend,urgent
 tkt context --clear          # clear active context
 ```
 
-Tags categorize tickets. The active context auto-applies tags to new tickets and can scope `tkt ready` output.
+Tags are the primary way to scope work to a subsystem. Set `--tags` when you create a ticket (retro-tagging rarely happens); the active context auto-applies tags to new tickets and scopes `tkt ready` output. One tag per ticket is the norm in multi-stream projects.
 
 ### Project health
 

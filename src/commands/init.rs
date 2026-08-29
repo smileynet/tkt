@@ -24,14 +24,16 @@ This project uses [tkt](https://github.com/smileynet/tkt) for work tracking. Tic
 tkt ready                                         # what to work on next
 tkt claim <id>                                    # mark as in_progress (shared repos)
 tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done
-tkt new <slug> --title "..." --status backlog     # park future work off the frontier
-tkt edit <id> --status open                       # promote backlog to frontier
+tkt new <slug> --title "..." [--tags stream]      # create work (defaults to open, on the frontier)
+tkt edit <id> --status backlog                    # park a ticket off the frontier (deferred work)
 tkt validate --brief                              # check for issues
 ```
 
 ### Status lifecycle
 
-`backlog` (parked, invisible to ready) → `open` (frontier-eligible) → `in_progress` → `done`
+`open` (frontier-eligible, the default) → `in_progress` → `done`; `backlog` = parked, invisible to `ready`.
+
+New work defaults to `open`. Use `--status backlog` only for work deliberately deferred out of this cycle — not for discovered work that's actually actionable.
 
 Reach `done` only via `tkt close` — never edit a ticket's status to `done` by hand (it skips the close gates).
 
@@ -39,9 +41,10 @@ Reach `done` only via `tkt close` — never edit a ticket's status to `done` by 
 
 Single-agent: `tkt ready` → `tkt close <id> --check-all --resolution "..."`
 Shared-repo: `tkt ready` → `tkt claim <id>` → work → `tkt close <id> --check-all --resolution "..."`
-Discovered work: `tkt new <slug> --title "..." --status backlog` (keeps it off the frontier)
+Discovered work: `tkt new <slug> --title "..."` (open — a separate, actionable ticket; add `--blocked-by` if it depends on current work)
 Migrated work: `tkt close <id> --force --resolution "Migrated to <project> #<id>"` (don't check ACs)
 
+Tag new tickets with their work stream (`--tags <stream>`) in multi-stream projects — one tag is the norm.
 If a claim push is rejected, someone else got there first — pick the next frontier ticket.
 "#;
 
@@ -52,15 +55,17 @@ const SNIPPET_CLAUDE: &str = r#"## Tickets
 This project uses tkt for work tracking. Run `tkt ready` to see what's available.
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "...", validate --brief
-Create: new <slug> --title "..." [--status backlog] [--blocked-by N,N] [--priority P]
-Edit: edit <id> --status open (promote from backlog), --status backlog (park)
+Create: new <slug> --title "..." [--tags stream] [--blocked-by N,N] [--priority P]  (defaults to open)
+Edit: edit <id> --status backlog (park deferred work), --status open (unpark)
 
-Status: backlog (hidden) → open (frontier) → in_progress → done
+Status: open (frontier, the default) → in_progress → done; backlog = parked, hidden from ready
+New work defaults to open. Use --status backlog only for deliberately deferred work, not actionable discovered work.
 Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: what was shipped"
 For shared repos: tkt ready → claim <id> → work → close <id> --check-all --resolution "..."
-Discovered work: tkt new <slug> --title "..." --status backlog
+Discovered work: tkt new <slug> --title "..." (open, a separate ticket; --blocked-by if it depends on current work)
+Tag new tickets with their work stream (--tags <stream>) in multi-stream projects.
 "#;
 
 const SNIPPET_CURSOR: &str = r#"---
@@ -73,15 +78,16 @@ alwaysApply: true
 This project uses tkt for work tracking (.tickets/ directory).
 
 ## Status lifecycle
-backlog (parked, invisible to ready) → open (frontier-eligible) → in_progress → done
+open (frontier-eligible, the default) → in_progress → done; backlog = parked, invisible to ready
+New work defaults to open. Use --status backlog only for deliberately deferred work.
 Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 ## Commands
 - `tkt ready` — see unblocked tickets (frontier)
 - `tkt claim <id>` — mark in_progress (shared repos only)
 - `tkt close <id> --check-all --evidence "..." --resolution "..."` — mark done
-- `tkt new <slug> --title "..." --status backlog` — park future work
-- `tkt edit <id> --status open` — promote from backlog to frontier
+- `tkt new <slug> --title "..." [--tags stream]` — create work (defaults to open)
+- `tkt edit <id> --status backlog` — park a ticket off the frontier (deferred work)
 - `tkt validate --brief` — check for issues
 
 ## Workflow
@@ -92,8 +98,9 @@ Reach done only via `tkt close` — never hand-edit status to done (skips close 
 5. `tkt close <id> --check-all --evidence "proof" --resolution "what was done"`
 
 ## Discovered work
-Create with `--status backlog` to keep it off the frontier:
-`tkt new <slug> --title "..." --status backlog`
+Create a separate, actionable ticket (defaults to open); add `--blocked-by` if it depends on current work.
+Only use `--status backlog` for work you're deliberately deferring:
+`tkt new <slug> --title "..." --tags <stream>`
 "#;
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
@@ -101,21 +108,23 @@ const SNIPPET_KIRO: &str = r#"# tkt Integration
 When .tickets/ exists, work the frontier.
 
 ## Status lifecycle
-backlog (parked, hidden from ready) → open (frontier) → in_progress → done
+open (frontier, the default) → in_progress → done; backlog = parked, hidden from ready
+New work defaults to open. Use --status backlog only for deliberately deferred work.
 Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 ## Commands
 tkt ready              # frontier (open + deps done + env match)
 tkt claim <id>         # status → in_progress, pushed
 tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done
-tkt new <slug> --title "..." --status backlog  # park future work
-tkt edit <id> --status open   # promote backlog → frontier
+tkt new <slug> --title "..." [--tags stream]  # create work (defaults to open)
+tkt edit <id> --status backlog   # park a ticket off the frontier (deferred work)
 tkt validate --brief   # check for issues
 
 ## Workflow
 Single-agent: tkt ready → close <id> --check-all --resolution "..."
 Shared-repo: tkt ready → claim <id> → work → close <id>
-Discovered work: tkt new <slug> --title "..." --status backlog
+Discovered work: tkt new <slug> --title "..." (open, a separate ticket; --blocked-by if it depends on current work)
+Tag new tickets with their work stream (--tags <stream>) in multi-stream projects.
 
 ## Frontier Rule
 Pick the first ticket `tkt ready` lists — it already applies priority sorting
@@ -130,15 +139,17 @@ trigger: always_on
 
 This project uses tkt for work tracking. Tickets in .tickets/.
 
-Status: backlog (hidden) → open (frontier) → in_progress → done
+Status: open (frontier, the default) → in_progress → done; backlog = parked, hidden from ready
+New work defaults to open. Use --status backlog only for deliberately deferred work.
 Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "...", validate --brief
-Create: new <slug> --title "..." [--status backlog] [--blocked-by N,N]
-Promote: edit <id> --status open
+Create: new <slug> --title "..." [--tags stream] [--blocked-by N,N]  (defaults to open)
+Park: edit <id> --status backlog (deferred work only)
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: description"
-Discovered work: tkt new <slug> --title "..." --status backlog
+Discovered work: tkt new <slug> --title "..." (open, a separate ticket; --blocked-by if it depends on current work)
+Tag new tickets with their work stream (--tags <stream>) in multi-stream projects.
 "#;
 
 const DEFAULT_CONFIG: &str = r#"[push]

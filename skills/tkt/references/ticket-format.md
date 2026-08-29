@@ -60,7 +60,7 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 |-------|------|-------|
 | `id` | quoted string | Must match filename prefix: `"07"` → `07-slug.md` |
 | `title` | quoted string | Human-readable, appears in `tkt ready` output |
-| `status` | enum | `backlog \| open \| in_progress \| done` |
+| `status` | enum | `open \| backlog \| in_progress \| done` (default: `open`) |
 | `blocked_by` | array of quoted strings | `["01", "03"]` — IDs that must be `done` first |
 
 ## Optional Fields
@@ -71,15 +71,15 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 | `env` | enum | `corp \| personal \| either` — filters `tkt ready` via `CREW_ENV` |
 | `spec` | string | Links to originating spec slug |
 | `validation_criteria` | string array | Machine-checkable criteria for agent close gate |
-| `tags` | string array | Categorization tags for context filtering. Set via `--tags` or auto-applied from `tkt context`. |
+| `tags` | string array | Work-stream / categorization tags — the primary scoping mechanism for `tkt ready` and `tkt context`. Set via `--tags` at creation (recommended) or auto-applied from `tkt context`. |
 | `requires` | string array | Machine capabilities required (e.g., `gpu`, `linux`, `corp`). Ticket only appears in `tkt ready` if `machine.capabilities` config includes all listed values. Backward compat: if `env` is set and `requires` is empty, requires is synthesized from env. |
 
 ## Status Lifecycle
 
 | Status | Meaning | Enters when |
 |--------|---------|-------------|
-| `backlog` | Parked, excluded from frontier | Deferred or not yet prioritized |
-| `open` | Available for work | Created and unblocked |
+| `backlog` | Parked, excluded from frontier | Deliberately deferred out of the current cycle |
+| `open` | Available for work (the default) | Created and unblocked |
 | `in_progress` | Currently being worked | `tkt claim <id>` |
 | `done` | Completed, verified | `tkt close <id>` — all ACs must be checked |
 
@@ -92,6 +92,8 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 
 ## Principles
 
+- **Default to `open`, not `backlog`** — new work is frontier-eligible unless deliberately deferred out of this cycle; parking actionable work hides it
+- **Tag at creation** — set `tags` (via `--tags`) when the ticket is born in multi-stream projects; retro-tagging rarely happens
 - **Behavioral, not procedural** — "User can export CSV" not "add CSV renderer to ExportService"
 - **Durable over precise** — interfaces and contracts, not file paths and line numbers
 - **One concern per ticket** — if title needs "and", split

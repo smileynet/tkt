@@ -83,6 +83,8 @@ tkt telemetry [--enable|--disable|--status|--show [--all]|--clear]  # manage loc
 
 Reach `done` only via `tkt close` — editing a ticket's `status` to `done` by hand bypasses the close gates (ACs, resolution, evidence) and is flagged by `tkt validate`.
 
+New tickets default to `open` (frontier-eligible); reserve `--status backlog` for work deliberately deferred out of the current cycle. Set `--tags <stream>` at creation in multi-stream projects — tags are the primary scoping mechanism for `tkt ready`/`tkt context`.
+
 ### Configuration
 
 - **User config**: `~/.config/tkt/config.toml` — debug mode, format preferences

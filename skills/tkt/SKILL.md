@@ -38,7 +38,7 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 | Ready to start something | promote a backlogged ticket to actionable | `tkt edit <id> --status open` |
 | Grabbing a task in a shared repo | signal that I'm working on it | `tkt claim <id>` |
 | Finishing a task | prove it's done with evidence | `tkt close <id> --check-all --evidence "..."` |
-| Discovering work during implementation | capture it without losing focus | `tkt new <slug> --title "..." --status backlog` |
+| Discovering work during implementation | capture it as a separate ticket without losing focus | `tkt new <slug> --title "..."` (open — or `--status backlog` only if genuinely deferred) |
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
 | Querying the full corpus | filter by status or priority | `tkt query --status open --priority high` |
 | Working in a specific environment | see only relevant work | Set `machine.capabilities` in config (or `CREW_ENV=corp` for legacy env filtering) → `tkt ready` filters by `requires` |
@@ -70,11 +70,17 @@ backlog → open → in_progress → done
 
 ## Backlog workflow
 
-Backlog is for work you've identified but aren't ready to commit to. Use it to:
+Backlog is for work you've identified but are deliberately **deferring out of the current cycle**. Default new work to `open` — backlog is the exception, not the reflex.
 
-- **Park future ideas** without cluttering the frontier
-- **Capture discovered work** mid-task without losing focus
-- **Defer low-priority items** that aren't worth doing yet
+**When NOT to backlog:** if the work could realistically be picked up once its blockers clear, it's `open` (frontier-eligible), not backlog. Discovered work found mid-task is usually actionable — create it as `open`, or `--blocked-by` if it depends on other tickets. Parking actionable work in backlog hides it from `tkt ready` and it gets forgotten. A growing backlog is a smell, not a safety net.
+
+Legitimate uses of backlog:
+
+- **Park future ideas** you have no plan to start yet (someday-maybe)
+- **Defer low-priority items** that aren't worth doing this cycle
+- **Hold work pending a decision** that hasn't been made
+
+The test: *could this realistically be worked next once its blockers are done?* If yes → `open`. Only if it's genuinely speculative or deferred → `backlog`.
 
 ### Creating backlogged tickets
 
@@ -193,6 +199,8 @@ Before writing ticket body content, read [ticket-standards.md](references/ticket
 2. Context for a fresh agent (files to read, decisions made)
 3. Behavioral outcome (what changes for the user)
 4. Testable validation (acceptance criteria an agent can verify)
+
+Set `--tags <stream>` at creation in multi-stream projects (one tag is the norm; omit in single-stream projects) — retro-tagging rarely happens, and tags are what scope `tkt ready`/`tkt context` to a subsystem.
 
 ---
 

@@ -4,7 +4,7 @@
 
 | Command | Effect |
 |---------|--------|
-| `tkt new <slug> --title "..."` | Create task, assign ID, push |
+| `tkt new <slug> --title "..." [--tags STREAM]` | Create task (defaults to `open`), assign ID, push |
 | `tkt batch "slug:title" ...` | Create multiple tasks in one push |
 | `tkt claim <id>` | Mark in-progress (push = visible WIP) |
 | `tkt close <id> --resolution "..."` | Mark done, write resolution |
@@ -85,12 +85,12 @@ When a context is active:
 | Flag | Effect | Default |
 |------|--------|---------|
 | `--title "..."` | Human-readable title | Required |
-| `--status S` | `backlog`, `open`, `in_progress`, `done` | `open` |
+| `--status S` | `open` (default), `backlog` (deferred out of cycle), `in_progress`, `done` | `open` |
 | `--priority P` | `urgent`, `high`, `medium`, `low` | `medium` |
 | `--blocked-by N,N` | IDs that must be done first | none |
 | `--env E` | Environment filter (`corp`, `personal`) | none |
 | `--spec S` | Originating spec slug | none |
-| `--tags T,T` | Tags for categorization (also auto-applied from active context) | none |
+| `--tags T,T` | Work-stream / categorization tags — the primary scoping mechanism for `ready`/`context`. Set at creation (one tag is the norm in multi-stream projects); also auto-applied from active context | none |
 | `--validation "..."` | Validation criteria (repeatable). Alias: `--vc` | none |
 | `--requires R,R` | Machine capabilities required (e.g., `gpu,linux,corp`) | none |
 
@@ -99,7 +99,7 @@ When a context is active:
 | Flag | Effect |
 |------|--------|
 | `--title "..."` | Change title |
-| `--status S` | Change status (`backlog`, `open`, `in_progress`). For `done`, use `tkt close` — editing status to `done` bypasses the close gates and is flagged by validate |
+| `--status S` | Change status (`open`, `backlog`, `in_progress`). For `done`, use `tkt close` — editing status to `done` bypasses the close gates and is flagged by validate |
 | `--priority P` | Change priority (pass `''` to clear) |
 | `--blocked-by N,N` | Replace dependencies |
 | `--env E` | Set environment (pass `''` to clear) |

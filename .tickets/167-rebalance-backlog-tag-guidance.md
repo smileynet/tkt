@@ -87,6 +87,16 @@ doc (not buried), in plain imperative prose.
     says "Deferred or not yet prioritized" — drop "or not yet prioritized"; Principles omit tags).
 - **Deploy:** `bash tools/deploy-skills.sh` (symlinks steering, per #110) after editing sources.
 
+## Implementation note (2026-08-29, on claim)
+
+Repo-owned surfaces (edit in repo, then deploy): `skills/tkt/SKILL.md`,
+`skills/tkt/references/{commands.md,ticket-format.md}`, `steering/frontier-work.md`,
+`src/commands/init.rs`, `AGENTS.md`, `README.md`. **`plan-ticket-sync/SKILL.md` is NOT
+repo-owned** — it lives only at `~/.kiro/skills/plan-ticket-sync/SKILL.md` (personal skill);
+edit it in place separately. Strongest offender found: `init.rs` — all 6 snippet variants
+carry a "Discovered work: tkt new ... --status backlog" line that directly teaches the
+over-backlogging behavior. Init snippet changes require a version bump.
+
 ## Edit plan (highest leverage first)
 
 1. **frontier-work.md (steering)** — add a top-placed standalone rule: default new/discovered

@@ -57,9 +57,17 @@ When a ticket's acceptance criteria are all met:
 
 Ticket creation is a race when 2+ sessions work the same repo (observed twice: archwright 005 pair, crew-research 12/13 collision — both required reconciliation merges).
 
-**With tkt (default):** `tkt new <slug> --title "..." [--blocked-by IDS] [--priority high]` does the whole claim protocol in one step — fetch, true-max scan (local + origin), create, commit, push, with automatic renumber on a lost race. Get `--blocked-by` right at creation; fix later with `tkt edit <id>`. Use `--status backlog` for discovered work that shouldn't enter the frontier yet. Reconcile out-of-band collisions with `tkt renumber <old> <new>` (birth-window only — cited ids are contracts).
+**Status follows readiness — default to `open`.** A new ticket is `open` (frontier-eligible) when the work could realistically be picked up once its blockers are done. Use `--status backlog` **only** for work you are deliberately deferring out of this cycle — speculative ideas, someday-maybe items, work parked pending a decision. Most discovered work is actionable and belongs on the frontier as `open` (or `--blocked-by` if it genuinely depends on other tickets), not in the backlog.
 
-**Work stream tags:** In multi-stream projects, tag each ticket with its work stream: `--tags ink`, `--tags mktoon`, `--tags platform`. Use the project's established tag vocabulary (visible in existing tickets via `tkt query --tag <name>`). One tag per ticket is the norm — add a second only when work genuinely spans streams (e.g., `--tags mktoon,blender` for texture prep that bridges both). Omit tags in single-stream projects or for cross-cutting work.
+- ✅ "Found a missing validation while implementing" → `tkt new ... ` (open — it's real, scoped work)
+- ✅ "This needs the auth refactor first" → `tkt new ... --blocked-by 12` (open, gated by a dependency)
+- ❌ "Might be nice someday, no plan to do it now" → `tkt new ... --status backlog`
+
+The test: *could this realistically be worked next once its blockers clear?* If yes, it's `open`, not `backlog`.
+
+**With tkt (default):** `tkt new <slug> --title "..." [--tags STREAM] [--blocked-by IDS] [--priority high]` does the whole claim protocol in one step — fetch, true-max scan (local + origin), create, commit, push, with automatic renumber on a lost race. Get `--blocked-by` right at creation; fix later with `tkt edit <id>`. Reconcile out-of-band collisions with `tkt renumber <old> <new>` (birth-window only — cited ids are contracts).
+
+**Tag at creation.** Set `--tags` when you create the ticket — retro-tagging rarely happens. In multi-stream projects, tag each ticket with its work stream: `--tags ink`, `--tags mktoon`, `--tags platform`. Use the project's established tag vocabulary (visible in existing tickets via `tkt query --tag <name>`). One tag per ticket is the norm — add a second only when work genuinely spans streams (e.g., `--tags mktoon,blender` for texture prep that bridges both). Omit tags in single-stream projects or for cross-cutting work. An active `tkt context` auto-applies its tags to new tickets, but don't rely on it — pass `--tags` explicitly when no context is set.
 
 **Manual fallback (tkt absent):**
 1. **Claim before allocating:** `git fetch`, then rescan `.tickets/` (local + `origin/main`) for the true max ID
@@ -72,7 +80,7 @@ Ticket creation is a race when 2+ sessions work the same repo (observed twice: a
 
 - Do NOT carry implementation context from one ticket to another
 - Each ticket starts from its file + referenced context
-- If a ticket reveals new work: create a new ticket with `--status backlog` (keeps it off the frontier), don't expand the current one
+- If a ticket reveals new work: create a *separate* ticket for it rather than expanding the current one. Default it to `open` (or `--blocked-by` the current ticket if it truly depends on this work finishing) — only use `--status backlog` if it's genuinely deferred, not just "later." The goal is to keep the current ticket scoped, not to hide the new work.
 - If context is exhausted: `/handoff` and start fresh for the next ticket
 
 ## PLAN.md is Authoritative
