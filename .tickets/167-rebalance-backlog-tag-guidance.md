@@ -1,7 +1,7 @@
 ---
 id: "167"
 title: "Rebalance ticketing guidance: curb over-backlogging, promote tagging"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -132,14 +132,24 @@ over-backlogging behavior. Init snippet changes require a version bump.
 
 ## Acceptance criteria
 
-- [ ] frontier-work.md has a standalone, top-placed status rule (open default; backlog =
+- [x] frontier-work.md has a standalone, top-placed status rule (open default; backlog =
       named deferral) with a positive+negative example pair, in plain prose (no CRITICAL/MUST)
-- [ ] frontier-work.md "Between Tickets" no longer hard-codes `--status backlog` for discovered work
-- [ ] Every primary creation example across all 6 surfaces includes `--tags` (flag list or prompt)
-- [ ] `--status` enum ordering in commands.md leads with `open`, not `backlog`
-- [ ] plan-ticket-sync Step 2 makes close the default for dead work; Steps 4-5 include tags
-- [ ] ticket-format.md backlog "Enters when" drops "or not yet prioritized"; tags principle added
-- [ ] All 6 surfaces updated consistently (grep confirms no surface leads with backlog or omits
+- [x] frontier-work.md "Between Tickets" no longer hard-codes `--status backlog` for discovered work
+- [x] Every primary creation example across all 6 surfaces includes `--tags` (flag list or prompt)
+- [x] `--status` enum ordering in commands.md leads with `open`, not `backlog`
+- [x] plan-ticket-sync Step 2 makes close the default for dead work; Steps 4-5 include tags
+- [x] ticket-format.md backlog "Enters when" drops "or not yet prioritized"; tags principle added
+- [x] All 6 surfaces updated consistently (grep confirms no surface leads with backlog or omits
       tagging in the creation workflow); README + init snippets covered
-- [ ] `bash tools/deploy-skills.sh` run so `~/.kiro/` reflects the edited sources; version bumped
+- [x] `bash tools/deploy-skills.sh` run so `~/.kiro/` reflects the edited sources; version bumped
       if init snippets changed
+
+## Resolution (2026-08-29)
+
+Rebalanced ticketing guidance across 7 surfaces (frontier-work.md, tkt SKILL.md, commands.md, ticket-format.md, init.rs snippets, AGENTS.md, README.md) plus the standalone plan-ticket-sync personal skill. Default new/discovered work to open; backlog reserved for deliberate deferral. Surfaced --tags at creation everywhere. Verified: fmt clean, clippy 0 warnings, 204 tests pass, deployed to 4 targets, binary v0.3.1.
+
+### Verification
+1. ✓ frontier-work.md 'Between Tickets' no longer hard-codes --status backlog for discovered work; status follows readiness (open default, backlog = deferred-out-of-cycle exception) with a positive+negative example pair — "frontier-work.md 'Creating Tickets' now opens with a standalone 'Status follows readiness - default to open' rule plus a positive+negative example pair (grep confirmed lines 62-70); 'Between Tickets' rewritten to default revealed work to open (no --status backlog hard-code; grep of the old pattern returns only #167's own body)"
+2. ✓ every primary ticket-creation example across all 6 guidance surfaces (per .memory/agent-guidance-surfaces.md) includes --tags in the flag list or a tag-at-creation prompt — "grep --tags across surfaces returns 7 files: init.rs (3 snippet variants + Tag-new-tickets lines), frontier-work.md (primary command + Tag-at-creation para), AGENTS.md, commands.md canonical example, ticket-format.md Tag-at-creation principle, tkt SKILL.md creation-quality; plan-ticket-sync Step 4 MUST-have + example added"
+3. ✓ a standalone 'when to backlog vs open' decision rule exists in frontier-work steering (top-placed, not buried mid-doc), phrased as normal imperative prose (no CRITICAL/MUST all-caps) — "a 'when NOT to backlog' counterweight added to tkt SKILL.md Backlog workflow and frontier-work.md 'Status follows readiness'; commands.md --status enums (create+edit) reordered to lead with open; ticket-format.md 'Enters when' now 'Deliberately deferred out of the current cycle'"
+4. ✓ all 6 agent-guidance surfaces updated consistently (grep confirms no surface leads with backlog in --status enums or omits tagging in the creation workflow); deploy-skills.sh run; init snippets version-bumped if changed — "cargo fmt clean; cargo clippy --all-targets 0 warnings; cargo test 142+62=204 passed 0 failed; bash tools/deploy-skills.sh deployed 4 targets (codex/claude/kiro skills + frontier-work steering); Cargo.toml bumped 0.3.0 to 0.3.1; tkt --version = 0.3.1 (ba1700c); grep confirms no guidance surface leads with backlog in status enums or teaches discovered-work to backlog"
