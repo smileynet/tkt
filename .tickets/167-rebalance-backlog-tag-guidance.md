@@ -1,7 +1,7 @@
 ---
 id: "167"
 title: "Rebalance ticketing guidance: curb over-backlogging, promote tagging"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
