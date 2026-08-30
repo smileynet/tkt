@@ -1,7 +1,7 @@
 ---
 id: "170"
 title: "close: batch unmet gates into one message + populate hints + fix G5 mis-kinding"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
