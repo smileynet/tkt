@@ -113,3 +113,44 @@ multi-line values as-is — worth pinning with a test.
 - [ ] F7: multi-line pass-through test added for normalize_blocked_by
 - [ ] #149 closed or annotated as superseded by this ticket
 - [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+
+## Disposition (verified 2026-08-30, HEAD)
+
+Research + code/test review dispatched 2026-08-30 (raw in `.scratch/t152-review/`).
+**7 of 8 findings already resolved by committed work (#167 + #149); only F2 remains.**
+
+| Finding | Verified state at HEAD | Disposition |
+|---------|------------------------|-------------|
+| F1 (fmt gate red) | RESOLVED — `cargo fmt --check` exit 0 (fixed by #167's `cargo fmt`) | Fixed |
+| F2 (indented comment corrupts preceding field) | CONFIRMED — continuation branch (ticket.rs:204) runs before comment branch (:208); indented `# note` merges into prior field's raw value; `parse_tolerates_comment_lines` (:1122) has the fixture but only asserts id/status | **FIX HERE** — the only remaining work |
+| F3 (blockers TBD, no #128 ref) | DONE — backfilled during #149 (commit 629ee1a); grep confirms no TBD, all reference #128 | Done |
+| F4 (lint inline-array keeps empties) | DONE — fixed as #149 F-R3 (commit 09fc517) + regression test | Done |
+| F5 (fold error-kind into #139) | DONE — #139 spec now folds in the F-R4 error-kind fix | Done |
+| F6 (#146 blocked by feature) | DONE — #127/#138 descoped to v0.4.0, recorded in #146 | Done |
+| F7 (multi-line pass-through test) | DONE — `normalize_value_passes_through_multiline` added (commit 09fc517) | Done |
+| F8 (info) | No action | — |
+
+### F2 fix (research + review grounded)
+
+Reorder the parse loop so the comment branch (`line.trim_start().starts_with('#')`)
+is evaluated **before** the continuation branch (`(starts_with(' ')||'\t') && !fm.is_empty()`)
+in `TicketFile::parse` (ticket.rs ~204-208). Bodies unchanged; only the relative order
+of the two else-if blocks swaps.
+
+Guards (from research-yaml.md, YAML 1.2 §6.6 / §3.2.3.3, Verified):
+- Keep the comment check a **whole-line** predicate — do NOT strip trailing mid-line `#`
+  (a title like `"fix #152"` contains a literal `#` inside a quoted scalar).
+- Comments are valid at any indentation and may interleave a block sequence without
+  terminating it — so an indented comment inside `blocked_by` must leave the list intact.
+- Block-list items (`  - "01"`) start with `-` not `#` → unaffected (review-parser.md).
+
+Tests to add (review-tests.md; minimum T1+T2+T4):
+- T1: indented comment after `title` → assert `title == "Commented"` (fails at HEAD, passes after)
+- T2: indented comment inside block-style `blocked_by` → assert list == `["01","03"]`
+- T4: parse→serialize→parse round-trip — comment preserved verbatim (empty-key passthrough),
+  dropped by lint's canonical rewrite, preceding field not merged
+
+Close-readiness: VC1 (fmt) MET; VC3 (dispositioned) MET except F2; VC4 (blockers backfilled)
+MET for actual release blockers (138/140/142-145 are descoped/backlog, outside scope). Only
+VC2 (F2) blocks the close. #149 already closed on merits (commit 6d91ab2), satisfying the
+"#149 closed or annotated" AC.
