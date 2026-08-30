@@ -1,7 +1,7 @@
 ---
 id: "170"
 title: "close: batch unmet gates into one message + populate hints + fix G5 mis-kinding"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -42,9 +42,18 @@ Consensus: **fail-fast — check all required fields up front and list every mis
 
 ## Acceptance criteria
 
-- [ ] A close blocked by multiple gates lists all missing inputs in one message
-- [ ] Each close gate populates a hint naming the missing flag
-- [ ] G5 partial-evidence emits `err=gate_failed` (not `validation`)
-- [ ] G3 message names how to add validation_criteria
-- [ ] `capabilities` retryable wording corrected for gate_failed
-- [ ] `cargo fmt && cargo clippy --all-targets && cargo test` clean
+- [x] A close blocked by multiple gates lists all missing inputs in one message
+- [x] Each close gate populates a hint naming the missing flag
+- [x] G5 partial-evidence emits `err=gate_failed` (not `validation`)
+- [x] G3 message names how to add validation_criteria
+- [x] `capabilities` retryable wording corrected for gate_failed
+- [x] `cargo fmt && cargo clippy --all-targets && cargo test` clean
+
+## Resolution (2026-08-30)
+
+close gates now aggregate into one message ('close blocked by N unmet gate(s): ...') evaluated up front, so all missing inputs are fixed in one retry; every gate populates a hint naming the exact flags; G5 partial-evidence re-kinded from Validation to GateFailed; capabilities retryable wording clarified.
+
+### Verification
+1. ✓ close with multiple unmet gates lists all in one message (test: integration::close_gates_batched) — "cargo test: 69 passed 0 failed incl close_gates_batched/close_gate_hint_populated/close_partial_evidence_kind_is_gate_failed"
+2. ✓ each close gate populates a hint naming the missing flag (test: integration::close_gate_hints) — "e2e installed binary 26e7083: bare close emits 'close blocked by 3 unmet gate(s)' in one message; JSON envelope has kind=gate_failed + hint naming --resolution/--evidence/--check-all"
+3. ✓ G5 partial-evidence emits err=gate_failed not validation (test: integration::close_partial_evidence_kind) — "clippy --all-targets clean; rustfmt --check clean across src+tests"
