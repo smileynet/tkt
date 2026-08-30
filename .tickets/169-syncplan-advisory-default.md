@@ -1,7 +1,7 @@
 ---
 id: "169"
 title: "sync-plan: advisory-by-default (demote plan-status-drift to warning, repurpose --check as CI gate)"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
