@@ -20,17 +20,12 @@ pub fn run(
     let t = ctx.find_ticket(id)?;
 
     if force && !ctx.config.close_allow_force {
-        domain_bail!(
-            GateFailed,
-            "--force is disabled by project config (close.allow_force = false)"
-        );
-    }
-
-    if ctx.config.close_require_resolution && note.is_none() && !force {
-        domain_bail!(
-            GateFailed,
-            "project config requires --resolution (or --note) to close a ticket"
-        );
+        return Err(crate::DomainError::with_hint(
+            crate::ErrorKind::GateFailed,
+            "--force is disabled by project config (close.allow_force = false)".to_string(),
+            "remove --force, or set close.allow_force = true in .tickets/config.toml".to_string(),
+        )
+        .into());
     }
 
     if let Some(remote_status) = ctx.remote_status(t) {
@@ -50,33 +45,78 @@ pub fn run(
         None
     };
 
-    // Config-driven gate: require_validation_criteria
-    if ctx.config.close_require_validation_criteria && criteria.is_empty() && !force {
-        domain_bail!(
-            GateFailed,
-            "project config requires validation_criteria on tickets being closed (use --force to override)"
-        );
+    // --- Aggregated close gates ---
+    // Collect every unmet requirement up front and report them together, so a
+    // caller missing several inputs fixes them in ONE retry instead of being
+    // drip-fed one rejection per round-trip. Each entry pairs a human reason
+    // with the exact flag(s) that satisfy it.
+    if !force {
+        let ac_stats = t.file.ac_stats();
+        let mut unmet: Vec<String> = Vec::new();
+        let mut remedies: Vec<&str> = Vec::new();
+
+        if ctx.config.close_require_resolution && note.is_none() {
+            unmet.push("no resolution (--resolution / --note)".to_string());
+            remedies.push("--resolution \"...\"");
+        }
+        if ctx.config.close_require_validation_criteria && criteria.is_empty() {
+            unmet.push(
+                "ticket has no validation_criteria (add via tkt edit --validation)".to_string(),
+            );
+            remedies.push("tkt edit <id> --validation \"...\"");
+        }
+        if ctx.config.close_require_validation_evidence == "true"
+            && !criteria.is_empty()
+            && evidence.is_empty()
+        {
+            unmet.push(format!(
+                "{} validation criteria present but no --evidence provided",
+                criteria.len()
+            ));
+            remedies.push("--evidence \"...\"");
+        }
+        if ctx.config.close_require_checked_acs
+            && ac_stats.total > 0
+            && ac_stats.unchecked == ac_stats.total
+            && ac_indices.is_empty()
+            && !check_all
+        {
+            unmet.push(format!(
+                "all {} acceptance criteria unchecked",
+                ac_stats.total
+            ));
+            remedies.push("--check-all (or --ac N,N)");
+        }
+
+        if !unmet.is_empty() {
+            let hint = format!(
+                "supply: {} — or use --force to close anyway",
+                remedies.join(", ")
+            );
+            return Err(crate::DomainError::with_hint(
+                crate::ErrorKind::GateFailed,
+                format!(
+                    "close blocked by {} unmet gate(s): {}",
+                    unmet.len(),
+                    unmet.join("; ")
+                ),
+                hint,
+            )
+            .into());
+        }
     }
 
-    // Config-driven gate: require_validation_evidence
-    if !criteria.is_empty() && evidence.is_empty() && !force {
-        match ctx.config.close_require_validation_evidence.as_str() {
-            "true" => {
-                domain_bail!(
-                    GateFailed,
-                    "{} validation criteria present but no --evidence provided (use --force to override)",
-                    criteria.len()
-                );
-            }
-            "warn" => {
-                eprintln!(
-                    "  {} {} validation criteria present but no --evidence provided",
-                    crate::color::sym_warn(),
-                    criteria.len()
-                );
-            }
-            _ => {} // "false" or anything else — no gate
-        }
+    // Non-blocking advisory: evidence recommended but config is "warn", not "true".
+    if ctx.config.close_require_validation_evidence == "warn"
+        && !criteria.is_empty()
+        && evidence.is_empty()
+        && !force
+    {
+        eprintln!(
+            "  {} {} validation criteria present but no --evidence provided",
+            crate::color::sym_warn(),
+            criteria.len()
+        );
     }
 
     // Partial evidence gate: evidence provided but doesn't cover all criteria
@@ -84,12 +124,17 @@ pub fn run(
         let gap = criteria.len() - evidence.len();
         match ctx.config.close_require_validation_evidence.as_str() {
             "true" => {
-                domain_bail!(
-                    "{} evidence items provided for {} criteria ({} missing) — provide evidence for all criteria or use --force",
-                    evidence.len(),
-                    criteria.len(),
-                    gap
-                );
+                return Err(crate::DomainError::with_hint(
+                    crate::ErrorKind::GateFailed,
+                    format!(
+                        "{} evidence items provided for {} criteria ({} missing) — provide evidence for all criteria or use --force",
+                        evidence.len(),
+                        criteria.len(),
+                        gap
+                    ),
+                    "provide --evidence for every criterion (positional or N=text), or --force to close anyway".to_string(),
+                )
+                .into());
             }
             "warn" => {
                 eprintln!(
@@ -138,21 +183,6 @@ pub fn run(
     }
 
     let mut file = t.file.clone();
-    let before_stats = file.ac_stats();
-
-    if ctx.config.close_require_checked_acs
-        && before_stats.total > 0
-        && before_stats.unchecked == before_stats.total
-        && ac_indices.is_empty()
-        && !check_all
-        && !force
-    {
-        domain_bail!(
-            GateFailed,
-            "all {} acceptance criteria are unchecked — check at least one with --ac, use --check-all, or use --force to close anyway",
-            before_stats.total
-        );
-    }
 
     file.set_status(Status::Done);
 

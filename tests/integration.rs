@@ -1021,6 +1021,119 @@ fn test_close_allows_partially_checked_acs() {
 }
 
 #[test]
+fn test_close_gates_batched() {
+    let (_tmp, clone) = setup_repo();
+
+    // Enable multiple gates: resolution + evidence, plus default checked-ACs
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_resolution = true\nrequire_validation_evidence = \"true\"\n",
+    )
+    .unwrap();
+    // Ticket with criteria AND all-unchecked ACs
+    std::fs::write(
+        clone.join(".tickets/02-multi.md"),
+        "---\nid: \"02\"\ntitle: \"Multi\"\nstatus: open\nblocked_by: []\nvalidation_criteria:\n  - \"must verify\"\n---\n\n# Multi\n\n## Acceptance criteria\n\n- [ ] A\n- [ ] B\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add multi"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Bare close: THREE gates unmet (resolution, evidence, unchecked ACs).
+    // They must all be reported in ONE message.
+    let (code, out) = run_tkt(&clone, &["close", "02"]);
+    assert_eq!(code, 1, "should be blocked: {}", out);
+    assert!(
+        out.contains("3 unmet gate"),
+        "should batch all three gates: {}",
+        out
+    );
+    assert!(out.contains("--resolution"), "names resolution: {}", out);
+    assert!(out.contains("--evidence"), "names evidence: {}", out);
+    assert!(
+        out.contains("--check-all") || out.contains("acceptance criteria"),
+        "names AC remedy: {}",
+        out
+    );
+}
+
+#[test]
+fn test_close_gate_hint_populated() {
+    let (_tmp, clone) = setup_repo();
+
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_resolution = true\n",
+    )
+    .unwrap();
+    std::fs::write(
+        clone.join(".tickets/02-hint.md"),
+        "---\nid: \"02\"\ntitle: \"Hint\"\nstatus: open\nblocked_by: []\n---\n\n# Hint\n\n## Acceptance criteria\n\n- [x] A\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add hint ticket"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // JSON envelope must carry a hint naming the missing flag
+    let (code, out) = run_tkt(&clone, &["-o", "json", "close", "02"]);
+    assert_eq!(code, 1, "should be blocked: {}", out);
+    assert!(
+        out.contains("\"hint\""),
+        "gate error should populate a hint: {}",
+        out
+    );
+    assert!(
+        out.contains("\"kind\":\"gate_failed\""),
+        "should be gate_failed kind: {}",
+        out
+    );
+}
+
+#[test]
+fn test_close_partial_evidence_kind_is_gate_failed() {
+    let (_tmp, clone) = setup_repo();
+
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_validation_evidence = \"true\"\n",
+    )
+    .unwrap();
+    // Two criteria, but we'll supply evidence for only one → partial evidence gate (G5)
+    std::fs::write(
+        clone.join(".tickets/02-partialev.md"),
+        "---\nid: \"02\"\ntitle: \"PartialEv\"\nstatus: open\nblocked_by: []\nvalidation_criteria:\n  - \"first\"\n  - \"second\"\n---\n\n# PartialEv\n\n## Acceptance criteria\n\n- [x] A\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add partialev"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Supply 1 of 2 evidence items → G5 partial-evidence gate fires.
+    // Must surface as gate_failed (previously mis-kinded as validation).
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "-o",
+            "json",
+            "close",
+            "02",
+            "--note",
+            "done",
+            "--evidence",
+            "1=only first",
+        ],
+    );
+    assert_eq!(code, 1, "partial evidence should be blocked: {}", out);
+    assert!(
+        out.contains("\"kind\":\"gate_failed\""),
+        "G5 must be gate_failed, not validation: {}",
+        out
+    );
+}
+
+#[test]
 fn test_close_resolution_flag_works() {
     let (_tmp, clone) = setup_repo();
 
@@ -1467,7 +1580,7 @@ fn test_project_config_require_resolution_blocks_bare_close() {
     let (code, out) = run_tkt(&clone, &["close", "02"]);
     assert_eq!(code, 1, "bare close should fail: {}", out);
     assert!(
-        out.contains("requires --resolution"),
+        out.contains("--resolution"),
         "should mention resolution requirement: {}",
         out
     );

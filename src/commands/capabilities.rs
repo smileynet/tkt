@@ -163,7 +163,7 @@ pub fn run() -> Result<i32> {
             {"kind": "not_found", "exit_code": 1, "retryable": false, "description": "Ticket or resource does not exist"},
             {"kind": "already_done", "exit_code": 1, "retryable": false, "description": "Ticket already closed or not in expected state"},
             {"kind": "conflict", "exit_code": 1, "retryable": true, "description": "Push race or claim conflict — retry with fresh state"},
-            {"kind": "gate_failed", "exit_code": 1, "retryable": false, "description": "Quality gate blocked operation (ACs, evidence, force)"},
+            {"kind": "gate_failed", "exit_code": 1, "retryable": false, "description": "Quality gate blocked operation (ACs, evidence, resolution, force) — not retryable with identical args; supply the missing flags named in the error hint, then retry"},
             {"kind": "validation", "exit_code": 1, "retryable": false, "description": "Invalid input (bad priority, slug, status, etc.)"},
             {"kind": "cycle", "exit_code": 1, "retryable": false, "description": "Dependency cycle detected"},
             {"kind": "io", "exit_code": 2, "retryable": false, "description": "Filesystem or git subprocess failure"},
