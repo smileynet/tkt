@@ -72,3 +72,24 @@ coordinate the fix with those tickets rather than duplicating.
 - [ ] F-R1: tickets 132-141 and 146 reference #128 findings; no TBD bodies on release blockers
 - [ ] F-R5: 146 blocker list decision recorded in the ticket
 - [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+
+## Disposition (verified 2026-08-30, HEAD)
+
+Research + code/ticket review dispatched 2026-08-30 (raw in `.scratch/t149-review/`).
+#149 is **superseded by #152** (per #152 provenance: "close #149 once its findings are
+dispositioned here or annotated there"). #156 defers #149/#152 items back to #152, it does
+not supersede it.
+
+| Finding | Verified state at HEAD | Disposition |
+|---------|------------------------|-------------|
+| F-R1 | CONFIRMED — only #149/#152/#156 reference #128; 10/11 blockers (132-141,146) still TBD (except #132, done) | **Defer to #152 F3** (identical, tracked there) |
+| F-R2 | PARTIAL — 8 regression tests exist (lint.rs:239-294); only the multi-line pass-through case is missing | **Fix here** — one small test on the `raw.contains('\n')` short-circuit |
+| F-R3 | CONFIRMED — inline-array branch (lint.rs:171-181) doesn't filter empties; bare-scalar branch (lint.rs:188) does | **Fix here** — `["01", ]`→`["01", ""]` fabricates a value; YAML 1.2 treats a trailing comma as a one-element list, so dropping the empty is spec-aligned [research-lists.md, Verified]. Add `.filter` + regression test |
+| F-R4 | CONFIRMED + **DEAD CODE** — close.rs partial-evidence gate uses bare `domain_bail!` (Validation not GateFailed), but `parse_evidence` bails via `?` before the gate is reached → zero runtime impact | **Defer to #139** (fix inside its restructure per #152 F5; do not touch separately) |
+| F-R5 | CONFIRMED over-scoped — #146 `blocked_by` still includes #127 (feature); #138 chains via `blocked_by: [127]` | **Decision: descope** #127/#138 from #146. SemVer clause 6 + GitLab patch-release policy: a bugfix release contains fixes only and must not be gated on feature work; feature ships in v0.4.0 [research-release.md, Established]. Record in #146 |
+| F-R6 | CONFIRMED — main.rs runs update_check after `cli::run()`; honors QUIET/CI but not DO_NOT_TRACK | **Defer to #135/#145** (coordinate). Small guard `if DO_NOT_TRACK { return }`; post-output ordering is defensible |
+
+**Plan:** fix F-R2 + F-R3 here (both genuinely #149-specific, small, isolated); annotate
+F-R1/F-R4/F-R6 as deferred; record the F-R5 descope decision in #146; then close #149 as
+superseded-by-#152. Note: F-R1 and the "no TBD bodies" AC are owned by #152, so those ACs
+close via `--force` with the superseded rationale rather than merits-based completion.
