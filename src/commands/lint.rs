@@ -173,10 +173,18 @@ fn normalize_blocked_by(raw: &str, index: &core::CorpusIndex) -> String {
         if inner.trim().is_empty() {
             return "[]".to_string();
         }
+        // Filter empty items so a trailing comma (`["01", ]`) yields `["01"]`, not
+        // `["01", ""]`. YAML 1.2 treats a flow-sequence trailing comma as no element;
+        // emitting an empty string would fabricate a value and can produce invalid
+        // YAML on re-emit. Mirrors the bare-scalar branch below.
         let items: Vec<String> = inner
             .split(',')
+            .filter(|s| !s.trim().trim_matches('"').trim_matches('\'').is_empty())
             .map(|s| normalize_element(s, index))
             .collect();
+        if items.is_empty() {
+            return "[]".to_string();
+        }
         return format!("[{}]", items.join(", "));
     }
     // Bare scalar (e.g., "01, 04" or "01") — parse as comma-separated IDs
@@ -291,5 +299,30 @@ mod tests {
         // #162: unresolvable ref is left untouched (validate still flags it).
         let i = idx(&["01-a.md", "05-b.md"]);
         assert_eq!(normalize_blocked_by("[\"99\"]", &i), "[\"99\"]");
+    }
+
+    #[test]
+    fn normalize_inline_array_drops_trailing_comma_empty() {
+        // #149 F-R3: a trailing comma must not fabricate an empty element.
+        // YAML 1.2 treats `["01", ]` as a one-element sequence.
+        assert_eq!(normalize_blocked_by("[\"01\", ]", &canon_idx()), "[\"01\"]");
+        assert_eq!(normalize_blocked_by("[ ]", &canon_idx()), "[]");
+        // Interior empty slot from a doubled comma is dropped too.
+        assert_eq!(
+            normalize_blocked_by("[\"01\", , \"04\"]", &canon_idx()),
+            "[\"01\", \"04\"]"
+        );
+    }
+
+    #[test]
+    fn normalize_value_passes_through_multiline() {
+        // #149 F-R2 gap: block-style (multi-line) values are returned verbatim,
+        // never coerced into an inline array.
+        let block = "\n  - \"01\"\n  - \"04\"";
+        assert_eq!(
+            normalize_value("blocked_by", block, &canon_idx()),
+            block,
+            "multi-line blocked_by must pass through unchanged"
+        );
     }
 }
