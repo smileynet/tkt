@@ -1,7 +1,7 @@
 ---
 id: "171"
 title: "new: advisory batch nudge on shared-attribute cadence (stderr + JSON hints[], TKT_ADVICE opt-out)"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
