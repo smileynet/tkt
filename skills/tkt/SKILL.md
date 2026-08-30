@@ -39,6 +39,7 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 | Grabbing a task in a shared repo | signal that I'm working on it | `tkt claim <id>` |
 | Finishing a task | prove it's done with evidence | `tkt close <id> --check-all --evidence "..."` |
 | Discovering work during implementation | capture it as a separate ticket without losing focus | `tkt new <slug> --title "..."` (open — or `--status backlog` only if genuinely deferred) |
+| Creating several related tickets at once | one commit/push instead of N; share `--tags`/`--blocked-by` | `tkt batch "slug:title" "slug:title" ... --tags STREAM` |
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
 | Querying the full corpus | filter by status or priority | `tkt query --status open --priority high` |
 | Working in a specific environment | see only relevant work | Set `machine.capabilities` in config (or `CREW_ENV=corp` for legacy env filtering) → `tkt ready` filters by `requires` |

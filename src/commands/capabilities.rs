@@ -173,7 +173,8 @@ pub fn run() -> Result<i32> {
             "flag": "--output / -o",
             "formats": ["json", "text"],
             "default": "text",
-            "error_envelope": "last line of stderr when -o json"
+            "error_envelope": "last line of stderr when -o json",
+            "success_hints": "success envelope may carry an advisory hints[] array (code, message, suggested_command, disable); advisory only, never changes exit_code; suppress with TKT_ADVICE=0"
         }
     });
     println!("{}", serde_json::to_string_pretty(&json).unwrap());

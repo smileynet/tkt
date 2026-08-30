@@ -2422,3 +2422,112 @@ fn test_validate_fix_advises_on_hand_flipped_done() {
         content
     );
 }
+
+/// Local-only repo (no remote) with push disabled, for rapid `new` bursts.
+fn setup_local_repo() -> (TempDir, PathBuf) {
+    let tmp = TempDir::new().unwrap();
+    let dir = tmp.path().join("repo");
+    std::fs::create_dir_all(&dir).unwrap();
+    Command::new("git")
+        .arg("init")
+        .arg("-q")
+        .arg(&dir)
+        .output()
+        .unwrap();
+    git(&dir, &["config", "user.email", "test@test"]);
+    git(&dir, &["config", "user.name", "test"]);
+    git(&dir, &["config", "core.autocrlf", "false"]);
+    std::fs::create_dir_all(dir.join(".tickets")).unwrap();
+    std::fs::write(
+        dir.join(".tickets/config.toml"),
+        "[push]\nenabled = false\n",
+    )
+    .unwrap();
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-qm", "init"]);
+    (tmp, dir)
+}
+
+#[test]
+fn test_batch_nudge_trigger() {
+    let (_tmp, dir) = setup_local_repo();
+
+    // First two creates with a shared tag: no nudge yet
+    for slug in ["a", "b"] {
+        let (code, _o, err) =
+            run_tkt_env(&dir, &["new", slug, "--title", slug, "--tags", "ui"], &[]);
+        assert_eq!(code, 0);
+        assert!(
+            !err.contains("tkt batch"),
+            "no nudge before threshold: {}",
+            err
+        );
+    }
+    // Third create sharing the tag: stderr nudge fires
+    let (code, stdout, stderr) =
+        run_tkt_env(&dir, &["new", "c", "--title", "c", "--tags", "ui"], &[]);
+    assert_eq!(code, 0, "create should still succeed: {}", stderr);
+    assert!(
+        stderr.contains("tkt batch"),
+        "3rd shared-tag new should nudge on stderr: {}",
+        stderr
+    );
+    // Nudge must NOT pollute stdout
+    assert!(
+        !stdout.contains("tkt batch"),
+        "nudge must not touch stdout: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_batch_nudge_json() {
+    let (_tmp, dir) = setup_local_repo();
+
+    for slug in ["a", "b"] {
+        let _ = run_tkt_env(&dir, &["new", slug, "--title", slug, "--tags", "api"], &[]);
+    }
+    // JSON mode: hint appears in hints[] array on the 3rd
+    let (code, stdout, _err) = run_tkt_env(
+        &dir,
+        &["-o", "json", "new", "c", "--title", "c", "--tags", "api"],
+        &[],
+    );
+    assert_eq!(code, 0, "create should succeed: {}", stdout);
+    assert!(
+        stdout.contains("\"hints\""),
+        "JSON envelope should carry hints[]: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("\"code\":\"prefer-batch\""),
+        "hint should carry the prefer-batch code: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("\"suggested_command\""),
+        "hint should carry a suggested_command: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_batch_nudge_optout() {
+    let (_tmp, dir) = setup_local_repo();
+
+    // TKT_ADVICE=0 must suppress the nudge even after the threshold
+    for slug in ["a", "b", "c"] {
+        let (code, stdout, stderr) = run_tkt_env(
+            &dir,
+            &["new", slug, "--title", slug, "--tags", "ui"],
+            &[("TKT_ADVICE", "0")],
+        );
+        assert_eq!(code, 0);
+        assert!(
+            !stderr.contains("tkt batch") && !stdout.contains("tkt batch"),
+            "TKT_ADVICE=0 should suppress nudge: out={} err={}",
+            stdout,
+            stderr
+        );
+    }
+}

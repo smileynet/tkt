@@ -247,6 +247,7 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 | `CREW_ENV` | Filter frontier by environment (legacy; prefer `machine.capabilities` config for new projects) |
 | `TKT_ASCII=1` | ASCII-only symbols (✓→\[ok\], ✗→\[err\]) |
 | `NO_COLOR=1` | Disable ANSI color |
+| `TKT_ADVICE=0` | Disable advisory hints (e.g. the batch nudge) |
 | `TKT_DEBUG=1` | Debug output to stderr |
 
 ## Contributing

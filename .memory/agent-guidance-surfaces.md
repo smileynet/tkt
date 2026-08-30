@@ -31,6 +31,8 @@ tkt teaches agents how to use it through multiple documents. When CLI behavior c
 | Tag context | — | — | ✓ | ✓ | ✓ | ✓ |
 | Migration | — | — | ✓ | — | ✓ | ✓ |
 | Validation criteria | — | — | ✓ | — | ✓ | ✓ |
+| Batch creation | — | ✓ | ✓ | — | ✓ | ✓ |
+| Advisory hints (TKT_ADVICE, batch nudge) | — | — | — | — | ✓ | ✓ |
 
 ## Update checklist
 

@@ -2,9 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{
-    domain_bail, is_dry_run, is_quiet, print_success, project_config, tickets_dir,
-};
+use crate::commands::common::{domain_bail, is_dry_run, is_quiet, project_config, tickets_dir};
 use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
@@ -137,6 +135,10 @@ pub fn run(
     git::add(&txn.repo, &[&rel_path])?;
     git::commit(&txn.repo, &format!("chore(tickets): new {} {}", tid, slug))?;
 
+    // Advisory batch nudge: record this `new` and, on a burst of shared-scope
+    // creates, surface a suggestion to use `tkt batch`. Advisory only.
+    let hint = crate::nudge::record_and_check(&txn.repo, &effective_tags, blocked_by);
+
     match txn.try_push()? {
         PublishResult::Done(outcome) => {
             if is_quiet() {
@@ -146,7 +148,7 @@ pub fn run(
                     crate::transaction::PublishOutcome::LocalOnly => "local only",
                     _ => "pushed",
                 };
-                print_success("created", &tid, slug, detail);
+                emit_created(&tid, slug, detail, hint.as_ref());
             }
             Ok(0)
         }
@@ -176,14 +178,39 @@ pub fn run(
             if is_quiet() {
                 println!("{}", tid2);
             } else {
-                print_success(
-                    "created",
+                emit_created(
                     &tid2,
                     slug,
                     &format!("pushed, renumbered {}→{}", tid, tid2),
+                    hint.as_ref(),
                 );
             }
             Ok(0)
+        }
+    }
+}
+
+/// Emit the `created` success line, routing an optional advisory nudge: human
+/// mode prints prose to stderr; JSON mode carries it in the `hints[]` array.
+/// Advisory only — never touches stdout in human mode, never changes exit code.
+fn emit_created(id: &str, slug: &str, detail: &str, hint: Option<&crate::nudge::Hint>) {
+    use crate::commands::common::{is_json_output, success_msg};
+    if is_json_output() {
+        let result = format!("created {} {} ({})", id, slug, detail);
+        match hint {
+            Some(h) => crate::cli::emit_json_success_with_hints(&result, std::slice::from_ref(h)),
+            None => crate::cli::emit_json_success(&result),
+        }
+    } else {
+        println!("{}", success_msg("created", id, slug, detail));
+        if let Some(h) = hint {
+            eprintln!(
+                "  {} {}\n    → {}\n    ({})",
+                crate::color::sym_arrow(),
+                h.message,
+                h.suggested_command,
+                h.disable
+            );
         }
     }
 }

@@ -10,6 +10,7 @@ mod fix;
 mod git;
 mod migrate;
 mod mutation;
+mod nudge;
 mod renumber;
 mod telemetry;
 mod transaction;

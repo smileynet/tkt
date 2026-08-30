@@ -917,11 +917,26 @@ fn emit_json_error(de: &crate::DomainError) {
 }
 
 /// Escape a string as a JSON string literal (with quotes).
-fn json_escape(s: &str) -> String {
+pub(crate) fn json_escape(s: &str) -> String {
     serde_json::to_string(s).unwrap_or_else(|_| format!("\"{}\"", s))
 }
 
 /// Emit a structured JSON success envelope to stdout.
 pub(crate) fn emit_json_success(result: &str) {
     println!("{{\"ok\":true,\"result\":{}}}", json_escape(result));
+}
+
+/// Emit a JSON success envelope carrying advisory hints (machine-legible).
+/// Hints are advisory only — presence never changes the exit code.
+pub(crate) fn emit_json_success_with_hints(result: &str, hints: &[crate::nudge::Hint]) {
+    if hints.is_empty() {
+        emit_json_success(result);
+        return;
+    }
+    let arr: Vec<String> = hints.iter().map(|h| h.to_json()).collect();
+    println!(
+        "{{\"ok\":true,\"result\":{},\"hints\":[{}]}}",
+        json_escape(result),
+        arr.join(",")
+    );
 }
