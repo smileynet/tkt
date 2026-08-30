@@ -1,7 +1,7 @@
 ---
 id: "171"
 title: "new: advisory batch nudge on shared-attribute cadence (stderr + JSON hints[], TKT_ADVICE opt-out)"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -37,9 +37,19 @@ A good nudge: (1) stderr only (never stdout — protects pipelines/JSON); (2) na
 
 ## Acceptance criteria
 
-- [ ] 3rd consecutive `new` with shared tag/blocker emits a stderr batch hint
-- [ ] Hint appears in `-o json` `hints[]` array with a suggested command
-- [ ] `TKT_ADVICE=0` and `-q` suppress the nudge
-- [ ] Nudge never alters stdout or exit code
-- [ ] SKILL.md gains a batch JTBD row; guidance-surfaces matrix gains a batch row
-- [ ] `cargo fmt && cargo clippy --all-targets && cargo test` clean
+- [x] 3rd consecutive `new` with shared tag/blocker emits a stderr batch hint
+- [x] Hint appears in `-o json` `hints[]` array with a suggested command
+- [x] `TKT_ADVICE=0` and `-q` suppress the nudge
+- [x] Nudge never alters stdout or exit code
+- [x] SKILL.md gains a batch JTBD row; guidance-surfaces matrix gains a batch row
+- [x] `cargo fmt && cargo clippy --all-targets && cargo test` clean
+
+## Resolution (2026-08-30)
+
+Advisory batch nudge implemented: new nudge module tracks recent 
+ew calls in .git/tkt-cadence.jsonl (120s window, worktree-safe fallback); 3rd consecutive shared-tag/blocker new emits a stderr advisory (human) and a hints[] entry in the -o json success envelope (agents). Opt-out via TKT_ADVICE=0/off/false and -q. Never touches stdout or exit code. Parse-error item dropped (clap suggestions already on). Docs updated across SKILL.md/AGENTS.md/README/guidance-surfaces/capabilities.
+
+### Verification
+1. ✓ 3rd consecutive new with shared tag/blocker emits stderr batch hint (test: integration::batch_nudge_trigger) — "cargo test: 72 integration + 144 unit passed 0 failed incl batch_nudge_trigger/batch_nudge_json/batch_nudge_optout"
+2. ✓ batch hint appears in -o json hints[] array (test: integration::batch_nudge_json) — "e2e installed binary 00aa832: 3rd shared-tag new emits stderr nudge (stdout clean); -o json carries hints[] with code=prefer-batch; TKT_ADVICE=0 fully suppresses"
+3. ✓ TKT_ADVICE=0 suppresses the nudge (test: integration::batch_nudge_optout) — "clippy --all-targets clean; rustfmt --check clean across src+tests"
