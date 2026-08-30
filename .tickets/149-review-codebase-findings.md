@@ -1,7 +1,7 @@
 ---
 id: "149"
 title: "Review 2026-08-26 codebase review findings and action valid ones"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
