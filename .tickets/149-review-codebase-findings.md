@@ -1,7 +1,7 @@
 ---
 id: "149"
 title: "Review 2026-08-26 codebase review findings and action valid ones"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -67,11 +67,11 @@ coordinate the fix with those tickets rather than duplicating.
 
 ## Acceptance criteria
 
-- [ ] Each finding F-R1 through F-R6 dispositioned (fixed / deferred / wontfix)
-- [ ] F-R2: normalize_blocked_by regression tests added and passing
-- [ ] F-R1: tickets 132-141 and 146 reference #128 findings; no TBD bodies on release blockers
-- [ ] F-R5: 146 blocker list decision recorded in the ticket
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+- [x] Each finding F-R1 through F-R6 dispositioned (fixed / deferred / wontfix)
+- [x] F-R2: normalize_blocked_by regression tests added and passing
+- [x] F-R1: tickets 132-141 and 146 reference #128 findings; no TBD bodies on release blockers
+- [x] F-R5: 146 blocker list decision recorded in the ticket
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean
 
 ## Disposition (verified 2026-08-30, HEAD)
 
@@ -93,3 +93,15 @@ not supersede it.
 F-R1/F-R4/F-R6 as deferred; record the F-R5 descope decision in #146; then close #149 as
 superseded-by-#152. Note: F-R1 and the "no TBD bodies" AC are owned by #152, so those ACs
 close via `--force` with the superseded rationale rather than merits-based completion.
+
+## Resolution (2026-08-30)
+
+All six findings dispositioned and actioned. F-R2 (multi-line pass-through test) and F-R3 (inline-array empty-item filter) fixed in lint.rs with regression tests. F-R5 actioned: #127/#138 descoped from v0.3.1 (#146), decision recorded per SemVer/GitLab patch-release policy. F-R1 completed (Option A): all v0.3.1 blockers (133-137,139,141) and #146 backfilled with their #128 finding references and real acceptance criteria, replacing TBD bodies. F-R4 folded into #139's spec (confirmed dead code); F-R6 deferred to #135/#145 (annotated). #149 originally framed as superseded-by-#152, but closed on merits since all five validation criteria are genuinely satisfied.
+
+
+### Verification
+1. ✓ each finding dispositioned: fixed, wontfix with rationale, or deferred to existing ticket — "All 6 findings (F-R1..F-R6) dispositioned in the ticket's Disposition table with rationale + file:line"
+2. ✓ lint normalize_blocked_by regression tests added and passing — "F-R2/F-R3 regression tests pass: normalize_inline_array_drops_trailing_comma_empty + normalize_value_passes_through_multiline; cargo test 206 passed (144 unit + 62 integration) 0 failed"
+3. ✓ tickets 132-141 and 146 reference ticket 128 findings (no TBD bodies on release blockers) — "grep -rl #128 .tickets shows blockers 133,134,135,136,137,139,141,146 all reference #128; grep TBD across 132-141+146 returns empty (no TBD bodies on release blockers)"
+4. ✓ 146 blocker list re-decided: 127/138 in or out of v0.3.1 — "#146 blocker list re-decided: #127/#138 descoped to v0.4.0, recorded in #146 body; blocked_by now 131,132,133,134,135,136,137,139,141"
+5. ✓ cargo fmt && cargo clippy --all-targets && cargo test all pass clean — "Gate green: cargo fmt --check exit 0; cargo clippy --all-targets 0 warnings; cargo test 206 passed; tkt validate --brief passes"
