@@ -301,6 +301,112 @@ fn test_sync_plan_fix_corrects_status() {
 }
 
 #[test]
+fn test_sync_plan_advisory_default() {
+    let (_tmp, clone) = setup_repo();
+
+    // Open ticket, plan says done → derivable drift
+    std::fs::write(
+        clone.join(".tickets/02-drifted.md"),
+        "---\nid: \"02\"\ntitle: \"Drifted\"\nstatus: open\nblocked_by: []\n---\n\n# Drifted\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(clone.join("docs")).unwrap();
+    std::fs::write(
+        clone.join("docs/plan.md"),
+        "| 01 | Seed | ✅ done |\n| 02 | Drifted | ✅ done |\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add drifted"]);
+
+    // Default run (no --check/--strict): derivable drift is advisory → exit 0
+    let (code, out) = run_tkt(&clone, &["sync-plan", "--brief"]);
+    assert_eq!(code, 0, "default run should be advisory (exit 0): {}", out);
+    assert!(
+        out.contains("plan-status-drift"),
+        "drift should still be reported as advisory: {}",
+        out
+    );
+}
+
+#[test]
+fn test_sync_plan_check_gate() {
+    let (_tmp, clone) = setup_repo();
+
+    std::fs::write(
+        clone.join(".tickets/02-drifted.md"),
+        "---\nid: \"02\"\ntitle: \"Drifted\"\nstatus: open\nblocked_by: []\n---\n\n# Drifted\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(clone.join("docs")).unwrap();
+    std::fs::write(
+        clone.join("docs/plan.md"),
+        "| 01 | Seed | ✅ done |\n| 02 | Drifted | ✅ done |\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add drifted"]);
+
+    // --check repurposed as the CI gate: drift now fails
+    let (code, out) = run_tkt(&clone, &["sync-plan", "--check", "--brief"]);
+    assert_eq!(code, 1, "--check should gate on drift (exit 1): {}", out);
+}
+
+#[test]
+fn test_sync_plan_orphan_row_errors() {
+    let (_tmp, clone) = setup_repo();
+
+    // Plan references id 99 with no matching ticket → non-derivable conflict (error)
+    std::fs::create_dir_all(clone.join("docs")).unwrap();
+    std::fs::write(
+        clone.join("docs/plan.md"),
+        "| 01 | Seed | ✅ done |\n| 99 | Ghost | open |\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add orphan plan row"]);
+
+    // Even the default (advisory) run fails on a genuine conflict
+    let (code, out) = run_tkt(&clone, &["sync-plan", "--brief"]);
+    assert_eq!(
+        code, 1,
+        "orphan plan row should error even by default: {}",
+        out
+    );
+    assert!(
+        out.contains("plan-orphan-row"),
+        "should report orphan row: {}",
+        out
+    );
+}
+
+#[test]
+fn test_sync_plan_fix_dryrun() {
+    let (_tmp, clone) = setup_repo();
+
+    std::fs::write(
+        clone.join(".tickets/02-fixable.md"),
+        "---\nid: \"02\"\ntitle: \"Fixable\"\nstatus: done\nblocked_by: []\n---\n\n# Fixable\n",
+    )
+    .unwrap();
+    std::fs::create_dir_all(clone.join("docs")).unwrap();
+    let original = "| 01 | Seed | ✅ done |\n| 02 | Fixable | open |\n";
+    std::fs::write(clone.join("docs/plan.md"), original).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add fixable"]);
+
+    // --fix --dry-run must NOT write the plan file
+    let (code, out) = run_tkt(&clone, &["sync-plan", "--fix", "--dry-run", "--brief"]);
+    assert_eq!(code, 0, "dry-run fix should exit 0: {}", out);
+    let plan = std::fs::read_to_string(clone.join("docs/plan.md")).unwrap();
+    assert_eq!(
+        plan, original,
+        "dry-run must not modify the plan file: {}",
+        plan
+    );
+}
+
+#[test]
 fn test_edit_changes_field() {
     let (_tmp, clone) = setup_repo();
 

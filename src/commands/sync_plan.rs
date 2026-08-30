@@ -6,7 +6,7 @@ use std::sync::LazyLock;
 use anyhow::Result;
 use regex::Regex;
 
-use crate::commands::common::{domain_bail, tickets_dir};
+use crate::commands::common::{domain_bail, is_dry_run, tickets_dir};
 use crate::core::{self, Status, Ticket};
 use crate::findings::{self, Finding};
 use crate::git;
@@ -21,7 +21,7 @@ pub fn run(
     brief: bool,
     plan_path: Option<&str>,
 ) -> Result<i32> {
-    let _ = check; // check is the default mode
+    let dry_run = is_dry_run();
     let dir = tickets_dir()?;
     let repo = git::repo_root(&dir)?;
     let plan = match plan_path {
@@ -45,32 +45,47 @@ pub fn run(
         let status_cell = &caps[2];
         let plan_done = status_cell.contains("✅");
 
-        if let Some(t) = corpus_map.get(tid) {
-            let ticket_done = t.status == Status::Done;
-            if plan_done != ticket_done {
-                if fix {
-                    let new_status = if ticket_done { " ✅ done " } else { " open " };
-                    let row_re = Regex::new(&format!(
-                        r"(?m)^(\|\s*{}\s*\|[^|]*\|)[^|]*(\|\s*)$",
-                        regex::escape(tid)
-                    ))
-                    .unwrap();
-                    plan_text = row_re
-                        .replace(&plan_text, format!("${{1}}{}${{2}}", new_status))
-                        .to_string();
-                    fixed_count += 1;
-                } else {
-                    findings.push(Finding {
-                        file: t.path.file_name().unwrap().to_string_lossy().to_string(),
-                        rule: "plan-status-drift".into(),
-                        message: format!(
-                            "plan says {}, ticket is {}",
-                            if plan_done { "done" } else { "not done" },
-                            t.status.as_str()
-                        ),
-                        severity: "error".into(),
-                    });
+        match corpus_map.get(tid) {
+            Some(t) => {
+                let ticket_done = t.status == Status::Done;
+                if plan_done != ticket_done {
+                    if fix && !dry_run {
+                        let new_status = if ticket_done { " ✅ done " } else { " open " };
+                        let row_re = Regex::new(&format!(
+                            r"(?m)^(\|\s*{}\s*\|[^|]*\|)[^|]*(\|\s*)$",
+                            regex::escape(tid)
+                        ))
+                        .unwrap();
+                        plan_text = row_re
+                            .replace(&plan_text, format!("${{1}}{}${{2}}", new_status))
+                            .to_string();
+                        fixed_count += 1;
+                    } else {
+                        // Derivable/cosmetic drift: the status cell disagrees with the
+                        // ticket, but `--fix` can regenerate it. Advisory (warning), not
+                        // blocking — escalated to a failure only under --check/--strict.
+                        findings.push(Finding {
+                            file: t.path.file_name().unwrap().to_string_lossy().to_string(),
+                            rule: "plan-status-drift".into(),
+                            message: format!(
+                                "plan says {}, ticket is {} (run: tkt sync-plan --fix)",
+                                if plan_done { "done" } else { "not done" },
+                                t.status.as_str()
+                            ),
+                            severity: "warning".into(),
+                        });
+                    }
                 }
+            }
+            None => {
+                // Non-derivable conflict: the plan references an id no ticket has.
+                // `--fix` cannot resolve this — it is a genuine error regardless of mode.
+                findings.push(Finding {
+                    file: plan.file_name().unwrap().to_string_lossy().to_string(),
+                    rule: "plan-orphan-row".into(),
+                    message: format!("plan row references id {} with no matching ticket", tid),
+                    severity: "error".into(),
+                });
             }
         }
     }
@@ -90,7 +105,7 @@ pub fn run(
         }
     }
 
-    if fix && fixed_count > 0 {
+    if fix && !dry_run && fixed_count > 0 {
         std::fs::write(&plan, &plan_text)?;
     }
 
@@ -99,20 +114,26 @@ pub fn run(
         .iter()
         .filter(|f| f.severity == "warning")
         .collect();
-    let status = if !errors.is_empty() || (strict && !warnings.is_empty()) {
+    // Advisory by default: derivable drift (warnings) does NOT fail the run.
+    // Escalate to failure when a real conflict exists (error), or when the caller
+    // opts into a gate via --check (CI) or --strict.
+    let gate = check || strict;
+    let status = if !errors.is_empty() || (gate && !warnings.is_empty()) {
         "fail"
     } else {
         "pass"
     };
 
     if fix {
+        let would = if dry_run { "would fix" } else { "fixed" };
         if !findings.is_empty() {
             findings::print_findings(&findings, brief, status);
         } else if brief {
-            println!("pass (fixed {}, 0 remaining)", fixed_count);
+            println!("pass ({} {}, 0 remaining)", would, fixed_count);
         } else {
             println!(
-                "{{\"status\":\"pass\",\"findings\":[],\"fixed\":{}}}",
+                "{{\"status\":\"pass\",\"findings\":[],\"{}\":{}}}",
+                if dry_run { "would_fix" } else { "fixed" },
                 fixed_count
             );
         }

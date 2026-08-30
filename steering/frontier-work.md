@@ -49,7 +49,7 @@ When a ticket's acceptance criteria are all met:
    - Evidence must be provided (`require_validation_evidence`)
    Use `--force` only with explicit justification.
 3. If ticket originated from GitHub: `gh issue close <number>` (only if `CREW_TICKET_SYNC=true`)
-4. Update `PLAN.md` task graph — mark the ticket complete, note any fog cleared (`tkt sync-plan --check` reports drift)
+4. Update the plan task graph — mark the ticket complete, note any fog cleared (`tkt sync-plan` reports drift; `--check` gates CI)
 5. Check if completing this ticket unblocks others — if so, state the new frontier
 6. If the completed ticket was the last one: report "All tickets done for this spec"
 

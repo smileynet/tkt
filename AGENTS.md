@@ -54,8 +54,9 @@ tkt blocked                                       # open tickets with unsatisfie
 tkt capabilities                                  # machine-readable JSON feature manifest
 tkt rebase [--dry-run]                            # resolve ID collisions with upstream
 tkt audit [--strict] [--brief]                    # closure quality check
-tkt sync-plan --check [--strict] [--brief] [plan] # report drift
-tkt sync-plan --fix [--strict] [--brief] [plan]   # fix derivable columns
+tkt sync-plan [--strict] [--brief] [plan]         # report drift (advisory, exit 0)
+tkt sync-plan --check [--strict] [--brief] [plan]  # CI gate: exit 1 on drift
+tkt sync-plan --fix [--dry-run] [--brief] [plan]  # fix derivable columns (default plan: docs/plan.md)
 tkt validate [--strict] [--brief] [--fix [--dry-run]]  # contract + cycle + decay findings
 tkt lint [--check] [IDs...]                       # normalize frontmatter style + blocked_by id refs
 tkt doctor [<path>] [--strict] [--fix]                    # health check (single or cross-project)

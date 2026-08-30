@@ -32,8 +32,9 @@
 | `tkt audit` | Closure quality: unchecked ACs, TBD resolutions, stale WIP |
 | `tkt audit --strict` | Treat warnings as errors |
 | `tkt audit --brief` | Short summary |
-| `tkt sync-plan --check [PLAN]` | Compare tickets vs plan document (default: docs/plan.md) |
-| `tkt sync-plan --fix [PLAN]` | Update derivable columns in the plan |
+| `tkt sync-plan [PLAN]` | Report ticket-vs-plan drift (advisory, exit 0; default: docs/plan.md) |
+| `tkt sync-plan --check [PLAN]` | CI gate: exit 1 on drift |
+| `tkt sync-plan --fix [--dry-run] [PLAN]` | Update derivable columns in the plan (`--dry-run` previews) |
 | `tkt lint` | Normalize frontmatter style (quoting, field order, blocked_by id padding + slug refs) |
 | `tkt lint --check` | CI mode: exit 1 if anything would change |
 | `tkt lint 03 07` | Lint specific tickets only |

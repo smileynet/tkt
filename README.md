@@ -142,7 +142,8 @@ tkt lint                 # normalize frontmatter style + blocked_by id refs
 tkt lint --check         # CI mode: exit 1 if lint needed
 tkt doctor               # full health check
 tkt blocked              # show tasks stuck on dependencies
-tkt sync-plan --check    # compare ticket status vs PLAN.md
+tkt sync-plan            # report ticket-vs-plan drift (advisory, exit 0)
+tkt sync-plan --check    # CI gate: exit 1 on drift (plan default: docs/plan.md)
 ```
 
 ### Query

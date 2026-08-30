@@ -42,7 +42,7 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
 | Querying the full corpus | filter by status or priority | `tkt query --status open --priority high` |
 | Working in a specific environment | see only relevant work | Set `machine.capabilities` in config (or `CREW_ENV=corp` for legacy env filtering) → `tkt ready` filters by `requires` |
-| Keeping a plan in sync | detect drift between tickets and plan doc | `tkt sync-plan --check` |
+| Keeping a plan in sync | report drift between tickets and plan doc (advisory) | `tkt sync-plan` (add `--check` to gate CI) |
 | Scoping work to a subsystem | filter frontier by tags | `tkt context backend` → `tkt ready` shows only matching |
 | Returning to unscoped view | clear tag filter | `tkt context --clear` |
 | Importing from another tool | convert foreign tickets | `tkt migrate --from tk` |
@@ -171,7 +171,7 @@ tkt close 05 --check-all \
 |---------|-----|
 | `tkt validate` | Contract integrity — cycles, broken deps, invalid fields |
 | `tkt audit` | Closure quality — unchecked ACs, TBD resolutions, stale WIP |
-| `tkt sync-plan --check` | Plan drift — ticket status vs plan document |
+| `tkt sync-plan` | Plan drift — ticket status vs plan document (advisory; `--check` gates CI) |
 | `tkt doctor` | Setup verification — current project or multi-project scan |
 | `tkt lint --check` | Style — frontmatter quoting and field order |
 
