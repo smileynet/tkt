@@ -125,10 +125,15 @@ Research + code/test review dispatched 2026-08-30 (raw in `.scratch/t152-review/
 | F2 (indented comment corrupts preceding field) | CONFIRMED — continuation branch (ticket.rs:204) runs before comment branch (:208); indented `# note` merges into prior field's raw value; `parse_tolerates_comment_lines` (:1122) has the fixture but only asserts id/status | **FIX HERE** — the only remaining work |
 | F3 (blockers TBD, no #128 ref) | DONE — backfilled during #149 (commit 629ee1a); grep confirms no TBD, all reference #128 | Done |
 | F4 (lint inline-array keeps empties) | DONE — fixed as #149 F-R3 (commit 09fc517) + regression test | Done |
-| F5 (fold error-kind into #139) | DONE — #139 spec now folds in the F-R4 error-kind fix | Done |
+| F5 (fold error-kind into #139) | REASSIGNED — the partial-evidence error-kind fix is now owned by **#170** (close-gate rework, touches the same `close.rs` lines); #139 scoped to the dead-branch/silent-discard behavior only | Done (owner: #170) |
 | F6 (#146 blocked by feature) | DONE — #127/#138 descoped to v0.4.0, recorded in #146 | Done |
 | F7 (multi-line pass-through test) | DONE — `normalize_value_passes_through_multiline` added (commit 09fc517) | Done |
 | F8 (info) | No action | — |
+
+**Status: FILED, not implemented.** F2 is the sole remaining item and is fully specced
+below, but implementation is intentionally **left to the active worker** in the close.rs/
+parser area to avoid a collision (that session is mid-flight on #169/#170/#171). #152 stays
+`open` on the frontier with a complete fix spec — whoever picks it up has everything needed.
 
 ### F2 fix (research + review grounded)
 
