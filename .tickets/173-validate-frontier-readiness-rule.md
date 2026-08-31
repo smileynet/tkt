@@ -48,9 +48,11 @@ hard-block work (false positives create friction; see the project's own enforcem
 
 ## References
 
-- crew-research `.scratch/subagent-raw/ticket-completeness.md` (readiness definition, mechanical vs judgment split)
-- crew-research `.scratch/research/dor-tooling-priorart.md` (Jira/Linear/GitLab DoR enforcement survey)
-- crew-research tickets 148 (judgment layer), 149 (plan slim) — this is their mechanical companion
+- Prior art is summarized inline above (Jira Field Required Validator; Linear LineGuard/Required;
+  GitHub Issue Forms; GitLab) — this ticket is self-contained; no external file needed to implement it.
+- Companions in the crew-research repo (context only, not required to build this): ticket 148
+  (the judgment-layer half) and ticket 149 (PLAN.md slim). Their shared design write-up lives at
+  crew-research `.memory/specs/ticket-plan-handoff-workstream.md` § Part 1 if that repo is available.
 
 ## Acceptance criteria
 
