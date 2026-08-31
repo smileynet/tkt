@@ -39,6 +39,7 @@ The Context section should give a fresh agent everything needed to START without
 - **Decisions already made** — link ADRs or state the constraint ("we chose X because Y")
 - **Domain terms** — if the ticket uses non-obvious vocabulary, link CONTEXT.md or define inline
 - **What NOT to touch** — boundaries that aren't obvious from the code
+- **References must be DURABLE** — cite git-tracked paths only (`.memory/specs/`, `design/`, `docs/`, other tickets). NEVER cite `.scratch/` or other gitignored paths: they vanish at cleanup and aren't pulled by a fresh clone or a cross-repo reader, leaving the ticket un-completable. If the source is research in `.scratch/`, promote it to `.memory/specs/` first, then cite that.
 
 Bad: "See the codebase"  
 Good: "Read src/config.rs (ProjectConfig struct) and src/commands/close.rs (enforcement logic). Decision: evidence is positional, not named (ADR in ticket 91)."
