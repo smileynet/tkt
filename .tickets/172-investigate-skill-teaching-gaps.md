@@ -59,3 +59,28 @@ teach/handle them so every project doesn't re-learn them.
 
 - The resume-buddy-specific AGENTS.md capture (already done there as a stopgap).
 
+## Disposition (2026-08-31 — research + code/corpus review, raw in `.scratch/research/` + `.scratch/review/`)
+
+Investigated as part of a broader "tickets must carry enough content to complete the
+work" pass. Verified against source (`ticket.rs:989` template, `audit.rs:211`
+done-only `check_template_only`, validate/close body-blindness) and the corpus
+(9 open TBD-stub tickets; 12 of 25 open tickets with no source reference).
+
+| Gap | Assessment | Decision | Owner |
+|-----|-----------|----------|-------|
+| 1 — `--evidence` ↔ validation_criteria (by index, not body ACs) | Both: UX error is terse ("criterion N does not exist") AND no surface states the mapping rule plainly | **Doc fix** (state the rule across surfaces) + optional UX (close error names expected count) | **#177** (guidance sync); UX-error-count folded into that ticket's decision |
+| 2 — `tkt edit` has no `--tags` | Both: deliberate omission per frontier-work steering, but undocumented as a hard constraint | **Doc fix** (state `edit` has no `--tags`; retro-tagging is rare by design). UX (add `--tags` to edit) = won't-fix for now (intentional) | **#177** |
+| 3 — `tkt new` TBD body validates + closes clean | Both: the tool's own template is the stub; only `audit --deep` (done-only, warning) detects it | **UX change** (advisory `stub-body` finding in validate, on open tickets) + template improvement + doc fix | **#174** (validate finding), **#176** (template), **#177** (docs) |
+
+Cross-cutting finding beyond the 3 gaps: no rule enforces a **source reference** →
+filed **#175** (advisory `no-source-reference` in validate).
+
+### Follow-ups filed
+- **#174** — validate: advisory `stub-body` finding on open/in_progress tickets (gap 3, UX) [priority: high]
+- **#175** — validate: advisory `no-source-reference` finding (cross-cutting) [blocked_by #174]
+- **#176** — new: clearer body template + `--body` flag (gap 3, root cause) [blocked_by #174]
+- **#177** — guidance sync: evidence↔validation_criteria rule, `edit` no-`--tags` constraint, fill-body-at-new, link-the-source (gaps 1, 2, 3 doc halves) — to be filed
+
+All three ACs satisfied: each gap assessed (skill-doc / binary-UX / both), a decision
+recorded per gap, and follow-ups filed. #172 closes once #177 is filed.
+
