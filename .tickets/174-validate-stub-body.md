@@ -1,7 +1,7 @@
 ---
 id: "174"
 title: "validate: advisory stub-body finding on open/in_progress tickets (promote check_template_only)"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -50,8 +50,8 @@ Follow the advisory-first pattern established by sync-plan (#169) and the batch 
 
 ## Acceptance criteria
 
-- [ ] `validate` emits an advisory `stub-body` warning for an open ticket with a TBD template body; exit 0
-- [ ] `validate --strict` escalates `stub-body` to a failure (exit 1)
-- [ ] A non-stub open ticket produces no `stub-body` finding (no false positive)
-- [ ] Existing audit `template-only-closure` (done-only) behavior unchanged
-- [ ] `mise run check` passes (fmt --check, clippy -D warnings, tests)
+- [x] `validate` emits an advisory `stub-body` warning for an open ticket with a TBD template body; exit 0
+- [x] `validate --strict` escalates `stub-body` to a failure (exit 1)
+- [x] A non-stub open ticket produces no `stub-body` finding (no false positive)
+- [x] Existing audit `template-only-closure` (done-only) behavior unchanged
+- [x] `mise run check` passes (fmt --check, clippy -D warnings, tests)
