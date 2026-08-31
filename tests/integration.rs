@@ -242,6 +242,73 @@ fn test_validate_passes_clean_corpus() {
 }
 
 #[test]
+fn test_validate_stub_body_advisory() {
+    let (_tmp, clone) = setup_repo();
+
+    // Open ticket with the default `tkt new` template stub body
+    std::fs::write(
+        clone.join(".tickets/02-stub.md"),
+        "---\nid: \"02\"\ntitle: \"Stub\"\nstatus: open\nblocked_by: []\n---\n\n# Stub\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add stub"]);
+
+    // Advisory: reported but exit 0 by default
+    let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
+    assert_eq!(code, 0, "stub-body should be advisory (exit 0): {}", out);
+    assert!(
+        out.contains("stub-body"),
+        "should report stub-body: {}",
+        out
+    );
+}
+
+#[test]
+fn test_validate_stub_body_strict() {
+    let (_tmp, clone) = setup_repo();
+
+    std::fs::write(
+        clone.join(".tickets/02-stub.md"),
+        "---\nid: \"02\"\ntitle: \"Stub\"\nstatus: open\nblocked_by: []\n---\n\n# Stub\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add stub"]);
+
+    // --strict escalates the warning to a failure
+    let (code, out) = run_tkt(&clone, &["validate", "--strict", "--brief"]);
+    assert_eq!(code, 1, "--strict should fail on stub-body: {}", out);
+    assert!(
+        out.contains("stub-body"),
+        "should report stub-body: {}",
+        out
+    );
+}
+
+#[test]
+fn test_validate_no_false_stub() {
+    let (_tmp, clone) = setup_repo();
+
+    // Open ticket with a real, filled-in body — no template placeholders
+    std::fs::write(
+        clone.join(".tickets/02-real.md"),
+        "---\nid: \"02\"\ntitle: \"Real\"\nstatus: open\nblocked_by: []\n---\n\n# Real\n\n## What to build\n\nImplement the widget cache with LRU eviction.\n\n## Acceptance criteria\n\n- [ ] cache evicts least-recently-used entry at capacity\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add real"]);
+
+    let (code, out) = run_tkt(&clone, &["validate", "--brief"]);
+    assert_eq!(code, 0, "filled body should pass: {}", out);
+    assert!(
+        !out.contains("stub-body"),
+        "no false stub-body on filled body: {}",
+        out
+    );
+}
+
+#[test]
 fn test_sync_plan_detects_drift() {
     let (_tmp, clone) = setup_repo();
 

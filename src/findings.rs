@@ -298,6 +298,79 @@ fn filename(t: &Ticket) -> String {
     t.path.file_name().unwrap().to_string_lossy().to_string()
 }
 
+/// Check for template placeholder ("stub") bodies on tickets still being worked
+/// (open / in_progress). `tkt new` writes a `## What to build\n\nTBD` +
+/// `- [ ] TBD` stub by default; this surfaces tickets that were never filled in,
+/// before they reach `done` (the done-only counterpart is audit's
+/// `template-only-closure`). Advisory: warning severity, so it only fails the
+/// run under `--strict`.
+///
+/// Detection is CONTENT-based, not substring-based: it inspects the trimmed
+/// content of the `## What to build` and `## Acceptance criteria` sections. A
+/// ticket that merely *quotes* the template sentinel in otherwise-filled prose
+/// (e.g. a ticket about the template itself) is not flagged, because its section
+/// content is substantive. Only a section whose real content is empty or exactly
+/// `TBD` (intent) or whose sole checkbox is `- [ ] TBD` (AC) counts as a stub.
+pub fn check_stub_body(corpus: &[Ticket]) -> Vec<Finding> {
+    corpus
+        .iter()
+        .filter(|t| matches!(t.status, Status::Open | Status::InProgress))
+        .filter_map(|t| {
+            if is_stub_body(&t.body) {
+                Some(Finding {
+                    file: filename(t),
+                    rule: "stub-body".into(),
+                    message: "body still has template placeholders (fill in before closing)".into(),
+                    severity: "warning".into(),
+                })
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// Extract the trimmed content of a `## <heading>` section (heading line matched
+/// at start-of-line), stopping at the next `## ` heading. None if absent.
+fn section_content<'a>(body: &'a str, heading: &str) -> Option<&'a str> {
+    let start_idx = if body.starts_with(heading) {
+        0
+    } else {
+        body.find(&format!("\n{}", heading))? + 1
+    };
+    let after_heading = start_idx + heading.len();
+    let content_start = body[after_heading..]
+        .find('\n')
+        .map(|i| after_heading + i + 1)
+        .unwrap_or(body.len());
+    let content_end = body[content_start..]
+        .find("\n## ")
+        .map(|i| content_start + i)
+        .unwrap_or(body.len());
+    Some(body[content_start..content_end].trim())
+}
+
+/// True when the body is an unfilled `tkt new` template stub: the intent section
+/// is empty/`TBD`, or the acceptance-criteria section's only checkbox is `- [ ] TBD`.
+fn is_stub_body(body: &str) -> bool {
+    let intent_stub = section_content(body, "## What to build")
+        .map(|c| c.is_empty() || c == "TBD")
+        .unwrap_or(false);
+
+    let ac_stub = section_content(body, "## Acceptance criteria")
+        .map(|c| {
+            let checkboxes: Vec<&str> = c
+                .lines()
+                .map(str::trim)
+                .filter(|l| l.starts_with("- ["))
+                .collect();
+            checkboxes == ["- [ ] TBD"]
+        })
+        .unwrap_or(false);
+
+    intent_stub || ac_stub
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -305,6 +378,48 @@ mod tests {
 
     fn make_ticket(content: &str) -> Ticket {
         Ticket::parse_str(content, Path::new("test.md")).unwrap()
+    }
+
+    #[test]
+    fn stub_body_flags_open_template() {
+        let t = make_ticket(
+            "---\nid: \"01\"\ntitle: \"A\"\nstatus: open\nblocked_by: []\n---\n\n# A\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
+        );
+        let f = check_stub_body(&[t]);
+        assert_eq!(f.len(), 1);
+        assert_eq!(f[0].rule, "stub-body");
+        assert_eq!(f[0].severity, "warning");
+    }
+
+    #[test]
+    fn stub_body_ignores_filled_open() {
+        let t = make_ticket(
+            "---\nid: \"01\"\ntitle: \"A\"\nstatus: open\nblocked_by: []\n---\n\n# A\n\n## What to build\n\nReal content here.\n\n## Acceptance criteria\n\n- [ ] real criterion\n",
+        );
+        assert!(check_stub_body(&[t]).is_empty());
+    }
+
+    #[test]
+    fn stub_body_ignores_done_tickets() {
+        // Done tickets are the domain of audit's template-only-closure, not this check.
+        let t = make_ticket(
+            "---\nid: \"01\"\ntitle: \"A\"\nstatus: done\nblocked_by: []\n---\n\n# A\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
+        );
+        assert!(check_stub_body(&[t]).is_empty());
+    }
+
+    #[test]
+    fn stub_body_ignores_ticket_that_quotes_the_sentinel() {
+        // A ticket ABOUT the template quotes `## What to build`/`TBD` in filled
+        // prose. Content-based detection must not flag it (regression: the old
+        // substring match produced false positives on #152/#174/#176).
+        let t = make_ticket(
+            "---\nid: \"01\"\ntitle: \"A\"\nstatus: open\nblocked_by: []\n---\n\n# A\n\n## What to build\n\nThe template writes `## What to build\\n\\nTBD` and `- [ ] TBD` by default; replace it.\n\n## Acceptance criteria\n\n- [ ] detector ignores quoted sentinels\n",
+        );
+        assert!(
+            check_stub_body(&[t]).is_empty(),
+            "quoting the sentinel in filled prose must not be flagged"
+        );
     }
 
     #[test]

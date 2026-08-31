@@ -34,6 +34,7 @@ fn collect_findings(dir: &std::path::Path) -> Result<Vec<Finding>> {
     all_findings.extend(findings::check_dangling_deps(&corpus));
     all_findings.extend(findings::check_cycles(&corpus));
     all_findings.extend(findings::check_unchecked_acs(&corpus));
+    all_findings.extend(findings::check_stub_body(&corpus));
     all_findings.extend(crate::audit::check_resolution_quality(&corpus));
 
     Ok(all_findings)
