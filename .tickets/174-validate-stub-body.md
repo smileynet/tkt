@@ -1,7 +1,7 @@
 ---
 id: "174"
 title: "validate: advisory stub-body finding on open/in_progress tickets (promote check_template_only)"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
