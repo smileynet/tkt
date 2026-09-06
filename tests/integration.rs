@@ -901,6 +901,104 @@ fn test_push_failure_no_rebase_on_unreachable() {
     );
 }
 
+/// Regression for #180: when the file write + local commit succeed but the push
+/// fails (non-race, e.g. unreachable remote), the mutation is NOT rolled back —
+/// the local commit and the on-disk change are left intact — and the user gets a
+/// structured, recoverable message ("committed locally, but the push failed" +
+/// a hint to re-run), not a bare crash or a false success.
+#[cfg(unix)]
+#[test]
+fn test_push_failure_after_commit_preserves_local_state() {
+    use std::os::unix::fs::PermissionsExt;
+
+    // A reachable bare remote (so the pre-flight fetch succeeds), which we then make
+    // read-only so only the *push* fails — isolating the post-commit failure path.
+    let (_tmp, dir) = setup_repo();
+    let remote = _tmp.path().join("remote.git");
+
+    std::fs::write(
+        dir.join(".tickets/02-test.md"),
+        "---\nid: \"02\"\ntitle: \"Test\"\nstatus: in_progress\nblocked_by: []\n---\n\n\
+         # Test\n\n## Acceptance criteria\n\n- [ ] A\n",
+    )
+    .unwrap();
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-qm", "add ticket"]);
+    git(&dir, &["push", "-q", "origin", "HEAD:main"]);
+    let head_before = git(&dir, &["rev-parse", "HEAD"]);
+
+    // Make the bare remote read-only so the push fails (fetch still works).
+    for entry in walk_dir(&remote) {
+        let mut perms = std::fs::metadata(&entry).unwrap().permissions();
+        perms.set_mode(0o555);
+        let _ = std::fs::set_permissions(&entry, perms);
+    }
+
+    // Close mutates the file, commits locally, then fails on push.
+    let (code, out) = run_tkt(
+        &dir,
+        &["close", "02", "--check-all", "--resolution", "done"],
+    );
+
+    // Restore perms so the tempdir can be cleaned up.
+    for entry in walk_dir(&remote) {
+        let mut perms = std::fs::metadata(&entry).unwrap().permissions();
+        perms.set_mode(0o755);
+        let _ = std::fs::set_permissions(&entry, perms);
+    }
+
+    // Surfaced as an operational error (exit 2), not a silent success.
+    assert_eq!(code, 2, "push failure should exit 2: {}", out);
+    assert!(
+        !out.contains("✓ closed"),
+        "must not report success when the push failed: {}",
+        out
+    );
+    // Actionable, recoverable message — not a bare "crash".
+    assert!(
+        out.contains("committed locally") && out.contains("push failed"),
+        "must explain the change is committed locally and the push failed: {}",
+        out
+    );
+    assert!(
+        out.contains("hint:") && out.contains("git push"),
+        "must give a copy-pasteable recovery hint (git push): {}",
+        out
+    );
+
+    // The mutation is preserved locally — NOT rolled back.
+    let head_after = git(&dir, &["rev-parse", "HEAD"]);
+    assert_ne!(
+        head_before, head_after,
+        "the close commit must remain (no auto-rollback): {}",
+        out
+    );
+    let content = std::fs::read_to_string(dir.join(".tickets/02-test.md")).unwrap();
+    assert!(
+        content.contains("status: done"),
+        "on-disk file must retain the mutation (not rolled back): {}",
+        content
+    );
+}
+
+/// Recursively collect all paths under `dir` (dirs first excluded from ordering
+/// guarantees) — used by tests that need to chmod an entire tree.
+#[cfg(unix)]
+fn walk_dir(dir: &Path) -> Vec<PathBuf> {
+    let mut out = vec![dir.to_path_buf()];
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for e in entries.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                out.extend(walk_dir(&p));
+            } else {
+                out.push(p);
+            }
+        }
+    }
+    out
+}
+
 /// Run tkt with extra environment variables, capturing stdout and stderr separately.
 /// Pass empty string as value to remove the variable from the child's environment.
 fn run_tkt_env(dir: &Path, args: &[&str], env: &[(&str, &str)]) -> (i32, String, String) {

@@ -131,7 +131,23 @@ impl MutationContext {
         crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
 
         if self.has_remote && self.config.push_enabled {
-            git::push_with_retry(&self.repo)?;
+            // The commit above succeeded and is durable. If the push fails for a
+            // non-race reason (auth, network, unreachable remote), we deliberately
+            // do NOT roll back the commit — git separates commit (local, durable)
+            // from push (network), the change is fully recoverable, and undoing a
+            // valid commit under a transient failure is the wrong move (#180).
+            // Surface a structured, actionable error instead of a bare crash.
+            if let Err(e) = git::push_with_retry(&self.repo) {
+                crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
+                return Err(DomainError::with_hint(
+                    crate::ErrorKind::Io,
+                    format!("committed locally, but the push failed: {e}"),
+                    "your change is saved in a local commit — nothing was lost. Run \
+                     `git push` once the remote is reachable to publish it."
+                        .to_string(),
+                )
+                .into());
+            }
             crate::telemetry::debug_event(dbg, "", "", "git push (success)");
         } else if self.has_remote {
             crate::telemetry::debug_event(dbg, "", "", "push skipped (push.enabled = false)");
