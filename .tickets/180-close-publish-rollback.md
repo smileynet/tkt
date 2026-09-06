@@ -1,7 +1,7 @@
 ---
 id: "180"
 title: "close/claim/edit write the ticket file before publish with no rollback on push failure"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
