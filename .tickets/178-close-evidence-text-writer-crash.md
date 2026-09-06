@@ -1,7 +1,7 @@
 ---
 id: "178"
 title: "close --evidence crashes the text-mode file writer"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
