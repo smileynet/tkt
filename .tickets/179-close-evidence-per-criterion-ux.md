@@ -1,7 +1,7 @@
 ---
 id: "179"
 title: "tkt close: per-criterion --evidence requirement is undiscoverable; error omits count + syntax"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -190,3 +190,11 @@ multiple times"). **No first-tier tool uses an `N=value` indexed form** — tkt'
 (closest analog is gh's `key[]=value` bracket syntax or plain repeat-order). clap does not
 auto-annotate repeatability in `--help`; write it into the help text. If occurrences combine, name
 the separator explicitly (git's `-m` paragraph-join surprises users).
+
+## Resolution (2026-09-06)
+
+Made the per-criterion --evidence requirement discoverable: rewrote the gate error to name both counts + missing list with a singular/plural guard and a hint carrying the repeatable/N=text syntax and a corrected-command template (renders in JSON); expanded --evidence help to state one-per-criterion; corrected the misleading single-string --evidence example across README, AGENTS.md, steering, and init.rs scaffolds. Pairs with #178 (closed) to retire the downstream hand-edit-status folklore.
+
+### Verification
+1. ✓ tkt close evidence error names both expected and actual counts and carries a hint with positional / N=text syntax and a copy-pasteable corrected command — "close.rs error: '2 of 3 validation criteria still need evidence (missing: 2,3)' + hint w/ syntax+template; singular guard tested (test_close_evidence_error_singular_form); JSON envelope carries message+hint — commit 0e57c57"
+2. ✓ docs/help make explicit that --evidence is supplied once per validation criterion (repeatable), corrected across all guidance surfaces — "help/docs: --evidence help states one-per-criterion (verified tkt close --help); corrected README/AGENTS/steering/init.rs; e2e 3/3 evidence close -> status:done + Verification section — commit 0e57c57, mise run check green 79 tests"
