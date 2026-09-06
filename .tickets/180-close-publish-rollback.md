@@ -1,7 +1,7 @@
 ---
 id: "180"
 title: "close/claim/edit write the ticket file before publish with no rollback on push failure"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -120,3 +120,11 @@ tickets commits on next run). Capture as a separate ticket if this proves to bit
 Related: #178 (atomic write + Io classification, landed) and #179 (evidence-gate UX). The initial
 "restore on failure" framing in this ticket was **revised** after research — surface-and-recover is
 smaller, safer, and matches how git and every VCS-backed tool behave.
+
+## Resolution (2026-09-06)
+
+Implemented surface-and-recover (not auto-rollback): on a non-race push failure after a successful commit, MutationContext::publish now returns a structured DomainError{Io} with a 'committed locally, run git push to recover' hint and leaves the commit intact. Race-rejection path unchanged. Matches how git/jj/dotfile tools behave (research: git splits durable commit from network push). Pre-commit add/commit restore deferred (effectively never fails post-atomic-write). Follow-up noted: re-running close short-circuits on already-done, so hint points at git push.
+
+### Verification
+1. ✓ On a non-race push failure after a successful local commit, the commit is left intact (no auto-rollback) and the user gets a structured, copy-pasteable recover message (committed locally, push failed, re-run git push); exit code 2 — "mutation.rs publish wraps push_with_retry failure in DomainError{Io}+hint, commit kept, exit 2; e2e: 'committed locally, but the push failed' + 'Run git push' hint, then git push recovers (local==remote) — commit 05512e6"
+2. ✓ Regression test forces a push failure after write and asserts: non-zero exit, success not falsely reported, local commit/mutation present on disk, recovery message shown — "test_push_failure_after_commit_preserves_local_state (read-only bare remote): asserts exit 2, no false '✓ closed', recovery message+hint, HEAD advanced + on-disk status:done preserved; mise run check green 78 tests — commit 05512e6"
