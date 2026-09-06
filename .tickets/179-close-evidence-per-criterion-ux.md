@@ -144,11 +144,11 @@ retired. Note the relationship in both tickets' resolutions.
 
 ## Acceptance criteria
 
-- [ ] `tkt close` evidence error names **both** counts (e.g. "2 of 3 validation criteria still need evidence") — not just which indices — with a correct singular/plural form
-- [ ] The error carries a `hint:` showing the repeatable/positional syntax AND the `N=text` form, ending with a copy-pasteable corrected command using `<…>` placeholders (renders in `-o json` too)
-- [ ] `tkt close --help` (`--evidence` doc at `src/cli.rs:167`) states `--evidence` is supplied **once per validation criterion** (repeatable; positional-in-order or `N=text`)
-- [ ] The single-string `--evidence "…"` folklore is corrected across all guidance surfaces (README, AGENTS.md, steering/frontier-work.md, init.rs scaffolds) per the guidance-surfaces checklist
-- [ ] Cross-referenced with #178 (the text-mode writer crash): the end-to-end close-with-evidence path is verified working (not just the error message in isolation), and both resolutions reference each other so the downstream "hand-edit status:done" folklore is retired only once both land
+- [x] `tkt close` evidence error names **both** counts ("2 of 3 validation criteria still need evidence (missing: 2, 3)") with a singular/plural guard (done; `test_close_evidence_error_singular_form` covers singular)
+- [x] The error carries a `hint:` showing the repeatable/positional + `N=text` syntax and a corrected-command template sized to the criteria count; renders in `-o json` (verified e2e: `kind gate_failed`, message + hint)
+- [x] `tkt close --help` states `--evidence` is supplied once per validation criterion (repeatable; positional or `N=text`) — verified via `tkt close --help`
+- [x] The single-string `--evidence "…"` folklore is corrected across README, AGENTS.md synopsis, steering/frontier-work.md, and the init.rs scaffolds
+- [x] Cross-referenced with #178 (closed): end-to-end evidence close verified working in text mode (3/3 evidence → `status: done` + `### Verification` section); both tickets reference each other — the downstream hand-edit-status folklore is retired now that both have landed
 
 ## Notes
 
