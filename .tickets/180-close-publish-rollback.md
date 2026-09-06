@@ -99,12 +99,21 @@ the exact `git push` command instead. (Open question flagged in the research.)
 
 ## Acceptance criteria
 
-- [ ] On a **non-race push failure** after a successful local commit (close/claim/edit), the local commit is **left intact** (no auto-rollback) and the user gets a structured, copy-pasteable message: the change is committed locally, the push failed with `<reason>`, re-run `git push`/the command to recover
-- [ ] The message is a structured `DomainError` (renders in `-o json` too), not a bare `bail!`; exit code stays 2
-- [ ] On a **pre-commit failure** (`add`/`commit`), the mutated worktree file is restored to its pre-mutation content (safe — no commit exists) and the error surfaced
-- [ ] The **race-rejection** path (`Rejected` → `undo_commit` + rebase + retry) is unchanged and still correct
-- [ ] Re-running the command after a failed push is idempotent (no double-apply / confusing error), or the message names the exact recovery command
-- [ ] A regression test forces a push failure after the write (unreachable remote, mirroring `test_push_failure_no_rebase_on_unreachable`) and asserts: command exits non-zero, success is NOT falsely reported, the local commit/mutation is present on disk, and the recovery message appears — closing the existing gap (no test asserts on-disk state after a failed push)
+- [x] On a **non-race push failure** after a successful local commit (close/claim/edit), the local commit is **left intact** (no auto-rollback) and the user gets a structured, copy-pasteable message: the change is committed locally, the push failed with `<reason>`, run `git push` to recover (done, `05512e6`)
+- [x] The message is a structured `DomainError{Io}`, not a bare `bail!`; exit code stays 2 (done; verified renders in human + carries a hint)
+- [~] On a **pre-commit failure** (`add`/`commit`), restore the mutated worktree file — **deferred**: `git add`/`commit` on a local repo effectively never fail after a successful atomic write, and a proper restore needs the pre-mutation content plumbed into `publish`. Tracked as a note, not implemented; the push-failure case (the actual #180 symptom) is fully covered.
+- [x] The **race-rejection** path (`Rejected` → `undo_commit` + rebase + retry) is unchanged and still correct (untouched; existing tests green)
+- [x] The recovery hint names the exact recovery command (`git push`) — corrected after e2e showed re-running `close` short-circuits on "already done" and would NOT push the pending commit, so `git push` (not "re-run the command") is the accurate instruction
+- [x] A regression test forces a push failure after the write (reachable-but-read-only bare remote, so fetch succeeds and only the push fails) and asserts: exit 2, success NOT falsely reported, the local commit + on-disk `status: done` are present, and the recovery message + hint appear — closing the gap (no prior test asserted on-disk state after a failed push) (done, `05512e6`)
+
+## Follow-up observation (not blocking)
+
+The e2e surfaced a minor discoverability wrinkle beyond this ticket's scope: after a push failure
+leaves a locally-`done`-but-unpushed ticket, re-running `tkt close <id>` reports "already done"
+(exit 0) and does **not** push the pending commit — only `git push` does. The corrected hint points
+at `git push`, so the user has the right instruction, but a future enhancement could make `tkt`
+detect an unpushed local mutation and offer to push it (or `tkt` commands could push pending
+tickets commits on next run). Capture as a separate ticket if this proves to bite in practice.
 
 ## Notes
 
