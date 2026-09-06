@@ -2262,6 +2262,132 @@ fn test_evidence_duplicate_named_index_rejected() {
     );
 }
 
+/// Regression for #178: text-mode `close --evidence` under the strict evidence
+/// gate must complete, apply the close (status -> done), and record evidence —
+/// without hitting the `crash: writing` fs-write path. The pre-existing success
+/// tests use the default `warn` config; this one combines strict gate + full
+/// evidence + default (text) output, the exact downstream repro shape.
+#[test]
+fn test_close_evidence_text_mode_strict_gate_writes_done() {
+    let (_tmp, clone) = setup_repo();
+
+    // Strict gate — mirrors this repo's .tickets/config.toml and the #178 repro.
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_validation_evidence = \"true\"\n",
+    )
+    .unwrap();
+
+    // Ticket with two validation criteria.
+    std::fs::write(
+        clone.join(".tickets/02-ev.md"),
+        "---\nid: \"02\"\ntitle: \"Ev\"\nstatus: in_progress\nblocked_by: []\n\
+         validation_criteria:\n  - \"c1 works\"\n  - \"c2 works\"\n---\n\n\
+         # Ev\n\n## Acceptance criteria\n\n- [ ] A\n- [ ] B\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add ev"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // DEFAULT TEXT MODE (no `-o json`) — the #178 trigger.
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--check-all",
+            "--evidence",
+            "c1 evidence",
+            "--evidence",
+            "c2 evidence",
+            "--resolution",
+            "done",
+        ],
+    );
+    assert_eq!(code, 0, "text-mode evidence close must not crash: {}", out);
+    assert!(
+        !out.contains("crash: writing"),
+        "must not hit the fs-write crash path: {}",
+        out
+    );
+
+    let content = std::fs::read_to_string(clone.join(".tickets/02-ev.md")).unwrap();
+    assert!(
+        content.contains("status: done"),
+        "must reach done: {}",
+        content
+    );
+    assert!(
+        content.contains("### Verification"),
+        "must record evidence in a Verification section: {}",
+        content
+    );
+    assert!(
+        content.contains("c1 evidence") && content.contains("c2 evidence"),
+        "must record both evidence values: {}",
+        content
+    );
+}
+
+/// Regression for #178: when the ticket file can't be written, the operational
+/// error must surface the underlying OS cause (errno / source chain), not a bare
+/// `crash: writing <path>`. Confirms the reported symptom is a returned io error
+/// (exit 2), identical across text and JSON output modes.
+#[cfg(unix)]
+#[test]
+fn test_close_write_failure_surfaces_os_error() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let (_tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/02-ro.md"),
+        "---\nid: \"02\"\ntitle: \"RO\"\nstatus: in_progress\nblocked_by: []\n\
+         validation_criteria:\n  - \"c1 works\"\n---\n\n\
+         # RO\n\n## Acceptance criteria\n\n- [ ] A\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add ro"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Make the ticket file read-only so the write step fails.
+    let path = clone.join(".tickets/02-ro.md");
+    let mut perms = std::fs::metadata(&path).unwrap().permissions();
+    perms.set_mode(0o444);
+    std::fs::set_permissions(&path, perms).unwrap();
+
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--check-all",
+            "--evidence",
+            "c1 evidence",
+            "--resolution",
+            "done",
+        ],
+    );
+
+    // Restore perms so the tempdir can be cleaned up.
+    let mut perms = std::fs::metadata(&path).unwrap().permissions();
+    perms.set_mode(0o644);
+    std::fs::set_permissions(&path, perms).unwrap();
+
+    assert_eq!(code, 2, "write failure is an operational error: {}", out);
+    assert!(
+        out.contains("crash: writing"),
+        "should report the failing write: {}",
+        out
+    );
+    assert!(
+        out.contains("os error") || out.contains("Permission denied"),
+        "must surface the underlying OS cause, not just the path: {}",
+        out
+    );
+}
+
 #[test]
 fn test_init_creates_tickets_dir_and_config() {
     let tmp = tempfile::tempdir().unwrap();

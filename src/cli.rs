@@ -519,11 +519,11 @@ pub fn run() -> i32 {
                 if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
                     let envelope = format!(
                         "{{\"ok\":false,\"error\":{{\"kind\":\"io\",\"message\":{}}},\"exit_code\":2}}",
-                        json_escape(&e.to_string())
+                        json_escape(&format!("{e:#}"))
                     );
                     eprintln!("{}", envelope);
                 }
-                eprintln!("tkt: {} crash: {}", crate::color::sym_err(), e);
+                eprintln!("tkt: {} crash: {:#}", crate::color::sym_err(), e);
                 (2, Some("io"))
             }
         }
