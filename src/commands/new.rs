@@ -129,7 +129,7 @@ pub fn run(
         tags: &effective_tags,
         requires,
     });
-    std::fs::write(&path, &content)?;
+    crate::core::atomic_write(&path, &content)?;
 
     let rel_path = format!(".tickets/{}", filename);
     git::add(&txn.repo, &[&rel_path])?;
@@ -169,7 +169,7 @@ pub fn run(
                 tags: &effective_tags,
                 requires,
             });
-            std::fs::write(&path2, &content2)?;
+            crate::core::atomic_write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;
             git::commit(&txn.repo, &format!("chore(tickets): new {} {}", tid2, slug))?;

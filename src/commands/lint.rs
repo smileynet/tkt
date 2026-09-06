@@ -62,7 +62,7 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
             if check {
                 eprintln!("  would change: {}", name);
             } else {
-                std::fs::write(path, &canonical)?;
+                crate::core::atomic_write(path, &canonical)?;
                 eprintln!("  ✓ {}", name);
             }
         }

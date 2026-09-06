@@ -116,7 +116,7 @@ pub fn run(
                     tags: &effective_tags,
                     requires,
                 });
-                std::fs::write(&path, &content)?;
+                crate::core::atomic_write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));
             }
             for f in &files {

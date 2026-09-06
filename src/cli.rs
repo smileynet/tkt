@@ -514,6 +514,9 @@ pub fn run() -> i32 {
                     emit_json_error(de);
                 }
                 eprintln!("tkt: {} {}", crate::color::sym_err(), de.message);
+                if let Some(hint) = &de.hint {
+                    eprintln!("  hint: {}", hint);
+                }
                 (code, Some(de.kind.as_str()))
             } else {
                 if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {

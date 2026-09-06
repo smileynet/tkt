@@ -2330,10 +2330,12 @@ fn test_close_evidence_text_mode_strict_gate_writes_done() {
     );
 }
 
-/// Regression for #178: when the ticket file can't be written, the operational
-/// error must surface the underlying OS cause (errno / source chain), not a bare
-/// `crash: writing <path>`. Confirms the reported symptom is a returned io error
-/// (exit 2), identical across text and JSON output modes.
+/// Regression for #178: when the ticket file can't be written, the failure is
+/// surfaced as an environment I/O error (exit 2) that names the underlying OS
+/// cause and carries an actionable hint — not a bare "crash". Writes are atomic
+/// (temp + rename), so the write is blocked by making the *directory*
+/// unwritable (renaming into it fails), not the file (rename replaces the dir
+/// entry regardless of the old file's mode).
 #[cfg(unix)]
 #[test]
 fn test_close_write_failure_surfaces_os_error() {
@@ -2351,11 +2353,12 @@ fn test_close_write_failure_surfaces_os_error() {
     git(&clone, &["commit", "-qm", "add ro"]);
     git(&clone, &["push", "-q", "origin", "HEAD:main"]);
 
-    // Make the ticket file read-only so the write step fails.
-    let path = clone.join(".tickets/02-ro.md");
-    let mut perms = std::fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o444);
-    std::fs::set_permissions(&path, perms).unwrap();
+    // Make the .tickets/ directory read-only so the atomic temp-write / rename
+    // into it fails.
+    let tickets_dir = clone.join(".tickets");
+    let mut perms = std::fs::metadata(&tickets_dir).unwrap().permissions();
+    perms.set_mode(0o555);
+    std::fs::set_permissions(&tickets_dir, perms).unwrap();
 
     let (code, out) = run_tkt(
         &clone,
@@ -2371,19 +2374,29 @@ fn test_close_write_failure_surfaces_os_error() {
     );
 
     // Restore perms so the tempdir can be cleaned up.
-    let mut perms = std::fs::metadata(&path).unwrap().permissions();
-    perms.set_mode(0o644);
-    std::fs::set_permissions(&path, perms).unwrap();
+    let mut perms = std::fs::metadata(&tickets_dir).unwrap().permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(&tickets_dir, perms).unwrap();
 
-    assert_eq!(code, 2, "write failure is an operational error: {}", out);
+    assert_eq!(code, 2, "write failure is an I/O error (exit 2): {}", out);
     assert!(
-        out.contains("crash: writing"),
+        !out.contains("crash"),
+        "environment I/O failure must not be labeled a 'crash': {}",
+        out
+    );
+    assert!(
+        out.contains("cannot write"),
         "should report the failing write: {}",
         out
     );
     assert!(
         out.contains("os error") || out.contains("Permission denied"),
         "must surface the underlying OS cause, not just the path: {}",
+        out
+    );
+    assert!(
+        out.contains("hint:") && out.contains("chmod"),
+        "must include an actionable hint: {}",
         out
     );
 }

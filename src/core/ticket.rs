@@ -404,10 +404,9 @@ impl TicketFile {
         format!("{}\n{}", header, self.body)
     }
 
-    /// Write the ticket file back to disk.
+    /// Write the ticket file back to disk (atomically, via temp + rename).
     pub fn write(&self) -> Result<()> {
-        std::fs::write(&self.path, self.serialize())
-            .with_context(|| format!("writing {}", self.path.display()))
+        crate::core::atomic_write(&self.path, &self.serialize())
     }
 }
 
