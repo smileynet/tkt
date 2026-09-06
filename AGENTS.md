@@ -148,7 +148,8 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 - `cargo clippy` must produce 0 warnings; `cargo fmt --check` must produce no diff
 - Integration tests MUST set `DO_NOT_TRACK=1` on child processes (prevents ambient env pollution)
 - Unit tests must NOT assert specific consent state (result depends on ambient env vars)
-- Windows: `std::fs::rename` cannot overwrite — always delete destination before rename
+- Windows: `std::fs::rename` cannot overwrite — always delete destination before rename (encoded in `core::atomic_write` and `renumber.rs`; the "cannot overwrite" claim may be stale on modern std — under verification in #181)
+- Ticket writes go through `core::atomic_write` (temp-file + rename) so a failed/interrupted write never leaves a torn ticket file; a failed write surfaces as `DomainError { Io }` with a hint (`cannot write <path>: <errno>`), exit 2. `crash: writing …` (now shows the errno) is an fs/permission error (read-only file, locked, read-only worktree) — NOT a validation bug; never hand-edit `status: done` to work around it (that bypasses the close gates — the exact anti-pattern #178/#179 fixed)
 - Codex review dispatch: `codex exec --dangerously-bypass-approvals-and-sandbox` (bwrap namespace restriction on this machine; `codex review --base <SHA>` cannot combine --base with custom prompt)
 - cargo-dist binary name is `dist` (not `cargo dist`) — `cargo dist --version` will fail; use `dist --version`
 - New mutation commands MUST route push through a push-gated path (GitTransaction respects `push.enabled`; direct `git::push_with_retry` calls must check `pcfg.push_enabled` first)

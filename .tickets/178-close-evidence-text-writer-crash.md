@@ -5,9 +5,11 @@ status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
-  - "Operational errors surface the OS cause: cli.rs:526 uses {:#} so 'crash: writing <PATH>' includes the errno/source chain"
-  - "tkt close <id> --check-all --evidence \"...\" completes in text mode (no 'crash: writing', ticket reaches status: done, evidence recorded)"
-  - "A regression test covers text-mode close --evidence under require_validation_evidence=true (exit 0, no crash, status done, Verification section)"
+  - "Operational errors surface the OS cause: cli.rs uses {:#} so 'crash: writing <PATH>' includes the errno/source chain (done)"
+  - "Ticket writes are atomic (shared temp+rename helper) so a failed/interrupted write never leaves a torn or half-updated ticket file"
+  - "fs-write failures surface as an Io environment error with an actionable hint (not 'crash'), hint printed in human output, exit code stays 2"
+  - "The write-before-publish partial-state exposure in close/claim/edit is addressed or clearly surfaced (not a bare bail)"
+  - "Regression tests cover text-mode close --evidence success and write-failure surfacing; updated for the new Io message shape"
 ---
 
 # close --evidence crashes the text-mode file writer
@@ -95,60 +97,141 @@ So the current suite does **not** reproduce this bug.
 3. **Non-reproduced content edge case** — e.g. a pre-existing malformed `.tickets/NN-slug.md`
    frontmatter continuation line fed to `TicketFile::parse`.
 
-### The diagnostic gap that is blocking a real fix
+### Root cause — CONFIRMED (2026-09-06, reproduced)
 
-`cli.rs:526` prints the error with `{}` (Display), which **drops the underlying OS error / source
-chain** (the errno behind `writing <PATH>`). We cannot confirm hypothesis 1 vs 3 without it. This is
-the single highest-leverage change and it gates the rest of the ticket.
+Hypothesis 1 is confirmed. After surfacing the errno (see Progress §1), a read-only ticket file
+reproduces the **exact** reported symptom:
 
-## Proposed fix
+```
+tkt: ✗ crash: writing /…/03-ro.md: Permission denied (os error 13)   # exit 2
+```
 
-The prior framing ("fix the text-mode writer") is not supported by the code: the write is shared
-with JSON mode and no crashing code path was found. Sequence the work diagnosis-first so we fix the
-real cause rather than a guessed one.
+JSON mode fails **identically** (exit 2, same errno) — disproving the "JSON succeeds / text crashes"
+divergence, which was an artifact of differing filesystem state between the reporter's two runs. The
+`--evidence` correlation was coincidental. This is an **environmental I/O failure**, not a
+text-mode-writer bug and not a panic.
 
-1. **Surface the real error (do this first — it unblocks everything).** Change the surfacing at
-   `cli.rs:526` from `{}` to `{:#}` (anyhow's alternate Display walks the full source chain) so
-   `crash: writing <PATH>` becomes e.g. `crash: writing …/02-ev.md: Permission denied (os error
-   13)`. Cheap, low-risk, and immediately distinguishes an fs/permission cause from any other. This
-   improves every operational-error message, not just this one.
+## Progress
 
-2. **Reproduce with the exact downstream config, then fix the confirmed cause.** The repro cites
-   `require_validation_evidence = "true"` (strict) + full evidence + text mode — a combination the
-   test suite never asserts as a *success*. Reproduce under that config with the errno now visible.
-   - If it's an **environmental fs error** (hypothesis 1): the fix is a clearer, actionable error
-     (name the path + errno + likely cause: "file may be read-only, locked, or on a read-only
-     worktree"), not a writer rewrite. Consider an **atomic write** (temp-file + rename on the same
-     filesystem, honoring the existing Windows delete-before-rename constraint) so a partial/failed
-     write never leaves the ticket half-updated — this also addresses the "close not applied, ticket
-     stuck `in_progress`" symptom regardless of the trigger.
-   - If it's a **content edge case** (hypothesis 3): capture the offending `.tickets/NN-slug.md`,
-     add it as a fixture, fix the parse/render.
+**§1 — errno surfacing (DONE, committed `17d4d7c`).** `cli.rs` human message and JSON envelope now
+use `{:#}` (anyhow alternate Display → full source chain). The errno was previously dropped by `{}`.
+This is the highest-leverage change and it confirmed the root cause above. Verified: `mise run
+check` green (fmt, clippy -D warnings, 77 tests).
 
-3. **Add the missing regression test** (AC-3). Combine `require_validation_evidence = "true"` +
-   full evidence + **default text mode** in a *success* assertion, and assert (a) exit 0, (b) no
-   `crash: writing` in output, (c) final `status: done`, (d) `### Verification` present. This is the
-   exact gap: existing strict-gate tests all assert *blocking* (exit 1); existing success tests use
-   default `warn`. Test belongs in `tests/integration.rs` near the evidence cluster (~`:2059`), via
-   the `run_tkt` binary harness (a suggested body is in `.scratch/research/178-tests-config.md`).
+**§2 — regression tests (DONE, committed `17d4d7c`).** Two tests added to `tests/integration.rs`:
+`test_close_evidence_text_mode_strict_gate_writes_done` (strict gate + full evidence + text mode
+success — the previously-untested downstream repro shape) and `test_close_write_failure_surfaces_os_error`
+(`#[cfg(unix)]`, read-only file → asserts exit 2 + the OS errno is surfaced).
 
-4. **Optional hardening** (only if cheap and in-scope): a text-vs-JSON parity test proving both
-   modes produce byte-identical on-disk results for the same `--evidence` input (directly disproves
-   the reported divergence), and an apply-twice-idempotency check on `append_resolution` (render
-   prior-art recommends the "apply twice → byte-identical" invariant; verify it isn't fence-blind).
+This already satisfies AC-1 and AC-4. The remaining work (below) is the substantive correctness
+improvement the research surfaced.
 
-### Note on the reported text-vs-JSON divergence
+## Additional fixes (evidence-backed — research in `.scratch/research/178b-*.md`)
 
-Since the write is byte-identical across modes, a genuine "JSON succeeds on the same tree" result
-would be new information contradicting the code reading — worth re-testing on the *same* tree (`tkt
--o json close …` vs `tkt close …`) as part of step 2. If JSON also fails there, the divergence was
-an artifact of different runs.
+The internal review surfaced a **second, more serious bug** and the error-class research shows the
+current surfacing is mislabeled. These are what "completing 178 correctly" actually requires.
+
+### A. Atomic write in a shared helper (prevents torn ticket files) — recommended
+
+`TicketFile::write` (`ticket.rs:407–410`) is a plain `std::fs::write` — truncate-in-place, **not
+atomic**. A crash / full disk / interrupt mid-write leaves a **truncated or corrupt ticket file**,
+and the ticket file *is* the database. Fix with the standard pattern: write to a temp file in the
+**same directory**, then rename over the target (atomic on POSIX and modern Windows).
+
+- **Scope it as a shared `core::atomic_write(path, contents)`** helper, not just in `TicketFile::write`.
+  The review found **three writers bypass `TicketFile::write`** with raw `std::fs::write`: `new.rs:132`
+  (+retry), `batch.rs:119`, `lint.rs:65`. Routing all of them through one helper gives full coverage;
+  `TicketFile::write` alone covers close/claim/edit/renumber/fix (6 callers).
+- **Atomicity, not durability.** Ticket files are git-committed, so git is the durability backstop —
+  a lost *uncommitted* write is recoverable. Atomicity (never a torn file) is the must-have; skip
+  `fsync`/`F_FULLFSYNC` on the hot path (avoids latency; macOS would need `F_FULLFSYNC` for true
+  durability anyway).
+- **Dependency decision required.** `tempfile` is currently a **dev-dependency only** (`Cargo.toml`);
+  using it in `src/` means promoting it to a runtime dep — which the "no new deps without
+  justification" constraint gates. Two options: (a) justify + promote `tempfile` (cargo itself uses
+  `tempfile::persist` for exactly this), or (b) hand-roll with std only (`write` temp + `fs::rename`),
+  no new dep. Recommend (b) unless `tempfile`'s Windows/cleanup handling is judged worth the dep.
+- **Windows caveat.** The atomic pattern renames *over* an existing file. AGENTS.md says
+  `std::fs::rename` can't overwrite on Windows (delete-first, per `renumber.rs:190–194`) — **but the
+  research flags this constraint as possibly stale** (modern std uses `MoveFileEx`/`ReplaceFile` and
+  *can* overwrite atomically). **Verify on Windows** before choosing delete-then-rename (which
+  reintroduces a non-atomic window) vs relying on atomic overwrite.
+
+### B. Classify fs-write failures as an environment error, not a "crash" — decision required
+
+The write failure currently surfaces as `tkt: ✗ crash: writing <path>: <errno>` (exit 2). The
+error-class research (clig.dev L4, Square L3, grizzlypeak L5) is unanimous: **reserve "crash"/panic
+language and the bug-class exit code for real bugs.** A read-only/locked file is an *expected
+environmental condition* — it should get a plain, actionable message + hint, not "crash." This
+mislabeling is precisely what seeded the downstream "tkt is broken → hand-edit status:done" folklore.
+
+The mechanics are already in place: `domain_bail!` has a `hint:` arm (`common.rs:14–46`), `DomainError`
+carries `hint`, `ErrorKind::Io` exists (but is **never produced** today), and `emit_json_error`
+already serializes the hint. Convert `TicketFile::write` (and the shared helper) to
+`domain_bail!(Io, "cannot write {}: {}", path, err, hint: "the file may be read-only, locked, or on a
+read-only worktree — e.g. chmod +w <path>")`.
+
+**Two gaps/decisions this forces:**
+- **Human branch drops the hint.** `cli.rs:514` prints `de.message` only — it never reads `de.hint`.
+  Must be fixed to print the hint (the JSON path already handles it).
+- **Exit-code conflict with the contract.** clig.dev says an environment error should be exit **1**,
+  but tkt's documented contract is **exit 2 = I/O** and the CLI-compat constraint forbids changing
+  observable behavior. `ErrorKind::Io.exit_code()` is already **2**, so routing through
+  `DomainError{Io}` **keeps exit 2** — satisfying the contract while dropping the "crash" label and
+  adding a hint. Recommend keeping exit 2 (honor the contract) but removing the "crash" wording for
+  the Io kind. *Do not* reclassify to exit 1 without an explicit contract decision.
+- **Regression test update.** `test_close_write_failure_surfaces_os_error` asserts
+  `contains("crash: writing")`; converting to `DomainError{Io}` removes the "crash:" prefix (routes
+  through the DomainError branch). Update the assertion to the new message shape; exit 2 still holds.
+
+### C. Fix the write-before-publish partial-state bug (NEW — found in review) → tracked in #180
+
+**This is a genuine bug not in the original report.** Split out to **#180** (affects close/claim/edit
+equally, not just evidence-close). In `close::run`,
+`file.write()` (`close.rs:218`) runs **before** `ctx.publish()` (commit+push, `close.rs:221`), and
+`MutationContext::publish` (`mutation.rs:130–146`) has **no rollback**. If the push fails (e.g.
+`push_with_retry` bails after two rejections), the ticket file on disk is already `status: done` with
+a Resolution appended, but the change is uncommitted/unpushed — local says done, remote does not.
+`claim.rs:39–42` and `edit.rs:152–156` share the identical exposure. (The `new`/`batch` path via
+`GitTransaction` *does* roll back, but only on a race-rejection, not a hard push failure.)
+
+Options: (a) pre-flight the push-ability / write-ability *before* mutating the file (fail-fast, per
+the error-class research), and/or (b) on publish failure, restore the file to its pre-write contents
+(the `GitTransaction::undo_commit` pattern at `git.rs:138–169` is the model). At minimum, document
+the exposure and surface a clear "written locally but not pushed — run `git push` or `tkt` will retry"
+message instead of a bare bail.
+
+### D. Cross-reference wiring + retire the folklore (AC-6) — DONE
+
+Reference #179 in this ticket's resolution and vice versa. AGENTS.md now carries the durable lesson
+(committed): *"`crash: writing …` (now shows the errno) is an fs/permission error … NOT a validation
+bug; never hand-edit `status: done` to work around it."* and the Windows-rename constraint is
+annotated as under verification in **#181**.
+
+## Follow-ups (split out of this ticket)
+
+- **#180** — write-before-publish partial-state rollback (close/claim/edit). Fix C above.
+- **#181** — cross-OS verification of `core::atomic_write` (Windows `fs::rename` overwrite, temp
+  cleanup, worktrees). Blocked by this ticket.
+- **#179** — the evidence-gate error UX (the other half of the downstream misdiagnosis). Together
+  with this ticket, retires teach-me's "hand-edit `status: done`" folklore.
+
+### Scope recommendation
+
+- **Must for "correct":** A (atomic write, hand-rolled std) + B (Io classification + hint, keep exit
+  2) + C (at least surface the partial-state clearly; ideally pre-flight) + D (cross-ref + AGENTS).
+- **Defer to follow-up tickets:** promoting `tempfile` (only if hand-roll proves insufficient),
+  full power-loss durability (fsync tier), a three-class error taxonomy / new exit codes (contract
+  change), the Windows `telemetry.rs:384` rename hazard, and any pre-flight TOCTOU spike.
+- **Verify separately:** the AGENTS.md "Windows rename cannot overwrite" staleness question.
 
 ## Acceptance criteria
 
-- [ ] Operational errors surface the underlying cause: `cli.rs:526` uses `{:#}` (or equivalent) so `crash: writing <PATH>` includes the OS errno / source chain
-- [ ] Root cause confirmed by reproduction under the downstream config (`require_validation_evidence = "true"` + full evidence + text mode), with the fix targeting the confirmed cause (clearer actionable error and/or atomic write; or a content-edge-case fix)
-- [ ] `tkt close <id> --check-all --evidence "…"` in text mode completes, applies the close, and records evidence in the `### Verification` section (no `crash: writing`, ticket reaches `status: done`)
-- [ ] A regression test covers text-mode `close --evidence` under the strict gate config, asserting exit 0, absence of `crash: writing`, `status: done`, and the Verification section
-- [ ] The JSON-mode path remains correct (ideally a text-vs-JSON on-disk parity assertion)
-- [ ] Cross-referenced with #179 (the evidence-gate error UX) — the end-to-end evidence close works in both modes, retiring the downstream "hand-edit status:done" workaround only once both land
+- [x] Operational errors surface the underlying cause: `cli.rs` uses `{:#}` so `crash: writing <PATH>` includes the OS errno / source chain (done, `17d4d7c`)
+- [x] Root cause confirmed by reproduction under the downstream config (strict gate + full evidence + text mode): environmental `std::fs::write` failure, identical in text and JSON mode (done)
+- [x] A regression test covers text-mode `close --evidence` under the strict gate (exit 0, no `crash: writing`, `status: done`, Verification section) + a write-failure test asserting the OS errno is surfaced (done, `17d4d7c`)
+- [x] Ticket writes are atomic (shared `core::atomic_write` temp+rename; covers `TicketFile::write` + the `new`/`batch`/`lint` bypass writers) so a failed/interrupted write never leaves a torn or half-updated ticket file (done, `45a2227`; e2e verified zero temp leftovers)
+- [x] fs-write failures surface as an environment error (Io kind) with an actionable `hint`, not "crash" language; the human branch prints the hint; exit code stays 2 (contract); the regression test is updated to the new message shape (done, `45a2227`)
+- [x] The write-before-publish partial-state exposure is documented and split out to #180 (it affects close/claim/edit equally, beyond evidence-close)
+- [x] The JSON-mode path remains correct — e2e verified: the Io error + hint emit identically in human and JSON modes (write path is mode-independent)
+- [x] Cross-referenced with #179 — the end-to-end evidence close works in both modes; AGENTS.md gained the "crash: writing is an fs error, not a validation bug — don't hand-edit status:done" note; follow-ups split to #180/#181
