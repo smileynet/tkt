@@ -77,7 +77,6 @@ impl DomainError {
         }
     }
 
-    #[allow(dead_code)]
     pub fn with_hint(kind: ErrorKind, message: String, hint: String) -> Self {
         Self {
             kind,

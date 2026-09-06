@@ -391,3 +391,125 @@ fn parse_evidence(evidence: &[String], criteria_count: usize) -> Result<Vec<Stri
         .map(|opt| opt.unwrap_or_default())
         .collect())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::parse_evidence;
+    use crate::{DomainError, ErrorKind};
+
+    fn ev(items: &[&str]) -> Vec<String> {
+        items.iter().map(|s| s.to_string()).collect()
+    }
+
+    /// Downcast an error to DomainError for inspecting kind/message/hint.
+    fn as_domain(err: anyhow::Error) -> DomainError {
+        // DomainError isn't Clone; rebuild the fields we assert on.
+        let de = err
+            .downcast_ref::<DomainError>()
+            .expect("expected a DomainError");
+        DomainError {
+            kind: de.kind,
+            message: de.message.clone(),
+            hint: de.hint.clone(),
+        }
+    }
+
+    #[test]
+    fn positional_fills_in_order() {
+        let got = parse_evidence(&ev(&["a", "b", "c"]), 3).unwrap();
+        assert_eq!(got, vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn named_index_targets_specific_slot() {
+        let got = parse_evidence(&ev(&["2=b", "1=a", "3=c"]), 3).unwrap();
+        assert_eq!(got, vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn positional_and_named_interleave() {
+        // Named writes slot 2; positional items fill the remaining slots (1 then 3),
+        // skipping the already-filled slot 2. This is the edge the research flagged.
+        let got = parse_evidence(&ev(&["2=B", "A", "C"]), 3).unwrap();
+        assert_eq!(got, vec!["A", "B", "C"]);
+    }
+
+    #[test]
+    fn named_out_of_range_is_gate_failed() {
+        let err = parse_evidence(&ev(&["4=x"]), 3).unwrap_err();
+        let de = as_domain(err);
+        assert_eq!(de.kind, ErrorKind::GateFailed);
+        assert!(de.message.contains("does not exist"), "{}", de.message);
+    }
+
+    #[test]
+    fn named_index_zero_is_rejected() {
+        let err = parse_evidence(&ev(&["0=x"]), 3).unwrap_err();
+        assert_eq!(as_domain(err).kind, ErrorKind::GateFailed);
+    }
+
+    #[test]
+    fn duplicate_named_index_is_rejected() {
+        let err = parse_evidence(&ev(&["1=a", "1=b"]), 2).unwrap_err();
+        let de = as_domain(err);
+        assert_eq!(de.kind, ErrorKind::GateFailed);
+        assert!(de.message.contains("duplicate"), "{}", de.message);
+    }
+
+    #[test]
+    fn positional_then_named_collision_is_duplicate() {
+        // Positional fills slot 1, then a named 1= targets the same slot → duplicate.
+        let err = parse_evidence(&ev(&["a", "1=b"]), 2).unwrap_err();
+        assert!(as_domain(err).message.contains("duplicate"));
+    }
+
+    #[test]
+    fn more_evidence_than_criteria_overflows() {
+        let err = parse_evidence(&ev(&["a", "b", "c"]), 2).unwrap_err();
+        let de = as_domain(err);
+        assert_eq!(de.kind, ErrorKind::GateFailed);
+        assert!(de.message.contains("more evidence items"), "{}", de.message);
+    }
+
+    #[test]
+    fn unfilled_plural_names_both_counts_and_missing() {
+        // 1 of 3 supplied → 2 missing → plural "criteria", names count + indices.
+        let err = parse_evidence(&ev(&["a"]), 3).unwrap_err();
+        let de = as_domain(err);
+        assert_eq!(de.kind, ErrorKind::GateFailed);
+        assert!(
+            de.message.contains("2 of 3 validation criteria"),
+            "expected both counts: {}",
+            de.message
+        );
+        assert!(de.message.contains("missing: 2, 3"), "{}", de.message);
+        // Hint carries the repeatable/N=text syntax + a corrected-command template.
+        let hint = de.hint.expect("hint present");
+        assert!(hint.contains("one --evidence per criterion"), "{hint}");
+        assert!(hint.contains("N=text"), "{hint}");
+        assert!(hint.contains("tkt close <id> --check-all"), "{hint}");
+        // Template has one --evidence per criterion (3), plus the one in the prose
+        // ("supply one --evidence per criterion") → 4 total occurrences.
+        assert_eq!(hint.matches("--evidence").count(), 4, "{hint}");
+    }
+
+    #[test]
+    fn unfilled_singular_uses_criterion() {
+        // Fill slot 1 of 2 → exactly slot 2 missing → singular "criterion".
+        let err = parse_evidence(&ev(&["1=only"]), 2).unwrap_err();
+        let de = as_domain(err);
+        assert!(
+            de.message
+                .contains("1 of 2 validation criterion still need"),
+            "expected singular form: {}",
+            de.message
+        );
+        assert!(de.message.contains("missing: 2"), "{}", de.message);
+    }
+
+    #[test]
+    fn exact_fill_succeeds() {
+        let got = parse_evidence(&ev(&["x", "y"]), 2).unwrap();
+        assert_eq!(got, vec!["x", "y"]);
+    }
+}

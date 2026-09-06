@@ -36,6 +36,10 @@ tags: ["cli"]
       keep the branch and document why.
 - [ ] Run the full test suite on Linux and Windows; confirm atomic_write's temp-file naming/cleanup
       works (no leftover `.tmp.<pid>` files on any OS).
+- [ ] **Harden the temp-file name** (independent-review finding #178-1): `core::atomic_write` names
+      the temp `.{name}.tmp.{pid}` — PID-only. It's benign today (sequential, no-async model; a
+      reused PID just truncates a stale temp), but a nanos/random suffix removes the theoretical
+      collision window and is cheap. Add while touching this code for the Windows verification.
 - [ ] Add a Windows equivalent of the write-failure regression test (or make the existing one
       cross-platform) so the Io-error surfacing is covered on Windows too.
 - [ ] Confirm atomic_write behaves correctly on git **worktrees** and on shared/virtual filesystems

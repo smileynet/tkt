@@ -81,6 +81,16 @@ indices. No unwrap/expect/panic site was found on the `--evidence` path.
 `N=` indices, multi-criteria, over-supply, and a real bare-remote+push run against a debug build —
 all exited 0 or failed *gracefully* as a `GateFailed` domain error (exit 1). Never `crash: writing`.
 
+> **Validation caveat (honest scope).** The reporter's *exact* claim — "text mode crashes, JSON mode
+> succeeds on the same tree" — was **never reproduced bit-for-bit**. The fix was arrived at by
+> **code-reading + reproducing the fs-error class** (a read-only file/dir yields the identical
+> `crash: writing …` symptom, now surfaced with the errno). The code proves the write path is
+> output-mode-independent, so the reported divergence is best explained by differing filesystem
+> state between the reporter's two runs — but that specific environment was not available to confirm.
+> If the symptom recurs, capture the reporter's OS, whether it was a git worktree, and the actual
+> `.tickets/NN.md` that failed, and re-test with the errno now visible. The delivered fix (atomic
+> write + errno-surfaced `DomainError{Io}`) addresses the fs-error class regardless.
+
 **The happy path is already tested and green.** `test_validation_criteria_and_evidence_flow`
 (`tests/integration.rs:2059`, positional evidence, asserts `### Verification` at `:2111`) and
 `test_evidence_named_mapping` (`:2128`) both close in default text mode with `--evidence` and pass.

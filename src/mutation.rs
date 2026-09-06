@@ -141,7 +141,7 @@ impl MutationContext {
                 crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
                 return Err(DomainError::with_hint(
                     crate::ErrorKind::Io,
-                    format!("committed locally, but the push failed: {e}"),
+                    format!("committed locally, but the push failed: {e:#}"),
                     "your change is saved in a local commit — nothing was lost. Run \
                      `git push` once the remote is reachable to publish it."
                         .to_string(),
