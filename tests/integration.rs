@@ -1296,6 +1296,63 @@ fn test_close_partial_evidence_kind_is_gate_failed() {
         "G5 must be gate_failed, not validation: {}",
         out
     );
+    // #179: the error names BOTH counts and which criteria are missing, and carries
+    // a hint with the repeatable/N=text syntax + a corrected-command template.
+    assert!(
+        out.contains("1 of 2 validation") && out.contains("missing: 2"),
+        "error must name expected+actual counts and the missing criteria: {}",
+        out
+    );
+    assert!(
+        out.contains("\"hint\"")
+            && out.contains("one --evidence per criterion")
+            && out.contains("N=text"),
+        "hint must explain the repeatable/N=text syntax: {}",
+        out
+    );
+}
+
+/// #179: with exactly one missing criterion, the parse_evidence message uses the
+/// singular "criterion" (not "criteria"). Force it with a 2-criterion ticket where
+/// one criterion is filled and one is left missing.
+#[test]
+fn test_close_evidence_error_singular_form() {
+    let (_tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[close]\nrequire_validation_evidence = \"true\"\n",
+    )
+    .unwrap();
+    std::fs::write(
+        clone.join(".tickets/02-two.md"),
+        "---\nid: \"02\"\ntitle: \"Two\"\nstatus: open\nblocked_by: []\n\
+         validation_criteria:\n  - \"first\"\n  - \"second\"\n---\n\n# Two\n\n\
+         ## Acceptance criteria\n\n- [x] A\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add two"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // Fill only criterion 1 (named) → exactly criterion 2 missing → singular branch.
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--check-all",
+            "--note",
+            "done",
+            "--evidence",
+            "1=first proof",
+        ],
+    );
+    assert_eq!(code, 1, "one missing criterion should block: {}", out);
+    assert!(
+        out.contains("1 of 2 validation criterion still need") && out.contains("missing: 2"),
+        "must use singular 'criterion' for a single missing item: {}",
+        out
+    );
 }
 
 #[test]

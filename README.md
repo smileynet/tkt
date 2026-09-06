@@ -109,10 +109,11 @@ tkt batch "api:Build API" "docs:Write docs" "tests:Add tests" --blocked-by 01
 ```bash
 tkt claim 03             # mark in-progress (visible to collaborators)
 tkt close 03 --note "Deployed to prod"
-tkt close 03 --check-all --evidence "All tests pass" --resolution "Shipped"
+# --evidence is repeatable — supply one per validation criterion:
+tkt close 03 --check-all --evidence "unit tests pass" --evidence "deployed to staging" --resolution "Shipped"
 ```
 
-`claim` is optional for solo work — `close` works directly on open tasks. Use `claim` in shared repos so others see what's taken.
+`claim` is optional for solo work — `close` works directly on open tasks. Use `claim` in shared repos so others see what's taken. When a ticket has N `validation_criteria`, pass one `--evidence` per criterion (positional in order, or `N=text` to target criterion N).
 
 ### Edit tasks
 

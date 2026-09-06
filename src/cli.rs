@@ -164,7 +164,8 @@ enum Commands {
         /// Force close even if all ACs are unchecked
         #[arg(long)]
         force: bool,
-        /// Evidence for validation criteria (repeatable, positional or N=text for named)
+        /// Evidence of validation — supply one per validation criterion. Repeatable:
+        /// positional items fill criteria in order, or use N=text to target criterion N
         #[arg(long, num_args = 1, action = clap::ArgAction::Append)]
         evidence: Vec<String>,
     },

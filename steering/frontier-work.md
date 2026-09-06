@@ -47,6 +47,7 @@ When a ticket's acceptance criteria are all met:
    - Acceptance criteria must be checked (`require_checked_acs`)
    - Validation criteria must exist (`require_validation_criteria`)
    - Evidence must be provided (`require_validation_evidence`)
+   `--evidence` is **repeatable — supply one per validation criterion** (positional in order, or `N=text` to target criterion N). A ticket with 3 criteria needs 3 `--evidence` values.
    Use `--force` only with explicit justification.
 3. If ticket originated from GitHub: `gh issue close <number>` (only if `CREW_TICKET_SYNC=true`)
 4. Update the plan task graph — mark the ticket complete, note any fog cleared (`tkt sync-plan` reports drift; `--check` gates CI)

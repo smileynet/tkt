@@ -359,15 +359,31 @@ fn parse_evidence(evidence: &[String], criteria_count: usize) -> Result<Vec<Stri
         .map(|(i, _)| i + 1)
         .collect();
     if !unfilled.is_empty() {
-        domain_bail!(
-            GateFailed,
-            "--evidence: criteria {} have no evidence (provide positional or named evidence for each)",
-            unfilled
-                .iter()
-                .map(|n| n.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        );
+        let missing = unfilled
+            .iter()
+            .map(|n| n.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let need = unfilled.len();
+        // Singular/plural guard (English-only).
+        let criteria_word = if need == 1 { "criterion" } else { "criteria" };
+        // A corrected-command template with one --evidence per criterion.
+        let evidence_flags = (0..criteria_count)
+            .map(|_| "--evidence \"<…>\"".to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
+        return Err(crate::DomainError::with_hint(
+            crate::ErrorKind::GateFailed,
+            format!(
+                "--evidence: {need} of {criteria_count} validation {criteria_word} still need \
+                 evidence (missing: {missing})"
+            ),
+            format!(
+                "supply one --evidence per criterion (positional in order, or N=text to \
+                 target criterion N), e.g.:\n      tkt close <id> --check-all {evidence_flags}"
+            ),
+        )
+        .into());
     }
 
     Ok(result

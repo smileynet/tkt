@@ -23,7 +23,7 @@ This project uses [tkt](https://github.com/smileynet/tkt) for work tracking. Tic
 ```
 tkt ready                                         # what to work on next
 tkt claim <id>                                    # mark as in_progress (shared repos)
-tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done
+tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done (--evidence: 1 per validation criterion, repeatable)
 tkt new <slug> --title "..." [--tags stream]      # create work (defaults to open, on the frontier)
 tkt edit <id> --status backlog                    # park a ticket off the frontier (deferred work)
 tkt validate --brief                              # check for issues
@@ -54,7 +54,7 @@ const SNIPPET_CLAUDE: &str = r#"## Tickets
 
 This project uses tkt for work tracking. Run `tkt ready` to see what's available.
 
-Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "...", validate --brief
+Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "..." (--evidence: 1 per criterion), validate --brief
 Create: new <slug> --title "..." [--tags stream] [--blocked-by N,N] [--priority P]  (defaults to open)
 Edit: edit <id> --status backlog (park deferred work), --status open (unpark)
 
@@ -85,7 +85,7 @@ Reach done only via `tkt close` — never hand-edit status to done (skips close 
 ## Commands
 - `tkt ready` — see unblocked tickets (frontier)
 - `tkt claim <id>` — mark in_progress (shared repos only)
-- `tkt close <id> --check-all --evidence "..." --resolution "..."` — mark done
+- `tkt close <id> --check-all --evidence "..." --resolution "..."` — mark done (`--evidence`: one per validation criterion, repeatable)
 - `tkt new <slug> --title "..." [--tags stream]` — create work (defaults to open)
 - `tkt edit <id> --status backlog` — park a ticket off the frontier (deferred work)
 - `tkt validate --brief` — check for issues
@@ -95,7 +95,7 @@ Reach done only via `tkt close` — never hand-edit status to done (skips close 
 2. Read the ticket file completely
 3. Do the work described
 4. Verify acceptance criteria
-5. `tkt close <id> --check-all --evidence "proof" --resolution "what was done"`
+5. `tkt close <id> --check-all --evidence "proof" --resolution "what was done"` (one `--evidence` per validation criterion)
 
 ## Discovered work
 Create a separate, actionable ticket (defaults to open); add `--blocked-by` if it depends on current work.
@@ -115,7 +115,7 @@ Reach done only via `tkt close` — never hand-edit status to done (skips close 
 ## Commands
 tkt ready              # frontier (open + deps done + env match)
 tkt claim <id>         # status → in_progress, pushed
-tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done
+tkt close <id> --check-all --evidence "..." --resolution "..."  # mark done (--evidence: 1 per validation criterion, repeatable)
 tkt new <slug> --title "..." [--tags stream]  # create work (defaults to open)
 tkt edit <id> --status backlog   # park a ticket off the frontier (deferred work)
 tkt validate --brief   # check for issues
@@ -143,7 +143,7 @@ Status: open (frontier, the default) → in_progress → done; backlog = parked,
 New work defaults to open. Use --status backlog only for deliberately deferred work.
 Reach done only via `tkt close` — never hand-edit status to done (skips close gates).
 
-Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "...", validate --brief
+Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "..." (--evidence: 1 per criterion), validate --brief
 Create: new <slug> --title "..." [--tags stream] [--blocked-by N,N]  (defaults to open)
 Park: edit <id> --status backlog (deferred work only)
 
