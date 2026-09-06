@@ -1,7 +1,7 @@
 ---
 id: "179"
 title: "tkt close: per-criterion --evidence requirement is undiscoverable; error omits count + syntax"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
