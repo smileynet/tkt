@@ -50,17 +50,30 @@ commit_preprocessors = [
     { pattern = '\\(#([0-9]+)\\)', replace = "([#${1}](https://github.com/smileynet/tkt/issues/${1}))" },
 ]
 commit_parsers = [
-    { message = "^feat", group = "<!-- 0 -->Added" },
-    { message = "^fix", group = "<!-- 1 -->Fixed" },
-    { message = "^perf", group = "<!-- 2 -->Changed" },
-    { message = "^refactor", group = "<!-- 2 -->Changed" },
-    { message = "^docs", group = "<!-- 3 -->Documentation" },
+    # --- Skip noise (evaluated first; first match wins) ---
     { message = "^chore\\(release\\)", skip = true },
     { message = "^chore\\(tickets\\)", skip = true },
     { message = "^chore\\(deps\\)", skip = true },
     { message = "^ticket", skip = true },
     { message = "^test", skip = true },
+    { message = "^docs", skip = true },
+    { message = "^ci", skip = true },
+    { message = "^build", skip = true },
+    { message = "^style", skip = true },
     { message = "^chore", skip = true },
+    { message = "^Merge ", skip = true },
+    { message = "^revert", skip = true },
+    { footer = "^changelog: ?ignore", skip = true },
+    # --- Breaking changes surface first (protect_breaking_commits keeps them) ---
+    { message = "^\\w+!", group = "<!-- 0 -->Changed" },
+    { body = ".*BREAKING CHANGE", group = "<!-- 0 -->Changed" },
+    # --- Kept, user-facing ---
+    { message = "^feat", group = "<!-- 1 -->Added" },
+    { message = "^fix", group = "<!-- 2 -->Fixed" },
+    { message = "^perf", group = "<!-- 3 -->Changed" },
+    { message = "^refactor", group = "<!-- 3 -->Changed" },
+    # --- Catch-all: keep unconventional commits (never silently drop) ---
+    { message = ".*", group = "<!-- 4 -->Changed" },
 ]
 protect_breaking_commits = true
 filter_commits = false
