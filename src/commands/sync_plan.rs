@@ -106,7 +106,10 @@ pub fn run(
     }
 
     if fix && !dry_run && fixed_count > 0 {
-        std::fs::write(&plan, &plan_text)?;
+        // Route through atomic_write (temp-file + rename) so an interrupted
+        // write never leaves a torn plan file — same guarantee ticket writes
+        // get (AGENTS.md constraint). Was std::fs::write (defect, #183).
+        core::atomic_write(&plan, &plan_text)?;
     }
 
     let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();

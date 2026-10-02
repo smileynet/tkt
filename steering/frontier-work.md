@@ -32,9 +32,18 @@ When tickets exist and no specific task is given:
 4. If `Reporter: Codex` and `Confirmation status: unconfirmed`, independently
    reproduce every finding before editing. Mark each confirmed, rejected, or
    obsolete with evidence; never accept Codex's diagnosis or remedy on authority.
-5. Do the work described in "What to build"
-6. Verify all acceptance criteria pass
-7. Mark done + update plan (see below)
+5. Verify the ticket's load-bearing premises against L1 sources before building.
+   A confidently-worded ticket is a hypothesis, not a spec — its "what to build"
+   can rest on a stale or wrong fact. Check the facts the work depends on against
+   primary sources (crate metadata/`Cargo.toml`, library source, a real HTTP/CLI
+   probe), not the ticket's assertion. If a premise is wrong, correct the ticket
+   first (intent-preserving), then build. (Field evidence: a single session
+   overturned four ticket premises this way — "upgrade dep X alone" that a pin
+   made impossible, "new dependency" that was already present, "the API returns
+   Err" that actually panics, a version target that was never released.)
+6. Do the work described in "What to build"
+7. Verify all acceptance criteria pass
+8. Mark done + update plan (see below)
 
 ## Marking Done
 
@@ -84,6 +93,8 @@ The test: *could this realistically be worked next once its blockers clear?* If 
 - If a ticket reveals new work: create a *separate* ticket for it rather than expanding the current one. Default it to `open` (or `--blocked-by` the current ticket if it truly depends on this work finishing) — only use `--status backlog` if it's genuinely deferred, not just "later." The goal is to keep the current ticket scoped, not to hide the new work.
 - If context is exhausted: `/handoff` and start fresh for the next ticket
 
-## PLAN.md is Authoritative
+## The plan is authoritative
 
 The plan is the single source of truth for work status. Tickets provide detail; the plan provides the map. Never duplicate status in HANDOFF.md or AGENTS.md — reference the plan instead.
+
+`tkt sync-plan` reconciles the plan against ticket status. Its default plan path is `docs/plan.md` (override with a positional arg), and it reads a Markdown status table (`| id | title | status |`). See ADR 0002 for the plan-format direction (plan-as-projection primary, narrative opt-in).
