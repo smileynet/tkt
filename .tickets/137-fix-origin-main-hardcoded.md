@@ -3,7 +3,7 @@ id: "137"
 title: "Fix origin/main hardcoded in race detection"
 status: open
 blocked_by: []
-priority: medium
+priority: high
 validation_criteria:
   - "race detection works with master branch and non-origin remotes"
 ---
