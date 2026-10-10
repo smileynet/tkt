@@ -20,7 +20,7 @@ blocker is done, the canonical gate passes, and the changelog records the releas
 | 141 | Count uppercase checked acceptance boxes | open |
 | 152 | Fix indented-comment parser corruption | open |
 | 146 | Cut, tag, and document v0.3.1 | open |
-| 178 | Restore automatic push/PR CI verification | open |
+| 185 | Restore automatic push/PR CI verification | open |
 
 ## Quality, integrity, and dogfooding
 
@@ -40,7 +40,8 @@ requires promotion.
 | 175 | Flag tickets with no source reference | open |
 | 176 | Improve new-ticket body template and add body input | open |
 | 177 | Synchronize ticket-content guidance | open |
-| 179 | Reconcile or retire the historical parity harness | open |
+| 181 | Verify atomic ticket writes across Windows and Linux | open |
+| 186 | Reconcile or retire the historical parity harness | open |
 
 ## v0.4.0 — agent experience and extensions
 
@@ -53,6 +54,8 @@ patch release.
 | 138 | Complete the machine-readable capabilities manifest | open |
 | 161 | Support aggregate reporter provenance in steering | open |
 | 168 | Consider advisory nudges for tag-less/backlog work | backlog |
+| 182 | Decide a delete/cancel lifecycle mechanism | backlog |
+| 184 | Implement opt-in narrative sync-plan support | open |
 | 79 | Safely undo the last tkt mutation | open |
 | 83 | Edit a ticket body through the configured editor | open |
 | 86 | One-way GitHub issue import | open |
