@@ -21,6 +21,8 @@ gate passes, and the changelog records the release.
 | 141 | Count uppercase checked acceptance boxes | open |
 | 152 | Fix indented-comment parser corruption | open |
 | 181 | Verify atomic writes across Windows and Linux | open |
+| 188 | Reject ambiguous duplicate frontmatter keys | open |
+| 189 | Unify env and requires into one eligibility model | open |
 | 146 | Cut, tag, and document v0.3.1 | open |
 
 ## Quality, integrity, and dogfooding
@@ -43,6 +45,8 @@ requires promotion.
 | 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | open |
 | 185 | Restore automatic push/PR CI verification (release engineering, not a #146 blocker) | open |
 | 186 | Reconcile or retire the historical parity harness | open |
+| 190 | Parse known config keys into strict typed policies | open |
+| 191 | Centralize mutation effects and dry-run policy after #136 | backlog |
 
 ## v0.4.0 — agent experience and extensions
 

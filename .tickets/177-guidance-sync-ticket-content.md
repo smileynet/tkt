@@ -34,6 +34,12 @@ frontier-work.md, AGENTS.md, README):
 
 Best sequenced after #174/#176 land so the docs describe the new behavior.
 
+## Disposition update (2026-10-10)
+
+#179 completed the first criterion's evidence-index guidance. It is recorded checked here;
+the remaining documentation pass is intentionally blocked by #176 so it can describe the
+finished new-ticket body flow rather than an interim interface.
+
 ## Acceptance criteria
 
 - [x] A surface states the evidence↔validation_criteria 1:1-by-index rule plainly
