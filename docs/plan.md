@@ -68,6 +68,25 @@ patch release.
 | 90 | Open ticket-body URLs | open |
 | 93 | Pluggable ticket schema and meta fields | open |
 
+## v0.4.0 — native relations and label namespaces
+
+Close the structural gaps surfaced by the grey-matter skill-adaptation work by
+adding native concepts (a `parent` relation, config-declared label namespaces, and
+an `assignee` field) rather than emulating them with tag conventions and an external
+lint script. All additive and backward compatible. Work in the order below: the
+three roots first (`192`, `193`, `194`), their dependents, then the docs pass last.
+
+| ID | Work | Status |
+|---:|---|---|
+| 192 | parent field: schema, parse, serialize | open |
+| 193 | `[labels.*]` config: parse single-select + closed-value namespaces | open |
+| 194 | assignee field + claim-by-assignment + frontier honors it | open |
+| 195 | parent validation: dangling + cycle checks (after 192) | open |
+| 196 | parent CLI + query/capabilities surface (after 192) | open |
+| 197 | parent rollup + frontier semantics (after 192, 196) | open |
+| 198 | label-namespace validation: single-select + closed-set (after 193) | open |
+| 199 | docs, capabilities, CHANGELOG for parent/assignee/labels (after 194, 196-198) | open |
+
 ## Post-v0.3.1 lifecycle and plan design
 
 These decisions change core contracts or introduce an optional planning surface. Keep
