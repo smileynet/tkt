@@ -75,9 +75,12 @@ them out of the active frontier until the corrective release is complete.
 | 184 | Implement opt-in narrative sync-plan support | deferred (ticket open) |
 
 ADR 0002 makes plan-as-projection the strategic primary direction; narrative support
-is the opt-in secondary path in #184. Before committing capacity to #184, file a
-separate backlog ticket for the projection renderer so the primary direction has an
-explicit, independently schedulable owner.
+is the opt-in secondary path in #184. #187 owns the primary projection renderer; keep
+the two efforts independently schedulable.
+
+| ID | Work | Status |
+|---:|---|---|
+| 187 | Generate a derived sync-plan projection from the ticket corpus | backlog |
 
 ## Intentionally deferred backlog
 
