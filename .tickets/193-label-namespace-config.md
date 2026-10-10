@@ -14,8 +14,23 @@ validation_criteria:
 
 ## What to build
 
-TBD
+Teach tkt about **label namespaces** declared in `.tickets/config.toml`, so a tag
+prefix can be a validated, closed-value, optionally single-select axis (the
+native replacement for emulating GitLab scoped labels with a tag convention).
+
+```toml
+[labels.triage]
+single_select = true
+values = ["needs-triage", "needs-info", "ready-for-agent", "ready-for-human", "wontfix"]
+```
+
+- `src/config.rs`: parse `[labels.<ns>]` tables into a namespace -> {single_select,
+  values} map. Validation of tags against this lives in a sibling ticket (198).
+
+Additive: configs without `[labels.*]` load unchanged.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] `config.rs` parses `[labels.<ns>]` tables with a `single_select` bool and a `values` list
+- [ ] Unknown or malformed `[labels.*]` entries produce a clear config error
+- [ ] Existing configs without `[labels.*]` continue to load unchanged (backward compatible)

@@ -14,8 +14,19 @@ validation_criteria:
 
 ## What to build
 
-TBD
+Document the new native capabilities once the code lands.
+
+- `src/commands/capabilities.rs` and the `tkt init` agent snippet document
+  `parent`, `assignee`, and `[labels.*]`.
+- README and CHANGELOG describe the new fields/config as additive and backward
+  compatible.
+- An end-to-end test exercises an epic with children (rollup + frontier exclusion)
+  plus a single-select label namespace (closed-set + at-most-one enforcement).
+
+Closes out the native gap-closure (grey-matter proposal 01c).
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] `tkt capabilities` and the `init` agent snippet document `parent`, `assignee`, and `[labels.*]`
+- [ ] README and CHANGELOG describe the new fields/config as additive and backward compatible
+- [ ] An end-to-end test exercises an epic with children plus a single-select label namespace
