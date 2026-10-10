@@ -1,7 +1,7 @@
 ---
 id: "172"
 title: "Investigate: recurring skill/UX gaps (--evidence↔validation_criteria, --tags-only-at-new, TBD bodies)"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Each of the 3 reported gaps assessed: is it a skill-doc gap, a binary-UX gap, or both"
@@ -45,9 +45,9 @@ teach/handle them so every project doesn't re-learn them.
 
 ## Acceptance criteria
 
-- [ ] Each of the 3 gaps assessed: skill-doc gap, binary-UX gap, or both
-- [ ] Decision per gap: doc fix (skill/help text), UX change (binary), or won't-fix with rationale
-- [ ] Any agreed doc/UX changes filed as their own follow-up tickets or applied
+- [x] Each of the 3 gaps assessed: skill-doc gap, binary-UX gap, or both
+- [x] Decision per gap: doc fix (skill/help text), UX change (binary), or won't-fix with rationale
+- [x] Any agreed doc/UX changes filed as their own follow-up tickets or applied
 
 ## Context / notes
 
@@ -84,3 +84,11 @@ filed **#175** (advisory `no-source-reference` in validate).
 All three ACs satisfied: each gap assessed (skill-doc / binary-UX / both), a decision
 recorded per gap, and follow-ups filed. #172 closes once #177 is filed.
 
+## Resolution (2026-10-10)
+
+Completed the three-gap UX/skill investigation; recorded decisions and filed #174–#177 follow-ups.
+
+### Verification
+1. ✓ Each of the 3 reported gaps assessed: is it a skill-doc gap, a binary-UX gap, or both — "Disposition table assesses all three reported gaps."
+2. ✓ Decision per gap: doc fix (skill/help text), UX change (binary), or won't-fix with rationale — "Table records doc, UX, and won't-fix decisions."
+3. ✓ Any agreed doc/UX changes filed as their own follow-up tickets or applied — "Follow-up tickets #174, #175, #176, and #177 were filed."
