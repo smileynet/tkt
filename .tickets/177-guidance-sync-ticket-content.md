@@ -2,7 +2,7 @@
 id: "177"
 title: "guidance: state evidence↔validation_criteria rule, edit-has-no-tags, fill-body-at-new, link-the-source"
 status: open
-blocked_by: []
+blocked_by: ["176"]
 priority: high
 validation_criteria:
   - "a surface states the evidence↔validation_criteria 1:1-by-index rule plainly (test: manual doc review)"
@@ -36,7 +36,7 @@ Best sequenced after #174/#176 land so the docs describe the new behavior.
 
 ## Acceptance criteria
 
-- [ ] A surface states the evidence↔validation_criteria 1:1-by-index rule plainly
+- [x] A surface states the evidence↔validation_criteria 1:1-by-index rule plainly
 - [ ] init.rs snippets instruct fill-body-at-new and link-the-source
 - [ ] `edit`'s lack of `--tags` documented as an intentional constraint
 - [ ] All surfaces synced per the guidance-surfaces checklist; `deploy-skills.sh` run
