@@ -6,8 +6,9 @@ release sequencing and intentionally deferred work visible to `tkt sync-plan`.
 
 ## v0.3.1 — correctness and release gate
 
-`#146` is the patch-release gate. Do not tag or publish `v0.3.1` until every listed
-blocker is done, the canonical gate passes, and the changelog records the release.
+`#146` is the patch-release gate. Do not tag or publish `v0.3.1` until its defect
+blockers and the cross-platform atomic-write verification below are done, the canonical
+gate passes, and the changelog records the release.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -19,8 +20,8 @@ blocker is done, the canonical gate passes, and the changelog records the releas
 | 139 | Repair evidence-gate severity and discarded-evidence behavior | open |
 | 141 | Count uppercase checked acceptance boxes | open |
 | 152 | Fix indented-comment parser corruption | open |
+| 181 | Verify atomic writes across Windows and Linux | open |
 | 146 | Cut, tag, and document v0.3.1 | open |
-| 185 | Restore automatic push/PR CI verification | open |
 
 ## Quality, integrity, and dogfooding
 
@@ -39,8 +40,8 @@ requires promotion.
 | 173 | Add advisory frontier Definition-of-Ready validation | open |
 | 175 | Flag tickets with no source reference | open |
 | 176 | Improve new-ticket body template and add body input | open |
-| 177 | Synchronize ticket-content guidance | open |
-| 181 | Verify atomic ticket writes across Windows and Linux | open |
+| 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | open |
+| 185 | Restore automatic push/PR CI verification (release engineering, not a #146 blocker) | open |
 | 186 | Reconcile or retire the historical parity harness | open |
 
 ## v0.4.0 — agent experience and extensions
@@ -54,8 +55,6 @@ patch release.
 | 138 | Complete the machine-readable capabilities manifest | open |
 | 161 | Support aggregate reporter provenance in steering | open |
 | 168 | Consider advisory nudges for tag-less/backlog work | backlog |
-| 182 | Decide a delete/cancel lifecycle mechanism | backlog |
-| 184 | Implement opt-in narrative sync-plan support | open |
 | 79 | Safely undo the last tkt mutation | open |
 | 83 | Edit a ticket body through the configured editor | open |
 | 86 | One-way GitHub issue import | open |
@@ -64,6 +63,21 @@ patch release.
 | 89 | Lifecycle hooks | open |
 | 90 | Open ticket-body URLs | open |
 | 93 | Pluggable ticket schema and meta fields | open |
+
+## Post-v0.3.1 lifecycle and plan design
+
+These decisions change core contracts or introduce an optional planning surface. Keep
+them out of the active frontier until the corrective release is complete.
+
+| ID | Work | Status |
+|---:|---|---|
+| 182 | Decide a delete/cancel lifecycle mechanism | backlog |
+| 184 | Implement opt-in narrative sync-plan support | deferred (ticket open) |
+
+ADR 0002 makes plan-as-projection the strategic primary direction; narrative support
+is the opt-in secondary path in #184. Before committing capacity to #184, file a
+separate backlog ticket for the projection renderer so the primary direction has an
+explicit, independently schedulable owner.
 
 ## Intentionally deferred backlog
 
