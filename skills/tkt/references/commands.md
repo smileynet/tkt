@@ -91,7 +91,7 @@ When a context is active:
 | `--blocked-by N,N` | IDs that must be done first | none |
 | `--env E` | Environment filter (`corp`, `personal`) | none |
 | `--spec S` | Originating spec slug | none |
-| `--tags T,T` | Work-stream / categorization tags — the primary scoping mechanism for `ready`/`context`. Set at creation (one tag is the norm in multi-stream projects); also auto-applied from active context | none |
+| `--tags T,T` | Work-stream / categorization tags — the primary scoping mechanism for `ready`/`context`. Set at creation (one tag is the norm in multi-stream projects); also auto-applied from active context. NOTE: `tkt edit` has NO `--tags` flag — to retag an existing ticket, edit its frontmatter `tags:` line directly (or set at creation / via `tkt context`). | none |
 | `--validation "..."` | Validation criteria (repeatable). Alias: `--vc` | none |
 | `--requires R,R` | Machine capabilities required (e.g., `gpu,linux,corp`) | none |
 

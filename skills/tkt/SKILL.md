@@ -189,6 +189,7 @@ Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` 
 - **Env filtering (legacy):** Tickets with `env: corp` only appear in `tkt ready` when `CREW_ENV=corp`. No env field = visible everywhere.
 - **Requires filtering:** Tickets with `requires: [gpu, linux]` only appear if `machine.capabilities` config includes all listed values. If a ticket has `env` but no `requires`, requires is synthesized from env for backward compat. Prefer `requires` over `env` for new tickets.
 - **Tag context:** `tkt context backend api` sets a session-scoped filter. `ready`, `query`, and `blocked` only show tickets whose `tags` include all context-include tags and none of the context-exclude tags. `new` and `batch` auto-inherit context tags.
+- **Scripted/non-interactive use — advice routing:** `tkt`'s advisory hints (e.g. the batch nudge) print to **stderr** in human mode, so parsing **stdout** is already safe. For scripts, prefer `-q`/`--quiet` (stdout becomes the bare id — including the renumbered id after a lost-race retry) or `-o json` (hints move into a structured `hints[]` array, never into the result). Set `TKT_ADVICE=0` (also `off`/`false`) to silence the nudge entirely.
 
 ---
 
