@@ -1,7 +1,7 @@
 ---
 id: "150"
 title: "doctor must report all validate findings"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -41,15 +41,23 @@ clean empty corpus.
 
 ## Acceptance criteria
 
-- [ ] `doctor --strict` and `validate --strict` return the same pass/fail result
+- [x] `doctor --strict` and `validate --strict` return the same pass/fail result
       for a corpus containing an unparseable file, a stub body, and a
       missing-resolution closure
-- [ ] doctor reports unparseable tickets with file context instead of silently
+- [x] doctor reports unparseable tickets with file context instead of silently
       treating them as absent
-- [ ] cross-project doctor output represents those findings without losing
+- [x] cross-project doctor output represents those findings without losing
       machine-readable status
-- [ ] regression tests cover the shared collection path and existing doctor tests pass
+- [x] regression tests cover the shared collection path and existing doctor tests pass
 
 ## Out of scope
 
 - Changing the semantics of individual validation rules
+
+## Resolution (2026-10-19)
+
+Extracted validate's per-file parse loop + all 9 checks into findings::collect_corpus_findings; both single- and cross-project doctor now call it. Unparseable tickets become structured 'unparseable' error findings named with file context; doctor and validate now agree on strict/non-strict pass/fail and finding set by construction. Removed dead run_validate_checks and unused fix params.
+
+### Verification
+1. ✓ doctor reports unparseable tickets that load_corpus silently skips — "test_doctor_names_unparseable_ticket passes: doctor --strict names 01-bad.md as unparseable (previously dropped by load_corpus); verified live on a mixed-defect repo"
+2. ✓ doctor and validate agree on ejected-ticket detection — "test_doctor_and_validate_agree_on_strict_result + test_doctor_and_validate_agree_on_clean_corpus pass; live repro: both validate --strict and doctor --strict exit 1 with 28 matching findings on this repo, and both pass a clean corpus (mise run check: 93 tests pass)"
