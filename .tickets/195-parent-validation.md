@@ -1,7 +1,7 @@
 ---
 id: "195"
 title: "parent validation: dangling + cycle checks"
-status: open
+status: backlog
 blocked_by: ["192"]
 priority: high
 validation_criteria:
