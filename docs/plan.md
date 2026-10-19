@@ -4,11 +4,11 @@ This plan is the repository-level view of unfinished work. Ticket files remain t
 source of truth for implementation detail and acceptance criteria; this table makes
 release sequencing and intentionally deferred work visible to `tkt sync-plan`.
 
-## v0.3.1 — correctness and release gate
+## v0.4.0 — shipped workflow changes and correctness gate
 
-`#146` is the patch-release gate. Do not tag or publish `v0.3.1` until its defect
-blockers and the cross-platform atomic-write verification below are done, the canonical
-gate passes, and the changelog records the release.
+`#146` is the minor-release gate. v0.3.1 was never tagged and is intentionally skipped.
+Do not tag or publish v0.4.0 until the defect and release-readiness blockers below are
+done, the canonical gate passes, and the curated changelog records the release.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -23,19 +23,22 @@ gate passes, and the changelog records the release.
 | 181 | Verify atomic writes across Windows and Linux | open |
 | 188 | Reject ambiguous duplicate frontmatter keys | open |
 | 189 | Unify env and requires into one eligibility model | open |
-| 146 | Cut, tag, and document v0.3.1 | open |
+| 150 | Make doctor strict results agree with validate | open |
+| 160 | Decide and apply the legacy missing-resolution validation baseline | open |
+| 185 | Restore automatic push/PR CI verification | open |
+| 201 | Remediate agent-facing help and release metadata drift | open |
+| 146 | Cut, tag, and document v0.4.0 | open |
 
 ## Quality, integrity, and dogfooding
 
 These items strengthen the ticket contract and the project’s ability to rely on its
-own health signals. They should follow the patch-release blockers unless a defect
-requires promotion.
+own health signals. They follow the v0.4.0 gate unless they are explicitly listed
+above as release blockers.
 
 | ID | Work | Status |
 |---:|---|---|
 | 153 | Prevent stale installed-binary validation | backlog |
 | 156 | Disposition remaining delta-review findings | open |
-| 160 | Decide legacy missing-resolution policy | backlog |
 | 163 | Backfill missing IDs from filename prefixes | open |
 | 164 | Support canonical slug IDs in validation | open |
 | 165 | Write project-scoped configuration safely | open |
@@ -43,15 +46,14 @@ requires promotion.
 | 175 | Flag tickets with no source reference | open |
 | 176 | Improve new-ticket body template and add body input | open |
 | 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | open |
-| 185 | Restore automatic push/PR CI verification (release engineering, not a #146 blocker) | open |
 | 186 | Reconcile or retire the historical parity harness | open |
 | 190 | Parse known config keys into strict typed policies | open |
 | 191 | Centralize mutation effects and dry-run policy after #136 | backlog |
 
-## v0.4.0 — agent experience and extensions
+## v0.5.0 — agent experience and extensions
 
-These are useful product improvements, deliberately not blockers for the corrective
-patch release.
+These are planned product improvements, deliberately not blockers for the v0.4.0
+release of already-merged behavior.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -67,8 +69,9 @@ patch release.
 | 89 | Lifecycle hooks | open |
 | 90 | Open ticket-body URLs | open |
 | 93 | Pluggable ticket schema and meta fields | open |
+| 202 | Deploy tkt guidance and skill safely across supported harnesses | open |
 
-## v0.4.0 — native relations and label namespaces
+## v0.5.0 — native relations and label namespaces
 
 Close the structural gaps surfaced by the grey-matter skill-adaptation work by
 adding native concepts (a `parent` relation, config-declared label namespaces, and
@@ -86,20 +89,18 @@ three roots first (`192`, `193`, `194`), their dependents, then the docs pass la
 | 197 | parent rollup + frontier semantics (after 192, 196) | open |
 | 198 | label-namespace validation: single-select + closed-set (after 193) | open |
 | 199 | docs, capabilities, CHANGELOG for parent/assignee/labels (after 194, 196-198) | open |
+| 200 | parent-scoped ready frontier (after 196, 197) | backlog |
 
-## Release readiness and agent integration
+## Release scope decision record
 
 | ID | Work | Status |
 |---:|---|---|
-| 200 | parent-scoped ready frontier | backlog |
-| 201 | remediate agent-facing help and release metadata drift | open |
-| 202 | deploy tkt guidance and skill safely across supported harnesses | open |
-| 203 | decide v0.4.0 release scope before moving planned work to v0.5.0 | open |
+| 203 | decide v0.4.0 release scope before moving planned work to v0.5.0 | ✅ done |
 
-## Post-v0.3.1 lifecycle and plan design
+## Post-v0.4.0 lifecycle and plan design
 
 These decisions change core contracts or introduce an optional planning surface. Keep
-them out of the active frontier until the corrective release is complete.
+them out of the active frontier until the v0.4.0 release is complete.
 
 | ID | Work | Status |
 |---:|---|---|

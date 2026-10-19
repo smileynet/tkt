@@ -2,10 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+
+- OpenCode is now supported as a project-instruction target when initializing tkt
+- `TKT_DEBUG=log` records diagnostics in a local log file for later inspection
+- `tkt validate` now reports placeholder ticket bodies and tickets manually changed to
+  `done` outside the closure workflow
+
+### Changed
+
+- `TKT_DEBUG=1` now writes diagnostics to a local file; use `TKT_DEBUG=stderr` or
+  `TKT_DEBUG=json` when diagnostics must be emitted to standard error
+- `tkt sync-plan` reports drift without failing by default; use `--check` to enforce it
+  in automation and `--fix` to apply safe derived updates
+- Closure errors now show all unmet requirements together, making it easier to correct
+  a ticket in one pass
+- `tkt validate --fix` stops rather than applying a repair that would introduce new
+  validation findings
+
+### Fixed
+
+- Tickets with a byte-order mark, comments, or block-style dependencies are parsed
+  without being dropped or losing dependency information
+- Frontmatter normalization preserves `blocked_by` references while correcting their
+  style
+- Failed ticket writes retain the existing ticket and report the underlying operating
+  system error; cross-platform verification remains in progress
+- A successful ticket commit followed by a failed push now reports the recoverable
+  commit instead of treating the work as lost
 
 ## [0.3.0] - 2026-08-23
 
