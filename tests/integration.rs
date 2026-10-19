@@ -131,6 +131,61 @@ fn test_ready_excludes_blocked() {
 }
 
 #[test]
+fn test_ready_uses_one_capability_model_for_env_and_requires() {
+    let (_tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/02-legacy-env.md"),
+        "---\nid: \"02\"\ntitle: \"Legacy env\"\nstatus: open\nblocked_by: []\nenv: corp\n---\n\n# Legacy\n",
+    )
+    .unwrap();
+    std::fs::write(
+        clone.join(".tickets/03-capability.md"),
+        "---\nid: \"03\"\ntitle: \"Capability\"\nstatus: open\nblocked_by: []\nrequires: [gpu]\n---\n\n# Capability\n",
+    )
+    .unwrap();
+    std::fs::write(
+        clone.join(".tickets/04-no-match.md"),
+        "---\nid: \"04\"\ntitle: \"No match\"\nstatus: open\nblocked_by: []\nrequires: [linux]\n---\n\n# No match\n",
+    )
+    .unwrap();
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[ready]\ndefault_env = \"corp\"\n\n[machine]\ncapabilities = \"gpu\"\n",
+    )
+    .unwrap();
+
+    let (code, out) = run_tkt(&clone, &["ready"]);
+    assert_eq!(code, 0, "ready should succeed: {}", out);
+    assert!(
+        out.contains("02  Legacy env"),
+        "legacy env should map to capability: {}",
+        out
+    );
+    assert!(
+        out.contains("03  Capability"),
+        "explicit capability should match: {}",
+        out
+    );
+    assert!(
+        !out.contains("04  No match"),
+        "unsatisfied capability must be excluded: {}",
+        out
+    );
+
+    let (code, out) = run_tkt(
+        &clone,
+        &["new", "mixed", "--env", "corp", "--requires", "gpu"],
+    );
+    assert_eq!(code, 1, "mixed creation must be rejected: {}", out);
+    assert!(
+        out.contains("mutually exclusive"),
+        "should explain boundary: {}",
+        out
+    );
+    assert!(!clone.join(".tickets/05-mixed.md").exists());
+}
+
+#[test]
 fn test_new_creates_and_pushes() {
     let (_tmp, clone) = setup_repo();
 
