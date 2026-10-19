@@ -2,7 +2,7 @@
 id: "181"
 title: "Verify atomic_write on Windows + Linux (fs::rename overwrite, temp cleanup, worktrees)"
 status: in_progress
-blocked_by: ["137"]
+blocked_by: ["136", "137"]
 priority: high
 validation_criteria:
   - "Confirm whether std::fs::rename can overwrite an existing file on the target Windows env (msvc); decide if the #[cfg(windows)] delete-first branch in core::atomic_write is necessary or can be removed, and update the AGENTS.md 'Windows rename cannot overwrite' constraint accordingly"
