@@ -1,7 +1,7 @@
 ---
 id: "133"
 title: "Fix yaml_scalar_unescape corrupting plain (unquoted) scalars"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -30,8 +30,16 @@ read/display/query/ready-json path — but it produces silently wrong output.
 
 ## Acceptance criteria
 
-- [ ] An unquoted `title: C:\notes` round-trips unchanged through read (typed title == `C:\notes`)
-- [ ] An unquoted `spec: regex \d+` retains its backslash on read
-- [ ] Double-quoted values still have escapes decoded (existing behavior preserved)
-- [ ] Regression test with a hand-edited backslash-scalar fixture (per #128 defect-class requirement)
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+- [x] An unquoted `title: C:\notes` round-trips unchanged through read (typed title == `C:\notes`)
+- [x] An unquoted `spec: regex \d+` retains its backslash on read
+- [x] Double-quoted values still have escapes decoded (existing behavior preserved)
+- [x] Regression test with a hand-edited backslash-scalar fixture (per #128 defect-class requirement)
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+
+## Resolution (2026-10-19)
+
+Plain and single-quoted scalar text now remains literal; only complete double-quoted scalars decode YAML escapes. Added unit and command-level regressions for hand-edited Windows paths and regex values.
+
+### Verification
+1. ✓ unquoted title with backslash reads back correctly — "cargo test test_query_preserves_hand_edited_plain_scalar_backslashes: passed; query preserved C:\notes and regex \d+ from an unquoted ticket"
+2. ✓ unescape only applied to double-quoted values — "cargo test scalars: passed; quoted newline and escaped backslash decoding remains covered"
