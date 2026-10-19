@@ -1,7 +1,7 @@
 ---
 id: "156"
 title: "Delta review 2026-08-27: #154 legacy-baseline gap, cross-project evidence, #152 still pending"
-status: open
+status: backlog
 blocked_by: []
 priority: high
 validation_criteria:
