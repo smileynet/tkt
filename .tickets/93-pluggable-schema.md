@@ -1,7 +1,7 @@
 ---
 id: "93"
 title: "Pluggable schema definitions with meta field + ai_context support"
-status: open
+status: backlog
 blocked_by: []
 priority: low
 ---
