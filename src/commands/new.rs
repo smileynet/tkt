@@ -87,7 +87,7 @@ pub fn run(
 
     let txn = GitTransaction::new(&dir)?;
 
-    let names = txn.scan_names();
+    let names = txn.scan_names()?;
     let (tid, _width) = GitTransaction::next_id(&names);
 
     let dep_strs: Vec<&str> = blocked_by.iter().map(|s| s.as_str()).collect();
@@ -153,7 +153,7 @@ pub fn run(
             Ok(0)
         }
         PublishResult::NeedsRetry => {
-            let names = txn.scan_names();
+            let names = txn.scan_names()?;
             let (tid2, _width) = GitTransaction::next_id(&names);
             let filename2 = format!("{}-{}.md", tid2, slug);
             let path2 = dir.join(&filename2);

@@ -27,42 +27,54 @@ pub struct GitTransaction {
     pub repo: PathBuf,
     pub dir: PathBuf,
     pub remote: bool,
+    pub upstream: Option<git::Upstream>,
 }
 
 impl GitTransaction {
     /// Create a new transaction: resolves repo root, detects remote, fetches if remote exists.
     pub fn new(dir: &Path) -> Result<Self> {
         let repo = git::repo_root(dir)?;
-        let has_remote = git::has_remote(&repo).unwrap_or(false);
+        let has_remote = git::has_remote(&repo)?;
 
         // Respect project config push.enabled
         let pcfg = crate::config::ProjectConfig::load(dir);
         let remote = has_remote && pcfg.push_enabled;
+        if remote && git::current_branch(&repo)?.is_empty() {
+            bail!(
+                "cannot mutate remote-backed tickets from detached HEAD; switch to a branch or set push.enabled = false for local-only work"
+            );
+        }
+        let upstream = if remote {
+            git::resolve_upstream(&repo)?
+        } else {
+            None
+        };
 
-        if remote {
-            git::fetch(&repo)?;
+        if let Some(upstream) = &upstream {
+            git::fetch(&repo, upstream)?;
         }
 
         Ok(Self {
             repo,
             dir: dir.to_path_buf(),
             remote,
+            upstream,
         })
     }
 
-    /// Scan ticket filenames from both local directory and remote (origin/main).
+    /// Scan ticket filenames from both the local directory and resolved upstream.
     /// Returns basenames like ["01-auth.md", "02-feature.md"].
-    pub fn scan_names(&self) -> Vec<String> {
+    pub fn scan_names(&self) -> Result<Vec<String>> {
         let mut names = local_ticket_filenames(&self.dir);
-        if self.remote {
-            let remote_names = git::remote_ticket_names(&self.repo);
+        if let Some(upstream) = &self.upstream {
+            let remote_names = git::remote_ticket_names(&self.repo, upstream)?;
             for rn in remote_names {
                 if !names.contains(&rn) {
                     names.push(rn);
                 }
             }
         }
-        names
+        Ok(names)
     }
 
     /// Compute the next available ID and zero-padding width from a set of names.
@@ -83,7 +95,11 @@ impl GitTransaction {
             return Ok(PublishResult::Done(PublishOutcome::LocalOnly));
         }
 
-        match git::push(&self.repo)? {
+        let upstream = self
+            .upstream
+            .as_ref()
+            .expect("remote transactions have an upstream");
+        match git::push(&self.repo, upstream)? {
             git::PushResult::Success => Ok(PublishResult::Done(PublishOutcome::Published)),
             git::PushResult::Failed(stderr) => {
                 bail!("push failed: {}", stderr);
@@ -91,7 +107,7 @@ impl GitTransaction {
             git::PushResult::Rejected => {
                 // Undo and rebase for retry
                 git::undo_commit(&self.repo)?;
-                git::pull_rebase(&self.repo)?;
+                git::pull_rebase(&self.repo, upstream)?;
                 Ok(PublishResult::NeedsRetry)
             }
         }
@@ -99,7 +115,11 @@ impl GitTransaction {
 
     /// Push after a retry (second attempt). Fails if rejected again.
     pub fn push_retry(&self) -> Result<PublishOutcome> {
-        match git::push(&self.repo)? {
+        let upstream = self
+            .upstream
+            .as_ref()
+            .expect("remote transactions have an upstream");
+        match git::push(&self.repo, upstream)? {
             git::PushResult::Success => Ok(PublishOutcome::Retried),
             git::PushResult::Failed(stderr) => {
                 bail!("push failed on retry: {}", stderr);

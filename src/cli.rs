@@ -238,7 +238,7 @@ enum Commands {
     Blocked,
     /// Machine-readable feature manifest for agent/automation discovery
     Capabilities,
-    /// Resolve ID collisions with upstream (origin always wins)
+    /// Resolve ID collisions with upstream (upstream always wins)
     Rebase {
         /// Show what would be renumbered without changing anything
         #[arg(long)]

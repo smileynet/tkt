@@ -93,7 +93,7 @@ pub fn run(
     };
 
     let txn = GitTransaction::new(&dir)?;
-    let names = txn.scan_names();
+    let names = txn.scan_names()?;
 
     let allocate_and_commit =
         |names: &[String], parsed: &[(&str, String)]| -> Result<(u64, usize)> {
@@ -157,7 +157,7 @@ pub fn run(
     match txn.try_push()? {
         PublishResult::Done(_) => {}
         PublishResult::NeedsRetry => {
-            let names = txn.scan_names();
+            let names = txn.scan_names()?;
             let result = allocate_and_commit(&names, &parsed)?;
             base = result.0;
             width = result.1;

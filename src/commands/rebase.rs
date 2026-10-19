@@ -9,14 +9,25 @@ use crate::renumber::{apply_renumber, materialize_renumber, RenumberPlan};
 pub fn run(dry_run: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let repo = dir.parent().unwrap().to_path_buf();
+    if !dry_run && git::current_branch(&repo)?.is_empty() {
+        anyhow::bail!(
+            "cannot resolve upstream collisions from detached HEAD; switch to a branch first"
+        );
+    }
+    let Some(upstream) = git::resolve_upstream(&repo)? else {
+        if !is_quiet() {
+            println!("No remote configured; no upstream collisions to resolve.");
+        }
+        return Ok(0);
+    };
 
     // A dry-run reads the last fetched remote state but never performs network I/O.
     if !dry_run {
-        git::fetch(&repo)?;
+        git::fetch(&repo, &upstream)?;
     }
 
     // Step 2: gather local + remote filenames
-    let remote_names = git::remote_ticket_names(&repo);
+    let remote_names = git::remote_ticket_names(&repo, &upstream)?;
     let local_names: Vec<String> = std::fs::read_dir(&dir)?
         .filter_map(|e| e.ok())
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))

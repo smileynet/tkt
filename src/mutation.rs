@@ -17,6 +17,7 @@ pub struct MutationContext {
     pub repo: PathBuf,
     pub tickets_dir: PathBuf,
     pub has_remote: bool,
+    pub upstream: Option<git::Upstream>,
     pub config: ProjectConfig,
     pub corpus: Vec<Ticket>,
 }
@@ -37,21 +38,37 @@ impl MutationContext {
         }
 
         let config = load_project_config(&tickets_dir);
-        let has_remote = git::has_remote(&repo).unwrap_or(false);
+        let has_remote = git::has_remote(&repo)?;
+        if has_remote && config.push_enabled && git::current_branch(&repo)?.is_empty() {
+            return Err(DomainError::with_hint(
+                crate::ErrorKind::Conflict,
+                "cannot mutate remote-backed tickets from detached HEAD".to_string(),
+                "switch to a branch or set push.enabled = false for local-only work".to_string(),
+            )
+            .into());
+        }
+        let upstream = if has_remote && config.push_enabled {
+            git::resolve_upstream(&repo)?
+        } else {
+            None
+        };
 
         let dbg = crate::telemetry::debug_mode();
-        if has_remote && !crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
-            let fetch_start = std::time::Instant::now();
-            git::fetch(&repo)?;
-            crate::telemetry::debug_event(
-                dbg,
-                "",
-                "",
-                &format!(
-                    "git fetch origin ({:.1}s)",
-                    fetch_start.elapsed().as_secs_f64()
-                ),
-            );
+        if !crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
+            if let Some(upstream) = &upstream {
+                let fetch_start = std::time::Instant::now();
+                git::fetch(&repo, upstream)?;
+                crate::telemetry::debug_event(
+                    dbg,
+                    "",
+                    "",
+                    &format!(
+                        "git fetch {} ({:.1}s)",
+                        upstream.remote,
+                        fetch_start.elapsed().as_secs_f64()
+                    ),
+                );
+            }
         }
 
         let corpus = core::load_corpus(&tickets_dir)?;
@@ -84,6 +101,7 @@ impl MutationContext {
             repo,
             tickets_dir,
             has_remote,
+            upstream,
             config,
             corpus,
         })
@@ -103,16 +121,16 @@ impl MutationContext {
     /// Check the remote status of a ticket. Returns `Some(status_string)` if remote
     /// has a different state, `None` if no remote or file not found on remote.
     pub fn remote_status(&self, ticket: &Ticket) -> Option<String> {
-        if !self.has_remote {
+        let Some(upstream) = &self.upstream else {
             return None;
-        }
+        };
         let remote_path = format!(
             ".tickets/{}",
             ticket.path.file_name().unwrap().to_string_lossy()
         );
         if let Ok(content) = git::git(
             &self.repo,
-            &["show", &format!("origin/main:{}", remote_path)],
+            &["show", &format!("{}:{}", upstream.reference, remote_path)],
         ) {
             if let Ok(remote_file) = TicketFile::parse_str(&content, &ticket.path) {
                 return remote_file.get("status").map(|s| s.to_string());
@@ -130,14 +148,14 @@ impl MutationContext {
         git::commit(&self.repo, message)?;
         crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
 
-        if self.has_remote && self.config.push_enabled {
+        if let Some(upstream) = &self.upstream {
             // The commit above succeeded and is durable. If the push fails for a
             // non-race reason (auth, network, unreachable remote), we deliberately
             // do NOT roll back the commit — git separates commit (local, durable)
             // from push (network), the change is fully recoverable, and undoing a
             // valid commit under a transient failure is the wrong move (#180).
             // Surface a structured, actionable error instead of a bare crash.
-            if let Err(e) = git::push_with_retry(&self.repo) {
+            if let Err(e) = git::push_with_retry(&self.repo, upstream) {
                 crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
                 return Err(DomainError::with_hint(
                     crate::ErrorKind::Io,

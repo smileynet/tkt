@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   commit instead of treating the work as lost
 - JSON-mode errors now end with the structured error envelope, so automation can
   reliably parse the final stderr line
+- Remote race protection now follows the current tracking branch, including `master`
+  and non-`origin` remotes, instead of assuming `origin/main`
 - Global `--dry-run` now consistently previews rather than changing tickets,
   configuration, context, project setup, frontmatter, or renumbered IDs
 - Migration previews no longer leave a confirmation file behind

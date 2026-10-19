@@ -30,10 +30,110 @@ pub fn repo_root_cwd() -> Result<std::path::PathBuf> {
     repo_root(&std::env::current_dir()?)
 }
 
-/// Check if a remote named "origin" is configured. Returns Result to propagate git failures.
+/// Check whether any remote is configured. Returns Result to propagate git failures.
 pub fn has_remote(repo: &Path) -> Result<bool> {
     let remotes = git(repo, &["remote"])?;
     Ok(!remotes.is_empty())
+}
+
+/// The remote and branch used for remote-aware ticket operations.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Upstream {
+    pub remote: String,
+    /// Short tracking name, for example `origin/main`.
+    pub reference: String,
+}
+
+impl Upstream {
+    fn branch(&self) -> &str {
+        self.reference
+            .strip_prefix(&format!("{}/", self.remote))
+            .unwrap_or(&self.reference)
+    }
+}
+
+/// Resolve the current branch's tracking ref, falling back to the selected remote's HEAD.
+///
+/// `None` means the repository has no remotes and is intentionally local-only. A repository
+/// with remotes but no resolvable upstream is an error: silently treating it as local-only
+/// would bypass race detection.
+pub fn resolve_upstream(repo: &Path) -> Result<Option<Upstream>> {
+    let remotes: Vec<String> = git(repo, &["remote"])?
+        .lines()
+        .filter(|name| !name.is_empty())
+        .map(ToOwned::to_owned)
+        .collect();
+    if remotes.is_empty() {
+        return Ok(None);
+    }
+
+    if let Ok(reference) = git(
+        repo,
+        &[
+            "rev-parse",
+            "--abbrev-ref",
+            "--symbolic-full-name",
+            "@{upstream}",
+        ],
+    ) {
+        if let Some((remote, _branch)) = reference.split_once('/') {
+            if remotes.iter().any(|name| name == remote) {
+                return Ok(Some(Upstream {
+                    remote: remote.to_string(),
+                    reference,
+                }));
+            }
+        }
+    }
+
+    let selected_remote = selected_remote(repo, &remotes)?;
+    let reference = match git(
+        repo,
+        &[
+            "symbolic-ref",
+            "--quiet",
+            "--short",
+            &format!("refs/remotes/{selected_remote}/HEAD"),
+        ],
+    ) {
+        Ok(reference) => reference,
+        Err(_) => remote_head_reference(repo, &selected_remote)?,
+    };
+    if !reference.starts_with(&format!("{selected_remote}/")) {
+        bail!("remote {selected_remote:?} returned invalid HEAD reference {reference:?}");
+    }
+    Ok(Some(Upstream {
+        remote: selected_remote,
+        reference,
+    }))
+}
+
+fn remote_head_reference(repo: &Path, remote: &str) -> Result<String> {
+    let output = git(repo, &["ls-remote", "--symref", remote, "HEAD"]).with_context(|| {
+        format!(
+            "cannot resolve an upstream for this branch: remote {remote:?} has no cached HEAD and its HEAD could not be queried; set an upstream or fetch that remote"
+        )
+    })?;
+    let target = output
+        .lines()
+        .find_map(|line| line.strip_prefix("ref: "))
+        .and_then(|line| line.split_whitespace().next())
+        .and_then(|name| name.strip_prefix("refs/heads/"))
+        .ok_or_else(|| anyhow::anyhow!("remote {remote:?} did not advertise a symbolic HEAD"))?;
+    Ok(format!("{remote}/{target}"))
+}
+
+fn selected_remote(repo: &Path, remotes: &[String]) -> Result<String> {
+    if let Ok(remote) = git(repo, &["config", "--get", "remote.pushDefault"]) {
+        if remotes.iter().any(|name| name == &remote) {
+            return Ok(remote);
+        }
+        bail!("remote.pushDefault names unknown remote {remote:?}");
+    }
+    if remotes.iter().any(|name| name == "origin") {
+        return Ok("origin".to_string());
+    }
+    Ok(remotes[0].clone())
 }
 
 /// Get the current branch name (empty string if detached HEAD).
@@ -41,9 +141,9 @@ pub fn current_branch(repo: &Path) -> Result<String> {
     git(repo, &["branch", "--show-current"])
 }
 
-/// Fetch from origin (quiet).
-pub fn fetch(repo: &Path) -> Result<()> {
-    git(repo, &["fetch", "-q"])?;
+/// Fetch the selected remote (quiet).
+pub fn fetch(repo: &Path, upstream: &Upstream) -> Result<()> {
+    git(repo, &["fetch", "-q", &upstream.remote])?;
     Ok(())
 }
 
@@ -73,9 +173,15 @@ pub enum PushResult {
 
 /// Push to origin (current branch). Returns a typed result distinguishing
 /// race rejections from other failures.
-pub fn push(repo: &Path) -> Result<PushResult> {
+pub fn push(repo: &Path, upstream: &Upstream) -> Result<PushResult> {
     let output = Command::new("git")
-        .args(["-C", &repo.to_string_lossy(), "push", "-q"])
+        .args([
+            "-C",
+            &repo.to_string_lossy(),
+            "push",
+            "-q",
+            &upstream.remote,
+        ])
         .output()
         .context("failed to execute git push")?;
 
@@ -104,8 +210,8 @@ pub fn push(repo: &Path) -> Result<PushResult> {
 /// and push without producing a merge conflict, the stale mutation proceeds.
 /// In practice, git's line-level conflict detection catches same-field races,
 /// and preflight_mutation's check_remote_status catches the common case.
-pub fn push_with_retry(repo: &Path) -> Result<()> {
-    match push(repo)? {
+pub fn push_with_retry(repo: &Path, upstream: &Upstream) -> Result<()> {
+    match push(repo, upstream)? {
         PushResult::Success => return Ok(()),
         PushResult::Failed(stderr) => {
             bail!("push failed: {}", stderr);
@@ -114,9 +220,9 @@ pub fn push_with_retry(repo: &Path) -> Result<()> {
     }
 
     // First rejection: pull-rebase and retry
-    pull_rebase(repo)?;
+    pull_rebase(repo, upstream)?;
 
-    match push(repo)? {
+    match push(repo, upstream)? {
         PushResult::Success => Ok(()),
         PushResult::Failed(stderr) => {
             bail!("push failed after rebase: {}", stderr);
@@ -128,8 +234,17 @@ pub fn push_with_retry(repo: &Path) -> Result<()> {
 }
 
 /// Pull with rebase (quiet).
-pub fn pull_rebase(repo: &Path) -> Result<()> {
-    git(repo, &["pull", "--rebase", "-q"])?;
+pub fn pull_rebase(repo: &Path, upstream: &Upstream) -> Result<()> {
+    git(
+        repo,
+        &[
+            "pull",
+            "--rebase",
+            "-q",
+            &upstream.remote,
+            upstream.branch(),
+        ],
+    )?;
     Ok(())
 }
 
@@ -168,33 +283,21 @@ pub fn undo_commit(repo: &Path) -> Result<()> {
     Ok(())
 }
 
-/// List ticket filenames from the remote (origin/main) without modifying the working tree.
+/// List ticket filenames from the resolved upstream without modifying the working tree.
 /// Returns basenames like ["01-auth.md", "02-feature.md"].
 /// Strips the .tickets/ prefix from ls-tree output.
-/// Returns an empty vec if origin/main doesn't exist or has no .tickets/ directory.
-pub fn remote_ticket_names(repo: &Path) -> Vec<String> {
-    let output = Command::new("git")
-        .args([
-            "-C",
-            &repo.to_string_lossy(),
-            "ls-tree",
-            "--name-only",
-            "origin/main",
-            ".tickets/",
-        ])
-        .output();
-
-    match output {
-        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout)
-            .lines()
-            .filter_map(|l| {
-                // ls-tree returns ".tickets/01-foo.md" — strip the prefix
-                l.strip_prefix(".tickets/")
-                    .or(Some(l)) // fallback if no prefix (shouldn't happen)
-                    .filter(|name| name.ends_with(".md"))
-                    .map(|s| s.to_string())
-            })
-            .collect(),
-        _ => Vec::new(),
-    }
+/// An absent .tickets/ directory produces an empty list; a git failure is propagated.
+pub fn remote_ticket_names(repo: &Path, upstream: &Upstream) -> Result<Vec<String>> {
+    Ok(git(
+        repo,
+        &["ls-tree", "--name-only", &upstream.reference, ".tickets/"],
+    )?
+    .lines()
+    .filter_map(|line| {
+        line.strip_prefix(".tickets/")
+            .or(Some(line))
+            .filter(|name| name.ends_with(".md"))
+            .map(ToOwned::to_owned)
+    })
+    .collect())
 }

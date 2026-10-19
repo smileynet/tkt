@@ -3089,3 +3089,90 @@ fn test_migrate_preview_is_no_write_and_apply_requires_confirm() {
     assert!(repo.join(".tickets/01-legacy.md").exists());
     assert!(repo.join(".tickets.bak/legacy.md").exists());
 }
+
+#[test]
+fn test_race_detection_uses_tracking_ref_for_master_and_non_origin_remote() {
+    let tmp = TempDir::new().unwrap();
+    let remote = tmp.path().join("remote.git");
+    let clone = tmp.path().join("work");
+    Command::new("git")
+        .args(["init", "--bare", "-q", "-b", "master"])
+        .arg(&remote)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["clone", "-q", "--origin", "upstream"])
+        .arg(&remote)
+        .arg(&clone)
+        .output()
+        .unwrap();
+    git(&clone, &["config", "user.email", "test@test"]);
+    git(&clone, &["config", "user.name", "test"]);
+    std::fs::create_dir_all(clone.join(".tickets")).unwrap();
+    std::fs::write(
+        clone.join(".tickets/01-seed.md"),
+        "---\nid: \"01\"\ntitle: \"Seed\"\nstatus: done\nblocked_by: []\n---\n\n# Seed\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "seed"]);
+    git(&clone, &["push", "-q", "upstream", "HEAD:master"]);
+
+    let (code, out) = run_tkt(&clone, &["new", "tracked", "--title", "Tracked"]);
+    assert_eq!(code, 0, "new should use upstream/master: {}", out);
+    assert!(
+        git(&clone, &["log", "--oneline", "upstream/master"]).contains("new 02 tracked"),
+        "ticket commit should reach the tracking ref"
+    );
+}
+
+#[test]
+fn test_race_detection_falls_back_to_remote_head_without_tracking() {
+    let (_tmp, clone) = setup_repo();
+    git(&clone, &["branch", "--unset-upstream"]);
+
+    let (code, out) = run_tkt(&clone, &["new", "fallback", "--title", "Fallback"]);
+    assert_eq!(code, 0, "new should use origin/HEAD fallback: {}", out);
+    assert!(clone.join(".tickets/02-fallback.md").exists());
+}
+
+#[test]
+fn test_remote_without_upstream_and_detached_head_fail_before_mutation() {
+    let (_tmp, repo) = setup_local_repo();
+    std::fs::write(
+        repo.join(".tickets/config.toml"),
+        "[push]\nenabled = true\n",
+    )
+    .unwrap();
+    git(&repo, &["add", "-A"]);
+    git(&repo, &["commit", "-qm", "enable push"]);
+    git(
+        &repo,
+        &[
+            "remote",
+            "add",
+            "upstream",
+            "https://example.invalid/tkt.git",
+        ],
+    );
+    let (code, out) = run_tkt(&repo, &["new", "no-upstream", "--title", "No upstream"]);
+    assert_ne!(
+        code, 0,
+        "unresolvable remote must not become local-only: {}",
+        out
+    );
+    assert!(!repo.join(".tickets/01-no-upstream.md").exists());
+
+    let (_tmp, clone) = setup_repo();
+    git(&clone, &["checkout", "--detach"]);
+    let head_before = git(&clone, &["rev-parse", "HEAD"]);
+    let (code, out) = run_tkt(&clone, &["new", "detached", "--title", "Detached"]);
+    assert_ne!(code, 0, "detached remote mutation must fail: {}", out);
+    assert!(
+        out.contains("detached HEAD"),
+        "should explain the safe path: {}",
+        out
+    );
+    assert_eq!(git(&clone, &["rev-parse", "HEAD"]), head_before);
+    assert!(!clone.join(".tickets/02-detached.md").exists());
+}
