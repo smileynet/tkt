@@ -1,7 +1,7 @@
 ---
 id: "199"
 title: "docs, capabilities, CHANGELOG for parent/assignee/labels"
-status: open
+status: backlog
 blocked_by: ["196", "197", "198", "194"]
 priority: high
 validation_criteria:
