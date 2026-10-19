@@ -26,8 +26,8 @@ work while preserving the non-negotiable safety gate. v0.4.0 would retain #146's
 integrity, validation-baseline, CI, packaging, and release-verification blockers and
 add #201 for accurate user-facing release metadata. It would not make #202's new
 cross-harness global installer a v0.4.0 blocker. The planned #127, #138, #161, #168,
-#79, #83, #86, #87, #88, #89, #90, #93, and #192–#202 work belongs to v0.5.0 unless a
-separate approved scope decision says otherwise.
+#79, #83, #86, #87, #88, #89, #90, #93, #192–#200, and #202 work belongs to v0.5.0
+unless a separate approved scope decision says otherwise.
 
 Source: user request on 2026-10-19 following the release-readiness and independent
 Kiro reviews. The Kiro proposal recommended v0.4.0 but understated the established
