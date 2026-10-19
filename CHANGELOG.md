@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tkt doctor` now runs the same full validation as `tkt validate` — reporting
   unparseable tickets by name, stub bodies, and closure-quality issues — so it can no
   longer report a clean project that `tkt validate` fails
+- Indented frontmatter comments no longer become part of the preceding ticket field
 
 ## [0.3.0] - 2026-08-23
 

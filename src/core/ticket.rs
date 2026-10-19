@@ -202,15 +202,22 @@ impl TicketFile {
             }
             if let Some(caps) = key_re.captures(line) {
                 fm.push((caps[1].to_string(), caps[2].to_string()));
-            } else if (line.starts_with(' ') || line.starts_with('\t')) && !fm.is_empty() {
-                let last = fm.last_mut().unwrap();
-                last.1.push('\n');
-                last.1.push_str(line);
             } else if line.trim_start().starts_with('#') {
                 // Comment line (YAML 1.2 §6.6): tolerate so the ticket isn't ejected.
                 // Stored as an empty-key passthrough (like blank lines) — preserved by
                 // serialize, dropped by lint's canonical rewrite (comments are non-data).
                 fm.push((String::new(), (*line).to_string()));
+            } else if (line.starts_with(' ') || line.starts_with('\t')) && !fm.is_empty() {
+                // A comment can appear between block-style continuation lines; it is
+                // non-data, so continue the preceding real field rather than the
+                // empty-key comment passthrough entry.
+                let last = fm
+                    .iter_mut()
+                    .rev()
+                    .find(|(key, _)| !key.is_empty())
+                    .unwrap();
+                last.1.push('\n');
+                last.1.push_str(line);
             } else if line.trim().is_empty() {
                 fm.push((String::new(), (*line).to_string()));
             } else {
@@ -1173,7 +1180,25 @@ spec: regex \d+
         let content = "---\n# this is a note\nid: \"05\"\ntitle: \"Commented\"\n  # indented note\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
         let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
         assert_eq!(t.id, "05");
+        assert_eq!(t.title, "Commented");
         assert_eq!(t.status, Status::Open);
+    }
+
+    #[test]
+    fn parse_indented_comments_inside_block_style_dependencies() {
+        let content = "---\nid: \"05\"\ntitle: \"Commented\"\nstatus: open\nblocked_by:\n  - \"01\"\n  # hand note\n  - \"03\"\n---\n\n# Body\n";
+        let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(ticket.blocked_by, vec!["01", "03"]);
+    }
+
+    #[test]
+    fn parse_serialize_roundtrip_preserves_indented_comment_without_corrupting_value() {
+        let content = "---\nid: \"05\"\ntitle: \"Commented\"\n  # hand note\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        let serialized = file.serialize();
+        assert!(serialized.contains("  # hand note"));
+        let reparsed = Ticket::parse_str(&serialized, Path::new("t.md")).unwrap();
+        assert_eq!(reparsed.title, "Commented");
     }
 
     #[test]
