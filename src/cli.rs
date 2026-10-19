@@ -148,7 +148,6 @@ enum Commands {
     },
     /// Mark open ticket in_progress (pushed = visible WIP)
     Claim { id: String },
-    /// Mark done, append dated Resolution stub, warn unchecked ACs
     /// Mark done, append dated Resolution, warn unchecked ACs
     Close {
         id: String,

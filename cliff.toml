@@ -8,7 +8,7 @@ header = """
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 """
@@ -71,11 +71,12 @@ commit_parsers = [
     { message = "^feat", group = "<!-- 1 -->Added" },
     { message = "^fix", group = "<!-- 2 -->Fixed" },
     { message = "^perf", group = "<!-- 3 -->Changed" },
-    { message = "^refactor", group = "<!-- 3 -->Changed" },
-    # --- Catch-all: keep unconventional commits (never silently drop) ---
-    { message = ".*", group = "<!-- 4 -->Changed" },
+    # Refactors and unclassified commits are implementation noise. The curated
+    # changelog remains the source of truth for any exceptional user-facing note.
+    { message = "^refactor", skip = true },
+    { message = ".*", skip = true },
 ]
 protect_breaking_commits = true
-filter_commits = false
+filter_commits = true
 tag_pattern = "v[0-9].*"
 sort_commits = "oldest"

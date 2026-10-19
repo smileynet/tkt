@@ -4,7 +4,8 @@
 # actual Cargo workspaces and fails to parse here).
 
 allow-branch = ["main"]
-pre-release-hook = ["git", "cliff", "--output", "CHANGELOG.md", "--tag", "v{{version}}"]
+# CHANGELOG.md is curated manually. `git cliff` may be used only to generate a
+# review candidate; it must never overwrite the release notes cargo-release tags.
 pre-release-commit-message = "chore(release): v{{version}}"
 tag-message = "tkt v{{version}}"
 tag-prefix = "v"

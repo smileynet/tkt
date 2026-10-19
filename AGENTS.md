@@ -61,7 +61,7 @@ tkt query [--status S] [--priority P]             # full corpus as JSON Lines (f
 tkt blocked                                       # open tickets with unsatisfied deps
 tkt capabilities                                  # machine-readable JSON feature manifest
 tkt rebase [--dry-run]                            # resolve ID collisions with upstream
-tkt audit [--strict] [--brief]                    # closure quality check
+tkt audit [--strict] [--brief] [--deep]           # closure quality check; --deep adds evidence/template analysis
 tkt sync-plan [--strict] [--brief] [plan]         # report drift (advisory, exit 0)
 tkt sync-plan --check [--strict] [--brief] [plan]  # CI gate: exit 1 on drift
 tkt sync-plan --fix [--dry-run] [--brief] [plan]  # fix derivable columns (default plan: docs/plan.md)
@@ -110,7 +110,9 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 
 | Var | Effect |
 |-----|--------|
-| `TKT_DEBUG=1\|json` | Debug output (`1`=file, `json`=stderr JSONL, `stderr`=stderr human) |
+| `TKT_DEBUG=1\|true\|log\|file` | Debug output to the local debug log (stderr remains clean) |
+| `TKT_DEBUG=stderr\|human` | Human-readable debug output to stderr |
+| `TKT_DEBUG=json` | Debug output as JSON Lines on stderr |
 | `TKT_ASCII=1` | ASCII-only symbols (✓→[ok], ✗→[err], ⚠→[warn]) |
 | `NO_COLOR=1` | Disable ANSI color |
 | `TKT_ADVICE=0` | Disable advisory hints (e.g. the batch nudge); `off`/`false` also accepted |

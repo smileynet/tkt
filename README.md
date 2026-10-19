@@ -259,7 +259,9 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 | `TKT_ASCII=1` | ASCII-only symbols (✓→\[ok\], ✗→\[err\]) |
 | `NO_COLOR=1` | Disable ANSI color |
 | `TKT_ADVICE=0` | Disable advisory hints (e.g. the batch nudge) |
-| `TKT_DEBUG=1` | Debug output to stderr |
+| `TKT_DEBUG=1\|true\|log\|file` | Debug output to the local debug log |
+| `TKT_DEBUG=stderr\|human` | Human-readable debug output to stderr |
+| `TKT_DEBUG=json` | Debug output as JSON Lines on stderr |
 
 ## Contributing
 
