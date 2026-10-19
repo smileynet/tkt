@@ -1,7 +1,7 @@
 ---
 id: "150"
 title: "doctor must report all validate findings"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
