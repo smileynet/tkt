@@ -1,7 +1,7 @@
 ---
 id: "188"
 title: "Reject ambiguous duplicate frontmatter keys"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -32,8 +32,17 @@ lint.
 
 ## Acceptance criteria
 
-- [ ] Duplicate non-comment keys are rejected with file and line context
-- [ ] `lint` never silently discards or chooses between duplicate known fields
-- [ ] The parser preserves comments and blank lines while detecting duplicate fields
-- [ ] Fixtures cover duplicate `status`, `id`, and inline/block `blocked_by` behavior
-- [ ] Existing valid frontmatter remains round-trip safe
+- [x] Duplicate non-comment keys are rejected with file and line context
+- [x] `lint` never silently discards or chooses between duplicate known fields
+- [x] The parser preserves comments and blank lines while detecting duplicate fields
+- [x] Fixtures cover duplicate `status`, `id`, and inline/block `blocked_by` behavior
+- [x] Existing valid frontmatter remains round-trip safe
+
+## Resolution (2026-10-19)
+
+Rejected duplicate frontmatter fields at the parser boundary.
+
+### Verification
+1. ✓ Duplicate non-comment keys are rejected with file and line context — "Parser regression covers duplicate status, id, and block-style blocked_by fields and asserts duplicate/original line context."
+2. ✓ lint never silently discards a duplicate known field — "All commands, including lint, use TicketFile::parse, so a duplicate is reported before any normalization write."
+3. ✓ fixtures cover status, ID, and blocked_by duplicate behavior — "mise run check passes: 171 unit tests, 94 integration tests, clippy clean."
