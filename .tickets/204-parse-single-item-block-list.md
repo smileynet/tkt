@@ -1,7 +1,7 @@
 ---
 id: "204"
 title: "Parse single-item block-style blocked_by lists correctly"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
