@@ -38,15 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontmatter normalization preserves `blocked_by` references while correcting their
   style
 - Failed ticket writes retain the existing ticket and report the underlying operating
-  system error; cross-platform verification remains in progress
+  system error; atomic replacement is verified on Windows and Linux, and temporary
+  write files use collision-resistant names and are cleaned up after failure
 - A successful ticket commit followed by a failed push now reports the recoverable
   commit instead of treating the work as lost
 - JSON-mode errors now end with the structured error envelope, so automation can
   reliably parse the final stderr line
 - Remote race protection now follows the current tracking branch, including `master`
-  and non-`origin` remotes, instead of assuming `origin/main`
+  and non-`origin` remotes, instead of assuming `origin/main`; when a branch has no
+  tracking configuration, it pushes explicitly to the resolved remote HEAD branch
 - Global `--dry-run` now consistently previews rather than changing tickets,
-  configuration, context, project setup, frontmatter, or renumbered IDs
+  configuration, context, project setup, frontmatter, renumbered IDs, or the local
+  update-check cache
 - Migration previews no longer leave a confirmation file behind
 - Partial `--evidence` at close now honors the configured evidence policy: it warns
   under `warn`, blocks under `true`, and is ignored under `false`, instead of always

@@ -30,26 +30,25 @@ use crate::{DomainError, ErrorKind};
 pub fn atomic_write(path: &Path, contents: &str) -> anyhow::Result<()> {
     let dir = path.parent().unwrap_or_else(|| Path::new("."));
 
-    // Unique-enough temp name in the same directory: <target>.tmp.<pid>.
+    // A per-process, time-suffixed sibling keeps concurrent invocations from
+    // colliding while retaining the same-filesystem rename guarantee.
     let file_name = path
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| "ticket".to_string());
-    let tmp_path = dir.join(format!(".{}.tmp.{}", file_name, std::process::id()));
+    let unique = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let tmp_path = dir.join(format!(
+        ".{file_name}.tmp.{}.{}",
+        std::process::id(),
+        unique
+    ));
 
     if let Err(e) = std::fs::write(&tmp_path, contents) {
+        let _ = std::fs::remove_file(&tmp_path);
         return Err(io_error(path, &e));
-    }
-
-    // On Windows, fs::rename cannot overwrite an existing destination — delete
-    // it first (mirrors renumber.rs). This reintroduces a small non-atomic
-    // window on Windows only; POSIX rename overwrites atomically.
-    #[cfg(windows)]
-    if path.exists() {
-        if let Err(e) = std::fs::remove_file(path) {
-            let _ = std::fs::remove_file(&tmp_path);
-            return Err(io_error(path, &e));
-        }
     }
 
     if let Err(e) = std::fs::rename(&tmp_path, path) {
@@ -96,4 +95,57 @@ pub fn ac_section_range(body: &str) -> Option<std::ops::Range<usize>> {
         .map(|i| content_start + i)
         .unwrap_or(body.len());
     Some(content_start..content_end)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::atomic_write;
+    use std::path::PathBuf;
+
+    fn test_dir(label: &str) -> PathBuf {
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir =
+            std::env::temp_dir().join(format!("tkt-{label}-{}.{}", std::process::id(), nonce));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn rename_replaces_an_existing_file() {
+        let dir = test_dir("rename-overwrite");
+        let source = dir.join("source");
+        let destination = dir.join("destination");
+        std::fs::write(&source, "new").unwrap();
+        std::fs::write(&destination, "old").unwrap();
+
+        std::fs::rename(&source, &destination).unwrap();
+
+        assert_eq!(std::fs::read_to_string(&destination).unwrap(), "new");
+        assert!(!source.exists());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn atomic_write_replaces_existing_file_without_leftover_temp() {
+        let dir = test_dir("atomic-write");
+        let destination = dir.join("ticket.md");
+        std::fs::write(&destination, "old").unwrap();
+
+        atomic_write(&destination, "new").unwrap();
+
+        assert_eq!(std::fs::read_to_string(&destination).unwrap(), "new");
+        let temp_prefix = ".ticket.md.tmp.";
+        let has_temp = std::fs::read_dir(&dir)
+            .unwrap()
+            .flatten()
+            .any(|entry| entry.file_name().to_string_lossy().starts_with(temp_prefix));
+        assert!(
+            !has_temp,
+            "successful atomic writes clean up their temp file"
+        );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 }

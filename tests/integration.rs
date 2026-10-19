@@ -2632,6 +2632,17 @@ fn test_close_write_failure_surfaces_os_error() {
     perms.set_mode(0o755);
     std::fs::set_permissions(&tickets_dir, perms).unwrap();
 
+    let has_temp = std::fs::read_dir(&tickets_dir)
+        .unwrap()
+        .flatten()
+        .any(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".02-ro.md.tmp.")
+        });
+    assert!(!has_temp, "failed write must clean up its temporary file");
+
     assert_eq!(code, 2, "write failure is an I/O error (exit 2): {}", out);
     assert!(
         !out.contains("crash"),
@@ -2646,6 +2657,77 @@ fn test_close_write_failure_surfaces_os_error() {
     assert!(
         out.contains("os error") || out.contains("Permission denied"),
         "must surface the underlying OS cause, not just the path: {}",
+        out
+    );
+    assert!(
+        out.contains("hint:") && out.contains("chmod"),
+        "must include an actionable hint: {}",
+        out
+    );
+}
+
+/// Windows counterpart to the Unix permissions regression above. The lock allows
+/// the CLI to read the ticket but denies deletion/replacement, so the final
+/// rename fails after parsing and temp creation.
+#[cfg(windows)]
+#[test]
+fn test_close_write_failure_surfaces_os_error() {
+    use std::os::windows::fs::OpenOptionsExt;
+
+    let (_tmp, clone) = setup_repo();
+    let ticket_path = clone.join(".tickets/02-ro.md");
+    std::fs::write(
+        &ticket_path,
+        "---\nid: \"02\"\ntitle: \"RO\"\nstatus: in_progress\nblocked_by: []\n\
+         validation_criteria:\n  - \"c1 works\"\n---\n\n\
+         # RO\n\n## Acceptance criteria\n\n- [ ] A\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add ro"]);
+    git(&clone, &["push", "-q", "origin", "HEAD:main"]);
+
+    // FILE_SHARE_READ permits parse/read but denies the rename's replacement of
+    // the destination. Keep the handle alive while the CLI runs.
+    let lock = std::fs::OpenOptions::new()
+        .read(true)
+        .share_mode(0x0000_0001) // FILE_SHARE_READ
+        .open(&ticket_path)
+        .unwrap();
+
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--check-all",
+            "--evidence",
+            "c1 evidence",
+            "--resolution",
+            "done",
+        ],
+    );
+    drop(lock);
+
+    let has_temp = std::fs::read_dir(clone.join(".tickets"))
+        .unwrap()
+        .flatten()
+        .any(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".02-ro.md.tmp.")
+        });
+    assert!(!has_temp, "failed write must clean up its temporary file");
+    assert_eq!(code, 2, "write failure is an I/O error (exit 2): {}", out);
+    assert!(
+        !out.contains("crash"),
+        "environment I/O failure must not be labeled a 'crash': {}",
+        out
+    );
+    assert!(
+        out.contains("cannot write"),
+        "should report the failing write: {}",
         out
     );
     assert!(
@@ -3030,9 +3112,10 @@ fn test_global_dry_run_prevents_lint_context_config_and_renumber_writes() {
     assert!(out.contains("Would renumber"), "should preview: {}", out);
     assert_eq!(std::fs::read_to_string(&ticket).unwrap(), noncanonical);
     assert!(!clone.join(".tickets/02-seed.md").exists());
+    let worktree_status = git(&clone, &["status", "--porcelain"]);
     assert!(
-        git(&clone, &["status", "--porcelain"]).is_empty(),
-        "dry-run must not create a commit or worktree changes"
+        worktree_status.is_empty(),
+        "dry-run must not create a commit or worktree changes: {worktree_status}"
     );
 }
 

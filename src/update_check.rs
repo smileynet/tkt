@@ -17,6 +17,10 @@ pub fn check_for_update() {
     if crate::QUIET.load(std::sync::atomic::Ordering::Relaxed) {
         return;
     }
+    // `--dry-run` must not create or refresh the update-check cache.
+    if crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
     // Disabled by env
     if std::env::var("TKT_UPDATE_CHECK").as_deref() == Ok("0") {
         return;
