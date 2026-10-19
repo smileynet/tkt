@@ -137,7 +137,6 @@ release cycle.
 | 145 | Honor DO_NOT_TRACK in update checking | backlog |
 | 147 | Investigate telemetry consent resets | backlog |
 | 148 | Support a primary-agent role pattern | backlog |
-| 150 | Have doctor detect ejected tickets | backlog |
 | 151 | Route corpus-ejection diagnostics through normal output policy | backlog |
 | 157 | Add optional hook installation | backlog |
 | 158 | Add per-agent ticket-write nudges | backlog |
