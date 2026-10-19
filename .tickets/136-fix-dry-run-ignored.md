@@ -1,7 +1,7 @@
 ---
 id: "136"
 title: "Fix global --dry-run ignored by 7 mutating commands"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
