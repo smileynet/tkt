@@ -1,9 +1,9 @@
 ---
 id: "150"
-title: "doctor should detect ejected (unparseable) tickets like validate does"
-status: backlog
+title: "doctor must report all validate findings"
+status: open
 blocked_by: []
-priority: medium
+priority: high
 validation_criteria:
   - "doctor reports unparseable tickets that load_corpus silently skips"
   - "doctor and validate agree on ejected-ticket detection"
