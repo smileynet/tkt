@@ -64,6 +64,9 @@ commit_parsers = [
     { message = "^Merge ", skip = true },
     { message = "^revert", skip = true },
     { footer = "^changelog: ?ignore", skip = true },
+    # Ticket, plan, and release bookkeeping can use conventional prefixes but
+    # is still internal; never present it as a customer-facing release note.
+    { message = "^(feat|fix|perf|refactor)\\((tickets|plan|release|adr)\\)", skip = true },
     # --- Breaking changes surface first (protect_breaking_commits keeps them) ---
     { message = "^\\w+!", group = "<!-- 0 -->Changed" },
     { body = ".*BREAKING CHANGE", group = "<!-- 0 -->Changed" },
