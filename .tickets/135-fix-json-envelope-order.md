@@ -1,7 +1,7 @@
 ---
 id: "135"
 title: "Fix JSON error envelope not last line of stderr"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
