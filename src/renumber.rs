@@ -4,13 +4,13 @@
 //! decoupled from git — callers handle staging and publishing.
 
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 use anyhow::{bail, Result};
 use regex::Regex;
 
-use crate::core::{self, Ticket, TicketFile};
+use crate::core::{self, Ticket};
 
 static RE_TICKET_FILENAME: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\d+)-(.+)\.md$").unwrap());
@@ -29,6 +29,22 @@ pub struct RenumberEntry {
 #[derive(Debug, Clone)]
 pub struct RenumberPlan {
     pub entries: Vec<RenumberEntry>,
+}
+
+/// A fully preflighted renumber operation. Every file to rename or rewrite is
+/// identified and rendered before `apply_renumber` starts mutating the filesystem.
+#[derive(Debug, Clone)]
+pub struct MaterializedRenumberPlan {
+    writes: Vec<PlannedWrite>,
+    staged_paths: Vec<String>,
+    refs_updated: usize,
+}
+
+#[derive(Debug, Clone)]
+struct PlannedWrite {
+    source: PathBuf,
+    target: PathBuf,
+    contents: String,
 }
 
 impl RenumberPlan {
@@ -165,93 +181,178 @@ pub struct AppliedRenumber {
     pub refs_updated: usize,
 }
 
-/// Apply a renumber plan to the filesystem. Renames files, rewrites `id` fields,
-/// and updates all `blocked_by` references across the corpus.
+/// Parse and render every affected ticket before a renumber begins.
 ///
-/// Does NOT handle git staging/commit/push — caller is responsible.
-pub fn apply_renumber(dir: &Path, plan: &RenumberPlan) -> Result<AppliedRenumber> {
-    let mut staged_paths: Vec<String> = Vec::new();
-    let mut refs_updated = 0;
-
-    // Build the ID mapping for reference rewrites
+/// `enforce_birth_window` is used by the manual `renumber` command: an ID that is
+/// cited by another ticket cannot be moved. Collision recovery (`rebase`) supplies
+/// `false`, because its purpose is specifically to repair a newly-created local ID
+/// collision and rewrite its inbound dependency references.
+pub fn materialize_renumber(
+    dir: &Path,
+    plan: &RenumberPlan,
+    enforce_birth_window: bool,
+) -> Result<MaterializedRenumberPlan> {
     let id_map: HashMap<&str, &str> = plan
         .entries
         .iter()
         .map(|e| (e.old_id.as_str(), e.new_id.as_str()))
         .collect();
-
-    // Phase 1: rename files and update id fields
-    for entry in &plan.entries {
-        let old_filename = format!("{}-{}.md", entry.old_id, entry.slug);
-        let new_filename = format!("{}-{}.md", entry.new_id, entry.slug);
-        let old_path = dir.join(&old_filename);
-        let new_path = dir.join(&new_filename);
-
-        // On Windows, fs::rename can't overwrite — delete first if exists
-        if new_path.exists() {
-            std::fs::remove_file(&new_path)?;
-        }
-        std::fs::rename(&old_path, &new_path)?;
-
-        // Update the id field in frontmatter
-        let mut file = TicketFile::parse(&new_path)?;
-        let old_raw = file.get("id").unwrap_or("");
-        let new_val = if old_raw.starts_with('"') {
-            format!("\"{}\"", entry.new_id)
-        } else {
-            entry.new_id.clone()
-        };
-        file.set_field("id", &new_val);
-        file.write()?;
-
-        staged_paths.push(format!(".tickets/{}", old_filename));
-        staged_paths.push(format!(".tickets/{}", new_filename));
-    }
-
-    // Phase 2: update blocked_by references across the entire corpus
-    let corpus_names: Vec<String> = std::fs::read_dir(dir)?
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
-        .map(|e| e.file_name().to_string_lossy().to_string())
+    let source_names: HashSet<String> = plan
+        .entries
+        .iter()
+        .map(|entry| format!("{}-{}.md", entry.old_id, entry.slug))
         .collect();
 
-    for name in &corpus_names {
-        let path = dir.join(name);
-        let mut file = TicketFile::parse(&path)?;
-        if let Some(deps_raw) = file.get("blocked_by") {
-            let deps: Vec<String> = deps_raw
-                .trim_matches(|c| c == '[' || c == ']')
-                .split(',')
-                .map(|s| s.trim().trim_matches('"').to_string())
-                .filter(|s| !s.is_empty())
-                .collect();
+    let mut names: Vec<String> = std::fs::read_dir(dir)?
+        .collect::<std::io::Result<Vec<_>>>()?
+        .into_iter()
+        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "md"))
+        .map(|entry| entry.file_name().to_string_lossy().to_string())
+        .collect();
+    names.sort();
 
-            let mut changed = false;
-            let new_deps: Vec<String> = deps
-                .into_iter()
-                .map(|d| {
-                    if let Some(&new_id) = id_map.get(d.as_str()) {
-                        changed = true;
-                        new_id.to_string()
-                    } else {
-                        d
-                    }
-                })
-                .collect();
+    // Parse the complete potentially affected corpus up front. Unlike load_corpus,
+    // this intentionally does not skip a bad file: applying a partial plan would
+    // violate the birth-window and files-are-the-database contracts.
+    let tickets: Vec<(String, Ticket)> = names
+        .iter()
+        .map(|name| {
+            let path = dir.join(name);
+            Ticket::parse(&path).map(|ticket| (name.clone(), ticket))
+        })
+        .collect::<Result<_>>()?;
 
-            if changed {
-                file.set_blocked_by(&new_deps);
-                file.write()?;
-                staged_paths.push(format!(".tickets/{}", name));
-                refs_updated += 1;
+    for source_name in &source_names {
+        if !names.contains(source_name) {
+            bail!("renumber source {:?} does not exist", source_name);
+        }
+    }
+
+    if enforce_birth_window {
+        for (name, ticket) in &tickets {
+            if source_names.contains(name) {
+                continue;
+            }
+            for entry in &plan.entries {
+                if ticket.blocked_by.iter().any(|id| id == &entry.old_id)
+                    || body_cites_id(&ticket.body, &entry.old_id)
+                {
+                    bail!(
+                        "cannot renumber {}: {} cites this id outside its birth window",
+                        entry.old_id,
+                        name
+                    );
+                }
             }
         }
     }
 
-    Ok(AppliedRenumber {
+    let mut writes = Vec::new();
+    let mut staged_paths = Vec::new();
+    let mut refs_updated = 0;
+
+    for (name, ticket) in tickets {
+        let source = dir.join(&name);
+        let mut target = source.clone();
+        let mut file = ticket.file;
+        let mut changed = false;
+
+        if let Some(entry) = plan
+            .entries
+            .iter()
+            .find(|entry| name == format!("{}-{}.md", entry.old_id, entry.slug))
+        {
+            target = dir.join(format!("{}-{}.md", entry.new_id, entry.slug));
+            if target.exists() {
+                bail!(
+                    "renumber target {:?} already exists",
+                    target.file_name().unwrap()
+                );
+            }
+            let old_raw = file.get("id").unwrap_or("");
+            let new_value = if old_raw.starts_with('"') {
+                format!("\"{}\"", entry.new_id)
+            } else {
+                entry.new_id.clone()
+            };
+            file.set_field("id", &new_value);
+            changed = true;
+            staged_paths.push(format!(".tickets/{}", name));
+            staged_paths.push(format!(
+                ".tickets/{}",
+                target.file_name().unwrap().to_string_lossy()
+            ));
+        }
+
+        let rewritten_deps: Vec<String> = ticket
+            .blocked_by
+            .iter()
+            .map(|id| {
+                id_map
+                    .get(id.as_str())
+                    .copied()
+                    .unwrap_or(id.as_str())
+                    .to_string()
+            })
+            .collect();
+        if rewritten_deps != ticket.blocked_by {
+            file.set_blocked_by(&rewritten_deps);
+            changed = true;
+            refs_updated += 1;
+        }
+
+        if changed {
+            if source == target {
+                staged_paths.push(format!(".tickets/{}", name));
+            }
+            writes.push(PlannedWrite {
+                source,
+                target,
+                contents: file.serialize(),
+            });
+        }
+    }
+
+    staged_paths.sort();
+    staged_paths.dedup();
+
+    Ok(MaterializedRenumberPlan {
+        writes,
         staged_paths,
         refs_updated,
     })
+}
+
+/// Apply a fully materialized renumber plan. This function performs no corpus
+/// discovery or parsing after mutation begins.
+pub fn apply_renumber(plan: &MaterializedRenumberPlan) -> Result<AppliedRenumber> {
+    // Move every source first. Targets were verified absent during preflight.
+    for write in &plan.writes {
+        if write.source != write.target {
+            std::fs::rename(&write.source, &write.target)?;
+        }
+    }
+
+    for write in &plan.writes {
+        core::atomic_write(&write.target, &write.contents)?;
+    }
+
+    Ok(AppliedRenumber {
+        staged_paths: plan.staged_paths.clone(),
+        refs_updated: plan.refs_updated,
+    })
+}
+
+fn body_cites_id(body: &str, id: &str) -> bool {
+    body.match_indices(id).any(|(start, _)| {
+        let before = body[..start].chars().last();
+        let after = body[start + id.len()..].chars().next();
+        !before.is_some_and(is_id_char) && !after.is_some_and(is_id_char)
+    })
+}
+
+fn is_id_char(c: char) -> bool {
+    c.is_ascii_alphanumeric() || matches!(c, '-' | '_')
 }
 
 #[cfg(test)]
@@ -364,7 +465,8 @@ mod tests {
             }],
         };
 
-        let result = apply_renumber(dir.path(), &plan).unwrap();
+        let materialized = materialize_renumber(dir.path(), &plan, false).unwrap();
+        let result = apply_renumber(&materialized).unwrap();
         assert_eq!(result.refs_updated, 1);
         assert!(!dir.path().join("01-auth.md").exists());
         assert!(dir.path().join("05-auth.md").exists());
@@ -377,6 +479,107 @@ mod tests {
         let api_content = std::fs::read_to_string(dir.path().join("02-api.md")).unwrap();
         assert!(api_content.contains("\"05\""));
         assert!(!api_content.contains("\"01\""));
+    }
+
+    #[test]
+    fn materialize_refuses_block_style_citation_without_writing() {
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("01-auth.md");
+        let citer = dir.path().join("02-api.md");
+        std::fs::write(
+            &source,
+            "---\nid: \"01\"\ntitle: \"Auth\"\nstatus: open\nblocked_by: []\n---\n\n# Auth\n",
+        )
+        .unwrap();
+        std::fs::write(
+            &citer,
+            "---\nid: \"02\"\ntitle: \"API\"\nstatus: open\nblocked_by:\n  - \"01\"\n---\n\n# API\n",
+        )
+        .unwrap();
+        let before_source = std::fs::read_to_string(&source).unwrap();
+        let before_citer = std::fs::read_to_string(&citer).unwrap();
+        assert_eq!(Ticket::parse(&citer).unwrap().blocked_by, vec!["01"]);
+        let plan = RenumberPlan {
+            entries: vec![RenumberEntry {
+                old_id: "01".to_string(),
+                new_id: "05".to_string(),
+                slug: "auth".to_string(),
+            }],
+        };
+
+        let err = materialize_renumber(dir.path(), &plan, true).unwrap_err();
+        assert!(err.to_string().contains("outside its birth window"));
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), before_source);
+        assert_eq!(std::fs::read_to_string(&citer).unwrap(), before_citer);
+        assert!(source.exists());
+        assert!(!dir.path().join("05-auth.md").exists());
+    }
+
+    #[test]
+    fn materialize_refuses_body_citation_and_malformed_corpus_without_writing() {
+        let dir = tempfile::tempdir().unwrap();
+        let source = dir.path().join("01-auth.md");
+        let prose = dir.path().join("02-api.md");
+        std::fs::write(
+            &source,
+            "---\nid: \"01\"\ntitle: \"Auth\"\nstatus: open\nblocked_by: []\n---\n\n# Auth\n",
+        )
+        .unwrap();
+        std::fs::write(
+            &prose,
+            "---\nid: \"02\"\ntitle: \"API\"\nstatus: open\nblocked_by: []\n---\n\n# API\n\nSee #01 first.\n",
+        )
+        .unwrap();
+        let plan = RenumberPlan {
+            entries: vec![RenumberEntry {
+                old_id: "01".to_string(),
+                new_id: "05".to_string(),
+                slug: "auth".to_string(),
+            }],
+        };
+        let before = std::fs::read_to_string(&source).unwrap();
+
+        assert!(materialize_renumber(dir.path(), &plan, true).is_err());
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), before);
+
+        std::fs::remove_file(&prose).unwrap();
+        let malformed = dir.path().join("02-broken.md");
+        std::fs::write(&malformed, "not frontmatter\n").unwrap();
+        assert!(materialize_renumber(dir.path(), &plan, true).is_err());
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), before);
+        assert!(malformed.exists());
+        assert!(!dir.path().join("05-auth.md").exists());
+    }
+
+    #[test]
+    fn apply_uses_only_preflighted_writes() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("01-auth.md"),
+            "---\nid: \"01\"\ntitle: \"Auth\"\nstatus: open\nblocked_by: []\n---\n\n# Auth\n",
+        )
+        .unwrap();
+        let plan = RenumberPlan {
+            entries: vec![RenumberEntry {
+                old_id: "01".to_string(),
+                new_id: "05".to_string(),
+                slug: "auth".to_string(),
+            }],
+        };
+        let materialized = materialize_renumber(dir.path(), &plan, true).unwrap();
+
+        // This file appears after preflight. Apply must not discover or parse it.
+        let late_bad_file = dir.path().join("02-late-bad.md");
+        std::fs::write(&late_bad_file, "not frontmatter\n").unwrap();
+        let result = apply_renumber(&materialized).unwrap();
+
+        assert_eq!(result.refs_updated, 0);
+        assert!(!dir.path().join("01-auth.md").exists());
+        assert!(dir.path().join("05-auth.md").exists());
+        assert_eq!(
+            std::fs::read_to_string(&late_bad_file).unwrap(),
+            "not frontmatter\n"
+        );
     }
 
     #[test]
@@ -413,7 +616,8 @@ mod tests {
             ],
         };
 
-        let result = apply_renumber(dir.path(), &plan).unwrap();
+        let materialized = materialize_renumber(dir.path(), &plan, false).unwrap();
+        let result = apply_renumber(&materialized).unwrap();
         assert_eq!(result.refs_updated, 2); // 02-b refs 01, 03-c refs both
 
         // 03-c should have both refs updated

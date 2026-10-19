@@ -692,6 +692,57 @@ fn test_query_preserves_hand_edited_plain_scalar_backslashes() {
 }
 
 #[test]
+fn test_renumber_refuses_one_item_block_style_citation_before_writing() {
+    let (_tmp, clone) = setup_repo();
+    let citer = clone.join(".tickets/02-citer.md");
+    std::fs::write(
+        &citer,
+        "---\nid: \"02\"\ntitle: \"Citer\"\nstatus: open\nblocked_by:\n  - \"01\"\n---\n\n# Citer\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add citer"]);
+    let seed = clone.join(".tickets/01-seed.md");
+    let before_seed = std::fs::read_to_string(&seed).unwrap();
+    let before_citer = std::fs::read_to_string(&citer).unwrap();
+
+    let (code, out) = run_tkt(&clone, &["renumber", "01", "05"]);
+    assert_eq!(code, 1, "renumber should reject a cited ID: {}", out);
+    assert!(
+        out.contains("birth window"),
+        "should explain the refusal: {}",
+        out
+    );
+    assert_eq!(std::fs::read_to_string(&seed).unwrap(), before_seed);
+    assert_eq!(std::fs::read_to_string(&citer).unwrap(), before_citer);
+    assert!(!clone.join(".tickets/05-seed.md").exists());
+}
+
+#[test]
+fn test_renumber_refuses_malformed_ticket_before_writing() {
+    let (_tmp, clone) = setup_repo();
+    let seed = clone.join(".tickets/01-seed.md");
+    let before_seed = std::fs::read_to_string(&seed).unwrap();
+    let malformed = clone.join(".tickets/02-broken.md");
+    std::fs::write(&malformed, "not frontmatter\n").unwrap();
+
+    let (code, out) = run_tkt(&clone, &["renumber", "01", "05"]);
+    assert_eq!(
+        code, 1,
+        "renumber should reject a malformed corpus: {}",
+        out
+    );
+    assert!(
+        out.contains("frontmatter") || out.contains("unparseable"),
+        "should explain the malformed ticket: {}",
+        out
+    );
+    assert_eq!(std::fs::read_to_string(&seed).unwrap(), before_seed);
+    assert!(malformed.exists());
+    assert!(!clone.join(".tickets/05-seed.md").exists());
+}
+
+#[test]
 fn test_competing_allocation_no_collision() {
     // Two clones allocate: first pushes, second gets rejected and reallocates
     let tmp = TempDir::new().unwrap();

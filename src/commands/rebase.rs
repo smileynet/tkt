@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use crate::commands::common::{is_quiet, tickets_dir};
 use crate::git;
-use crate::renumber::{apply_renumber, RenumberPlan};
+use crate::renumber::{apply_renumber, materialize_renumber, RenumberPlan};
 
 pub fn run(dry_run: bool) -> Result<i32> {
     let dir = tickets_dir()?;
@@ -31,6 +31,10 @@ pub fn run(dry_run: bool) -> Result<i32> {
         return Ok(0);
     }
 
+    // Parse and render every local ticket before previewing or mutating, so an
+    // unreadable corpus never leaves collision recovery half-applied.
+    let materialized = materialize_renumber(&dir, &plan, false)?;
+
     // Step 4: dry-run preview
     if dry_run {
         println!("Collisions detected ({}):", plan.entries.len());
@@ -42,7 +46,7 @@ pub fn run(dry_run: bool) -> Result<i32> {
     }
 
     // Step 5: apply
-    let result = apply_renumber(&dir, &plan)?;
+    let result = apply_renumber(&materialized)?;
 
     // Step 6: publish (stage + commit)
     let add_paths: Vec<&str> = result.staged_paths.iter().map(|s| s.as_str()).collect();

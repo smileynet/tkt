@@ -763,7 +763,7 @@ fn parse_blocked_by(raw: &str) -> Vec<String> {
     // Multi-line YAML list format:
     //   - "01"
     //   - "03"
-    if raw.contains('\n') {
+    if raw.contains('\n') || trimmed.starts_with('-') {
         return raw
             .split('\n')
             .map(|line| line.trim())
@@ -1134,6 +1134,14 @@ spec: regex \d+
         let content = "---\nid: \"05\"\ntitle: \"Block deps\"\nstatus: open\nblocked_by:\n  - \"01\"\n  - \"03\"\n---\n\n# Body\n";
         let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
         assert_eq!(t.blocked_by, vec!["01", "03"]);
+    }
+
+    #[test]
+    fn parse_single_item_block_style_blocked_by() {
+        let content =
+            "---\nid: \"05\"\ntitle: \"One dependency\"\nstatus: open\nblocked_by:\n  - \"01\"\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.blocked_by, vec!["01"]);
     }
 
     #[test]
