@@ -31,25 +31,25 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 205 | Keep migration confirmation without writing during dry runs | ✅ done |
 | 146 | Cut, tag, and document v0.4.0 | open |
 
-## Quality, integrity, and dogfooding
+## Post-v0.4.0 quality, integrity, and dogfooding
 
 These items strengthen the ticket contract and the project’s ability to rely on its
-own health signals. They follow the v0.4.0 gate unless they are explicitly listed
-above as release blockers.
+own health signals. They are explicitly deferred from the v0.4.0 release; the
+release gate is limited to the completed blocker table above and #146.
 
 | ID | Work | Status |
 |---:|---|---|
 | 153 | Prevent stale installed-binary validation | backlog |
-| 156 | Disposition remaining delta-review findings | open |
-| 163 | Backfill missing IDs from filename prefixes | open |
-| 164 | Support canonical slug IDs in validation | open |
-| 165 | Write project-scoped configuration safely | open |
-| 173 | Add advisory frontier Definition-of-Ready validation | open |
-| 175 | Flag tickets with no source reference | open |
-| 176 | Improve new-ticket body template and add body input | open |
-| 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | open |
-| 186 | Reconcile or retire the historical parity harness | open |
-| 190 | Parse known config keys into strict typed policies | open |
+| 156 | Disposition remaining delta-review findings | backlog |
+| 163 | Backfill missing IDs from filename prefixes | backlog |
+| 164 | Support canonical slug IDs in validation | backlog |
+| 165 | Write project-scoped configuration safely | backlog |
+| 173 | Add advisory frontier Definition-of-Ready validation | backlog |
+| 175 | Flag tickets with no source reference | backlog |
+| 176 | Improve new-ticket body template and add body input | backlog |
+| 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | backlog |
+| 186 | Reconcile or retire the historical parity harness | backlog |
+| 190 | Parse known config keys into strict typed policies | backlog |
 | 191 | Centralize mutation effects and dry-run policy after #136 | backlog |
 
 ## v0.5.0 — agent experience and extensions
@@ -59,19 +59,19 @@ release of already-merged behavior.
 
 | ID | Work | Status |
 |---:|---|---|
-| 127 | Improve agent discovery and init guidance | open |
-| 138 | Complete the machine-readable capabilities manifest | open |
-| 161 | Support aggregate reporter provenance in steering | open |
+| 127 | Improve agent discovery and init guidance | backlog |
+| 138 | Complete the machine-readable capabilities manifest | backlog |
+| 161 | Support aggregate reporter provenance in steering | backlog |
 | 168 | Consider advisory nudges for tag-less/backlog work | backlog |
-| 79 | Safely undo the last tkt mutation | open |
-| 83 | Edit a ticket body through the configured editor | open |
-| 86 | One-way GitHub issue import | open |
-| 87 | Ticket body templates | open |
-| 88 | Recent-completions report | open |
-| 89 | Lifecycle hooks | open |
-| 90 | Open ticket-body URLs | open |
-| 93 | Pluggable ticket schema and meta fields | open |
-| 202 | Deploy tkt guidance and skill safely across supported harnesses | open |
+| 79 | Safely undo the last tkt mutation | backlog |
+| 83 | Edit a ticket body through the configured editor | backlog |
+| 86 | One-way GitHub issue import | backlog |
+| 87 | Ticket body templates | backlog |
+| 88 | Recent-completions report | backlog |
+| 89 | Lifecycle hooks | backlog |
+| 90 | Open ticket-body URLs | backlog |
+| 93 | Pluggable ticket schema and meta fields | backlog |
+| 202 | Deploy tkt guidance and skill safely across supported harnesses | backlog |
 
 ## v0.5.0 — native relations and label namespaces
 
@@ -83,14 +83,14 @@ three roots first (`192`, `193`, `194`), their dependents, then the docs pass la
 
 | ID | Work | Status |
 |---:|---|---|
-| 192 | parent field: schema, parse, serialize | open |
-| 193 | `[labels.*]` config: parse single-select + closed-value namespaces | open |
-| 194 | assignee field + claim-by-assignment + frontier honors it | open |
-| 195 | parent validation: dangling + cycle checks (after 192) | open |
-| 196 | parent CLI + query/capabilities surface (after 192) | open |
-| 197 | parent rollup + frontier semantics (after 192, 196) | open |
-| 198 | label-namespace validation: single-select + closed-set (after 193) | open |
-| 199 | docs, capabilities, CHANGELOG for parent/assignee/labels (after 194, 196-198) | open |
+| 192 | parent field: schema, parse, serialize | backlog |
+| 193 | `[labels.*]` config: parse single-select + closed-value namespaces | backlog |
+| 194 | assignee field + claim-by-assignment + frontier honors it | backlog |
+| 195 | parent validation: dangling + cycle checks (after 192) | backlog |
+| 196 | parent CLI + query/capabilities surface (after 192) | backlog |
+| 197 | parent rollup + frontier semantics (after 192, 196) | backlog |
+| 198 | label-namespace validation: single-select + closed-set (after 193) | backlog |
+| 199 | docs, capabilities, CHANGELOG for parent/assignee/labels (after 194, 196-198) | backlog |
 | 200 | parent-scoped ready frontier (after 196, 197) | backlog |
 
 ## Release scope decision record
@@ -107,7 +107,7 @@ them out of the active frontier until the v0.4.0 release is complete.
 | ID | Work | Status |
 |---:|---|---|
 | 182 | Decide a delete/cancel lifecycle mechanism | backlog |
-| 184 | Implement opt-in narrative sync-plan support | deferred (ticket open) |
+| 184 | Implement opt-in narrative sync-plan support | backlog |
 
 ADR 0002 makes plan-as-projection the strategic primary direction; narrative support
 is the opt-in secondary path in #184. #187 owns the primary projection renderer; keep

@@ -36,3 +36,14 @@ Decide the policy. Options (from the warn-vs-block research, `.scratch/subagent-
 ## Out of scope
 
 - Changing the #154 check itself (it's correct for new tickets)
+
+## Resolution (2026-10-19)
+
+Adopted a numeric grandfather cutoff instead of fabricating historical closure
+records. The project configuration exempts IDs below 36 from
+`missing-resolution`; every later closure remains subject to the normal check.
+
+### Verification
+
+1. ✓ policy decided: grandfather (suppress pre-date), backfill note, or accept as documented — "0e804f8 added `validate.missing_resolution_before_id = \"36\"` and filters only legacy missing-resolution findings."
+2. ✓ `tkt validate` no longer emits noise for legacy closed tickets, OR the warnings are explicitly documented as expected — "The configured cutoff suppresses the 27 pre-protocol #02–#35 findings while preserving validation for newer tickets."
