@@ -1,7 +1,7 @@
 ---
 id: "160"
 title: "Decide handling for 27 historical done tickets flagged missing-resolution"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
