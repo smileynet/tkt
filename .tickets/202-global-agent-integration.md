@@ -1,7 +1,7 @@
 ---
 id: "202"
 title: "Deploy tkt guidance and skill safely across supported harnesses"
-status: open
+status: backlog
 blocked_by: []
 priority: high
 validation_criteria:
