@@ -1,7 +1,7 @@
 ---
 id: "160"
 title: "Decide handling for 27 historical done tickets flagged missing-resolution"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -29,9 +29,9 @@ Decide the policy. Options (from the warn-vs-block research, `.scratch/subagent-
 
 ## Acceptance criteria
 
-- [ ] policy decided: grandfather (suppress pre-date), backfill note, or accept as documented
-- [ ] `tkt validate` no longer emits noise for legacy closed tickets, OR the warnings are explicitly documented as expected
-- [ ] no fabricated resolutions
+- [x] policy decided: grandfather (suppress pre-date), backfill note, or accept as documented
+- [x] `tkt validate` no longer emits noise for legacy closed tickets, OR the warnings are explicitly documented as expected
+- [x] no fabricated resolutions
 
 ## Out of scope
 
