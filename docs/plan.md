@@ -21,7 +21,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 141 | Count uppercase checked acceptance boxes | ✅ done |
 | 152 | Fix indented-comment parser corruption | ✅ done |
 | 181 | Verify atomic writes across Windows and Linux | ✅ done |
-| 188 | Reject ambiguous duplicate frontmatter keys | open |
+| 188 | Reject ambiguous duplicate frontmatter keys | ✅ done |
 | 189 | Unify env and requires into one eligibility model | open |
 | 150 | Make doctor strict results agree with validate | ✅ done |
 | 160 | Decide and apply the legacy missing-resolution validation baseline | ✅ done |
