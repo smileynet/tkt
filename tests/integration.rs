@@ -666,6 +666,32 @@ fn test_query_outputs_json_lines() {
 }
 
 #[test]
+fn test_query_preserves_hand_edited_plain_scalar_backslashes() {
+    let (_tmp, clone) = setup_repo();
+
+    std::fs::write(
+        clone.join(".tickets/02-unquoted.md"),
+        "---\nid: 02\ntitle: C:\\notes\nstatus: open\nblocked_by: []\nspec: regex \\d+\n---\n\n# Hand edited\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add hand edited ticket"]);
+
+    let (code, out) = run_tkt(&clone, &["query"]);
+    assert_eq!(code, 0, "query should succeed: {}", out);
+    assert!(
+        out.contains(r#""title":"C:\\notes""#),
+        "query must retain the title backslash: {}",
+        out
+    );
+    assert!(
+        out.contains(r#""spec":"regex \\d+""#),
+        "query must retain the spec backslash: {}",
+        out
+    );
+}
+
+#[test]
 fn test_competing_allocation_no_collision() {
     // Two clones allocate: first pushes, second gets rejected and reallocates
     let tmp = TempDir::new().unwrap();

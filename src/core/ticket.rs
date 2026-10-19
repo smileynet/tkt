@@ -453,10 +453,10 @@ impl Ticket {
         let path_display = file.path.display().to_string();
 
         let raw_id = file.get("id").unwrap_or("");
-        let id = yaml_scalar_unescape(raw_id.trim_matches('"').trim_matches('\''));
+        let id = yaml_scalar_decode(raw_id);
 
         let raw_title = file.get("title").unwrap_or("");
-        let title = yaml_scalar_unescape(raw_title.trim_matches('"').trim_matches('\''));
+        let title = yaml_scalar_decode(raw_title);
 
         let raw_status = file.get("status").unwrap_or("");
         let status =
@@ -475,9 +475,7 @@ impl Ticket {
             None => None,
         };
 
-        let spec = file
-            .get("spec")
-            .map(|v| yaml_scalar_unescape(v.trim_matches('"').trim_matches('\'')));
+        let spec = file.get("spec").map(yaml_scalar_decode);
 
         let validation_criteria =
             parse_validation_criteria(file.get("validation_criteria").unwrap_or(""));
@@ -758,7 +756,7 @@ fn parse_blocked_by(raw: &str) -> Vec<String> {
         let inner = &trimmed[1..trimmed.len() - 1];
         return inner
             .split(',')
-            .map(|s| yaml_scalar_unescape(s.trim().trim_matches('"').trim_matches('\'')))
+            .map(yaml_scalar_decode)
             .filter(|s| !s.is_empty())
             .collect();
     }
@@ -772,7 +770,7 @@ fn parse_blocked_by(raw: &str) -> Vec<String> {
             .filter(|line| line.starts_with('-'))
             .map(|line| {
                 let val = line[1..].trim();
-                yaml_scalar_unescape(val.trim_matches('"').trim_matches('\''))
+                yaml_scalar_decode(val)
             })
             .filter(|s| !s.is_empty())
             .collect();
@@ -802,7 +800,7 @@ fn parse_validation_criteria(raw: &str) -> Vec<String> {
         let inner = &trimmed[1..trimmed.len() - 1];
         return inner
             .split(',')
-            .map(|s| yaml_scalar_unescape(s.trim().trim_matches('"').trim_matches('\'')))
+            .map(yaml_scalar_decode)
             .filter(|s| !s.is_empty())
             .collect();
     }
@@ -814,7 +812,7 @@ fn parse_validation_criteria(raw: &str) -> Vec<String> {
         .filter(|line| line.starts_with('-'))
         .map(|line| {
             let val = line[1..].trim();
-            yaml_scalar_unescape(val.trim_matches('"').trim_matches('\''))
+            yaml_scalar_decode(val)
         })
         .filter(|s| !s.is_empty())
         .collect()
@@ -903,6 +901,26 @@ pub fn yaml_scalar_unescape(s: &str) -> String {
         }
     }
     out
+}
+
+/// Decode a scalar according to the narrow frontmatter contract.
+///
+/// Plain scalars are user-owned text, so their bytes must not be interpreted as YAML
+/// escapes. Only a complete double-quoted scalar uses the escape decoder; single-quoted
+/// values are accepted as literal text for backwards-compatible hand editing.
+fn yaml_scalar_decode(raw: &str) -> String {
+    let trimmed = raw.trim();
+    match trimmed
+        .strip_prefix('"')
+        .and_then(|value| value.strip_suffix('"'))
+    {
+        Some(value) => yaml_scalar_unescape(value),
+        None => trimmed
+            .strip_prefix('\'')
+            .and_then(|value| value.strip_suffix('\''))
+            .unwrap_or(trimmed)
+            .to_string(),
+    }
 }
 
 /// Escape a string for use inside a JSON string value (between quotes).
@@ -1084,6 +1102,31 @@ mod tests {
         assert!(t.is_high_priority());
         assert_eq!(t.env, Env::Corp);
         assert_eq!(t.spec.as_deref(), Some("my-spec"));
+    }
+
+    #[test]
+    fn parse_unquoted_scalars_preserve_backslashes() {
+        let content = r#"---
+id: 05
+title: C:\notes
+status: open
+blocked_by: []
+spec: regex \d+
+---
+
+# Body
+"#;
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.title, r"C:\notes");
+        assert_eq!(t.spec.as_deref(), Some(r"regex \d+"));
+    }
+
+    #[test]
+    fn parse_double_quoted_scalars_decode_escapes() {
+        let content = "---\nid: \"05\"\ntitle: \"Line\\nbreak\"\nstatus: open\nblocked_by: []\nspec: \"C:\\\\notes\"\n---\n\n# Body\n";
+        let t = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(t.title, "Line\nbreak");
+        assert_eq!(t.spec.as_deref(), Some(r"C:\notes"));
     }
 
     #[test]
