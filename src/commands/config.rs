@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{is_quiet, project_config, tickets_dir};
+use crate::commands::common::{is_dry_run, is_quiet, project_config, tickets_dir};
 
 pub fn run(
     set: Option<&str>,
@@ -17,6 +17,10 @@ pub fn run(
             .ok_or_else(|| anyhow::anyhow!("expected key=value format, got {:?}", pair))?;
         let key = key.trim();
         let value = value.trim();
+        if is_dry_run() {
+            println!("Would set {} = {:?}", key, value);
+            return Ok(0);
+        }
         crate::config::Config::set(key, value)?;
         if !is_quiet() {
             println!("{} {} = {:?}", crate::color::sym_ok(), key, value);
@@ -31,6 +35,10 @@ pub fn run(
     }
 
     if let Some(key) = unset {
+        if is_dry_run() {
+            println!("Would unset {:?}", key);
+            return Ok(0);
+        }
         let existed = crate::config::Config::unset(key)?;
         if !is_quiet() {
             if existed {

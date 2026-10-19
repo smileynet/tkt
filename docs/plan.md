@@ -28,6 +28,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 185 | Restore automatic push/PR CI verification | open |
 | 201 | Remediate agent-facing help and release metadata drift | open |
 | 204 | Parse single-item block-style dependencies correctly | ✅ done |
+| 205 | Keep migration confirmation without writing during dry runs | open |
 | 146 | Cut, tag, and document v0.4.0 | open |
 
 ## Quality, integrity, and dogfooding

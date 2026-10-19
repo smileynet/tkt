@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a ticket in one pass
 - `tkt validate --fix` stops rather than applying a repair that would introduce new
   validation findings
+- `tkt migrate` now requires an explicit `--confirm` after its no-write preview has
+  been reviewed
 
 ### Fixed
 
@@ -41,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   commit instead of treating the work as lost
 - JSON-mode errors now end with the structured error envelope, so automation can
   reliably parse the final stderr line
+- Global `--dry-run` now consistently previews rather than changing tickets,
+  configuration, context, project setup, frontmatter, or renumbered IDs
+- Migration previews no longer leave a confirmation file behind
 
 ## [0.3.0] - 2026-08-23
 

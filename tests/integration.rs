@@ -1676,7 +1676,7 @@ fn test_rebase_resolves_id_collision() {
 
     // Now A pushes another ticket (so B is behind)
     // B runs tkt rebase — should detect collision on 02 and renumber
-    let (code, out) = run_tkt(&clone_b, &["rebase", "--dry-run"]);
+    let (code, out) = run_tkt(&clone_b, &["--dry-run", "rebase"]);
     assert_eq!(code, 0, "rebase --dry-run should succeed: {}", out);
     assert!(
         out.contains("02") && out.contains("beta"),
@@ -2990,4 +2990,102 @@ fn test_batch_nudge_optout() {
             stderr
         );
     }
+}
+
+#[test]
+fn test_global_dry_run_prevents_lint_context_config_and_renumber_writes() {
+    let (_tmp, clone) = setup_repo();
+    let ticket = clone.join(".tickets/01-seed.md");
+    let original = std::fs::read_to_string(&ticket).unwrap();
+    std::fs::write(&ticket, original.replace("id: \"01\"", "id : 01")).unwrap();
+    let noncanonical = std::fs::read_to_string(&ticket).unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "make seed noncanonical"]);
+
+    let (code, out) = run_tkt(&clone, &["--dry-run", "lint"]);
+    assert_eq!(code, 0, "dry-run lint should succeed: {}", out);
+    assert_eq!(std::fs::read_to_string(&ticket).unwrap(), noncanonical);
+
+    let (code, out) = run_tkt(&clone, &["--dry-run", "context", "backend"]);
+    assert_eq!(code, 0, "dry-run context should succeed: {}", out);
+    assert!(!clone.join(".tickets/.context").exists());
+
+    let config_home = clone.join("dry-run-config");
+    let (code, stdout, stderr) = run_tkt_env(
+        &clone,
+        &["--dry-run", "config", "--set", "debug=true"],
+        &[
+            ("TKT_NO_USER_CONFIG", ""),
+            ("XDG_CONFIG_HOME", config_home.to_str().unwrap()),
+        ],
+    );
+    assert_eq!(code, 0, "dry-run config should succeed: {stdout}{stderr}");
+    assert!(
+        !config_home.join("tkt/config.toml").exists(),
+        "dry-run config must not create a user config"
+    );
+
+    let (code, out) = run_tkt(&clone, &["--dry-run", "renumber", "01", "02"]);
+    assert_eq!(code, 0, "dry-run renumber should succeed: {}", out);
+    assert!(out.contains("Would renumber"), "should preview: {}", out);
+    assert_eq!(std::fs::read_to_string(&ticket).unwrap(), noncanonical);
+    assert!(!clone.join(".tickets/02-seed.md").exists());
+    assert!(
+        git(&clone, &["status", "--porcelain"]).is_empty(),
+        "dry-run must not create a commit or worktree changes"
+    );
+}
+
+#[test]
+fn test_global_dry_run_init_does_not_create_files() {
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = tmp.path().join("repo");
+    std::fs::create_dir_all(&repo).unwrap();
+    Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&repo)
+        .output()
+        .unwrap();
+
+    let (code, out) = run_tkt(&repo, &["--dry-run", "init", "--all"]);
+    assert_eq!(code, 0, "dry-run init should succeed: {}", out);
+    assert!(!repo.join(".tickets").exists());
+    assert!(!repo.join("AGENTS.md").exists());
+    assert!(!repo.join(".kiro").exists());
+}
+
+#[test]
+fn test_migrate_preview_is_no_write_and_apply_requires_confirm() {
+    let (_tmp, repo) = setup_local_repo();
+    let legacy = repo.join(".tickets/legacy.md");
+    let original = "---\nstatus: open\ndeps: []\n---\n\n# Legacy\n\nMigrate me.\n";
+    std::fs::write(&legacy, original).unwrap();
+    let status_before = git(&repo, &["status", "--porcelain"]);
+
+    let (code, out) = run_tkt(&repo, &["--dry-run", "migrate", "--from", "tk"]);
+    assert_eq!(code, 0, "migration preview should succeed: {}", out);
+    assert!(
+        out.contains("Migration plan"),
+        "should show a plan: {}",
+        out
+    );
+    assert_eq!(std::fs::read_to_string(&legacy).unwrap(), original);
+    assert!(!repo.join(".tickets/.migrate-reviewed").exists());
+    assert!(!repo.join(".tickets.bak").exists());
+    assert_eq!(git(&repo, &["status", "--porcelain"]), status_before);
+
+    let (code, out) = run_tkt(&repo, &["migrate", "--from", "tk"]);
+    assert_eq!(code, 1, "unconfirmed migration must fail: {}", out);
+    assert!(
+        out.contains("--confirm"),
+        "should explain the confirmation: {}",
+        out
+    );
+    assert_eq!(std::fs::read_to_string(&legacy).unwrap(), original);
+
+    let (code, out) = run_tkt(&repo, &["migrate", "--from", "tk", "--confirm"]);
+    assert_eq!(code, 0, "confirmed migration should succeed: {}", out);
+    assert!(!legacy.exists());
+    assert!(repo.join(".tickets/01-legacy.md").exists());
+    assert!(repo.join(".tickets.bak/legacy.md").exists());
 }

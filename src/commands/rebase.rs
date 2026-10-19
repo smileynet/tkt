@@ -10,8 +10,10 @@ pub fn run(dry_run: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let repo = dir.parent().unwrap().to_path_buf();
 
-    // Step 1: fetch origin
-    git::fetch(&repo)?;
+    // A dry-run reads the last fetched remote state but never performs network I/O.
+    if !dry_run {
+        git::fetch(&repo)?;
+    }
 
     // Step 2: gather local + remote filenames
     let remote_names = git::remote_ticket_names(&repo);

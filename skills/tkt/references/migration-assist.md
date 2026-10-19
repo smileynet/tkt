@@ -32,7 +32,7 @@ Help users convert tickets from any format into tkt's schema.
 3. **Propose** — draft a `migrate.toml` with field renames, enum maps, ID strategy
 4. **Preview** — show 2-3 tickets before/after so the user sees exactly what changes
 5. **Confirm** — user approves or adjusts the map
-6. **Apply** — `tkt migrate --map migrate.toml --apply`
+6. **Apply** — run the explicitly confirmed migration command after review
 
 ## Analysis steps
 
@@ -155,8 +155,8 @@ tkt migrate --detect
 # Preview migration (auto-detects or specify format)
 tkt migrate --from tk --dry-run
 
-# Apply migration
-tkt migrate --from tk
+# Apply the reviewed migration
+tkt migrate --from tk --confirm
 ```
 
 Note: The map-file workflow (`--map`, `--generate-map`, `--apply`) is planned but not yet implemented. For complex migrations requiring custom field mappings, use the manual analysis workflow described above and apply edits via scripting or `tkt edit`.

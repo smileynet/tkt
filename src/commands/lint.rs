@@ -19,6 +19,7 @@ const CANONICAL_ORDER: &[&str] = &[
 ];
 
 pub fn run(check: bool, ids: &[String]) -> Result<i32> {
+    let dry_run = crate::commands::common::is_dry_run();
     let tickets_dir = crate::commands::common::tickets_dir()?;
     let files = collect_files(&tickets_dir, ids)?;
 
@@ -59,7 +60,7 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
         if original != canonical {
             changed += 1;
             let name = path.file_name().unwrap_or_default().to_string_lossy();
-            if check {
+            if check || dry_run {
                 eprintln!("  would change: {}", name);
             } else {
                 crate::core::atomic_write(path, &canonical)?;
@@ -78,7 +79,12 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
         }
     } else {
         if changed > 0 {
-            eprintln!("\ntkt lint: {} file(s) normalized", changed);
+            let verb = if dry_run {
+                "would normalize"
+            } else {
+                "normalized"
+            };
+            eprintln!("\ntkt lint: {} file(s) {}", changed, verb);
         } else {
             eprintln!("tkt lint: all files already canonical");
         }

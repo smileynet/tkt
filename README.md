@@ -159,7 +159,8 @@ tkt query --priority high        # filter by priority
 
 ```bash
 tkt migrate --detect          # detect current ticket format
-tkt migrate --from tk         # convert tk-format tickets to tkt
+tkt migrate --from tk --dry-run  # preview tk-format conversion without writing
+tkt migrate --from tk --confirm  # apply the reviewed conversion
 ```
 
 ## Task Format

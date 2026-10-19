@@ -85,6 +85,9 @@ enum Commands {
         /// Detect and report the current ticket format
         #[arg(long)]
         detect: bool,
+        /// Apply a reviewed migration plan (use after --dry-run)
+        #[arg(long, conflicts_with = "detect")]
+        confirm: bool,
     },
     /// Allocate a new ticket id (fetch, scan, create, commit, push)
     New {
@@ -356,9 +359,11 @@ pub fn run() -> i32 {
             crate::commands::doctor::run(path.as_deref(), fix, strict)
         }
         Commands::Lint { check, ids } => crate::commands::lint::run(check, &ids),
-        Commands::Migrate { from, detect } => {
-            crate::commands::migrate::run(from.as_deref(), detect)
-        }
+        Commands::Migrate {
+            from,
+            detect,
+            confirm,
+        } => crate::commands::migrate::run(from.as_deref(), detect, confirm),
         Commands::New {
             slug,
             title,
@@ -478,7 +483,9 @@ pub fn run() -> i32 {
         }
         Commands::Blocked => crate::commands::blocked::run(),
         Commands::Capabilities => crate::commands::capabilities::run(),
-        Commands::Rebase { dry_run } => crate::commands::rebase::run(dry_run),
+        Commands::Rebase { dry_run } => crate::commands::rebase::run(
+            dry_run || crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed),
+        ),
         Commands::Audit {
             strict,
             brief,

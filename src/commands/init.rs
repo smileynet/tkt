@@ -7,7 +7,7 @@
 use anyhow::Result;
 
 use crate::color::{sym_ok, sym_warn};
-use crate::commands::common::is_quiet;
+use crate::commands::common::{is_dry_run, is_quiet};
 
 // --- Marker constants ---
 
@@ -169,6 +169,19 @@ pub fn run(
     agent_only: bool,
 ) -> Result<i32> {
     let repo_root = crate::git::repo_root_cwd()?;
+
+    let writes = !agent_only || all || target.is_some() || write.is_some();
+    if writes && is_dry_run() {
+        println!("Would initialize tkt files in {}", repo_root.display());
+        if all {
+            println!("Would update all supported agent instruction targets");
+        } else if let Some(target) = target {
+            println!("Would update {} agent instructions", target);
+        } else if let Some(file) = write.as_ref().and_then(|file| file.as_ref()) {
+            println!("Would update {}", file);
+        }
+        return Ok(0);
+    }
 
     // Step 1: Project bootstrapping (unless --agent-only)
     if !agent_only {

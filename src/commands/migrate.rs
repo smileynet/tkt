@@ -5,7 +5,7 @@ use anyhow::Result;
 use crate::commands::common::{domain_bail, is_quiet, tickets_dir};
 use crate::migrate::{self, DetectedFormat};
 
-pub fn run(from: Option<&str>, detect: bool) -> Result<i32> {
+pub fn run(from: Option<&str>, detect: bool, confirm: bool) -> Result<i32> {
     let dir = tickets_dir()?;
 
     // --detect mode: report format and exit
@@ -47,14 +47,14 @@ pub fn run(from: Option<&str>, detect: bool) -> Result<i32> {
     };
 
     match source.as_str() {
-        "tk" => run_tk_migration(&dir),
+        "tk" => run_tk_migration(&dir, confirm),
         other => {
             domain_bail!("unknown source format: {} (available: tk)", other);
         }
     }
 }
 
-fn run_tk_migration(dir: &std::path::Path) -> Result<i32> {
+fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
     let dry_run = crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed);
 
     // Build plan
@@ -124,28 +124,23 @@ fn run_tk_migration(dir: &std::path::Path) -> Result<i32> {
     }
 
     if dry_run {
-        // Write a marker so apply knows the plan was reviewed
-        let marker = dir.join(".migrate-reviewed");
-        std::fs::write(&marker, format!("{}\n", plan.total))?;
         if !is_quiet() {
-            println!("Run without --dry-run to apply.");
+            println!("Review the plan, then run again with --confirm to apply.");
         }
         return Ok(0);
     }
 
-    // Safety: require --dry-run preview before first apply.
-    let marker = dir.join(".migrate-reviewed");
-    if !marker.exists() {
+    // Safety: do not apply without an explicit, separately-invoked confirmation.
+    // A preview never leaves a marker behind, so it remains genuinely no-write.
+    if !confirm {
         return Err(crate::DomainError::with_hint(
             crate::ErrorKind::GateFailed,
-            "migration requires --dry-run preview before applying".to_string(),
-            "run: tkt migrate --from tk --dry-run (review the plan, then re-run without --dry-run)"
+            "migration requires a reviewed preview and explicit --confirm".to_string(),
+            "run: tkt migrate --from tk --dry-run (review the plan, then run: tkt migrate --from tk --confirm)"
                 .to_string(),
         )
         .into());
     }
-    // Remove marker after reading (one-shot confirmation)
-    let _ = std::fs::remove_file(&marker);
 
     // Apply
     let result = migrate::apply(dir, &plan)?;

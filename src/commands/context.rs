@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{is_quiet, tickets_dir};
+use crate::commands::common::{is_dry_run, is_quiet, tickets_dir};
 use crate::context;
 
 /// Run the context command.
@@ -13,6 +13,10 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
     let dir = tickets_dir()?;
 
     if clear {
+        if is_dry_run() {
+            println!("Would clear context");
+            return Ok(0);
+        }
         context::save(&dir, &context::Context::default())?;
         if !is_quiet() {
             println!("context cleared");
@@ -38,11 +42,19 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
     let ctx = context::parse_context(&raw);
 
     if ctx.is_empty() {
+        if is_dry_run() {
+            println!("Would clear context");
+            return Ok(0);
+        }
         context::save(&dir, &context::Context::default())?;
         if !is_quiet() {
             println!("context cleared");
         }
     } else {
+        if is_dry_run() {
+            println!("Would set context: {}", ctx.serialize());
+            return Ok(0);
+        }
         context::save(&dir, &ctx)?;
         if !is_quiet() {
             println!("context set: {}", ctx.serialize());

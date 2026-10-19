@@ -46,7 +46,7 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 | Keeping a plan in sync | report drift between tickets and plan doc (advisory) | `tkt sync-plan` (add `--check` to gate CI) |
 | Scoping work to a subsystem | filter frontier by tags | `tkt context backend` → `tkt ready` shows only matching |
 | Returning to unscoped view | clear tag filter | `tkt context --clear` |
-| Importing from another tool | convert foreign tickets | `tkt migrate --from tk` |
+| Importing from another tool | preview, review, then convert foreign tickets | `tkt migrate --from tk --dry-run` → `tkt migrate --from tk --confirm` |
 
 For full flags and options, see [commands.md](references/commands.md).
 

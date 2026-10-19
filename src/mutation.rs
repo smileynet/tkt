@@ -40,7 +40,7 @@ impl MutationContext {
         let has_remote = git::has_remote(&repo).unwrap_or(false);
 
         let dbg = crate::telemetry::debug_mode();
-        if has_remote {
+        if has_remote && !crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
             let fetch_start = std::time::Instant::now();
             git::fetch(&repo)?;
             crate::telemetry::debug_event(

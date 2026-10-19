@@ -78,8 +78,8 @@ When a context is active:
 | Command | Effect |
 |---------|--------|
 | `tkt migrate --detect` | Report detected ticket format and confidence |
-| `tkt migrate --from tk` | Convert tk-format tickets to tkt format |
 | `tkt migrate --from tk --dry-run` | Preview migration without writing |
+| `tkt migrate --from tk --confirm` | Apply the reviewed tk-format migration |
 
 ## Creation flags (new, batch)
 

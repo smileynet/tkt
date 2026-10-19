@@ -46,7 +46,7 @@ All three gate checks must pass with zero warnings before presenting work as don
 tkt --version                                     # print version
 tkt ready [--json]                                # frontier: open + deps done + env match
 tkt context [TAGS...] [--clear]                   # set/show/clear active tag context for scoped work
-tkt migrate [--from FORMAT] [--detect]            # convert foreign ticket schemas (tk → tkt)
+tkt migrate [--from FORMAT] [--detect] [--confirm] # convert foreign ticket schemas (tk → tkt; preview first)
 tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
 tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
 tkt claim <id>                                    # status→in_progress, pushed
