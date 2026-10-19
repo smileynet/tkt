@@ -106,6 +106,13 @@ pub fn run(
         }
     }
 
+    if criteria.is_empty() && !evidence.is_empty() {
+        eprintln!(
+            "  {} --evidence ignored: ticket has no validation_criteria to map it to",
+            crate::color::sym_warn(),
+        );
+    }
+
     // Non-blocking advisory: evidence recommended but config is "warn", not "true".
     if ctx.config.close_require_validation_evidence == "warn"
         && !criteria.is_empty()
@@ -120,19 +127,38 @@ pub fn run(
     }
 
     // Partial evidence gate: evidence provided but doesn't cover all criteria
-    if !criteria.is_empty() && !evidence.is_empty() && evidence.len() < criteria.len() && !force {
-        let gap = criteria.len() - evidence.len();
+    let missing_evidence: Vec<usize> = evidence_map
+        .as_ref()
+        .map(|items| {
+            items
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| item.is_empty())
+                .map(|(index, _)| index + 1)
+                .collect()
+        })
+        .unwrap_or_default();
+    if !criteria.is_empty() && !evidence.is_empty() && !missing_evidence.is_empty() && !force {
+        let gap = missing_evidence.len();
+        let missing = missing_evidence
+            .iter()
+            .map(|index| index.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        // Singular/plural guard (English-only): one missing slot reads "criterion".
+        let criteria_word = if gap == 1 { "criterion" } else { "criteria" };
         match ctx.config.close_require_validation_evidence.as_str() {
             "true" => {
                 return Err(crate::DomainError::with_hint(
                     crate::ErrorKind::GateFailed,
                     format!(
-                        "{} evidence items provided for {} criteria ({} missing) — provide evidence for all criteria or use --force",
-                        evidence.len(),
+                        "{} of {} validation {} still need evidence (missing: {})",
+                        gap,
                         criteria.len(),
-                        gap
+                        criteria_word,
+                        missing
                     ),
-                    "provide --evidence for every criterion (positional or N=text), or --force to close anyway".to_string(),
+                    "supply one --evidence per criterion (positional or N=text), or --force to close anyway".to_string(),
                 )
                 .into());
             }
@@ -197,7 +223,11 @@ pub fn run(
         parts.push(String::new());
         parts.push("### Verification".to_string());
         for (i, criterion) in criteria.iter().enumerate() {
-            let ev = emap.get(i).map(|s| s.as_str()).unwrap_or("(no evidence)");
+            let ev = emap
+                .get(i)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.as_str())
+                .unwrap_or("(no evidence)");
             parts.push(format!("{}. ✓ {} — \"{}\"", i + 1, criterion, ev));
         }
         parts.join("\n")
@@ -351,41 +381,6 @@ fn parse_evidence(evidence: &[String], criteria_count: usize) -> Result<Vec<Stri
         positional_idx += 1;
     }
 
-    // Verify all slots are filled — unfilled slots mean missing evidence
-    let unfilled: Vec<usize> = result
-        .iter()
-        .enumerate()
-        .filter(|(_, v)| v.is_none())
-        .map(|(i, _)| i + 1)
-        .collect();
-    if !unfilled.is_empty() {
-        let missing = unfilled
-            .iter()
-            .map(|n| n.to_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-        let need = unfilled.len();
-        // Singular/plural guard (English-only).
-        let criteria_word = if need == 1 { "criterion" } else { "criteria" };
-        // A corrected-command template with one --evidence per criterion.
-        let evidence_flags = (0..criteria_count)
-            .map(|_| "--evidence \"<…>\"".to_string())
-            .collect::<Vec<_>>()
-            .join(" ");
-        return Err(crate::DomainError::with_hint(
-            crate::ErrorKind::GateFailed,
-            format!(
-                "--evidence: {need} of {criteria_count} validation {criteria_word} still need \
-                 evidence (missing: {missing})"
-            ),
-            format!(
-                "supply one --evidence per criterion (positional in order, or N=text to \
-                 target criterion N), e.g.:\n      tkt close <id> --check-all {evidence_flags}"
-            ),
-        )
-        .into());
-    }
-
     Ok(result
         .into_iter()
         .map(|opt| opt.unwrap_or_default())
@@ -472,39 +467,15 @@ mod tests {
     }
 
     #[test]
-    fn unfilled_plural_names_both_counts_and_missing() {
-        // 1 of 3 supplied → 2 missing → plural "criteria", names count + indices.
-        let err = parse_evidence(&ev(&["a"]), 3).unwrap_err();
-        let de = as_domain(err);
-        assert_eq!(de.kind, ErrorKind::GateFailed);
-        assert!(
-            de.message.contains("2 of 3 validation criteria"),
-            "expected both counts: {}",
-            de.message
-        );
-        assert!(de.message.contains("missing: 2, 3"), "{}", de.message);
-        // Hint carries the repeatable/N=text syntax + a corrected-command template.
-        let hint = de.hint.expect("hint present");
-        assert!(hint.contains("one --evidence per criterion"), "{hint}");
-        assert!(hint.contains("N=text"), "{hint}");
-        assert!(hint.contains("tkt close <id> --check-all"), "{hint}");
-        // Template has one --evidence per criterion (3), plus the one in the prose
-        // ("supply one --evidence per criterion") → 4 total occurrences.
-        assert_eq!(hint.matches("--evidence").count(), 4, "{hint}");
+    fn partial_evidence_preserves_missing_slots_for_severity_gate() {
+        let got = parse_evidence(&ev(&["a"]), 3).unwrap();
+        assert_eq!(got, vec!["a", "", ""]);
     }
 
     #[test]
-    fn unfilled_singular_uses_criterion() {
-        // Fill slot 1 of 2 → exactly slot 2 missing → singular "criterion".
-        let err = parse_evidence(&ev(&["1=only"]), 2).unwrap_err();
-        let de = as_domain(err);
-        assert!(
-            de.message
-                .contains("1 of 2 validation criterion still need"),
-            "expected singular form: {}",
-            de.message
-        );
-        assert!(de.message.contains("missing: 2"), "{}", de.message);
+    fn partial_named_evidence_preserves_missing_slots_for_severity_gate() {
+        let got = parse_evidence(&ev(&["1=only"]), 2).unwrap();
+        assert_eq!(got, vec!["only", ""]);
     }
 
     #[test]

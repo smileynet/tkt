@@ -48,6 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Global `--dry-run` now consistently previews rather than changing tickets,
   configuration, context, project setup, frontmatter, or renumbered IDs
 - Migration previews no longer leave a confirmation file behind
+- Partial `--evidence` at close now honors the configured evidence policy: it warns
+  under `warn`, blocks under `true`, and is ignored under `false`, instead of always
+  blocking; closing a ticket that has no validation criteria now warns that supplied
+  evidence was ignored rather than discarding it silently
+- Hand-typed uppercase `- [X]` acceptance-criteria boxes are now counted as checked,
+  so they satisfy the close gate and are no longer reported as unchecked
 
 ## [0.3.0] - 2026-08-23
 

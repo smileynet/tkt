@@ -3176,3 +3176,119 @@ fn test_remote_without_upstream_and_detached_head_fail_before_mutation() {
     assert_eq!(git(&clone, &["rev-parse", "HEAD"]), head_before);
     assert!(!clone.join(".tickets/02-detached.md").exists());
 }
+
+#[test]
+fn test_partial_evidence_respects_warn_true_and_false_and_criteria_less_warns() {
+    for (severity, expected_code, expects_warning) in
+        [("warn", 0, true), ("true", 1, false), ("false", 0, false)]
+    {
+        let (_tmp, clone) = setup_repo();
+        std::fs::write(
+            clone.join(".tickets/config.toml"),
+            format!("[close]\nrequire_validation_evidence = \"{severity}\"\n"),
+        )
+        .unwrap();
+        std::fs::write(
+            clone.join(".tickets/02-evidence.md"),
+            "---\nid: \"02\"\ntitle: \"Evidence\"\nstatus: open\nblocked_by: []\nvalidation_criteria:\n  - \"one\"\n  - \"two\"\n---\n\n# Evidence\n\n## Acceptance criteria\n\n- [x] Done\n",
+        )
+        .unwrap();
+        let (code, out) = run_tkt(
+            &clone,
+            &["close", "02", "--resolution", "done", "--evidence", "first"],
+        );
+        assert_eq!(code, expected_code, "severity {severity}: {out}");
+        assert_eq!(
+            out.contains("unevidenced"),
+            expects_warning,
+            "severity {severity}: {out}"
+        );
+    }
+
+    let (_tmp, clone) = setup_repo();
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "01",
+            "--resolution",
+            "done",
+            "--evidence",
+            "orphan proof",
+        ],
+    );
+    assert_eq!(code, 1, "seed is already done: {out}");
+
+    std::fs::write(
+        clone.join(".tickets/02-no-criteria.md"),
+        "---\nid: \"02\"\ntitle: \"No criteria\"\nstatus: open\nblocked_by: []\n---\n\n# No criteria\n",
+    )
+    .unwrap();
+    let (code, out) = run_tkt(
+        &clone,
+        &[
+            "close",
+            "02",
+            "--resolution",
+            "done",
+            "--evidence",
+            "orphan proof",
+        ],
+    );
+    assert_eq!(code, 0, "criteria-less close should still succeed: {out}");
+    assert!(out.contains("--evidence ignored"), "should warn: {out}");
+}
+
+#[test]
+fn test_uppercase_checkbox_counts_as_checked_at_close() {
+    // #141: a hand-typed `- [X]` must be seen as checked by the close gate.
+    // With a mix of one `[X]` (checked) and one `[ ]` (unchecked), the
+    // require_checked_acs gate ("all unchecked") must NOT fire — proving the
+    // uppercase box is counted. Before the fix `[X]` was invisible, so the
+    // ticket read as all-unchecked and close was blocked vacuously.
+    let (_tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/02-upper.md"),
+        "---\nid: \"02\"\ntitle: \"Upper\"\nstatus: open\nblocked_by: []\n---\n\n# Upper\n\n## Acceptance criteria\n\n- [X] Hand-checked uppercase\n- [ ] Still open\n",
+    )
+    .unwrap();
+
+    // No --check-all: the gate should still pass because at least one box is checked.
+    let (code, out) = run_tkt(&clone, &["close", "02", "--resolution", "done"]);
+    assert_eq!(
+        code, 0,
+        "uppercase [X] must count as checked so the gate does not block: {}",
+        out
+    );
+    let content = std::fs::read_to_string(clone.join(".tickets/02-upper.md")).unwrap();
+    assert!(
+        content.contains("status: done"),
+        "ticket should be closed: {}",
+        content
+    );
+}
+
+#[test]
+fn test_uppercase_checkbox_not_flagged_as_all_unchecked_on_done() {
+    // #141 / AC3: audit must not vacuously flag a done ticket whose completed
+    // work is recorded with `- [X]`. Before the fix, an uppercase box was
+    // invisible, so a done ticket with `[X]` + `[ ]` read as "none checked"
+    // and tripped `all-acs-unchecked-on-done`.
+    let (_tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/02-done-upper.md"),
+        "---\nid: \"02\"\ntitle: \"Done upper\"\nstatus: done\nblocked_by: []\n---\n\n# Done upper\n\n## Acceptance criteria\n\n- [X] Finished work\n- [ ] Follow-up\n\n## Resolution (2026-01-01)\n\nClosed with uppercase checkbox.\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "add done-upper"]);
+
+    let (code, out) = run_tkt(&clone, &["audit", "--brief"]);
+    // audit is advisory (exit 0); the point is the specific rule must be absent.
+    assert_eq!(code, 0, "audit is advisory: {}", out);
+    assert!(
+        !out.contains("all-acs-unchecked-on-done"),
+        "an [X]-checked done ticket must not be flagged all-unchecked: {}",
+        out
+    );
+}

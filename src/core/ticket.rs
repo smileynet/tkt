@@ -158,7 +158,7 @@ pub struct AcStats {
 // --- Compiled regex for AC manipulation ---
 
 static RE_UNCHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[ \]").unwrap());
-static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"- \[x\]").unwrap());
+static RE_CHECKED_AC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)- \[x\]").unwrap());
 
 // --- TicketFile ---
 
@@ -1535,6 +1535,20 @@ spec: regex \d+
         assert_eq!(stats.total, 3);
         assert_eq!(stats.checked, 1);
         assert_eq!(stats.unchecked, 2);
+    }
+
+    #[test]
+    fn ac_stats_counts_uppercase_x_as_checked() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Test\n\n## Acceptance criteria\n\n- [X] Done\n";
+        let file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+        assert_eq!(
+            file.ac_stats(),
+            AcStats {
+                checked: 1,
+                unchecked: 0,
+                total: 1
+            }
+        );
     }
 
     #[test]
