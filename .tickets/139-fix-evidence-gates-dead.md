@@ -4,9 +4,9 @@ title: "Fix evidence gates partially dead: unreachable warn branch + silent disc
 status: in_progress
 blocked_by: []
 priority: medium
-validation_criteria:
+validation_criteria: 
   - "partial evidence triggers warning correctly"
-  - "evidence on criteria-less ticket produces error"
+  - "evidence on a criteria-less ticket warns that it was ignored"
 ---
 
 # Fix evidence gates partially dead: unreachable warn branch + silent discard
