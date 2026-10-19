@@ -2,7 +2,7 @@
 id: "138"
 title: "Update capabilities manifest with all commands"
 status: backlog
-blocked_by: ["127"]
+blocked_by: []
 priority: high
 validation_criteria:
   - "tkt capabilities lists all 20+ commands"
