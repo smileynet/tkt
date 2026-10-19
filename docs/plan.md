@@ -40,7 +40,7 @@ release gate is limited to the completed blocker table above and #146.
 | ID | Work | Status |
 |---:|---|---|
 | 153 | Prevent stale installed-binary validation | backlog |
-| 156 | Disposition remaining delta-review findings | backlog |
+| 156 | Disposition remaining delta-review findings | ✅ done |
 | 163 | Backfill missing IDs from filename prefixes | backlog |
 | 164 | Support canonical slug IDs in validation | backlog |
 | 165 | Write project-scoped configuration safely | backlog |
@@ -50,6 +50,7 @@ release gate is limited to the completed blocker table above and #146.
 | 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | backlog |
 | 186 | Reconcile or retire the historical parity harness | backlog |
 | 190 | Parse known config keys into strict typed policies | backlog |
+| 206 | Grandfather pre-protocol corpus from audit missing-resolution (ADR 0003) | backlog |
 | 191 | Centralize mutation effects and dry-run policy after #136 | backlog |
 
 ## v0.5.0 — agent experience and extensions

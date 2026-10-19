@@ -43,9 +43,9 @@ Agent setup recommendations:
 
 This gives agents (and humans setting up for agents) a clear "what else should I do" path.
 
-### 3. Update capabilities manifest (prerequisite)
-
-`tkt capabilities` currently only lists 11 of ~20 commands. It needs to include: context, migrate, audit, blocked, doctor, init, rebase, renumber, sync-plan, telemetry. Otherwise the nudge sends agents to an incomplete manifest.
+> Manifest completeness is owned by #138 (a prerequisite — this ticket is
+> `blocked_by: 138`). The nudge here must only point at a manifest that #138 has
+> already made complete.
 
 ## Context
 
@@ -56,5 +56,4 @@ This gives agents (and humans setting up for agents) a clear "what else should I
 
 - [ ] `tkt --help` includes a line pointing to `tkt capabilities`
 - [ ] `tkt init` output includes agent setup recommendations
-- [ ] `tkt capabilities` lists ALL commands (not just the current subset)
 - [ ] Agents following the init recommendations get full tool effectiveness
