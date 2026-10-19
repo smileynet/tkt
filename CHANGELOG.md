@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hand-edited unquoted ticket fields now retain literal backslashes instead of
+  interpreting sequences such as `\n` as escapes
 - Tickets with a byte-order mark, comments, or block-style dependencies are parsed
   without being dropped or losing dependency information
 - Frontmatter normalization preserves `blocked_by` references while correcting their

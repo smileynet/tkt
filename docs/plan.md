@@ -12,7 +12,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 
 | ID | Work | Status |
 |---:|---|---|
-| 133 | Preserve unquoted YAML scalar bytes | open |
+| 133 | Preserve unquoted YAML scalar bytes | ✅ done |
 | 134 | Make renumber citation-safe and crash-consistent | open |
 | 135 | Put JSON error envelope last on stderr | open |
 | 136 | Apply global dry-run to every mutation | open |
