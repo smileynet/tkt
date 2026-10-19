@@ -2,7 +2,7 @@
 id: "136"
 title: "Fix global --dry-run ignored by 7 mutating commands"
 status: in_progress
-blocked_by: []
+blocked_by: ["205"]
 priority: high
 validation_criteria:
   - "all mutating commands respect global --dry-run flag"
