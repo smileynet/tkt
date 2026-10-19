@@ -31,6 +31,13 @@ the larger capability-manifest work (#138) or cross-harness installation work (#
 Source: release-readiness review requested 2026-10-19; see #146 for release scope and
 the crew-research changelog-discipline guidance.
 
+The independent Kiro review confirms the two help defects and supplies a candidate
+summary of post-v0.3.0 user-visible changes. Incorporate that research only after
+checking each assertion against the repository: populate `Unreleased` first, do not
+pre-label it as v0.4.0 or claim that OpenCode receives a global skill before #202
+delivers one. Describe atomic-write behavior with the #181 qualification until its
+cross-platform investigation is closed.
+
 ## Context
 
 - Read `src/cli.rs` for the duplicate command description and `AGENTS.md` for the
@@ -50,6 +57,9 @@ the crew-research changelog-discipline guidance.
       the agreed Keep a Changelog version
 - [ ] A release-note dry run proves that curated user-facing entries survive and that
       ticket/docs/CI/test/refactor commit noise is excluded
+- [ ] The populated `Unreleased` section contains only verified user-facing changes;
+      it makes no premature release-version, OpenCode-skill, or unqualified
+      cross-platform atomic-write claim
 
 ## Out of scope
 

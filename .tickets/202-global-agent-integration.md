@@ -35,6 +35,15 @@ as a conflict, never deleted. Keep per-project instructions idempotent and
 marker-owned; do not invent a global AGENTS.md convention where a harness does not
 have one.
 
+The independent Kiro review correctly identifies that a `cargo install` user cannot
+use repository-only skill assets. Package the canonical skill/instruction templates
+with the executable (for example via compile-time embedded assets) and provide a
+dedicated deployment command rather than overloading project-local `tkt init` with
+global behavior. Exact command spelling and harness paths remain design work and must
+be verified against each harness's current official documentation. Codex's user-level
+instruction discovery is a useful supported case; it is not permission to generalize
+that convention to other harnesses.
+
 Source: 2026-10-19 review of `tkt init`, `tools/deploy-skills.sh`, README agent
 claims, and the existing `skills/tkt` package.
 
@@ -57,6 +66,8 @@ claims, and the existing `skills/tkt` package.
       global tkt skill without requiring a Claude installation
 - [ ] Temporary-home tests cover first install, idempotent update, unmanaged conflict,
       and dry run; all guidance surfaces describe the same supported harness set
+- [ ] A binary installed without the repository can deploy the packaged tkt skill and
+      only the verified harness-specific instruction target for each selected tool
 
 ## Out of scope
 

@@ -94,6 +94,7 @@ three roots first (`192`, `193`, `194`), their dependents, then the docs pass la
 | 200 | parent-scoped ready frontier | backlog |
 | 201 | remediate agent-facing help and release metadata drift | open |
 | 202 | deploy tkt guidance and skill safely across supported harnesses | open |
+| 203 | decide v0.4.0 release scope before moving planned work to v0.5.0 | open |
 
 ## Post-v0.3.1 lifecycle and plan design
 
