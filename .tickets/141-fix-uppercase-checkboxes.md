@@ -1,7 +1,7 @@
 ---
 id: "141"
 title: "Fix uppercase X checkboxes invisible to AC stats"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
