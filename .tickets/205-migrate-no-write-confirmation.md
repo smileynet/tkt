@@ -1,7 +1,7 @@
 ---
 id: "205"
 title: "Keep migration confirmation without writing during dry runs"
-status: open
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -37,9 +37,17 @@ deliberate safety gate, so simply removing it would weaken migration safety.
 
 ## Acceptance criteria
 
-- [ ] `tkt migrate --dry-run` leaves the ticket directory and repository status
+- [x] `tkt migrate --dry-run` leaves the ticket directory and repository status
       byte-identical
-- [ ] Applying a migration requires an explicit confirmation after a dry-run plan has
+- [x] Applying a migration requires an explicit confirmation after a dry-run plan has
       been reviewed, without a filesystem marker
-- [ ] Integration tests cover no-write preview, unconfirmed apply refusal, and
+- [x] Integration tests cover no-write preview, unconfirmed apply refusal, and
       confirmed application
+
+## Resolution (2026-10-19)
+
+Replaced the filesystem marker with an explicit --confirm apply step after reviewing the no-write migration preview.
+
+### Verification
+1. ✓ tkt migrate --dry-run makes no filesystem changes — "Verified preview preserves ticket bytes and git status, and creates no marker or backup; the regression test covers it."
+2. ✓ a reviewed migration requires explicit non-dry-run confirmation before applying — "Verified unconfirmed apply fails, --confirm applies the reviewed plan, and integration coverage passes."
