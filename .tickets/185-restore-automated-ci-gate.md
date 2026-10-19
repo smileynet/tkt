@@ -1,7 +1,7 @@
 ---
 id: "185"
 title: "Restore automated CI gate for pushes and pull requests"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
