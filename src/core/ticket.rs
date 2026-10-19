@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
@@ -193,6 +194,7 @@ impl TicketFile {
 
         let key_re = &*RE_FM_KEY;
         let mut fm: Vec<(String, String)> = Vec::new();
+        let mut key_lines: HashMap<String, usize> = HashMap::new();
         let mut close_idx = None;
 
         for (i, line) in lines.iter().enumerate().skip(1) {
@@ -201,7 +203,17 @@ impl TicketFile {
                 break;
             }
             if let Some(caps) = key_re.captures(line) {
-                fm.push((caps[1].to_string(), caps[2].to_string()));
+                let key = caps[1].to_string();
+                if let Some(first_line) = key_lines.insert(key.clone(), i + 1) {
+                    bail!(
+                        "{}: duplicate frontmatter key {:?} on line {} (first declared on line {})",
+                        path.display(),
+                        key,
+                        i + 1,
+                        first_line
+                    );
+                }
+                fm.push((key, caps[2].to_string()));
             } else if line.trim_start().starts_with('#') {
                 // Comment line (YAML 1.2 §6.6): tolerate so the ticket isn't ejected.
                 // Stored as an empty-key passthrough (like blank lines) — preserved by
@@ -1098,6 +1110,28 @@ mod tests {
         assert_eq!(t.title, "Test ticket");
         assert_eq!(t.status, Status::Open);
         assert!(t.blocked_by.is_empty());
+    }
+
+    #[test]
+    fn parse_rejects_duplicate_frontmatter_keys_with_line_context() {
+        for (name, field) in [
+            ("status", "status: open\nstatus: done"),
+            ("id", "id: \"01\"\nid: \"99\"\nstatus: open"),
+            (
+                "blocked_by",
+                "status: open\nblocked_by:\n  - \"01\"\nblocked_by: [\"02\"]",
+            ),
+        ] {
+            let content = format!(
+                "---\nid: \"01\"\ntitle: \"Duplicate {name}\"\n{field}\nblocked_by: []\n---\n\n# Test\n"
+            );
+            let err = Ticket::parse_str(&content, Path::new("duplicate.md"))
+                .unwrap_err()
+                .to_string();
+            assert!(err.contains("duplicate frontmatter key"), "{err}");
+            assert!(err.contains(name), "{err}");
+            assert!(err.contains("line"), "{err}");
+        }
     }
 
     #[test]
