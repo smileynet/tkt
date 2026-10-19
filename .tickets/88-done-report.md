@@ -1,7 +1,7 @@
 ---
 id: "88"
 title: "tkt done --week: show-resolved report for standups"
-status: open
+status: backlog
 blocked_by: []
 priority: low
 ---
