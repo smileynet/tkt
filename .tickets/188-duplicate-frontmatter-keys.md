@@ -1,7 +1,7 @@
 ---
 id: "188"
 title: "Reject ambiguous duplicate frontmatter keys"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
