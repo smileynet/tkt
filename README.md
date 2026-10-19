@@ -200,6 +200,10 @@ enabled = true              # false for local-only repos (no network on writes)
 require_checked_acs = true  # require acceptance criteria checked before close
 require_resolution = false  # require --note when closing
 
+[validate]
+# Project-specific ratchet: grandfather historical closures below this numeric ID.
+missing_resolution_before_id = "36"
+
 [ready]
 default_env = ""            # filter frontier by environment
 

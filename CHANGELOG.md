@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unparseable tickets by name, stub bodies, and closure-quality issues — so it can no
   longer report a clean project that `tkt validate` fails
 - Indented frontmatter comments no longer become part of the preceding ticket field
+- Projects can grandfather historical closure records with a numeric resolution-check
+  cutoff, keeping strict validation focused on tickets created after that policy began
 
 ## [0.3.0] - 2026-08-23
 
