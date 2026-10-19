@@ -16,7 +16,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 134 | Make renumber citation-safe and crash-consistent | ✅ done |
 | 135 | Put JSON error envelope last on stderr | ✅ done |
 | 136 | Apply global dry-run to every mutation | ✅ done |
-| 137 | Resolve the real upstream branch for race detection | open |
+| 137 | Resolve the real upstream branch for race detection | ✅ done |
 | 139 | Repair evidence-gate severity and discarded-evidence behavior | open |
 | 141 | Count uppercase checked acceptance boxes | open |
 | 152 | Fix indented-comment parser corruption | open |
