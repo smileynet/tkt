@@ -2044,6 +2044,28 @@ fn test_error_output_includes_program_name() {
     );
 }
 
+#[test]
+fn test_json_error_envelope_is_last_stderr_line() {
+    let (_tmp, clone) = setup_repo();
+
+    let (code, _stdout, stderr) = run_tkt_env(&clone, &["-o", "json", "close", "01"], &[]);
+    assert_eq!(code, 1, "closing a done ticket should fail: {}", stderr);
+    assert!(
+        stderr.contains("tkt:"),
+        "human error should be retained: {}",
+        stderr
+    );
+    let last = stderr
+        .lines()
+        .last()
+        .expect("error output should not be empty");
+    let envelope: serde_json::Value = serde_json::from_str(last)
+        .unwrap_or_else(|_| panic!("last stderr line must be JSON: {last}"));
+    assert_eq!(envelope["ok"], false);
+    assert_eq!(envelope["exit_code"], 1);
+    assert_eq!(envelope["error"]["kind"], "already_done");
+}
+
 // --- Filter and view tests ---
 
 #[test]

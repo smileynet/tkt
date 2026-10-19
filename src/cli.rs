@@ -506,29 +506,30 @@ pub fn run() -> i32 {
             clear,
         } => crate::commands::telemetry::run(enable, disable, status, show, all, clear),
     };
-    let (exit_code, error_kind) = match result {
-        Ok(code) => (code, None),
+    let (exit_code, error_kind, json_error) = match result {
+        Ok(code) => (code, None, None),
         Err(e) => {
             if let Some(de) = e.downcast_ref::<crate::DomainError>() {
                 let code = de.kind.exit_code();
-                if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
-                    emit_json_error(de);
-                }
                 eprintln!("tkt: {} {}", crate::color::sym_err(), de.message);
                 if let Some(hint) = &de.hint {
                     eprintln!("  hint: {}", hint);
                 }
-                (code, Some(de.kind.as_str()))
+                let envelope = crate::JSON_OUTPUT
+                    .load(std::sync::atomic::Ordering::Relaxed)
+                    .then(|| json_error_envelope(de));
+                (code, Some(de.kind.as_str()), envelope)
             } else {
-                if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
-                    let envelope = format!(
+                eprintln!("tkt: {} crash: {:#}", crate::color::sym_err(), e);
+                let envelope = crate::JSON_OUTPUT
+                    .load(std::sync::atomic::Ordering::Relaxed)
+                    .then(|| {
+                        format!(
                         "{{\"ok\":false,\"error\":{{\"kind\":\"io\",\"message\":{}}},\"exit_code\":2}}",
                         json_escape(&format!("{e:#}"))
-                    );
-                    eprintln!("{}", envelope);
-                }
-                eprintln!("tkt: {} crash: {:#}", crate::color::sym_err(), e);
-                (2, Some("io"))
+                    )
+                    });
+                (2, Some("io"), envelope)
             }
         }
     };
@@ -552,6 +553,12 @@ pub fn run() -> i32 {
             start.elapsed().as_secs_f64()
         ),
     );
+
+    // This must be the final stderr line: agents can safely parse
+    // `stderr.lines().last()` when requesting JSON output.
+    if let Some(envelope) = json_error {
+        eprintln!("{}", envelope);
+    }
 
     exit_code
 }
@@ -904,8 +911,8 @@ fn record_telemetry(
     telemetry::record_event(&event);
 }
 
-/// Emit a structured JSON error envelope to stderr (last line).
-fn emit_json_error(de: &crate::DomainError) {
+/// Build the structured JSON error envelope emitted as the final stderr line.
+fn json_error_envelope(de: &crate::DomainError) -> String {
     let hint_part = match &de.hint {
         Some(h) => format!(",\"hint\":{}", json_escape(h)),
         None => String::new(),
@@ -917,7 +924,7 @@ fn emit_json_error(de: &crate::DomainError) {
         hint_part,
         de.kind.exit_code()
     );
-    eprintln!("{}", envelope);
+    envelope
 }
 
 /// Escape a string as a JSON string literal (with quotes).

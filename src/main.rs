@@ -112,6 +112,9 @@ pub(crate) static RESULT_COUNT: std::sync::atomic::AtomicI32 =
 
 fn main() -> ExitCode {
     let code = cli::run();
-    update_check::check_for_update();
+    // JSON callers reserve the final stderr line for the structured error envelope.
+    if !JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
+        update_check::check_for_update();
+    }
     ExitCode::from(code as u8)
 }
