@@ -100,11 +100,11 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 - **Project config**: `.tickets/config.toml` — committed to repo, shared by contributors
   - `[close]` require_resolution, require_checked_acs, require_validation_criteria, require_validation_evidence, allow_force
   - `[validate]` strict, missing_resolution_before_id (project-specific legacy ratchet)
-  - `[ready]` default_env
+  - `[ready]` default_env (legacy single capability; prefer `[machine] capabilities`)
   - `[priority]` warn_unknown
   - `[new]` default_priority
   - `[push]` enabled (set false for local-only repos)
-  - `[machine]` capabilities (comma-separated list of workstation capabilities for requires matching)
+  - `[machine]` capabilities (comma-separated canonical eligibility set for `requires` matching)
 
 ### Environment variables
 

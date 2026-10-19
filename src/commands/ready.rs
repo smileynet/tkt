@@ -9,26 +9,19 @@ pub fn run(json: bool) -> Result<i32> {
     let dir = tickets_dir()?;
     let pcfg = project_config(&dir);
     let corpus = core::load_corpus(&dir)?;
-    let front = core::frontier_with_default_env(&corpus, &pcfg.ready_default_env);
+    let legacy_env = std::env::var("CREW_ENV")
+        .ok()
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| pcfg.ready_default_env.clone());
+    let mut capabilities = pcfg.machine_capabilities.clone();
+    if !legacy_env.is_empty() && !capabilities.contains(&legacy_env) {
+        capabilities.push(legacy_env);
+    }
+    let front = core::frontier_with_capabilities(&corpus, &capabilities);
 
     // Apply context filter (unless bypass is active)
     let ctx = crate::context::load(&dir);
     let front: Vec<&Ticket> = front.into_iter().filter(|t| ctx.matches(&t.tags)).collect();
-
-    // Apply machine capabilities filter (requires subset matching)
-    let front: Vec<&Ticket> = if pcfg.machine_capabilities.is_empty() {
-        front
-    } else {
-        front
-            .into_iter()
-            .filter(|t| {
-                t.requires.is_empty()
-                    || t.requires
-                        .iter()
-                        .all(|r| pcfg.machine_capabilities.contains(r))
-            })
-            .collect()
-    };
 
     // Record frontier size for telemetry
     crate::RESULT_COUNT.store(front.len() as i32, std::sync::atomic::Ordering::Relaxed);

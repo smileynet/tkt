@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Indented frontmatter comments no longer become part of the preceding ticket field
 - Projects can grandfather historical closure records with a numeric resolution-check
   cutoff, keeping strict validation focused on tickets created after that policy began
+- `tkt ready` now evaluates legacy `env` and modern `requires` through one capability
+  model; ambiguous mixed tickets are rejected instead of being silently filtered
 
 ## [0.3.0] - 2026-08-23
 

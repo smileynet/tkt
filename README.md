@@ -214,6 +214,11 @@ default_priority = "medium" # default priority for new tasks
 capabilities = "gpu,linux"   # capabilities this workstation provides (filters tkt ready)
 ```
 
+`requires` is the canonical eligibility field. Existing `env: corp` or `env: personal`
+tickets remain compatible: tkt treats that value as one required capability. Do not combine
+a non-`either` `env` with `requires`; use `requires: [corp, gpu]` when both are needed.
+`CREW_ENV` and `ready.default_env` remain legacy ways to supply one capability.
+
 User-level defaults in `~/.config/tkt/config.toml`. Project config overrides.
 
 ```bash

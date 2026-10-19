@@ -31,6 +31,9 @@ pub fn run(
             domain_bail!("{}", err);
         }
     }
+    if env.is_some_and(|e| e != "either") && !requires.is_empty() {
+        domain_bail!("--env and --requires are mutually exclusive; omit --env or use --env either");
+    }
     if let Some(p) = priority {
         if let Err(err) = validate::validate_priority(p) {
             domain_bail!("{}", err);

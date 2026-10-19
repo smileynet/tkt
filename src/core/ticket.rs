@@ -501,9 +501,16 @@ impl Ticket {
 
         let tags = parse_tags(file.get("tags").unwrap_or(""));
 
-        // Parse requires field (machine capability requirements)
-        // Backward compat: if env is set and requires is empty, synthesize from env
+        // `requires` is the canonical eligibility representation. Legacy `env`
+        // contributes one capability only when no explicit requirements exist.
         let mut requires = parse_tags(file.get("requires").unwrap_or(""));
+        if !requires.is_empty() && env != Env::Either {
+            bail!(
+                "{}: ambiguous eligibility: use either legacy env or requires, not both (set env: either or move {:?} into requires)",
+                file.path.display(),
+                env.as_str()
+            );
+        }
         if requires.is_empty() && env != Env::Either {
             requires.push(env.as_str().to_string());
         }
@@ -576,7 +583,6 @@ pub fn frontier(corpus: &[Ticket]) -> Vec<&Ticket> {
 /// Compute the frontier with a fallback default_env (from project config).
 /// CREW_ENV env var takes priority over the default.
 pub fn frontier_with_default_env<'a>(corpus: &'a [Ticket], default_env: &str) -> Vec<&'a Ticket> {
-    // Build machine capabilities: CREW_ENV (legacy) + config machine.capabilities
     let crew_env = std::env::var("CREW_ENV").unwrap_or_default();
     let effective_env = if crew_env.is_empty() {
         default_env.to_string()
@@ -584,16 +590,19 @@ pub fn frontier_with_default_env<'a>(corpus: &'a [Ticket], default_env: &str) ->
         crew_env
     };
 
-    // Machine capabilities come from config (loaded by caller and passed via default_env for legacy).
-    // For requires matching, we build a simple set from CREW_ENV as a capability.
-    // The full machine.capabilities set is checked in ready.rs which has access to ProjectConfig.
-    // Here we handle the legacy path: CREW_ENV as a single capability.
-    let legacy_caps: Vec<&str> = if effective_env.is_empty() {
+    let capabilities = if effective_env.is_empty() {
         vec![]
     } else {
-        vec![effective_env.as_str()]
+        vec![effective_env]
     };
+    frontier_with_capabilities(corpus, &capabilities)
+}
 
+/// Compute the frontier from one canonical capability set.
+pub fn frontier_with_capabilities<'a>(
+    corpus: &'a [Ticket],
+    capabilities: &[String],
+) -> Vec<&'a Ticket> {
     let done: std::collections::HashSet<&str> = corpus
         .iter()
         .filter(|t| t.status == Status::Done)
@@ -609,17 +618,9 @@ pub fn frontier_with_default_env<'a>(corpus: &'a [Ticket], default_env: &str) ->
             if !t.blocked_by.iter().all(|dep| done.contains(dep.as_str())) {
                 return false;
             }
-            // Legacy env filter: only applies to tickets using the old env field.
-            // Tickets with explicit `requires` (env == Either) are filtered by
-            // machine.capabilities in ready.rs, not here.
-            if t.env != Env::Either
-                && !legacy_caps.is_empty()
-                && !t.requires.iter().all(|r| legacy_caps.contains(&r.as_str()))
-            {
+            if !capabilities.is_empty() && !t.requires.iter().all(|r| capabilities.contains(r)) {
                 return false;
             }
-            // If machine declares no capabilities (legacy_caps empty) and ticket has requires,
-            // we still show it — the full capability check happens in ready.rs with ProjectConfig
             true
         })
         .collect();
@@ -1132,6 +1133,16 @@ mod tests {
             assert!(err.contains(name), "{err}");
             assert!(err.contains("line"), "{err}");
         }
+    }
+
+    #[test]
+    fn parse_rejects_mixed_legacy_env_and_requires() {
+        let content = "---\nid: \"01\"\ntitle: \"Mixed\"\nstatus: open\nblocked_by: []\nenv: corp\nrequires: [gpu]\n---\n\n# Test\n";
+        let err = Ticket::parse_str(content, Path::new("mixed.md"))
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("ambiguous eligibility"), "{err}");
+        assert!(err.contains("env") && err.contains("requires"), "{err}");
     }
 
     #[test]
