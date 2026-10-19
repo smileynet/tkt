@@ -1,9 +1,9 @@
 ---
 id: "160"
 title: "Decide handling for 27 historical done tickets flagged missing-resolution"
-status: backlog
+status: open
 blocked_by: []
-priority: low
+priority: high
 validation_criteria:
   - "policy decided: grandfather (suppress pre-date), backfill note, or accept as known warnings"
   - "tkt validate no longer emits noise for legacy closed tickets, OR the warnings are documented as expected"
