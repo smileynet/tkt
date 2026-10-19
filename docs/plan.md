@@ -26,7 +26,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 150 | Make doctor strict results agree with validate | ✅ done |
 | 160 | Decide and apply the legacy missing-resolution validation baseline | ✅ done |
 | 185 | Restore automatic push/PR CI verification | ✅ done |
-| 201 | Remediate agent-facing help and release metadata drift | open |
+| 201 | Remediate agent-facing help and release metadata drift | ✅ done |
 | 204 | Parse single-item block-style dependencies correctly | ✅ done |
 | 205 | Keep migration confirmation without writing during dry runs | ✅ done |
 | 146 | Cut, tag, and document v0.4.0 | open |
