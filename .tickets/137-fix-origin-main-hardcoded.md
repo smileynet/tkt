@@ -1,7 +1,7 @@
 ---
 id: "137"
 title: "Fix origin/main hardcoded in race detection"
-status: open
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
