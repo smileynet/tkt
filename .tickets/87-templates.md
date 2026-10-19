@@ -1,7 +1,7 @@
 ---
 id: "87"
 title: "tkt new --template: predefined ticket body structures"
-status: open
+status: backlog
 blocked_by: []
 priority: low
 ---
