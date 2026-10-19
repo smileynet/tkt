@@ -1,7 +1,7 @@
 ---
 id: "184"
 title: "Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002"
-status: open
+status: backlog
 blocked_by: []
 priority: medium
 validation_criteria:
