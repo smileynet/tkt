@@ -1,7 +1,7 @@
 ---
 id: "152"
 title: "Review 2026-08-27: fmt gate red at HEAD, indented-comment corruption, #149 dispositions pending"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
