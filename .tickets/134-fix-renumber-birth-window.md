@@ -1,7 +1,7 @@
 ---
 id: "134"
 title: "Fix renumber: enforce birth-window citation scan before apply"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
