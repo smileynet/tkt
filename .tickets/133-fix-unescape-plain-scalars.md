@@ -1,7 +1,7 @@
 ---
 id: "133"
 title: "Fix yaml_scalar_unescape corrupting plain (unquoted) scalars"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
