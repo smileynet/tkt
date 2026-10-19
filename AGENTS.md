@@ -32,6 +32,10 @@ cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 
 Use `--check` (not bare `cargo fmt`) — bare `cargo fmt` mutates in place and exits 0 regardless, so it cannot gate a diff or reveal a broken formatter.
 
+GitHub Actions runs this same gate automatically for every push and pull request.
+That automated check complements, but does not replace, the required local check before
+each commit.
+
 ### Deploy (run after pulling or making changes)
 
 ```bash

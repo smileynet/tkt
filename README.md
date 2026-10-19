@@ -261,6 +261,10 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 Found a bug? [File a report](https://github.com/smileynet/tkt/issues/new?template=bug_report.md).
 Want a feature? [Request it](https://github.com/smileynet/tkt/issues/new?template=feature_request.md).
 
+Before each commit, run `mise run check`. GitHub Actions runs that same verification
+gate on every push and pull request, but the automated check does not replace local
+verification.
+
 ## License
 
 [MIT](LICENSE)

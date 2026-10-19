@@ -1,28 +1,28 @@
 name: CI
 
-# Disabled — we verify locally before commit (cargo fmt && cargo clippy && cargo test)
-# Trigger manually if needed:
 on:
+  push:
+  pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   check:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Install mise
+        uses: jdx/mise-action@v5
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
 
-      - name: Format check
-        run: cargo fmt --check
-
-      - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
-
-      - name: Test
-        run: cargo test
+      - name: Verification gate
+        run: mise run check
         env:
           DO_NOT_TRACK: "1"
