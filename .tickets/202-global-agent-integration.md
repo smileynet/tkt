@@ -15,8 +15,50 @@ tags: ["guidance", "agent-integration"]
 
 ## What to build
 
-TBD
+Provide a single safe installation path for the two complementary integration layers:
+
+1. project-local, marker-owned tkt instructions (`AGENTS.md` or the harness-native
+   equivalent); and
+2. a globally discoverable `tkt` skill for harnesses that support skills.
+
+`tkt init --all` already writes project instructions, while
+`tools/deploy-skills.sh` installs a maintainer-local skill only for Kiro, Claude, and
+Codex. That split leaves an OpenCode-only environment without a global skill despite
+OpenCode being advertised, skips harnesses whose root does not already exist, and
+unconditionally removes a same-named skill without recording ownership.
+
+Define a supported-harness registry with verified project-instruction and global-skill
+paths. The installer must offer `--tool`, `--all`, and `--dry-run`; create missing
+managed roots; and replace only tkt-owned paths (or an existing tkt symlink). Record
+managed ownership and source/version so an unmanaged same-named directory is reported
+as a conflict, never deleted. Keep per-project instructions idempotent and
+marker-owned; do not invent a global AGENTS.md convention where a harness does not
+have one.
+
+Source: 2026-10-19 review of `tkt init`, `tools/deploy-skills.sh`, README agent
+claims, and the existing `skills/tkt` package.
+
+## Context
+
+- Read `src/commands/init.rs` for current project-local targets and markers.
+- Read `tools/deploy-skills.sh` for current local symlink behavior.
+- Read `.memory/agent-guidance-surfaces.md`; a CLI behavior change still requires all
+  listed guidance surfaces to remain synchronized.
+- Verify each harness path against its current official documentation before adding it
+  to the registry. A claimed but unverified target is worse than an explicit skip.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] `--dry-run` reports the instruction and skill action for every verified target
+      and makes no filesystem changes
+- [ ] Installation creates missing managed roots and updates only tkt-owned paths;
+      an unmanaged target is left untouched with an actionable conflict message
+- [ ] A verified OpenCode-only fixture receives both its project instruction and its
+      global tkt skill without requiring a Claude installation
+- [ ] Temporary-home tests cover first install, idempotent update, unmanaged conflict,
+      and dry run; all guidance surfaces describe the same supported harness set
+
+## Out of scope
+
+- Teaching every harness to consume skills it does not natively support
+- Changing the ticket workflow itself

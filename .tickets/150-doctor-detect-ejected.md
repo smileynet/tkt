@@ -14,23 +14,42 @@ tags: ["parser"]
 
 ## What to build
 
-`doctor` uses `core::load_corpus`, which silently skips unparseable tickets (stderr warning only). As a result `doctor` can report "All checks passed" while a ticket is ejected from the corpus. `validate` already detects this — it has its own read_dir+parse loop that emits a `Finding{rule:"unparseable", severity:"error"}` per bad file. The two commands disagree.
+`doctor --strict` can report "All checks passed" when `validate --strict` fails on
+the same corpus. `doctor` uses `core::load_corpus`, which silently skips
+unparseable tickets, and it runs only the older structural checks. `validate` also
+reports unparseable files, unchecked acceptance criteria, stub bodies, and closure
+quality. A health command must not give a stronger clean signal than the validation
+command it is expected to summarize.
 
-Make `doctor` detect ejected tickets, either by reusing validate's per-file loop or by diffing the `.md` file count against `load_corpus().len()`.
+Give `doctor` and `validate` one shared finding collector, including the per-file
+parse loop. Their output formats can differ, but on one project their strict exit
+status and the set of corpus findings must agree. Keep cross-project reporting
+machine-readable and preserve the distinction between an unparseable ticket and a
+clean empty corpus.
 
 ## Context
 
-- **Relevant files:** `src/commands/doctor.rs` (Check 6 uses load_corpus), `src/commands/validate.rs` (has the unparseable-detection loop), `src/core/ticket.rs` (load_corpus)
-- **Discovered during #132** — the parser leniency fixes reduce ejection frequency but don't change the silent-skip handling; detection is orthogonal
+- **Relevant files:** `src/commands/doctor.rs`, `src/commands/validate.rs`,
+  `src/findings.rs`, `src/audit.rs`, and `src/core/ticket.rs`
+- **Discovery:** 2026-10-19 release-readiness review: this repository returns exit
+  1 from `tkt validate --strict --brief` (missing resolutions and a stub body) but
+  exit 0 from `tkt doctor --strict`.
+- **Related:** #151 owns structured propagation of `load_corpus` ejection
+  diagnostics. Reuse that boundary if it lands first; do not duplicate a second
+  stderr-only diagnostic path.
 - Cross-project doctor also uses load_corpus, so its `parse_error` arm is effectively unreachable for per-ticket failures
 
 ## Acceptance criteria
 
-- [ ] doctor reports unparseable tickets that load_corpus silently skips
-- [ ] doctor and validate agree on ejected-ticket detection
-- [ ] doctor does not report "all checks passed" when a ticket is ejected
-- [ ] existing doctor tests pass
+- [ ] `doctor --strict` and `validate --strict` return the same pass/fail result
+      for a corpus containing an unparseable file, a stub body, and a
+      missing-resolution closure
+- [ ] doctor reports unparseable tickets with file context instead of silently
+      treating them as absent
+- [ ] cross-project doctor output represents those findings without losing
+      machine-readable status
+- [ ] regression tests cover the shared collection path and existing doctor tests pass
 
 ## Out of scope
 
-- Changing load_corpus's return signature (that's #151)
+- Changing the semantics of individual validation rules

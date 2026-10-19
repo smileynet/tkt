@@ -87,6 +87,14 @@ three roots first (`192`, `193`, `194`), their dependents, then the docs pass la
 | 198 | label-namespace validation: single-select + closed-set (after 193) | open |
 | 199 | docs, capabilities, CHANGELOG for parent/assignee/labels (after 194, 196-198) | open |
 
+## Release readiness and agent integration
+
+| ID | Work | Status |
+|---:|---|---|
+| 200 | parent-scoped ready frontier | backlog |
+| 201 | remediate agent-facing help and release metadata drift | open |
+| 202 | deploy tkt guidance and skill safely across supported harnesses | open |
+
 ## Post-v0.3.1 lifecycle and plan design
 
 These decisions change core contracts or introduce an optional planning surface. Keep
