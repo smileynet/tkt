@@ -1,7 +1,7 @@
 ---
 id: "139"
 title: "Fix evidence gates partially dead: unreachable warn branch + silent discard"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria: 
@@ -40,10 +40,18 @@ part of its close-gate rework on the same lines.
 
 ## Acceptance criteria
 
-- [ ] Partial evidence under `require_validation_evidence = "warn"` emits a warning (not a hard bail)
-- [ ] `close --evidence` on a criteria-less ticket warns that evidence was discarded
-- [ ] The previously-unreachable severity branch is now reachable (or removed if truly dead) with a test proving it
-- [ ] Regression tests for warn / true / false severities and the criteria-less case
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+- [x] Partial evidence under `require_validation_evidence = "warn"` emits a warning (not a hard bail)
+- [x] `close --evidence` on a criteria-less ticket warns that evidence was discarded
+- [x] The previously-unreachable severity branch is now reachable (or removed if truly dead) with a test proving it
+- [x] Regression tests for warn / true / false severities and the criteria-less case
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean
 
 (Partial-evidence error-kind → `GateFailed` is verified in #170's ACs, not here.)
+
+## Resolution (2026-10-19)
+
+Moved partial-evidence completeness check into the severity-handled gate so warn/true/false policy is reachable; criteria-less close now warns instead of silently discarding evidence; restored singular/plural + 'missing: N' wording.
+
+### Verification
+1. ✓ partial evidence triggers warning correctly — "test_partial_evidence_respects_warn_true_and_false_and_criteria_less_warns passes: warn->exit0+warning, true->exit1, false->exit0 (mise run check: 90 integration tests pass)"
+2. ✓ evidence on a criteria-less ticket warns that it was ignored — "same test's criteria-less branch asserts exit 0 with '--evidence ignored' warning; verified live on a criteria-less ticket"
