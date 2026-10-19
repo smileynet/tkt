@@ -1,7 +1,7 @@
 ---
 id: "181"
 title: "Verify atomic_write on Windows + Linux (fs::rename overwrite, temp cleanup, worktrees)"
-status: in_progress
+status: done
 blocked_by: ["136", "137"]
 priority: high
 validation_criteria:
@@ -48,9 +48,17 @@ tags: ["cli"]
 
 ## Acceptance criteria
 
-- [ ] Windows `fs::rename` overwrite behavior confirmed; the `#[cfg(windows)]` branch and AGENTS.md constraint are correct (kept-with-reason or removed-with-correction)
-- [ ] Full suite passes on Linux and Windows, including a Windows-covering write-failure test; atomic_write verified on worktrees
+- [x] Windows `fs::rename` overwrite behavior confirmed; the `#[cfg(windows)]` branch and AGENTS.md constraint are correct (kept-with-reason or removed-with-correction)
+- [x] Full suite passes on Linux and Windows, including a Windows-covering write-failure test; atomic_write verified on worktrees
 
 ## Notes
 
 Blocked by #178 (the code under test). Related: #180 (publish rollback).
+
+## Resolution (2026-10-19)
+
+Verified and hardened atomic replacement on Windows and Linux.
+
+### Verification
+1. ✓ Confirm whether std::fs::rename can overwrite an existing file on the target Windows env (msvc); decide if the #[cfg(windows)] delete-first branch in core::atomic_write is necessary or can be removed, and update the AGENTS.md 'Windows rename cannot overwrite' constraint accordingly — "Windows/MSVC direct rename-overwrite and atomic-write cleanup tests pass; the delete-first branch was removed and AGENTS.md now records the supported-filesystem behavior."
+2. ✓ Run the full test suite on Linux and Windows (incl. a Windows equivalent of test_close_write_failure_surfaces_os_error, which is currently #[cfg(unix)]) and confirm atomic_write behaves correctly on git worktrees and shared/virtual filesystems — "Windows gate passes 170 unit plus 94 integration tests; native Linux non-root container passes 170 unit plus 95 integration tests, including the Windows-specific locked-file regression in its platform suite."
