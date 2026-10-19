@@ -20,7 +20,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 139 | Repair evidence-gate severity and discarded-evidence behavior | ✅ done |
 | 141 | Count uppercase checked acceptance boxes | ✅ done |
 | 152 | Fix indented-comment parser corruption | ✅ done |
-| 181 | Verify atomic writes across Windows and Linux | open |
+| 181 | Verify atomic writes across Windows and Linux | ✅ done |
 | 188 | Reject ambiguous duplicate frontmatter keys | open |
 | 189 | Unify env and requires into one eligibility model | open |
 | 150 | Make doctor strict results agree with validate | ✅ done |
