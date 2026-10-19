@@ -1,7 +1,7 @@
 ---
 id: "181"
 title: "Verify atomic_write on Windows + Linux (fs::rename overwrite, temp cleanup, worktrees)"
-status: open
+status: in_progress
 blocked_by: ["178"]
 priority: high
 validation_criteria:
