@@ -1,7 +1,7 @@
 ---
 id: "201"
 title: "Remediate small agent-facing help and release metadata drift"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "tkt --help has one accurate Close description and AGENTS.md documents every relevant public audit/debug option"
@@ -51,13 +51,13 @@ cross-platform investigation is closed.
 
 ## Acceptance criteria
 
-- [ ] `tkt --help` prints the Close command description once, and AGENTS.md documents
+- [x] `tkt --help` prints the Close command description once, and AGENTS.md documents
       `tkt audit --deep` plus every supported `TKT_DEBUG` spelling and destination
-- [ ] `plugin.json` is versioned with the released package and CHANGELOG.md declares
+- [x] `plugin.json` is versioned with the released package and CHANGELOG.md declares
       the agreed Keep a Changelog version
-- [ ] A release-note dry run proves that curated user-facing entries survive and that
+- [x] A release-note dry run proves that curated user-facing entries survive and that
       ticket/docs/CI/test/refactor commit noise is excluded
-- [ ] The populated `Unreleased` section contains only verified user-facing changes;
+- [x] The populated `Unreleased` section contains only verified user-facing changes;
       it makes no premature release-version, OpenCode-skill, or unqualified
       cross-platform atomic-write claim
 
@@ -65,3 +65,12 @@ cross-platform investigation is closed.
 
 - Completing the capabilities manifest (#138)
 - Adding or changing agent-harness installation targets (#202)
+
+## Resolution (2026-10-19)
+
+Corrected agent-facing help/guidance and made the release process preserve curated notes.
+
+### Verification
+1. ✓ tkt --help has one accurate Close description and AGENTS.md documents every relevant public audit/debug option — "Installed tkt 0.4.0 (78c3f24) shows one close summary; AGENTS.md documents audit --deep and every TKT_DEBUG spelling/destination."
+2. ✓ plugin.json version and changelog header match the release metadata policy — "plugin.json and Cargo metadata both declare 0.4.0; CHANGELOG.md and git-cliff use Keep a Changelog 1.1."
+3. ✓ the release process produces curated user-facing notes without internal ticket or documentation noise — "git cliff --unreleased was run as a review candidate and excludes configured ticket/docs/CI/test/refactor noise; release.toml no longer lets it overwrite CHANGELOG.md, and Unreleased remains curated and unlabelled until the release cut."
