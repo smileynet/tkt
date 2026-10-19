@@ -15,7 +15,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 133 | Preserve unquoted YAML scalar bytes | ✅ done |
 | 134 | Make renumber citation-safe and crash-consistent | ✅ done |
 | 135 | Put JSON error envelope last on stderr | ✅ done |
-| 136 | Apply global dry-run to every mutation | open |
+| 136 | Apply global dry-run to every mutation | ✅ done |
 | 137 | Resolve the real upstream branch for race detection | open |
 | 139 | Repair evidence-gate severity and discarded-evidence behavior | open |
 | 141 | Count uppercase checked acceptance boxes | open |
@@ -28,7 +28,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 | 185 | Restore automatic push/PR CI verification | open |
 | 201 | Remediate agent-facing help and release metadata drift | open |
 | 204 | Parse single-item block-style dependencies correctly | ✅ done |
-| 205 | Keep migration confirmation without writing during dry runs | open |
+| 205 | Keep migration confirmation without writing during dry runs | ✅ done |
 | 146 | Cut, tag, and document v0.4.0 | open |
 
 ## Quality, integrity, and dogfooding
