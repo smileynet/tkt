@@ -1,7 +1,7 @@
 ---
 id: "201"
 title: "Remediate small agent-facing help and release metadata drift"
-status: open
+status: done
 blocked_by: []
 validation_criteria:
   - "tkt --help has one accurate Close description and AGENTS.md documents every relevant public audit/debug option"
