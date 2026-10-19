@@ -1,7 +1,7 @@
 ---
 id: "79"
 title: "tkt undo: revert last mutation"
-status: open
+status: backlog
 blocked_by: []
 priority: low
 ---
