@@ -2,7 +2,7 @@
 id: "134"
 title: "Fix renumber: enforce birth-window citation scan before apply"
 status: in_progress
-blocked_by: []
+blocked_by: ["204"]
 priority: high
 validation_criteria:
   - "renumber refuses when old ID is cited in other tickets"
