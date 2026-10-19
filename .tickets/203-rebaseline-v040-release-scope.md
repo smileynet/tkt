@@ -1,7 +1,7 @@
 ---
 id: "203"
 title: "Decide v0.4.0 release scope before moving planned work to v0.5.0"
-status: open
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -45,13 +45,21 @@ Kiro reviews. The Kiro proposal recommended v0.4.0 but understated the establish
 ## Out of scope
 
 - Implementing any deferred v0.5.0 feature
-- Bumping package or plugin versions, tagging, or publishing a release
+- Tagging, publishing, or otherwise cutting the v0.4.0 release
 
 ## Acceptance criteria
 
-- [ ] The approved plan distinguishes the v0.4.0 shipped-change release train from
+- [x] The approved plan distinguishes the v0.4.0 shipped-change release train from
       deferred v0.5.0 feature work, with every moved ticket represented exactly once
-- [ ] #146 names the approved release version and lists every required v0.4.0 blocker,
+- [x] #146 names the approved release version and lists every required v0.4.0 blocker,
       including #201 if the release requires curated notes and metadata
-- [ ] The decision records whether v0.3.1 is skipped and which currently open tickets
+- [x] The decision records whether v0.3.1 is skipped and which currently open tickets
       are explicitly deferred rather than implying that an open-ticket release is safe
+
+## Resolution (2026-10-19)
+
+Approved the v0.4.0 release train for merged post-v0.3.0 behavior; deferred planned feature work to v0.5.0 and aligned the plan, release gate, and version metadata.
+
+### Verification
+1. ✓ docs/plan.md states the approved v0.4.0 and v0.5.0 scopes — "docs/plan.md separates v0.4.0 release blockers from v0.5.0 planned features"
+2. ✓ release ticket blockers match the approved v0.4.0 gate — "ticket 146 names v0.4.0 and its blocked_by list includes release-metadata ticket 201"
