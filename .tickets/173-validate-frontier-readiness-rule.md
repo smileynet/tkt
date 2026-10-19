@@ -1,7 +1,7 @@
 ---
 id: "173"
 title: "validate: frontier-scoped readiness rule (Definition of Ready gate)"
-status: open
+status: backlog
 blocked_by: []
 validation_criteria:
   - "open+deps-done ticket missing an intent source (spec/blocked_by/etc) is flagged"
