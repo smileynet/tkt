@@ -1,7 +1,7 @@
 ---
 id: "189"
 title: "Unify env and requires into one ticket eligibility model"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -32,8 +32,18 @@ data-model decision and implementation.
 
 ## Acceptance criteria
 
-- [ ] Mixed `env` and `requires` receives an explicit, unambiguous boundary outcome
-- [ ] `ready` evaluates one canonical eligibility model and includes a satisfied ticket
-- [ ] Environment-only legacy tickets and configuration defaults retain documented compatibility
-- [ ] Capability, environment, mixed-field, and no-match cases have regression coverage
-- [ ] The design decision records serialization and migration behavior
+- [x] Mixed `env` and `requires` receives an explicit, unambiguous boundary outcome
+- [x] `ready` evaluates one canonical eligibility model and includes a satisfied ticket
+- [x] Environment-only legacy tickets and configuration defaults retain documented compatibility
+- [x] Capability, environment, mixed-field, and no-match cases have regression coverage
+- [x] The design decision records serialization and migration behavior
+
+## Resolution (2026-10-19)
+
+Unified frontier eligibility around the requires capability set while preserving env-only compatibility.
+
+### Verification
+1. ✓ Mixed env and requires receives an explicit, unambiguous boundary outcome — "Mixed non-either env plus requires is rejected by parser, new, and batch; regression coverage verifies the boundary."
+2. ✓ ready includes tickets when their canonical eligibility is satisfied — "ready now merges machine capabilities with the legacy CREW_ENV/default_env value once, then performs a single capability eligibility check."
+3. ✓ Legacy env, capability, and config inputs have compatibility tests — "Legacy env, explicit capability, no-match, and mixed input regression coverage passes in mise run check (172 unit, 95 integration)."
+4. ✓ The design decision records compatibility and migration behavior — "README and AGENTS.md document the compatibility and migration rule: move combined constraints into requires."
