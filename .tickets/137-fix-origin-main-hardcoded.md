@@ -1,7 +1,7 @@
 ---
 id: "137"
 title: "Fix origin/main hardcoded in race detection"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -36,9 +36,16 @@ needs it.
 
 ## Acceptance criteria
 
-- [ ] A single upstream resolver prefers the current branch's tracking ref and otherwise uses the selected remote's HEAD
-- [ ] Conflict, fetch, status, rebase, and publish paths use that result rather than literal `origin/main`
-- [ ] Repositories with `master`, a non-`origin` remote, no upstream, and detached HEAD have explicit, tested behavior
-- [ ] Resolver failure cannot silently bypass a remote race check
-- [ ] Regression/unit coverage exercises tracking, remote-HEAD fallback, non-origin remotes, no-upstream, and detached cases
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+- [x] A single upstream resolver prefers the current branch's tracking ref and otherwise uses the selected remote's HEAD
+- [x] Conflict, fetch, status, rebase, and publish paths use that result rather than literal `origin/main`
+- [x] Repositories with `master`, a non-`origin` remote, no upstream, and detached HEAD have explicit, tested behavior
+- [x] Resolver failure cannot silently bypass a remote race check
+- [x] Regression/unit coverage exercises tracking, remote-HEAD fallback, non-origin remotes, no-upstream, and detached cases
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+
+## Resolution (2026-10-19)
+
+Remote race checks now resolve the current tracking ref first and a selected remote HEAD fallback otherwise; remote mutations refuse detached HEAD before writing.
+
+### Verification
+1. ✓ race detection works with master branch and non-origin remotes — "Added regression coverage for tracking refs, master, non-origin remotes, remote-HEAD fallback, resolver failure, and detached HEAD; mise run check passed."
