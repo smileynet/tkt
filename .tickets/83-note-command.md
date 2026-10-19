@@ -1,7 +1,7 @@
 ---
 id: "83"
 title: "tkt note <id>: open ticket body in $EDITOR"
-status: open
+status: backlog
 blocked_by: []
 priority: low
 ---
