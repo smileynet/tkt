@@ -1,7 +1,7 @@
 ---
 id: "135"
 title: "Fix JSON error envelope not last line of stderr"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -28,8 +28,15 @@ so an agent doing `stderr.lines().last()` gets valid JSON. Today the envelope is
 
 ## Acceptance criteria
 
-- [ ] With `-o json`, a failing command's final stderr line parses as the JSON error envelope
-- [ ] The human-readable error line (if any) precedes the envelope
-- [ ] Behavior matches the capabilities manifest claim
-- [ ] Regression test asserting `stderr.lines().last()` is valid JSON on error (per #128 defect-class requirement)
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+- [x] With `-o json`, a failing command's final stderr line parses as the JSON error envelope
+- [x] The human-readable error line (if any) precedes the envelope
+- [x] Behavior matches the capabilities manifest claim
+- [x] Regression test asserting `stderr.lines().last()` is valid JSON on error (per #128 defect-class requirement)
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+
+## Resolution (2026-10-19)
+
+Human-readable errors and telemetry diagnostics now emit before the JSON envelope; JSON mode also suppresses update notices so the envelope remains the final stderr line.
+
+### Verification
+1. ✓ JSON envelope is the last line of stderr on error — "cargo test json_error_envelope_is_last_stderr_line: passed; stderr.lines().last() parsed as the expected error envelope"
