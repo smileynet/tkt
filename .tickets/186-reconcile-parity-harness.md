@@ -1,7 +1,7 @@
 ---
 id: "186"
 title: "Reconcile or retire the historical Python parity harness"
-status: open
+status: backlog
 blocked_by: []
 priority: medium
 validation_criteria:
