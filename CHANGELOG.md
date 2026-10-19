@@ -54,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   evidence was ignored rather than discarding it silently
 - Hand-typed uppercase `- [X]` acceptance-criteria boxes are now counted as checked,
   so they satisfy the close gate and are no longer reported as unchecked
+- `tkt doctor` now runs the same full validation as `tkt validate` — reporting
+  unparseable tickets by name, stub bodies, and closure-quality issues — so it can no
+  longer report a clean project that `tkt validate` fails
 
 ## [0.3.0] - 2026-08-23
 

@@ -6,7 +6,6 @@ use anyhow::Result;
 
 use crate::color::{sym_err, sym_ok, sym_warn};
 use crate::commands::common::{is_json_output, is_quiet};
-use crate::core::{self, Ticket};
 use crate::findings;
 
 pub fn run(path: Option<&str>, fix: bool, strict: bool) -> Result<i32> {
@@ -17,14 +16,14 @@ pub fn run(path: Option<&str>, fix: bool, strict: bool) -> Result<i32> {
         );
     }
     match path {
-        None => run_single_project(fix, strict),
-        Some(p) => run_cross_project(Path::new(p), fix, strict),
+        None => run_single_project(strict),
+        Some(p) => run_cross_project(Path::new(p), strict),
     }
 }
 
 // --- Single-project doctor (no path arg) ---
 
-fn run_single_project(fix: bool, strict: bool) -> Result<i32> {
+fn run_single_project(strict: bool) -> Result<i32> {
     let mut issues = 0;
 
     // Check 1: git available
@@ -92,10 +91,12 @@ fn run_single_project(fix: bool, strict: bool) -> Result<i32> {
         ),
     }
 
-    // Check 6: validate (cycles, dangling deps, contract)
-    match core::load_corpus(&tickets_dir) {
-        Ok(corpus) => {
-            let all_findings = run_validate_checks(&corpus, &tickets_dir, &root, fix);
+    // Check 6: full corpus validation (parse errors, cycles, dangling deps,
+    // contract, unchecked ACs, stub bodies, closure quality). Shares
+    // `collect_corpus_findings` with `tkt validate` so doctor can never give a
+    // stronger clean signal than validate on the same corpus.
+    match findings::collect_corpus_findings(&tickets_dir) {
+        Ok(all_findings) => {
             let errors = all_findings
                 .iter()
                 .filter(|f| f.severity == "error")
@@ -105,11 +106,14 @@ fn run_single_project(fix: bool, strict: bool) -> Result<i32> {
                 .filter(|f| f.severity == "warning")
                 .count();
 
-            let effective_errors = if strict { errors + warnings } else { errors };
-
-            if effective_errors == 0 && warnings == 0 {
+            if errors == 0 && warnings == 0 {
                 println!("  {} no validation issues", sym_ok());
             } else {
+                // Surface unparseable tickets by name — they are dropped from the
+                // corpus by load_corpus elsewhere, so doctor must name them here.
+                for f in all_findings.iter().filter(|f| f.rule == "unparseable") {
+                    println!("  {} {} [unparseable] {}", sym_err(), f.file, f.message);
+                }
                 if errors > 0 {
                     println!("  {} {} validation errors", sym_err(), errors);
                     issues += errors;
@@ -129,7 +133,7 @@ fn run_single_project(fix: bool, strict: bool) -> Result<i32> {
             }
         }
         Err(e) => {
-            println!("  {} failed to load corpus: {}", sym_err(), e);
+            println!("  {} failed to read .tickets/: {}", sym_err(), e);
             issues += 1;
         }
     }
@@ -148,7 +152,7 @@ fn run_single_project(fix: bool, strict: bool) -> Result<i32> {
 
 // --- Cross-project scan ---
 
-fn run_cross_project(scan_path: &Path, fix: bool, strict: bool) -> Result<i32> {
+fn run_cross_project(scan_path: &Path, strict: bool) -> Result<i32> {
     let projects = find_ticket_dirs(scan_path);
     let non_tkt = find_non_tkt_git_repos(scan_path, &projects);
     let json_mode = is_json_output();
@@ -184,10 +188,8 @@ fn run_cross_project(scan_path: &Path, fix: bool, strict: bool) -> Result<i32> {
 
         let count = ticket_file_count(tickets_dir);
 
-        match core::load_corpus(tickets_dir) {
-            Ok(corpus) => {
-                let repo_root = tickets_dir.parent().unwrap_or(tickets_dir);
-                let all_findings = run_validate_checks(&corpus, tickets_dir, repo_root, fix);
+        match findings::collect_corpus_findings(tickets_dir) {
+            Ok(all_findings) => {
                 let errors = all_findings
                     .iter()
                     .filter(|f| f.severity == "error")
@@ -232,6 +234,8 @@ fn run_cross_project(scan_path: &Path, fix: bool, strict: bool) -> Result<i32> {
                 }
             }
             Err(_) => {
+                // Whole-directory read failure (not a per-ticket parse error —
+                // those now surface as `unparseable` error findings above).
                 if json_mode {
                     println!(
                         "{{\"path\":{},\"status\":\"parse_error\",\"tickets\":{}}}",
@@ -241,7 +245,7 @@ fn run_cross_project(scan_path: &Path, fix: bool, strict: bool) -> Result<i32> {
                     );
                 } else {
                     println!(
-                        "  {} {} ({} tickets, parse errors)",
+                        "  {} {} ({} tickets, unreadable .tickets/)",
                         sym_err(),
                         project_name,
                         count
@@ -363,20 +367,4 @@ fn find_non_tkt_git_repos(scan_path: &Path, tkt_dirs: &[PathBuf]) -> Vec<PathBuf
     }
     non_tkt.sort();
     non_tkt
-}
-
-fn run_validate_checks(
-    corpus: &[Ticket],
-    _tickets_dir: &Path,
-    _repo_root: &Path,
-    _fix: bool,
-) -> Vec<findings::Finding> {
-    let mut all = Vec::new();
-    all.extend(findings::check_status(corpus));
-    all.extend(findings::check_env(corpus));
-    all.extend(findings::check_id_filename(corpus));
-    all.extend(findings::check_duplicate_ids(corpus));
-    all.extend(findings::check_dangling_deps(corpus));
-    all.extend(findings::check_cycles(corpus));
-    all
 }

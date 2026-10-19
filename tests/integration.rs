@@ -3292,3 +3292,90 @@ fn test_uppercase_checkbox_not_flagged_as_all_unchecked_on_done() {
         out
     );
 }
+
+/// Seed a local repo with a mixed-defect corpus: one unparseable file (no
+/// frontmatter fence), one stub body, and one done ticket missing a Resolution.
+/// Returns the repo dir. Used to prove doctor and validate agree (#150).
+fn setup_mixed_defect_repo() -> (TempDir, PathBuf) {
+    let (tmp, dir) = setup_local_repo();
+    std::fs::write(dir.join(".tickets/01-bad.md"), "no fence here\njust text\n").unwrap();
+    std::fs::write(
+        dir.join(".tickets/02-stub.md"),
+        "---\nid: \"02\"\ntitle: \"Stub\"\nstatus: open\nblocked_by: []\n---\n\n# Stub\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join(".tickets/03-done.md"),
+        "---\nid: \"03\"\ntitle: \"Done\"\nstatus: done\nblocked_by: []\n---\n\n# Done\n",
+    )
+    .unwrap();
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-qm", "mixed defects"]);
+    (tmp, dir)
+}
+
+#[test]
+fn test_doctor_and_validate_agree_on_strict_result() {
+    // #150: a health command must not give a stronger clean signal than the
+    // validation command it summarizes. On a corpus with an unparseable file,
+    // a stub body, and a missing-resolution closure, both must fail under
+    // --strict (and both must fail even without --strict, since the
+    // unparseable file is an error).
+    let (_tmp, dir) = setup_mixed_defect_repo();
+
+    let (vcode, vout) = run_tkt(&dir, &["validate", "--strict", "--brief"]);
+    let (dcode, dout) = run_tkt(&dir, &["doctor", "--strict"]);
+    assert_eq!(
+        vcode, dcode,
+        "doctor and validate must agree on strict exit: validate={} ({}), doctor={} ({})",
+        vcode, vout, dcode, dout
+    );
+    assert_eq!(
+        dcode, 1,
+        "mixed-defect corpus must fail doctor --strict: {}",
+        dout
+    );
+
+    // Non-strict: the unparseable error alone fails both.
+    let (vcode, _vout) = run_tkt(&dir, &["validate", "--brief"]);
+    let (dcode, dout) = run_tkt(&dir, &["doctor"]);
+    assert_eq!(vcode, 1, "unparseable error fails validate");
+    assert_eq!(dcode, 1, "unparseable error must fail doctor too: {}", dout);
+}
+
+#[test]
+fn test_doctor_names_unparseable_ticket() {
+    // #150 / AC2: doctor must report an unparseable ticket with file context
+    // instead of silently treating it as absent (load_corpus drops it).
+    let (_tmp, dir) = setup_mixed_defect_repo();
+
+    let (code, out) = run_tkt(&dir, &["doctor", "--strict"]);
+    assert_eq!(
+        code, 1,
+        "corpus with an unparseable file must fail: {}",
+        out
+    );
+    assert!(
+        out.contains("01-bad.md") && out.contains("unparseable"),
+        "doctor must name the unparseable file: {}",
+        out
+    );
+}
+
+#[test]
+fn test_doctor_and_validate_agree_on_clean_corpus() {
+    // A clean corpus must pass both, under strict and non-strict.
+    let (_tmp, dir) = setup_local_repo();
+    std::fs::write(
+        dir.join(".tickets/01-clean.md"),
+        "---\nid: \"01\"\ntitle: \"Clean\"\nstatus: open\nblocked_by: []\n---\n\n# Clean\n\nReal body content.\n",
+    )
+    .unwrap();
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-qm", "clean"]);
+
+    let (vcode, _v) = run_tkt(&dir, &["validate", "--strict", "--brief"]);
+    let (dcode, dout) = run_tkt(&dir, &["doctor", "--strict"]);
+    assert_eq!(vcode, 0, "clean corpus passes validate");
+    assert_eq!(dcode, 0, "clean corpus passes doctor: {}", dout);
+}

@@ -3,42 +3,7 @@
 use anyhow::Result;
 
 use crate::commands::common::{project_config, tickets_dir};
-use crate::core::Ticket;
-use crate::findings::{self, Finding};
-
-/// Collect all validation findings for the corpus in `dir`.
-/// Shared by `run` (print + exit) and `run_with_fix` (before/after comparison)
-/// so the two can never disagree on what a finding is.
-fn collect_findings(dir: &std::path::Path) -> Result<Vec<Finding>> {
-    let mut all_findings: Vec<Finding> = Vec::new();
-
-    let mut corpus: Vec<Ticket> = Vec::new();
-    for entry in std::fs::read_dir(dir)?.filter_map(|e| e.ok()) {
-        if entry.path().extension().is_some_and(|ext| ext == "md") {
-            match Ticket::parse(&entry.path()) {
-                Ok(t) => corpus.push(t),
-                Err(e) => all_findings.push(Finding {
-                    file: entry.file_name().to_string_lossy().to_string(),
-                    rule: "unparseable".to_string(),
-                    message: e.to_string(),
-                    severity: "error".to_string(),
-                }),
-            }
-        }
-    }
-
-    all_findings.extend(findings::check_status(&corpus));
-    all_findings.extend(findings::check_env(&corpus));
-    all_findings.extend(findings::check_id_filename(&corpus));
-    all_findings.extend(findings::check_duplicate_ids(&corpus));
-    all_findings.extend(findings::check_dangling_deps(&corpus));
-    all_findings.extend(findings::check_cycles(&corpus));
-    all_findings.extend(findings::check_unchecked_acs(&corpus));
-    all_findings.extend(findings::check_stub_body(&corpus));
-    all_findings.extend(crate::audit::check_resolution_quality(&corpus));
-
-    Ok(all_findings)
-}
+use crate::findings::{self, collect_corpus_findings, Finding};
 
 /// Stable identity of a finding for before/after regression comparison.
 fn finding_ids(findings: &[Finding]) -> std::collections::HashSet<(String, String)> {
@@ -53,7 +18,7 @@ pub fn run(strict: bool, brief: bool) -> Result<i32> {
     let pcfg = project_config(&dir);
     let effective_strict = strict || pcfg.validate_strict;
 
-    let all_findings = collect_findings(&dir)?;
+    let all_findings = collect_corpus_findings(&dir)?;
 
     let status = findings::status_from_findings(&all_findings, effective_strict);
     crate::RESULT_COUNT.store(
@@ -72,7 +37,7 @@ pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
     let before = if dry_run {
         std::collections::HashSet::new()
     } else {
-        finding_ids(&collect_findings(&dir)?)
+        finding_ids(&collect_corpus_findings(&dir)?)
     };
 
     // Run the fix pass
@@ -111,7 +76,7 @@ pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
     if !dry_run && !result.repairs.is_empty() {
         // Regression gate: a fix must never introduce a NEW finding. Compare
         // identities (file+rule), not counts, so a swap can't slip through.
-        let after = finding_ids(&collect_findings(&dir)?);
+        let after = finding_ids(&collect_corpus_findings(&dir)?);
         let new: Vec<&(String, String)> = after.difference(&before).collect();
         if !new.is_empty() {
             // Record the (worse) count for telemetry since we skip run() below.

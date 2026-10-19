@@ -55,6 +55,49 @@ pub fn status_from_findings(findings: &[Finding], strict: bool) -> &'static str 
     }
 }
 
+/// Collect every corpus finding for the `.tickets/` directory `dir`.
+///
+/// This is the single source of truth for `validate` and `doctor`: it owns the
+/// per-file parse loop (so an unparseable ticket becomes a structured
+/// `unparseable` **error** finding with file context instead of being silently
+/// dropped by `load_corpus`) and runs every structural, AC, stub-body, and
+/// closure-quality check. Both commands call this so their strict pass/fail
+/// result and finding set can never disagree.
+pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Finding>> {
+    let mut all_findings: Vec<Finding> = Vec::new();
+
+    let mut corpus: Vec<Ticket> = Vec::new();
+    let mut entries: Vec<_> = std::fs::read_dir(dir)?
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
+        .collect();
+    entries.sort_by_key(|e| e.file_name());
+
+    for entry in entries {
+        match Ticket::parse(&entry.path()) {
+            Ok(t) => corpus.push(t),
+            Err(e) => all_findings.push(Finding {
+                file: entry.file_name().to_string_lossy().to_string(),
+                rule: "unparseable".to_string(),
+                message: e.to_string(),
+                severity: "error".to_string(),
+            }),
+        }
+    }
+
+    all_findings.extend(check_status(&corpus));
+    all_findings.extend(check_env(&corpus));
+    all_findings.extend(check_id_filename(&corpus));
+    all_findings.extend(check_duplicate_ids(&corpus));
+    all_findings.extend(check_dangling_deps(&corpus));
+    all_findings.extend(check_cycles(&corpus));
+    all_findings.extend(check_unchecked_acs(&corpus));
+    all_findings.extend(check_stub_body(&corpus));
+    all_findings.extend(crate::audit::check_resolution_quality(&corpus));
+
+    Ok(all_findings)
+}
+
 // --- Rules ---
 
 /// Check that all ticket statuses are valid.
