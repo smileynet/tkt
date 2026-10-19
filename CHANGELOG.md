@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   system error; cross-platform verification remains in progress
 - A successful ticket commit followed by a failed push now reports the recoverable
   commit instead of treating the work as lost
+- JSON-mode errors now end with the structured error envelope, so automation can
+  reliably parse the final stderr line
 
 ## [0.3.0] - 2026-08-23
 

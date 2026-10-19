@@ -14,7 +14,7 @@ done, the canonical gate passes, and the curated changelog records the release.
 |---:|---|---|
 | 133 | Preserve unquoted YAML scalar bytes | ✅ done |
 | 134 | Make renumber citation-safe and crash-consistent | ✅ done |
-| 135 | Put JSON error envelope last on stderr | open |
+| 135 | Put JSON error envelope last on stderr | ✅ done |
 | 136 | Apply global dry-run to every mutation | open |
 | 137 | Resolve the real upstream branch for race detection | open |
 | 139 | Repair evidence-gate severity and discarded-evidence behavior | open |
