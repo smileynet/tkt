@@ -1,7 +1,7 @@
 ---
 id: "198"
 title: "label-namespace validation: single-select + closed-set"
-status: open
+status: backlog
 blocked_by: ["193"]
 priority: high
 validation_criteria:
