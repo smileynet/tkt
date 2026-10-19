@@ -1,7 +1,7 @@
 ---
 id: "136"
 title: "Fix global --dry-run ignored by 7 mutating commands"
-status: in_progress
+status: done
 blocked_by: ["205"]
 priority: high
 validation_criteria:
@@ -30,9 +30,16 @@ should ideally skip the fetch too.
 
 ## Acceptance criteria
 
-- [ ] `sync-plan --fix`, `renumber`, `lint`, `init`, `context`, and `config --set` all make no writes under `--dry-run`
-- [ ] `renumber --dry-run` performs no commit and no push
-- [ ] Each previews the mutation it would perform (human/JSON) instead of writing
-- [ ] (Optional/decide) dry-run skips the network fetch
-- [ ] Regression tests: at least one dry-run no-write assertion per newly-covered command
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+- [x] `sync-plan --fix`, `renumber`, `lint`, `init`, `context`, and `config --set` all make no writes under `--dry-run`
+- [x] `renumber --dry-run` performs no commit and no push
+- [x] Each previews the mutation it would perform (human/JSON) instead of writing
+- [x] (Optional/decide) dry-run skips the network fetch
+- [x] Regression tests: at least one dry-run no-write assertion per newly-covered command
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+
+## Resolution (2026-10-19)
+
+Global --dry-run now suppresses filesystem, commit, push, and mutation preflight fetch effects across the affected commands; migration confirmation moved to #205.
+
+### Verification
+1. ✓ all mutating commands respect global --dry-run flag — "Added no-write integration coverage for lint, context, config, init, renumber, rebase, and migration; full mise run check passes."
