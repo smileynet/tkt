@@ -1,7 +1,7 @@
 ---
 id: "134"
 title: "Fix renumber: enforce birth-window citation scan before apply"
-status: in_progress
+status: done
 blocked_by: ["204"]
 priority: high
 validation_criteria:
@@ -36,10 +36,18 @@ mutation begins.
 
 ## Acceptance criteria
 
-- [ ] `renumber` refuses before writing when the old id is cited in another ticket's blocked_by or body
-- [ ] Block-style `blocked_by` citers are detected by the scan (not just inline arrays)
-- [ ] Preflight materializes all affected paths and replacement bytes before the first rename or write
-- [ ] An unparseable potentially affected file or citation violation leaves the entire corpus byte-identical
-- [ ] Apply consumes only the approved plan; it performs no new corpus discovery after the first write
-- [ ] Regression coverage proves cited-id refusal, malformed-file preflight refusal, and successful complete application
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+- [x] `renumber` refuses before writing when the old id is cited in another ticket's blocked_by or body
+- [x] Block-style `blocked_by` citers are detected by the scan (not just inline arrays)
+- [x] Preflight materializes all affected paths and replacement bytes before the first rename or write
+- [x] An unparseable potentially affected file or citation violation leaves the entire corpus byte-identical
+- [x] Apply consumes only the approved plan; it performs no new corpus discovery after the first write
+- [x] Regression coverage proves cited-id refusal, malformed-file preflight refusal, and successful complete application
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean
+
+## Resolution (2026-10-19)
+
+Renumber now materializes and validates every local ticket before mutating. Manual renumber rejects citations in dependencies or body text, while collision recovery reuses the preflighted rewrite plan without birth-window enforcement.
+
+### Verification
+1. ✓ renumber refuses when old ID is cited in other tickets — "cargo test test_renumber_refuses_one_item_block_style_citation_before_writing: passed; cited ID left all files unchanged"
+2. ✓ partial failure does not leave corpus in inconsistent state — "cargo test test_renumber_refuses_malformed_ticket_before_writing: passed; malformed local ticket aborted before rename"
