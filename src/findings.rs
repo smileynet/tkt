@@ -93,7 +93,30 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     all_findings.extend(check_cycles(&corpus));
     all_findings.extend(check_unchecked_acs(&corpus));
     all_findings.extend(check_stub_body(&corpus));
-    all_findings.extend(crate::audit::check_resolution_quality(&corpus));
+    let cfg = crate::config::ProjectConfig::load(dir);
+    let cutoff = cfg
+        .validate_missing_resolution_before_id
+        .parse::<u64>()
+        .ok();
+    let legacy_ids: HashSet<String> = cutoff
+        .map(|cutoff| {
+            corpus
+                .iter()
+                .filter(|ticket| ticket.id.parse::<u64>().is_ok_and(|id| id < cutoff))
+                .map(|ticket| ticket.id.clone())
+                .collect()
+        })
+        .unwrap_or_default();
+    all_findings.extend(
+        crate::audit::check_resolution_quality(&corpus)
+            .into_iter()
+            .filter(|finding| {
+                finding.rule != "missing-resolution"
+                    || !corpus.iter().any(|ticket| {
+                        filename(ticket) == finding.file && legacy_ids.contains(&ticket.id)
+                    })
+            }),
+    );
 
     Ok(all_findings)
 }

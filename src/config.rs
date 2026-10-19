@@ -18,6 +18,7 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
     ("close.require_validation_evidence", "warn"),
     ("close.allow_force", "true"),
     ("validate.strict", "false"),
+    ("validate.missing_resolution_before_id", ""),
     ("ready.default_env", ""),
     ("priority.warn_unknown", "true"),
     ("new.default_priority", ""),
@@ -42,6 +43,8 @@ pub struct ProjectConfig {
     pub close_require_validation_evidence: String,
     pub close_allow_force: bool,
     pub validate_strict: bool,
+    /// Suppress missing-resolution findings for numeric IDs below this project ratchet.
+    pub validate_missing_resolution_before_id: String,
     pub ready_default_env: String,
     pub priority_warn_unknown: bool,
     pub new_default_priority: String,
@@ -63,6 +66,7 @@ impl Default for ProjectConfig {
             close_require_validation_evidence: "warn".to_string(),
             close_allow_force: true,
             validate_strict: false,
+            validate_missing_resolution_before_id: String::new(),
             ready_default_env: String::new(),
             priority_warn_unknown: true,
             new_default_priority: String::new(),
@@ -153,6 +157,10 @@ impl ProjectConfig {
             ),
             ("close.allow_force", self.close_allow_force.to_string()),
             ("validate.strict", self.validate_strict.to_string()),
+            (
+                "validate.missing_resolution_before_id",
+                self.validate_missing_resolution_before_id.clone(),
+            ),
             ("ready.default_env", self.ready_default_env.clone()),
             (
                 "priority.warn_unknown",
@@ -188,6 +196,9 @@ fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> bool {
         }
         "close.allow_force" => cfg.close_allow_force = is_truthy(value),
         "validate.strict" => cfg.validate_strict = is_truthy(value),
+        "validate.missing_resolution_before_id" => {
+            cfg.validate_missing_resolution_before_id = value.to_string()
+        }
         "ready.default_env" => cfg.ready_default_env = value.to_string(),
         "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
         "new.default_priority" => cfg.new_default_priority = value.to_string(),

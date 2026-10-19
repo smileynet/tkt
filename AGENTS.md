@@ -95,7 +95,7 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 - **User config**: `~/.config/tkt/config.toml` — debug mode, format preferences
 - **Project config**: `.tickets/config.toml` — committed to repo, shared by contributors
   - `[close]` require_resolution, require_checked_acs, require_validation_criteria, require_validation_evidence, allow_force
-  - `[validate]` strict
+  - `[validate]` strict, missing_resolution_before_id (project-specific legacy ratchet)
   - `[ready]` default_env
   - `[priority]` warn_unknown
   - `[new]` default_priority
