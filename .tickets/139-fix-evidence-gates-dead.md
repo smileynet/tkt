@@ -1,7 +1,7 @@
 ---
 id: "139"
 title: "Fix evidence gates partially dead: unreachable warn branch + silent discard"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
