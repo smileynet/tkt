@@ -1,7 +1,7 @@
 ---
 id: "156"
 title: "Delta review 2026-08-27: #154 legacy-baseline gap, cross-project evidence, #152 still pending"
-status: backlog
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -77,8 +77,8 @@ tracked in #152 — disposition there, not here.
 
 ## Acceptance criteria
 
-- [ ] D1: #154 spec gains a legacy-baseline decision (grandfather cutoff recommended) before implementation
-- [ ] D2: #154 evidence line annotated with source project for the #209/#210 incident
-- [ ] D3: #154 spec states audit-vs-validate dedup and severity handling
-- [ ] D4/D5: no action — verification record only
-- [ ] cargo fmt && cargo clippy --all-targets && cargo test pass clean (no code changes expected from this ticket)
+- [x] D1: #154 spec gains a legacy-baseline decision (grandfather cutoff recommended) before implementation
+- [x] D2: #154 evidence line annotated with source project for the #209/#210 incident
+- [x] D3: #154 spec states audit-vs-validate dedup and severity handling
+- [x] D4/D5: no action — verification record only
+- [x] cargo fmt && cargo clippy --all-targets && cargo test pass clean (no code changes expected from this ticket)
