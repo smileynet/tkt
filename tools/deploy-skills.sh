@@ -67,7 +67,12 @@ fm_name() {
   sed -n '/^---/,/^---/p' "$1" | sed -n 's/^name:[[:space:]]*//p' | head -1 | tr -d '"'"'"' '
 }
 
-# --- Hard lint: name==dir + globally-unique names ---
+# --- Hard lint: name==dir + globally-unique names + tkt self-sufficiency ---
+# Self-sufficiency: tkt must work standalone for an adopter who has tkt but NOT
+# grey-matter. A distributed skill therefore must not reference a non-tkt skill by
+# name (frontier-work, read-handoff, to-tickets, ...) — those won't exist for a
+# tkt-only user. Referencing sibling tkt-* skills and `tkt` commands is fine.
+FOREIGN_SKILLS='frontier-work|read-handoff|to-tickets|spec-driven-development|reconcile-tickets|wrap-session|compass|implement-spec'
 lint() {
   local errors=0
   declare -A seen
@@ -75,6 +80,11 @@ lint() {
     local fm; fm="$(fm_name "$SKILLS_DIR/$name/SKILL.md")"
     if [[ -n "$fm" && "$fm" != "$name" ]]; then
       echo "  lint: $name/SKILL.md declares name \"$fm\" but its folder is \"$name\"" >&2
+      errors=$((errors + 1))
+    fi
+    local foreign; foreign="$(grep -oE "\b($FOREIGN_SKILLS)\b" "$SKILLS_DIR/$name/SKILL.md" | sort -u | tr '\n' ' ')"
+    if [[ -n "${foreign// }" ]]; then
+      echo "  lint: $name/SKILL.md references non-tkt skill(s): ${foreign}(tkt skills must be self-sufficient — use tkt commands or sibling tkt-* skills)" >&2
       errors=$((errors + 1))
     fi
     if [[ -n "${seen[$name]:-}" ]]; then

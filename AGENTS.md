@@ -167,6 +167,7 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 ## Constraints
 
 - Do NOT change the frontmatter contract without updating the tkt-work skill
+- Distributed skills (`skills/<name>/`) MUST be self-sufficient for a tkt-only adopter (someone who has tkt but NOT grey-matter or any other skill set): reference only `tkt` commands and sibling `tkt-*` skills, never a non-tkt skill by name (`frontier-work`, `read-handoff`, `to-tickets`, …). tkt is the standalone tool; grey-matter is an opinionated layer that *wraps* tkt's skills. `tools/deploy-skills.sh` lint enforces this (fails the deploy on a foreign-skill reference).
 - Do NOT change CLI flags or agent-facing behavior without updating all guidance surfaces (see `.memory/agent-guidance-surfaces.md` for checklist — init snippets, skill, steering, AGENTS.md, README)
 - Do NOT implement computed sort overrides for the frontier — priority+ID ordering is intentional and gives explicit control over agent work sequence
 - Do NOT add dependencies beyond what's in Cargo.toml without justification
