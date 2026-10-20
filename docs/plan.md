@@ -62,7 +62,7 @@ release of already-merged behavior.
 |---:|---|---|
 | 127 | Improve agent discovery and init guidance | backlog |
 | 138 | Complete the machine-readable capabilities manifest | backlog |
-| 208 | capabilities -o json incomplete: omits flags + commands (overlaps #138) | open |
+| 208 | capabilities -o json incomplete (consolidated into #138) | backlog |
 | 161 | Support aggregate reporter provenance in steering | backlog |
 | 168 | Consider advisory nudges for tag-less/backlog work | backlog |
 | 79 | Safely undo the last tkt mutation | backlog |
@@ -86,7 +86,7 @@ three roots first (`192`, `193`, `194`), their dependents, then the docs pass la
 
 | ID | Work | Status |
 |---:|---|---|
-| 192 | parent field: schema, parse, serialize | backlog |
+| 192 | parent field: schema, parse, serialize | open |
 | 193 | `[labels.*]` config: parse single-select + closed-value namespaces | backlog |
 | 194 | assignee field + claim-by-assignment + frontier honors it | backlog |
 | 195 | parent validation: dangling + cycle checks (after 192) | backlog |

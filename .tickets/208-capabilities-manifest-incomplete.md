@@ -48,3 +48,12 @@ command/flag exists in the CLI but not in the manifest.
 - [ ] `tkt capabilities -o json` lists every top-level command `tkt --help` lists
 - [ ] Each command's inputSchema includes every flag its `--help` documents (incl. `new`'s `--tags`, `--vc`/`--validation`, `--requires`)
 - [ ] A test asserts the manifest stays in sync with the clap command/flag definitions
+
+## Consolidation note (tkt-reconcile, 2026-10-20)
+
+Demoted to `backlog` as a **duplicate of #138** ("Complete the machine-readable
+capabilities manifest"). #138 is the established umbrella and the ticket #127 depends on;
+this ticket's sharper ACs and consumer evidence (grey-matter `verify-tkt-usage`
+false-flagging valid `--tags`/`--vc` flags and missing commands) were folded into #138.
+Implement on **#138**, not here. Kept (not closed) because project policy disables
+force-close and these ACs aren't honestly met yet — parked rather than gamed.

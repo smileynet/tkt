@@ -35,5 +35,21 @@ v0.3.1 bugfix release.
 - [ ] Each added mutation command declares its effects and meaningful input schema
 - [ ] Existing schemas include `new`/`batch` tags and requires, and never advertise
       `edit --status done` as a supported lifecycle transition
+- [ ] Each command's inputSchema includes every flag its `--help` documents (e.g. `new`
+      includes `--tags`, `--vc`/`--validation`, `--requires` — gaps found by #208)
 - [ ] A regression test or derived command inventory prevents command and field drift
 - [ ] #127's help/init guidance can safely point agents to the complete manifest
+
+## Consumer evidence (from #208, consolidated)
+
+A real consumer surfaced the gap: grey-matter's `verify-tkt-usage` skill validates inlined
+tkt commands against this manifest and false-flagged valid flags/commands because the
+manifest is incomplete at 0.4.0 (92d4833). Specifics it found:
+
+- `new` inputSchema omits `--tags`, `--vc`/`--validation`, `--requires`.
+- Command list omits `context`, `blocked`, `audit`, `sync-plan`, `renumber`, `init`,
+  `doctor`, `migrate`, `rebase`, `telemetry`, `config`.
+
+An automation that trusts the manifest as authoritative (as its description invites) will
+mis-validate until this is fixed — so the single-source (clap-derived) + drift test is
+load-bearing, not nice-to-have. (#208 closed as duplicate of this ticket.)
