@@ -46,7 +46,7 @@ After creating tickets, add them to the plan — every open ticket needs a plan 
 
 ### 4. New ticket quality standard
 
-Apply the tkt skill's ticket-standards (if the tkt skill is loaded, read `references/ticket-standards.md`; otherwise apply the checklist below).
+Apply the tkt-core skill's ticket-standards (if the tkt-core skill is loaded, read `references/ticket-standards.md`; otherwise apply the checklist below).
 
 Every new ticket MUST have:
 
@@ -122,6 +122,6 @@ Present: tickets created, tickets updated, plan re-organization (what moved and 
 ## Does NOT
 
 - Pick the single next ticket to execute (that's `frontier-work` — this skill makes the plan's frontier *pickable*, it doesn't pick)
-- Decompose a spec from scratch into a ticket set (that's `tkt` / `to-tickets`)
+- Decompose a spec from scratch into a ticket set (that's `tkt-core` / `to-tickets`)
 - Create specs or features (that's `spec-driven-development`)
 - Rewrite the plan's narrative prose or change its format (status/ordering only; format is ADR 0002's concern)

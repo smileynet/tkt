@@ -53,8 +53,9 @@ each commit.
 cargo build --release && cargo install --path . && bash tools/deploy-skills.sh
 ```
 
-`tools/deploy-skills.sh` deploys tkt's core skills (`skills/<name>/`, currently `tkt`
-and `tkt-reconcile`) to every agent harness scan root following grey-matter conventions:
+`tools/deploy-skills.sh` deploys tkt's core skills (`skills/<name>/`, currently `tkt-core`
+and `tkt-reconcile` — every distributed skill is `tkt-`-prefixed for ownership clarity) to
+every agent harness scan root following grey-matter conventions:
 copy (not symlink), manifest-tracked (`.installed-by-tkt.json`), name==dir + global-unique
 lint, and it only ever touches skills it installed (`--force` to replace a foreign dir,
 `--dry-run`/`list`/`uninstall` for the rest). tkt owns these skills so they track tool
