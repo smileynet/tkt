@@ -36,6 +36,17 @@ GitHub Actions runs this same gate automatically for every push and pull request
 That automated check complements, but does not replace, the required local check before
 each commit.
 
+### Session workflow (commit + push cadence)
+
+- **Always commit after completing a task** — each logical unit of work ends in a commit
+  with a `type(scope): what changed` message. Don't leave finished work uncommitted.
+- **Always push after committing** (a remote exists). Before pushing, `git fetch` and
+  verify no upstream divergence; fast-forward or rebase cleanly, otherwise report the
+  upstream state before proceeding.
+- For code changes, the verification gate above must pass before the commit. For
+  docs/tickets/tooling-only changes, the gate's build/test step doesn't apply, but still
+  commit + push on completion.
+
 ### Deploy (run after pulling or making changes)
 
 ```bash
