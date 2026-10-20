@@ -1,7 +1,6 @@
 ---
 name: tkt-reconcile
 description: "End-of-session ticket + plan pass: make every ticket current, capture all open work as tickets, and re-prioritize/re-sequence the plan to match current priorities and work streams. Use when wrapping up a session, auditing ticket health, after planning, when work feels untracked, or asking 'is everything captured?' / 'update the plan'. Trigger: sync tickets, update the plan, re-prioritize, end of session ticket pass, ticket review, are tickets current, is everything tracked, ticket audit, ticket hygiene, wrap up tickets, tag scope, work stream."
-compatibility: Requires git
 ---
 
 # Tkt Reconcile
@@ -123,7 +122,7 @@ Present: tickets created, tickets updated, plan re-organization (what moved and 
 ## Does NOT
 
 - Orient at the start of a session (that's `tkt-orient`, the session-start counterpart that reads the state this skill leaves behind)
-- Pick the single next ticket to execute (that's `tkt-work` — this skill makes the plan's frontier *pickable*, it doesn't pick)
-- Decompose a spec from scratch into a ticket set (that's `tkt-core` / `to-tickets`)
-- Create specs or features (that's `spec-driven-development`)
-- Rewrite the plan's narrative prose or change its format (status/ordering only; format is ADR 0002's concern)
+- Pick and execute the next ticket (that's `tkt-work`) — this skill makes the plan's frontier *pickable*, it doesn't pick
+- Decompose a spec from scratch into a ticket set (that's the `tkt-core` skill's ticket-creation workflow, or your harness's planning flow)
+- Create specs or features
+- Rewrite the plan's narrative prose or change its format (status/ordering only)

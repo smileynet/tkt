@@ -1,14 +1,13 @@
 ---
 name: tkt-orient
 description: "Start-of-session pickup from the reconciled plan and tickets: read the frontier, in-progress threads, and plan ordering that tkt-reconcile left behind, flag stale WIP, and propose the next step. Use when starting a session, resuming after a break, or asking 'where were we?' / 'what's next?' / 'pick up where we left off'. Trigger: start of session, orient, resume, pick up where we left off, where were we, what's next, catch me up, continue, session start, what's on the board."
-compatibility: Requires git
 ---
 
 # Tkt Orient
 
 Session-start bookend to `tkt-reconcile`. Read the reconciled plan + ticket state, detect anything a prior session left mid-flight, and propose a concrete next step — then hand off to the actual pick-and-work.
 
-This skill *reads* and *orients*. It does not reconcile (that's `tkt-reconcile`, at session end) and does not claim-and-execute (that's `tkt-work`). Orient is the bridge between them.
+This skill *reads* and *orients*. It does not re-prioritize or rewrite the plan (that's `tkt-reconcile`, at session end) and it does not claim-and-execute (that's `tkt-work`) — it stops at a proposal.
 
 ## Process
 
@@ -22,7 +21,7 @@ tkt query --status in_progress    # claimed/mid-flight threads
 
 These are instant reads — batch them into one call (with `echo ---MARKER---` separators) rather than issuing them separately.
 
-Then read the **reconciled ordering**. The default is `docs/plan.md` — read it directly; this is what `tkt-reconcile` last re-organized and is authoritative for *intended* sequence. If `docs/plan.md` is absent, do NOT conclude "no plan" and stop: check `AGENTS.md` for the project's declared status/sequencing source — many repos deliberately use a `BACKLOG.md` or a spec overview and treat `tkt ready`/`tkt query` as authoritative. Orient from whatever source the project declares, and name the source you used. If a `HANDOFF.md` exists in the ephemeral dir (most projects won't — skip silently if absent), read it too (`read-handoff` owns prose-handoff resumption; this only complements it).
+Then read the **reconciled ordering**. The default is `docs/plan.md` — read it directly; this is what `tkt-reconcile` last re-organized and is authoritative for *intended* sequence. If `docs/plan.md` is absent, do NOT conclude "no plan" and stop: check `AGENTS.md` for the project's declared status/sequencing source — many repos deliberately use a `BACKLOG.md` or a spec overview and treat `tkt ready`/`tkt query` as authoritative. Orient from whatever source the project declares, and name the source you used. If a `HANDOFF.md` exists in the ephemeral dir (most projects won't — skip silently if absent), read it too for extra context.
 
 ### 2. Detect stale WIP
 
@@ -44,7 +43,7 @@ For stale WIP: **flag and offer**, never auto-release. Present it as a choice �
 
 ### 3. Apply the plan-ordering rubric to find the intended next pick
 
-Use the same rubric `tkt-reconcile` writes the plan against (do not re-derive your own order — this rubric is mirrored verbatim in `tkt-reconcile` step 6; keep the two copies in sync if either changes):
+Use the same rubric `tkt-reconcile` writes the plan against (do not re-derive your own order):
 
 1. **Finish current threads first** — a live in-progress thread outranks starting a new one.
 2. **Prefer earlier (lower-ID) tickets** — within/between equal threads.
@@ -60,7 +59,7 @@ Keep it short. A distillation, not a dump:
 
 - **Where we are** — one or two sentences: active scope (if any), how many tickets on the frontier, which thread (if any) is mid-flight.
 - **Heads up** — only if there's stale WIP, a blocker cleared/appeared, or plan drift. Skip if clean.
-- **Next step** — a specific proposal: "Thread X is live at #NN — resume it?" or "Frontier is clean; the rubric says #NN is next. Start?" End with a proceed question, then hand to `tkt-work` to claim + work.
+- **Next step** — a specific proposal: "Thread X is live at #NN — resume it?" or "Frontier is clean; the rubric says #NN is next. Start?" End with a proceed question. On acceptance, hand to `tkt-work` (claim + execute the ticket).
 
 ## Verify (run up front, alongside step 1's reads)
 
@@ -78,7 +77,7 @@ Recurring cosmetic warnings (e.g. `unchecked-acs-on-done` on done-and-superseded
 
 ## Does NOT
 
-- Claim and execute a ticket (that's `tkt-work` — orient proposes, tkt-work picks + works)
+- Claim and execute the ticket (that's `tkt-work` — orient proposes, tkt-work picks + works)
 - Reconcile tickets or re-prioritize/rewrite the plan (that's `tkt-reconcile`, at session end — orient only reads the plan)
 - Auto-release another session's `in_progress` claim (flag + offer; the user decides)
-- Resume from a prose handoff document (that's `read-handoff`, which this complements)
+- Replace a prose handoff document — if the project keeps one, orient reads it for context but doesn't own it
