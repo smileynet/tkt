@@ -1,41 +1,91 @@
----
-created_at: 2026-08-27T10:02:18-07:00
-base_commit: 00e717a
-handoff_key: tkt-v031-bugfix
----
+# Handoff — v0.5 scope review + grey-matter skill adoption
 
-# Handoff
+Date: 2026-10-20. Branch `main`, synced with `origin/main`, working tree clean.
+Installed binary: `tkt 0.4.0 (92d4833)` — matches shipped release; HEAD is ahead only
+by docs/tickets/skills commits (no Rust code changed this session).
 
-## Objective
-Ship v0.3.1 — close the data-loss/contract bugs blocking the release (#146 is the release-cut ticket, blocked by 131-141 + 127).
+## What happened this session
 
-## Constraints
-- Windows: mise shims broken → use `D:\dev-tools\cargo\bin\cargo.exe` and toolchain rustfmt directly (AGENTS.md:145).
-- `git commit -F <file>` for multi-line messages (PowerShell mangles `-m`).
-- **Stale-binary trap (hit 3×):** the installed `tkt` drifts from HEAD after commits. Validate via `cargo test` integration tests (`tkt_bin()` = auto-rebuilt `target/` binary), NOT the PATH binary. See #153.
-- Project enforces `require_validation_criteria` at `tkt new` and one `--evidence` per criterion at close.
-- Never fabricate resolutions; never hand-flip `status: done` (enforced now — see #154).
+A planning + skills session (no production Rust touched). Three threads:
 
-## Prior Decisions
-- Tags shipped in v0.3.0 (`--tags`, plural) — do NOT reimplement.
-- #155 decided hook-enforcement policy: warn-default, block opt-in via `[hooks]` config, logging opt-in (off by default). Client hooks are advisory; CI `validate --strict` is the only real gate.
+### 1. v0.5 scope review (done)
+- **Rewired #127/#138.** The capabilities-manifest work was both a prerequisite *inside*
+  #127 and a ticket *blocked by* #127 — circular. Fixed: `#127 blocked_by 138`, #138 is
+  now an independent root, and #127's body/ACs no longer duplicate the manifest scope.
+- **ADR 0003** (`.memory/adr/0003-audit-debt-grandfather-cutoff.md`): audit debt policy —
+  grandfather the 27 pre-protocol `missing-resolution` findings rather than fabricate
+  resolutions; `audit --strict` is NOT a v0.5 release blocker. Implementation tracked in
+  **#206**.
+- **Closed #156** (stale delta-review; its D1 superseded by ADR 0003, D2/D3 moot since
+  #154 closed).
+- Proposal doc: `.scratch/v050-proposal.md` (fuller detail, incl. the A2 gate-membership
+  recommendation that is still UNCONFIRMED — see Open decisions).
 
-## Current State
-Run `tkt ready` for the frontier. Closed this session: #131 (block-style/bare blocked_by), #132 (BOM/comment/space-colon parse tolerance), #154 (validate flags hand-flipped done + guidance), #155 (hook spike → decision record). Nothing left mid-flight — clean tree at 00e717a.
+### 2. Skill work (done)
+- **`tkt-reconcile`** — new/renamed skill (was `plan-ticket-sync`): end-of-session pass
+  that makes tickets current, captures untracked work, AND re-prioritizes the plan.
+  Includes a plan-ordering rubric (finish current threads → prefer earlier IDs → blockers
+  override → explicit user instruction wins → priority is weight-not-order) and
+  work-stream tag scoping. Now lives in the committed `skills/tkt-reconcile/`.
+- **grey-matter is now the canonical skill format; crew-research is deprecated.** Adopted
+  grey-matter conventions: `skills/tkt/SKILL.md` frontmatter trimmed to safe-core
+  (`name`+`description`+`compatibility`; folded `triggers:`/`tools:` away), and
+  `tools/deploy-skills.sh` rewritten as a grey-matter-convention installer (COPY,
+  manifest-tracked `.installed-by-tkt.json`, name==dir + global-unique lint, refuses
+  foreign dirs without `--force`, dry-run/list/uninstall).
+- **Deployed globally** to all 4 harness roots (`~/.kiro`, `~/.codex`, `~/.claude`,
+  `~/.agents/skills`), replacing the stale crew copies. Verified present + compliant.
 
-## Next Steps
-- Continue the #146 blocker set: #133 (yaml_scalar_unescape corrupts plain scalars), #134, #135, #136 are the next HIGH-priority parser/contract fixes on the frontier.
-- #153 (bumped HIGH): implement the stale-binary practice-change — the recurring trap.
-- Follow the propose → dispatch research → update ticket → implement → verify-via-cargo-test → close loop that worked for 131/132/154.
+### 3. Process rules recorded (done)
+- `AGENTS.md` "Session workflow": always commit after a task, push after commits
+  (fetch + divergence check first). This is now a standing convention.
 
-## Fog
-- #160: 27 legacy tickets (#02-#35) now warn `missing-resolution` (side-effect of #154 firing on pre-#154 closes). Policy undecided: grandfather by close-date vs accept as documented. Do NOT backfill (fabrication).
-- #157/#158/#159 (hook impl follow-ups) not yet scoped for sequencing against the release.
+## Current state
 
-## Evidence
-- Frontier: `tkt ready`. Health: `tkt validate --brief` (27 expected legacy warnings, else pass).
-- Hook research preserved: `.scratch/subagent-raw/{agent-hook-mechanisms,beads-hooks,git-hook-install-patterns,guardrail-warn-vs-block,codex-applypatch-hook,tkt-init-git-review}.md` (referenced by #155/#157/#158/#159).
+- `tkt validate --strict` → pass. `tkt sync-plan --check` → pass.
+- `tkt audit --strict` → **32 findings** (27 pre-protocol missing-resolution + low-evidence
+  closures). This is KNOWN, documented debt per ADR 0003 — not a regression, not a blocker.
+  Do NOT "fix" it by hand-editing tickets. (Count rose from 30 to 32 as #156 closed and new
+  tickets landed — unchanged in character.)
+- Frontier (`tkt ready`): **#206, #207, #208** ready; **#192 in_progress**.
 
-## Recommended Updates
-- [ ] #153 is the highest-leverage process fix — prose constraint (AGENTS.md:148) failed 3×; needs the mechanical `cargo test` practice-change.
-- [ ] AGENTS.md is at the 150-line ceiling — next Constraint addition should trigger a trim (`/agents-md-authoring`).
+## ⚠️ Read before you start
+
+- **#192 is claimed by me but UNSTARTED.** I ran `tkt claim 192` to seed the frontier
+  during the review but wrote zero implementation. If you pick it up, treat it as fresh:
+  re-read the ticket, start from its 3 ACs (add `parent: Option<String>` to Ticket, typed
+  set/clear on TicketFile, round-trip test). If you'd rather work something else, that's
+  fine — just know the in_progress flag is not real progress.
+- **#208 arrived from a concurrent session** (another agent created it + the
+  `verify-tkt-usage` grey-matter skill while I worked). It OVERLAPS #138 heavily — both
+  are "complete the capabilities manifest." Disposition before implementing either:
+  likely #208 is the concrete bug report and #138 the umbrella; merge or blocked-by them.
+  Note #208 also introduced a **namespaced tag convention** (`type:bug`, `stream:tooling`)
+  that the rest of the corpus doesn't use yet — decide whether to adopt it project-wide.
+
+## Open decisions (not mine to make)
+
+1. **A2 — v0.5 gate membership** (from `.scratch/v050-proposal.md`): proposed gate =
+   #138→#127, relations slice (#192 + deps, #193+#198, #194, #199), #190. Deferring #202,
+   the feature wishlist (#79/#83/#86–#90/#93), #161/#168, #182/#184/#187. NOT yet enforced
+   on the plan — confirm before marking the deferred set.
+2. **Tag vocabulary**: corpus has no established tags; #208 introduced `type:`/`stream:`
+   namespaces. Pick one convention and apply consistently, or leave single-stream.
+
+## Recommended next steps
+
+- Pick a v0.5 root: **#192** (relations keystone, unblocks #195/#196/#197/#200) or **#190**
+  (highest-value integrity: strict typed config parsing). Both are zero-dep roots.
+- Or clear the small stuff: **#206** (implement the ADR 0003 cutoff — small, well-specced)
+  or disposition **#208 vs #138**.
+- **#207** (retire crew steering `frontier-work.md` into a skill) — natural follow-on to
+  this session's grey-matter adoption.
+
+## Key references
+
+- `.scratch/v050-proposal.md` — full v0.5 review + gate recommendation
+- `.memory/adr/0003-audit-debt-grandfather-cutoff.md` — audit debt policy
+- `.memory/agent-guidance-surfaces.md` — update ALL of these on any CLI/agent-facing change
+- `docs/plan.md` — authoritative work map (now includes #206, #207, #208)
+- grey-matter conventions: `d:\code\grey-matter\docs\agents\skill-frontmatter.md`,
+  `doc-conventions.md` (crew-research is deprecated in favor of this repo's format)

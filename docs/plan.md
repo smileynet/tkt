@@ -62,6 +62,7 @@ release of already-merged behavior.
 |---:|---|---|
 | 127 | Improve agent discovery and init guidance | backlog |
 | 138 | Complete the machine-readable capabilities manifest | backlog |
+| 208 | capabilities -o json incomplete: omits flags + commands (overlaps #138) | open |
 | 161 | Support aggregate reporter provenance in steering | backlog |
 | 168 | Consider advisory nudges for tag-less/backlog work | backlog |
 | 79 | Safely undo the last tkt mutation | backlog |
