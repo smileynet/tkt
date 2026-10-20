@@ -73,6 +73,7 @@ release of already-merged behavior.
 | 90 | Open ticket-body URLs | backlog |
 | 93 | Pluggable ticket schema and meta fields | backlog |
 | 202 | Deploy tkt guidance and skill safely across supported harnesses | backlog |
+| 207 | Retire crew steering surface: fold frontier-work into a skill/AGENTS.md | open |
 
 ## v0.5.0 — native relations and label namespaces
 
