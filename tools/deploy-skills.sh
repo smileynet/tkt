@@ -27,7 +27,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_DIR="$REPO_ROOT/skills"
-STEERING_SRC="$REPO_ROOT/steering"
 MANIFEST_NAME=".installed-by-tkt.json"
 
 CMD="install"
@@ -151,20 +150,10 @@ do_install() {
     write_manifest "$root" "${SKILL_NAMES[@]}"
   done
 
-  # --- Steering (kiro-only, still live: frontier-work is referenced by skills) ---
-  if [[ -d "$STEERING_SRC" && -d "$HOME/.kiro" ]]; then
-    echo ""
-    echo "steering (kiro):"
-    local sdest="$HOME/.kiro/steering"
-    $DRY_RUN || mkdir -p "$sdest"
-    for src in "$STEERING_SRC"/*.md; do
-      [[ -f "$src" ]] || continue
-      local n; n="$(basename "$src")"
-      if $DRY_RUN; then echo "  copy $n"; continue; fi
-      cp -f "$src" "$sdest/$n"
-      echo "  copied  $n"
-    done
-  fi
+  # --- Steering ---
+  # tkt ships no steering files: steering is kiro-only (not cross-compatible with
+  # codex/claude/other harnesses), so all agent guidance lives in skills/ instead.
+  # The former frontier-work.md steering is now the tkt-work skill.
 
   echo ""
   echo "$($DRY_RUN && echo '(dry-run) would install' || echo installed) ${#SKILL_NAMES[@]} skills into ${#ROOTS[@]} root(s)."

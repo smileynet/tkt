@@ -76,7 +76,7 @@ Machine-checkable strings that the evidence gate uses:
 validation_criteria:
   - "cargo test passes"
   - "tkt validate --strict exits 0"
-  - "~/.kiro/skills/tkt/SKILL.md exists after deploy"
+  - "~/.kiro/skills/tkt-core/SKILL.md exists after deploy"
 ```
 
 Each must be:

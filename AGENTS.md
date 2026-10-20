@@ -165,7 +165,7 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 
 ## Constraints
 
-- Do NOT change the frontmatter contract without updating frontier-work steering
+- Do NOT change the frontmatter contract without updating the tkt-work skill
 - Do NOT change CLI flags or agent-facing behavior without updating all guidance surfaces (see `.memory/agent-guidance-surfaces.md` for checklist — init snippets, skill, steering, AGENTS.md, README)
 - Do NOT implement computed sort overrides for the frontier — priority+ID ordering is intentional and gives explicit control over agent work sequence
 - Do NOT add dependencies beyond what's in Cargo.toml without justification

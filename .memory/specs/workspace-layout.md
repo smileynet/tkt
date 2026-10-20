@@ -23,8 +23,11 @@ src/
 tests/
 ├── integration.rs   — integration tests (tempdir repos, race scenarios, telemetry, debug)
 └── parity/          — historical Python parity comparison harness
-skills/tkt/          — agentskills.io skill (deployed via symlink to ~/.kiro/skills/tkt)
-steering/            — always-on steering files (deployed as copy to ~/.kiro/steering/)
+skills/                — cross-harness skills (deployed as copy to ~/.{kiro,codex,claude,agents}/skills/)
+  tkt-core/            — agentskills.io skill: tkt CLI jobs-to-be-done + references
+  tkt-orient/          — session-start: read reconciled plan, propose next pick
+  tkt-work/            — execution loop: claim, verify premises, do work, close with evidence
+  tkt-reconcile/       — session-end: make tickets current, re-sequence the plan
 plugin.json          — Agent Plugins v1.0.0 manifest
 .memory/CONTEXT.md   — project glossary
 .tickets/            — tkt's own tickets (dogfooding)

@@ -7,7 +7,7 @@ description: "Start-of-session pickup from the reconciled plan and tickets: read
 
 Session-start bookend to `tkt-reconcile`. Read the reconciled plan + ticket state, detect anything a prior session left mid-flight, and propose a concrete next step — then hand off to the actual pick-and-work.
 
-This skill *reads* and *orients*. It does not reconcile (that's `tkt-reconcile`, at session end) and does not claim-and-execute (that's `frontier-work`). Orient is the bridge between them.
+This skill *reads* and *orients*. It does not reconcile (that's `tkt-reconcile`, at session end) and does not claim-and-execute (that's `tkt-work`). Orient is the bridge between them.
 
 ## Process
 
@@ -59,7 +59,7 @@ Keep it short. A distillation, not a dump:
 
 - **Where we are** — one or two sentences: active scope (if any), how many tickets on the frontier, which thread (if any) is mid-flight.
 - **Heads up** — only if there's stale WIP, a blocker cleared/appeared, or plan drift. Skip if clean.
-- **Next step** — a specific proposal: "Thread X is live at #NN — resume it?" or "Frontier is clean; the rubric says #NN is next. Start?" End with a proceed question, then hand to `frontier-work` to claim + work.
+- **Next step** — a specific proposal: "Thread X is live at #NN — resume it?" or "Frontier is clean; the rubric says #NN is next. Start?" End with a proceed question, then hand to `tkt-work` to claim + work.
 
 ## Verify (run up front, alongside step 1's reads)
 
@@ -77,7 +77,7 @@ Recurring cosmetic warnings (e.g. `unchecked-acs-on-done` on done-and-superseded
 
 ## Does NOT
 
-- Claim and execute a ticket (that's `frontier-work` — orient proposes, frontier-work picks + works)
+- Claim and execute a ticket (that's `tkt-work` — orient proposes, tkt-work picks + works)
 - Reconcile tickets or re-prioritize/rewrite the plan (that's `tkt-reconcile`, at session end — orient only reads the plan)
 - Auto-release another session's `in_progress` claim (flag + offer; the user decides)
 - Resume from a prose handoff document (that's `read-handoff`, which this complements)

@@ -1,7 +1,14 @@
+---
+name: tkt-work
+description: "Claim and execute a ticket from the frontier: pick the next ready ticket, claim it, verify its premises against primary sources, do the work, verify acceptance criteria, and close with evidence. The execution loop between tkt-orient (propose) and tkt-reconcile (wrap up). Use when working a ticket, picking up the next task, or asked 'work the frontier' / 'do the next ticket' / 'start on NN'. Trigger: work the frontier, do the next ticket, pick up work, claim and work, start ticket, next on the frontier, work a ticket, execute ticket, close ticket with evidence."
+compatibility: Requires git
+---
 
-# Frontier Work
+# Tkt Work
 
-When a project has tickets, work the frontier.
+When a project has tickets, work the frontier. This is the execution loop: claim a ready ticket, verify its premises, do the work, and close it with evidence.
+
+This skill *claims and executes*. It does not orient/propose (that's `tkt-orient`, at session start) and does not reconcile/re-sequence the plan (that's `tkt-reconcile`, at session end). `tkt-orient` proposes the next pick and hands off here.
 
 ## Ticket Sources (priority order)
 
@@ -98,3 +105,8 @@ The test: *could this realistically be worked next once its blockers clear?* If 
 The plan is the single source of truth for work status. Tickets provide detail; the plan provides the map. Never duplicate status in HANDOFF.md or AGENTS.md — reference the plan instead.
 
 `tkt sync-plan` reconciles the plan against ticket status. Its default plan path is `docs/plan.md` (override with a positional arg), and it reads a Markdown status table (`| id | title | status |`). See ADR 0002 for the plan-format direction (plan-as-projection primary, narrative opt-in).
+
+## Does NOT
+
+- Orient from the reconciled plan or propose the next pick (that's `tkt-orient`, at session start — it hands off here)
+- Reconcile tickets or re-sequence the plan (that's `tkt-reconcile`, at session end)
