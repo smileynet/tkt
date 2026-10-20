@@ -1,7 +1,7 @@
 ---
 id: "207"
 title: "Retire crew-research steering surface: fold frontier-work into a skill/AGENTS.md"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -61,14 +61,24 @@ Then:
 
 ## Acceptance criteria
 
-- [ ] `frontier-work` guidance lives in a grey-matter-convention skill (preferred) or
+- [x] `frontier-work` guidance lives in a grey-matter-convention skill (preferred) or
       AGENTS.md — not in `steering/`
-- [ ] `tkt-reconcile` and any other skill referencing `frontier-work` point at the new home
-- [ ] `tools/deploy-skills.sh` no longer deploys `steering/`; `steering/` is removed or stubbed
-- [ ] No dangling references to `steering/frontier-work.md` across skills, AGENTS.md, README
-- [ ] Stale `~/.kiro/steering/frontier-work.md` is cleaned up (sweep or installer prune)
+- [x] `tkt-reconcile` and any other skill referencing `frontier-work` point at the new home
+- [x] `tools/deploy-skills.sh` no longer deploys `steering/`; `steering/` is removed or stubbed
+- [x] No dangling references to `steering/frontier-work.md` across skills, AGENTS.md, README
+- [x] Stale `~/.kiro/steering/frontier-work.md` is cleaned up (sweep or installer prune)
 
 ## Out of scope
 
 - The broader multi-harness guidance deploy (#202)
 - Any change to the frontier *rule content* itself — this is a relocation, not a rewrite
+
+## Resolution (2026-10-20)
+
+Migrated steering/frontier-work.md to skills/tkt-work/ (cross-harness skill, name==dir). Repointed tkt-orient + tkt-reconcile referrers, AGENTS.md constraint, and guidance-surfaces/workspace-layout docs. Removed steering block + STEERING_SRC var from deploy-skills.sh, deleted steering/ dir, swept stale ~/.kiro/steering/frontier-work.md. Deployed tkt-work to all four harness roots.
+
+### Verification
+1. ✓ frontier-work guidance lives in a grey-matter-convention skill or AGENTS.md, not steering/ — "skills/tkt-work/SKILL.md created with frontmatter name:tkt-work + triggers; deploy dry-run lint passes name==dir"
+2. ✓ tkt-reconcile and any skill referencing frontier-work point at the new home — "grep across skills/,AGENTS.md,README.md for frontier-work returns no matches; tkt-orient + tkt-reconcile now cite tkt-work"
+3. ✓ deploy-skills.sh no longer deploys steering/ (or steering/ is removed) — "deploy-skills.sh steering block removed (bash -n ok); dry-run shows no steering copy; steering/ dir deleted"
+4. ✓ no dangling references to steering/frontier-work.md across skills, AGENTS.md, README — "~/.kiro/skills/tkt-work/SKILL.md present in all 4 roots; ~/.kiro/steering/frontier-work.md confirmed removed"
