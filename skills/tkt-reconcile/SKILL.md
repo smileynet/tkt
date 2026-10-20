@@ -121,6 +121,7 @@ Present: tickets created, tickets updated, plan re-organization (what moved and 
 
 ## Does NOT
 
+- Orient at the start of a session (that's `tkt-orient`, the session-start counterpart that reads the state this skill leaves behind)
 - Pick the single next ticket to execute (that's `frontier-work` — this skill makes the plan's frontier *pickable*, it doesn't pick)
 - Decompose a spec from scratch into a ticket set (that's `tkt-core` / `to-tickets`)
 - Create specs or features (that's `spec-driven-development`)
