@@ -19,11 +19,15 @@ tkt ready                         # the frontier: what's pickable now
 tkt query --status in_progress    # claimed/mid-flight threads
 ```
 
-Then read `docs/plan.md` for the current section ordering and priorities — this is what `tkt-reconcile` last re-organized, and it is authoritative for *intended* sequence. If a `HANDOFF.md` exists in the ephemeral dir, read it too (it complements this skill; `read-handoff` owns prose-handoff resumption).
+These are instant reads — batch them into one call (with `echo ---MARKER---` separators) rather than issuing them separately.
+
+Then read the **reconciled ordering**. The default is `docs/plan.md` — read it directly; this is what `tkt-reconcile` last re-organized and is authoritative for *intended* sequence. If `docs/plan.md` is absent, do NOT conclude "no plan" and stop: check `AGENTS.md` for the project's declared status/sequencing source — many repos deliberately use a `BACKLOG.md` or a spec overview and treat `tkt ready`/`tkt query` as authoritative. Orient from whatever source the project declares, and name the source you used. If a `HANDOFF.md` exists in the ephemeral dir (most projects won't — skip silently if absent), read it too (`read-handoff` owns prose-handoff resumption; this only complements it).
 
 ### 2. Detect stale WIP
 
-An `in_progress` ticket is a claim a prior session made. Check whether the claim is real progress or an abandoned/crashed session:
+If `tkt query --status in_progress` is **empty**, there's no WIP to classify — skip straight to step 3 (still glance at `git log` once for the Heads-up freshness check: confirm the last commit was the expected `tkt-reconcile`/prior work, not a surprise).
+
+Otherwise, an `in_progress` ticket is a claim a prior session made. Check whether the claim is real progress or an abandoned/crashed session:
 
 ```bash
 git log --oneline -5             # recent commits — do any touch the in_progress ticket's files?
@@ -35,6 +39,8 @@ For each `in_progress` ticket, classify:
 
 For stale WIP: **flag and offer**, never auto-release. Present it as a choice — "#NN is in_progress but unstarted; resume it, or release it back to `open`?" Releasing is `tkt edit <id> --status open`, but it's the user's call (releasing another identity's claim is a judgment, and the push is the real race boundary).
 
+**A plan-level "active thread" is not a `tkt` claim.** The plan (or a reconcile note) may say a thread was "in flight," yet nothing is `in_progress` in `tkt`. That means you're starting *fresh on that thread's next ticket*, not resuming a claim — say so, and don't hunt for a non-existent WIP.
+
 ### 3. Apply the plan-ordering rubric to find the intended next pick
 
 Use the same rubric `tkt-reconcile` writes the plan against (do not re-derive your own order):
@@ -45,7 +51,7 @@ Use the same rubric `tkt-reconcile` writes the plan against (do not re-derive yo
 4. **Explicit plan/user instruction overrides** — honor any recorded "do X before Y" note in the plan or handoff.
 5. **Priority is contextual weight, not order** — `high`/`urgent` breaks ties among equals; it does not let a late ticket jump a live earlier thread.
 
-The result is a *proposal*, not a claim. `tkt ready` already sorts priority-aware + lowest-ID; the rubric layers in "finish live threads first" and any plan-recorded ordering that the frontier can't know.
+The result is a *proposal*, not a claim. `tkt ready` already sorts priority-aware + lowest-ID — but **its top line is NOT automatically the pick.** When the plan's "current priorities" ordering disagrees with the frontier's first line (e.g. the frontier leads with #18 but the plan ranks #19 first), the **plan wins** (rubric item 4) — the plan encodes intent the frontier can't see. Name the divergence in your Heads-up, and state which source you followed; don't claim a false "both agree."
 
 ### 4. Present the orientation + a concrete next step
 
@@ -55,14 +61,19 @@ Keep it short. A distillation, not a dump:
 - **Heads up** — only if there's stale WIP, a blocker cleared/appeared, or plan drift. Skip if clean.
 - **Next step** — a specific proposal: "Thread X is live at #NN — resume it?" or "Frontier is clean; the rubric says #NN is next. Start?" End with a proceed question, then hand to `frontier-work` to claim + work.
 
-## Verify (quick, before proposing)
+## Verify (run up front, alongside step 1's reads)
 
 ```bash
 tkt validate --brief            # structural health — surface cycles/broken refs as a Heads up
-tkt sync-plan --check --brief   # plan↔ticket drift — if it fails, the plan is stale; note it and suggest tkt-reconcile
+tkt sync-plan --check --brief   # plan↔ticket drift
 ```
 
-If `sync-plan --check` fails, the prior session's reconcile is incomplete or drift crept in — flag it and suggest running `tkt-reconcile` before picking up, rather than orienting against a stale plan.
+Running these in the same early batch as step 1 is fine (and usually better — their results feed the orientation). Interpreting `sync-plan --check`:
+
+- **Reports drift** (ticket/plan status disagree) → the prior reconcile is incomplete or drift crept in. Flag it and suggest running `tkt-reconcile` before picking up, rather than orienting against a stale plan.
+- **Reports "no plan file" / exits non-zero because `docs/plan.md` is absent** → this is NOT drift and NOT a failure. The repo may track sequencing elsewhere (a `BACKLOG.md`, a spec overview) or rely on `tkt ready` alone (see step 1). Do **not** recommend `tkt-reconcile` — note the plan source you used and proceed. A non-zero exit here is expected, not an alarm.
+
+Recurring cosmetic warnings (e.g. `unchecked-acs-on-done` on done-and-superseded tickets) belong in the Heads-up **once**, with a suggested one-time `tkt close --check-all` cleanup — don't re-flag them every session.
 
 ## Does NOT
 
