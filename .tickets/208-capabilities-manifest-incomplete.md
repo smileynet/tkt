@@ -1,7 +1,7 @@
 ---
 id: "208"
 title: "tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...)"
-status: open
+status: backlog
 blocked_by: []
 priority: medium
 validation_criteria:
