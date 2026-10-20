@@ -1,7 +1,7 @@
 ---
 id: "207"
 title: "Retire crew-research steering surface: fold frontier-work into a skill/AGENTS.md"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
