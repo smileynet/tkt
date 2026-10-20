@@ -1,7 +1,7 @@
 ---
 id: "192"
 title: "parent field: schema, parse, serialize"
-status: in_progress
+status: open
 blocked_by: []
 priority: high
 validation_criteria:
