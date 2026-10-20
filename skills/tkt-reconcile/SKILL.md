@@ -1,6 +1,7 @@
 ---
 name: tkt-reconcile
 description: "End-of-session ticket + plan pass: make every ticket current, capture all open work as tickets, and re-prioritize/re-sequence the plan to match current priorities and work streams. Use when wrapping up a session, auditing ticket health, after planning, when work feels untracked, or asking 'is everything captured?' / 'update the plan'. Trigger: sync tickets, update the plan, re-prioritize, end of session ticket pass, ticket review, are tickets current, is everything tracked, ticket audit, ticket hygiene, wrap up tickets, tag scope, work stream."
+compatibility: Requires git
 ---
 
 # Tkt Reconcile

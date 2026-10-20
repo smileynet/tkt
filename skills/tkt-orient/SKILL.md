@@ -1,6 +1,7 @@
 ---
 name: tkt-orient
 description: "Start-of-session pickup from the reconciled plan and tickets: read the frontier, in-progress threads, and plan ordering that tkt-reconcile left behind, flag stale WIP, and propose the next step. Use when starting a session, resuming after a break, or asking 'where were we?' / 'what's next?' / 'pick up where we left off'. Trigger: start of session, orient, resume, pick up where we left off, where were we, what's next, catch me up, continue, session start, what's on the board."
+compatibility: Requires git
 ---
 
 # Tkt Orient
@@ -43,7 +44,7 @@ For stale WIP: **flag and offer**, never auto-release. Present it as a choice �
 
 ### 3. Apply the plan-ordering rubric to find the intended next pick
 
-Use the same rubric `tkt-reconcile` writes the plan against (do not re-derive your own order):
+Use the same rubric `tkt-reconcile` writes the plan against (do not re-derive your own order — this rubric is mirrored verbatim in `tkt-reconcile` step 6; keep the two copies in sync if either changes):
 
 1. **Finish current threads first** — a live in-progress thread outranks starting a new one.
 2. **Prefer earlier (lower-ID) tickets** — within/between equal threads.
