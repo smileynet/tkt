@@ -9,10 +9,25 @@ use crate::findings::Finding;
 /// Check resolution quality on done tickets:
 /// - Missing `## Resolution` section entirely
 /// - Resolution is empty or still "TBD"
-pub fn check_resolution_quality(corpus: &[Ticket]) -> Vec<Finding> {
+///
+/// `resolution_baseline_id` is the ADR 0003 grandfather cutoff: done tickets whose
+/// numeric ID is below it are exempt from both resolution-quality rules (the
+/// pre-protocol corpus whose evidence cannot be honestly reconstructed). `None`
+/// disables the exemption. The cutoff never affects any other rule.
+pub fn check_resolution_quality(
+    corpus: &[Ticket],
+    resolution_baseline_id: Option<u64>,
+) -> Vec<Finding> {
     let mut findings = Vec::new();
 
     for t in corpus.iter().filter(|t| t.status == Status::Done) {
+        // Grandfather pre-protocol tickets below the cutoff (ADR 0003).
+        if let Some(cutoff) = resolution_baseline_id {
+            if t.id.parse::<u64>().is_ok_and(|id| id < cutoff) {
+                continue;
+            }
+        }
+
         let fname = filename(t);
 
         if !t.body.contains("## Resolution") {
@@ -246,7 +261,7 @@ mod tests {
     #[test]
     fn resolution_quality_missing_section() {
         let corpus = vec![done_ticket("01", "auth", "# Auth\n\nSome body text.\n")];
-        let findings = check_resolution_quality(&corpus);
+        let findings = check_resolution_quality(&corpus, None);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].rule, "missing-resolution");
     }
@@ -258,7 +273,7 @@ mod tests {
             "auth",
             "# Auth\n\n## Resolution (2026-01-01)\n\nTBD\n",
         )];
-        let findings = check_resolution_quality(&corpus);
+        let findings = check_resolution_quality(&corpus, None);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].rule, "tbd-resolution");
     }
@@ -270,7 +285,7 @@ mod tests {
             "auth",
             "# Auth\n\n## Resolution (2026-01-01)\n\n",
         )];
-        let findings = check_resolution_quality(&corpus);
+        let findings = check_resolution_quality(&corpus, None);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].rule, "tbd-resolution");
     }
@@ -282,7 +297,7 @@ mod tests {
             "auth",
             "# Auth\n\n## Resolution (2026-01-01)\n\nShipped JWT tokens.\n",
         )];
-        let findings = check_resolution_quality(&corpus);
+        let findings = check_resolution_quality(&corpus, None);
         assert!(findings.is_empty());
     }
 
@@ -293,8 +308,94 @@ mod tests {
             "auth",
             "# Auth\n\nNo resolution section.\n",
         )];
-        let findings = check_resolution_quality(&corpus);
+        let findings = check_resolution_quality(&corpus, None);
         assert!(findings.is_empty());
+    }
+
+    // --- Grandfather cutoff (ADR 0003) ---
+
+    #[test]
+    fn cutoff_exempts_below_missing_resolution() {
+        // Pre-protocol done ticket (id 02) with no Resolution: exempt under cutoff 36.
+        let corpus = vec![done_ticket("02", "legacy", "# Legacy\n\nNo resolution.\n")];
+        let findings = check_resolution_quality(&corpus, Some(36));
+        assert!(
+            findings.is_empty(),
+            "ticket below cutoff should be exempt from missing-resolution"
+        );
+    }
+
+    #[test]
+    fn cutoff_exempts_below_tbd_resolution() {
+        // Cutoff exempts the tbd-resolution rule too, not just missing-resolution.
+        let corpus = vec![done_ticket(
+            "02",
+            "legacy",
+            "# Legacy\n\n## Resolution (2026-01-01)\n\nTBD\n",
+        )];
+        let findings = check_resolution_quality(&corpus, Some(36));
+        assert!(
+            findings.is_empty(),
+            "ticket below cutoff should be exempt from tbd-resolution"
+        );
+    }
+
+    #[test]
+    fn cutoff_does_not_exempt_at_or_above() {
+        // A post-cutoff done ticket (id == cutoff) with no Resolution still fires.
+        let corpus = vec![done_ticket("36", "modern", "# Modern\n\nNo resolution.\n")];
+        let findings = check_resolution_quality(&corpus, Some(36));
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].rule, "missing-resolution");
+    }
+
+    #[test]
+    fn cutoff_post_cutoff_still_fires() {
+        // Well above the cutoff: unambiguously still fires missing-resolution.
+        let corpus = vec![done_ticket("200", "recent", "# Recent\n\nNo resolution.\n")];
+        let findings = check_resolution_quality(&corpus, Some(36));
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].rule, "missing-resolution");
+    }
+
+    #[test]
+    fn cutoff_none_disables_exemption() {
+        // No cutoff configured: even a low-id pre-protocol ticket fires.
+        let corpus = vec![done_ticket("02", "legacy", "# Legacy\n\nNo resolution.\n")];
+        let findings = check_resolution_quality(&corpus, None);
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].rule, "missing-resolution");
+    }
+
+    #[test]
+    fn cutoff_does_not_affect_low_evidence_closure() {
+        // The cutoff is specific to resolution-quality rules. low-evidence-closure
+        // runs independently and must still fire for a sub-cutoff ticket.
+        let content =
+            "---\nid: \"02\"\ntitle: \"legacy\"\nstatus: done\nblocked_by: []\nvalidation_criteria:\n  - \"criterion one\"\n---\n\n# Legacy\n\n## Resolution (2026-01-01)\n\nShipped.\n";
+        let corpus = vec![Ticket::parse_str(content, &PathBuf::from("02-legacy.md")).unwrap()];
+        // Resolution-quality is clean (has content) AND below cutoff — no finding there.
+        assert!(check_resolution_quality(&corpus, Some(36)).is_empty());
+        // But low-evidence-closure fires regardless of the cutoff.
+        let evidence = check_validation_evidence(&corpus);
+        assert_eq!(evidence.len(), 1);
+        assert_eq!(evidence[0].rule, "low-evidence-closure");
+    }
+
+    #[test]
+    fn cutoff_does_not_affect_ac_completeness() {
+        // AC-completeness runs independently of the resolution cutoff.
+        let corpus = vec![done_ticket(
+            "02",
+            "legacy",
+            "# Legacy\n\n## Acceptance criteria\n\n- [ ] First\n\n## Resolution (2026-01-01)\n\nShipped.\n",
+        )];
+        // Below cutoff: no resolution-quality finding.
+        assert!(check_resolution_quality(&corpus, Some(36)).is_empty());
+        // But AC-completeness still fires (all boxes unchecked on a done ticket).
+        let ac = check_ac_completeness(&corpus);
+        assert_eq!(ac.len(), 1);
+        assert_eq!(ac[0].rule, "all-acs-unchecked-on-done");
     }
 
     // --- AC completeness ---
