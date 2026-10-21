@@ -1,7 +1,7 @@
 ---
 id: "206"
 title: "audit: grandfather pre-protocol corpus from missing-resolution (ADR 0003)"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -39,10 +39,10 @@ gone — we record that the pre-protocol corpus is exempt.
 
 ## Acceptance criteria
 
-- [ ] A `[audit]` config key sets the cutoff; resolution-quality rules exempt done
+- [x] A `[audit]` config key sets the cutoff; resolution-quality rules exempt done
       tickets below it (default drops this repo's 27 pre-protocol findings)
-- [ ] `low-evidence-closure` and AC-completeness rules are NOT affected by the cutoff
-- [ ] Regression test: a post-cutoff done ticket with no `## Resolution` still fires
+- [x] `low-evidence-closure` and AC-completeness rules are NOT affected by the cutoff
+- [x] Regression test: a post-cutoff done ticket with no `## Resolution` still fires
       `missing-resolution`
-- [ ] Unknown/malformed `[audit]` config produces a clear config error (consistent with
+- [x] Unknown/malformed `[audit]` config produces a clear config error (consistent with
       the #190 config-parsing direction)
