@@ -12,3 +12,12 @@ allow_force = false
 # Resolution sections were introduced after the historical #02–#35 closures.
 # Keep the new check strict for every later ticket without fabricating history.
 missing_resolution_before_id = "36"
+
+[audit]
+# ADR 0003: the #02–#35 corpus was closed before the Resolution-section protocol
+# existed; its evidence can't be honestly reconstructed. Grandfather those tickets
+# out of the audit resolution-quality rules (missing-resolution / tbd-resolution).
+# Cutoff is by ticket id, matching the pre-protocol boundary (ids < 36). This assumes
+# id order tracks close order, which holds for this repo. low-evidence-closure and
+# AC-completeness rules are deliberately NOT exempted.
+resolution_baseline_id = "36"

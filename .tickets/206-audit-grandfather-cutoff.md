@@ -1,7 +1,7 @@
 ---
 id: "206"
 title: "audit: grandfather pre-protocol corpus from missing-resolution (ADR 0003)"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:

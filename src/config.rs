@@ -24,6 +24,7 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
     ("new.default_priority", ""),
     ("push.enabled", "true"),
     ("machine.capabilities", ""),
+    ("audit.resolution_baseline_id", ""),
 ];
 
 /// User-only keys (debug settings, not applicable at project level).
@@ -51,6 +52,11 @@ pub struct ProjectConfig {
     pub push_enabled: bool,
     /// Machine capabilities declared by this workstation (for requires matching).
     pub machine_capabilities: Vec<String>,
+    /// Grandfather cutoff for audit resolution-quality rules: done tickets with a
+    /// numeric ID below this value are exempt from `missing-resolution` /
+    /// `tbd-resolution` (ADR 0003). Empty = no exemption. Raw string so the audit
+    /// command can surface a structured error on a malformed (non-numeric) value.
+    pub audit_resolution_baseline_id: String,
     /// Unknown keys found in the config file (for warning).
     pub unknown_keys: Vec<String>,
     /// Track which keys came from which source for --show.
@@ -72,6 +78,7 @@ impl Default for ProjectConfig {
             new_default_priority: String::new(),
             push_enabled: true,
             machine_capabilities: Vec::new(),
+            audit_resolution_baseline_id: String::new(),
             unknown_keys: Vec::new(),
             sources: BTreeMap::new(),
         }
@@ -169,6 +176,10 @@ impl ProjectConfig {
             ("new.default_priority", self.new_default_priority.clone()),
             ("push.enabled", self.push_enabled.to_string()),
             ("machine.capabilities", self.machine_capabilities.join(",")),
+            (
+                "audit.resolution_baseline_id",
+                self.audit_resolution_baseline_id.clone(),
+            ),
         ];
 
         for (key, value) in fields {
@@ -210,6 +221,7 @@ fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> bool {
                 .filter(|s| !s.is_empty())
                 .collect();
         }
+        "audit.resolution_baseline_id" => cfg.audit_resolution_baseline_id = value.to_string(),
         _ => return false,
     }
     true
@@ -579,6 +591,30 @@ foo = "bar"
         assert!(!cfg.push_enabled);
         assert_eq!(cfg.ready_default_env, "corp");
         assert_eq!(cfg.unknown_keys, vec!["mystery.foo"]);
+    }
+
+    #[test]
+    fn test_audit_resolution_baseline_id_parsed() {
+        std::env::set_var("TKT_NO_USER_CONFIG", "1");
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("config.toml"),
+            "[audit]\nresolution_baseline_id = \"36\"\n",
+        )
+        .unwrap();
+        let cfg = ProjectConfig::load(dir.path());
+        assert_eq!(cfg.audit_resolution_baseline_id, "36");
+        assert!(cfg.unknown_keys.is_empty());
+        std::env::remove_var("TKT_NO_USER_CONFIG");
+    }
+
+    #[test]
+    fn test_audit_resolution_baseline_id_default_empty() {
+        std::env::set_var("TKT_NO_USER_CONFIG", "1");
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = ProjectConfig::load(dir.path());
+        assert!(cfg.audit_resolution_baseline_id.is_empty());
+        std::env::remove_var("TKT_NO_USER_CONFIG");
     }
 
     #[test]

@@ -108,7 +108,7 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
         })
         .unwrap_or_default();
     all_findings.extend(
-        crate::audit::check_resolution_quality(&corpus)
+        crate::audit::check_resolution_quality(&corpus, None)
             .into_iter()
             .filter(|finding| {
                 finding.rule != "missing-resolution"
