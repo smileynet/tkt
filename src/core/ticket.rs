@@ -301,6 +301,18 @@ impl TicketFile {
         self.set_field("blocked_by", &format!("[{}]", formatted));
     }
 
+    /// Set the parent ticket id.
+    #[allow(dead_code)] // Consumed by the parent CLI work in ticket 196.
+    pub fn set_parent(&mut self, parent: &str) {
+        self.set_field("parent", &format!("\"{}\"", yaml_scalar_escape(parent)));
+    }
+
+    /// Remove the parent ticket id.
+    #[allow(dead_code)] // Consumed by the parent CLI work in ticket 196.
+    pub fn remove_parent(&mut self) {
+        self.remove_field("parent");
+    }
+
     /// Set or clear the priority field.
     pub fn set_priority(&mut self, priority: Option<Priority>) {
         match priority {
@@ -442,6 +454,8 @@ pub struct Ticket {
     pub env: Env,
     pub priority: Option<Priority>,
     pub spec: Option<String>,
+    #[allow(dead_code)] // Consumed by parent validation and CLI follow-ups.
+    pub parent: Option<String>,
     pub validation_criteria: Vec<String>,
     pub tags: Vec<String>,
     /// Machine capability requirements. Ticket only appears on frontier
@@ -495,6 +509,7 @@ impl Ticket {
         };
 
         let spec = file.get("spec").map(yaml_scalar_decode);
+        let parent = file.get("parent").map(yaml_scalar_decode);
 
         let validation_criteria =
             parse_validation_criteria(file.get("validation_criteria").unwrap_or(""));
@@ -523,6 +538,7 @@ impl Ticket {
             env,
             priority,
             spec,
+            parent,
             validation_criteria,
             tags,
             requires,
@@ -1494,6 +1510,97 @@ spec: regex \d+
         file.set_blocked_by(&["01"]);
         let out = file.serialize();
         assert!(out.contains("blocked_by: [\"01\"]"));
+    }
+
+    #[test]
+    fn parse_parent_decodes_yaml_scalar() {
+        let content = r#"---
+id: "01"
+title: "Test"
+status: open
+blocked_by: []
+parent: "epic\"01"
+---
+
+# Body
+"#;
+        let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+
+        assert_eq!(ticket.parent.as_deref(), Some("epic\"01"));
+    }
+
+    #[test]
+    fn parse_without_parent_remains_parentless() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+
+        assert_eq!(ticket.parent, None);
+        assert!(!ticket.file.serialize().contains("parent:"));
+    }
+
+    #[test]
+    fn set_parent_replaces_in_place_and_preserves_other_content() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\ncustom: keep:raw\nparent: \"epic-01\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+
+        file.set_parent("epic\"02");
+
+        assert_eq!(
+            file.serialize(),
+            "---\nid: \"01\"\ntitle: \"Test\"\ncustom: keep:raw\nparent: \"epic\\\"02\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n"
+        );
+    }
+
+    #[test]
+    fn set_parent_appends_when_absent() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\ncustom: unchanged\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+
+        file.set_parent("epic-01");
+
+        assert_eq!(
+            file.serialize(),
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\ncustom: unchanged\nparent: \"epic-01\"\n---\n\n# Body\n"
+        );
+    }
+
+    #[test]
+    fn remove_parent_preserves_other_content() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\ncustom: unchanged\nparent: \"epic-01\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+
+        file.remove_parent();
+
+        assert_eq!(
+            file.serialize(),
+            "---\nid: \"01\"\ntitle: \"Test\"\ncustom: unchanged\nstatus: open\nblocked_by: []\n---\n\n# Body\n"
+        );
+    }
+
+    #[test]
+    fn remove_parent_is_noop_when_absent() {
+        let content =
+            "---\nid: \"01\"\ntitle: \"Test\"\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let mut file = TicketFile::parse_str(content, Path::new("t.md")).unwrap();
+
+        file.remove_parent();
+
+        assert_eq!(file.serialize(), content);
+    }
+
+    #[test]
+    fn parent_round_trip_preserves_value_and_raw_content() {
+        let content = "---\nid: \"01\"\ntitle: \"Test\"\nparent: \"epic-01\"\ncustom: unchanged\nstatus: open\nblocked_by: []\n---\n\n# Body\n";
+        let ticket = Ticket::parse_str(content, Path::new("t.md")).unwrap();
+        let serialized = ticket.file.serialize();
+
+        let reparsed = Ticket::parse_str(&serialized, Path::new("t.md")).unwrap();
+
+        assert_eq!(reparsed.parent, ticket.parent);
+        assert_eq!(reparsed.file.get("custom"), Some("unchanged"));
+        assert_eq!(reparsed.body, ticket.body);
+        assert_eq!(serialized, content);
     }
 
     #[test]
