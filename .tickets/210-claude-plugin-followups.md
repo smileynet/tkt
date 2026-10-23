@@ -29,4 +29,4 @@ Follow-ups to 209, the tkt Claude Code plugin.
 ## Acceptance criteria
 
 - [ ] a guarded SessionStart hook (only when .tickets/ exists and tkt is on PATH) adds 'tkt ready' output to context and passes claude plugin validate
-- [ ] deploy-skills.sh skips ~/.claude/skills when the tkt Claude plugin is installed, printing a note; never deletes a foreign dir
+- [x] deploy-skills.sh skips ~/.claude/skills when the tkt Claude plugin is installed, printing a note; never deletes a foreign dir
