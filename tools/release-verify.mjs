@@ -2,7 +2,7 @@
 // Run fresh product/native gates for one sealed commit identity; never publish.
 // Usage: node scripts/release-verify.mjs --repo DIR --sha FULL_SHA --artifacts DIR --out NEW_DIR
 //        [--execute | --dry-run] [--codex BINARY] [--claude BINARY] [--agy BINARY]
-import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { basename, dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,44 @@ function canonical(path) {
 export function requireMatchingIdentity(product, metadata) {
   if (product.candidateSha !== metadata.candidateSha || product.product !== metadata.name || product.version !== metadata.version) throw new ReleaseError("candidate and sealed artifacts have different commit, product or version identities");
 }
+// The expected index hash must come from reviewed staging, not this evidence directory.
+export function readCandidateEvidence({ artifacts, evidence, verificationSha256 }) {
+  const root = realpathSync.native(resolve(evidence)), metadata = verifyArtifacts(realpathSync.native(resolve(artifacts)));
+  function sealed(file, sha256) {
+    if (typeof file !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(file) || file.split("/").some((part) => !part || part === "." || part === "..") || !/^[a-f0-9]{64}$/.test(sha256)) throw new ReleaseError("invalid evidence path or digest");
+    const path = resolve(root, file);
+    if (!realpathSync.native(path).startsWith(root + sep) || !lstatSync(path).isFile() || lstatSync(path).isSymbolicLink() || digest(path) !== sha256) throw new ReleaseError("evidence file escaped, changed or is not regular");
+    return readFileSync(path);
+  }
+  function json(file, sha256) {
+    try { return JSON.parse(sealed(file, sha256)); }
+    catch (error) { if (error instanceof SyntaxError) throw new ReleaseError("invalid evidence JSON"); throw error; }
+  }
+  const index = json("verification.json", verificationSha256);
+  requireMatchingIdentity(index, metadata);
+  if (index.schema !== 1 || index.status !== "pass" || index.mode !== "candidate-verification" || index.publishable !== false || index.phases?.product !== "pass" || index.phases?.native !== "pass" || index.metadataSha256 !== digest(resolve(artifacts, "release-metadata.json"))) throw new ReleaseError("candidate verification index is incomplete or differs from artifacts");
+  const pending = ["scope", "compatibility", "upgrade", "platform-approval", "final-audit", "staging"];
+  if (JSON.stringify(index.pending) !== JSON.stringify(pending)) throw new ReleaseError("verification cannot waive staging or audit gates");
+  const productRef = index.productEvidence, nativeRef = index.nativeEvidence;
+  if (productRef?.file !== "product/product-evidence.json" || nativeRef?.file !== "native/native-evidence.json") throw new ReleaseError("unexpected evidence report location");
+  const product = json(productRef.file, productRef.sha256), native = json(nativeRef.file, nativeRef.sha256);
+  for (const [report, mode] of [[product, "product-evidence"], [native, "native-evidence"]]) {
+    requireMatchingIdentity(report, metadata);
+    if (report.schema !== 1 || report.status !== "pass" || report.mode !== mode || report.publishable !== false) throw new ReleaseError("underlying evidence did not pass an executed gate");
+  }
+  if (!Array.isArray(product.checks) || product.checks.length !== 1 || product.candidateError) throw new ReleaseError("product checks are incomplete");
+  for (const check of product.checks) {
+    if (check.exit !== 0 || check.signal !== null || check.error !== null || check.log !== "1-product.log") throw new ReleaseError("product command failed or evidence is incomplete");
+    sealed(`product/${check.log}`, check.sha256);
+  }
+  if (!Array.isArray(native.rows) || native.rows.length !== metadata.assets.length) throw new ReleaseError("native evidence omitted an artifact");
+  for (const asset of metadata.assets) {
+    const rows = native.rows.filter((row) => row.host === asset.host && row.asset === asset.name && row.assetSha256 === asset.sha256);
+    if (rows.length !== 1 || rows[0].status !== "pass" || typeof rows[0].nativeVersion !== "string" || !rows[0].nativeVersion.trim() || !Array.isArray(rows[0].checks) || !rows[0].checks.length || rows[0].checks.some((check) => check.exit !== 0 || check.signal)) throw new ReleaseError("native artifact checks are missing, duplicate or failed");
+  }
+  return { status: "pass", publishable: false, product: metadata.name, version: metadata.version, candidateSha: metadata.candidateSha, verificationSha256, pending, product, native };
+}
+
 export async function verifyCandidate(options) {
   if (options.execute && options.dryRun) throw new ReleaseError("--execute and --dry-run cannot combine");
   const repo = realpathSync.native(git(resolve(options.repo), ["rev-parse", "--show-toplevel"]).trim()), out = canonical(resolve(options.out)), artifacts = realpathSync.native(resolve(options.artifacts));
