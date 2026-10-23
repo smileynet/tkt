@@ -15,9 +15,10 @@ push = true
 publish = true
 verify = true
 
-# Keep both plugin manifests on the crate version (Claude Code caches plugins by
-# version; tests/plugin_manifests.rs fails if either drifts).
+# Keep all plugin manifests on the crate version (Claude Code caches plugins by
+# version; tests/plugin_manifests.rs fails if any drift).
 pre-release-replacements = [
+  { file = ".codex-plugin/plugin.json", search = '"version": "[^"]+"', replace = '"version": "{{version}}"', exactly = 1 },
   { file = "plugin.json", search = '"version": "[^"]+"', replace = '"version": "{{version}}"', exactly = 1 },
   { file = ".claude-plugin/plugin.json", search = '"version": "[^"]+"', replace = '"version": "{{version}}"', exactly = 1 },
 ]

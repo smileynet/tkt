@@ -2,8 +2,8 @@
 //!
 //! Claude Code caches a plugin by its `version`, so a manifest left behind on a
 //! release means installed users never receive the update. cargo-release bumps
-//! both manifests (`pre-release-replacements` in release.toml); this test fails
-//! if either one drifts from Cargo.toml.
+//! all manifests (`pre-release-replacements` in release.toml); this test fails
+//! if any manifest drifts from Cargo.toml.
 
 use std::path::Path;
 
@@ -30,4 +30,12 @@ fn claude_plugin_version_matches_crate() {
 #[test]
 fn agy_plugin_version_matches_crate() {
     assert_eq!(manifest_version("plugin.json"), env!("CARGO_PKG_VERSION"));
+}
+
+#[test]
+fn codex_plugin_version_matches_crate() {
+    assert_eq!(
+        manifest_version(".codex-plugin/plugin.json"),
+        env!("CARGO_PKG_VERSION")
+    );
 }

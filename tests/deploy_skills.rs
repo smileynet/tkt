@@ -43,6 +43,8 @@ fn deploy(base: &Path, args: &[&str]) -> String {
         .arg(script())
         .args(args)
         .env("CLAUDE_CODE_PLUGIN_CACHE_DIR", base.join("plugins"))
+        .env("CODEX_HOME", base)
+        .env("DO_NOT_TRACK", "1")
         .output()
         .unwrap();
     let text = format!(
@@ -121,4 +123,30 @@ fn another_plugin_does_not_trigger_the_guard() {
     let root = base.path().join(".claude/skills");
     deploy(base.path(), &["--root", root.to_str().unwrap()]);
     assert!(root.join("tkt-core").exists(), "only the tkt plugin counts");
+}
+
+#[test]
+fn codex_plugin_removes_owned_copies_and_preserves_foreign_skills() {
+    let base = sandbox(None);
+    let root = base.path().join(".codex/skills");
+    let args = ["--root", root.to_str().unwrap()];
+    deploy(base.path(), &args);
+    std::fs::create_dir_all(root.join("foreign")).unwrap();
+    let config = base.path().join("config.toml");
+    std::fs::write(&config, "[plugins.\"tkt@tkt\"]\nenabled = true\n").unwrap();
+    assert!(deploy(base.path(), &args).contains("skipped: Codex plugin"));
+    assert!(!root.join("tkt-core").exists());
+    assert!(root.join("foreign").exists());
+    deploy(
+        base.path(),
+        &["--root", root.to_str().unwrap(), "--allow-dual"],
+    );
+    assert!(root.join("tkt-core").exists());
+    std::fs::write(&config, "[plugins.\"tkt@tkt\"]\nenabled = false\n").unwrap();
+    deploy(base.path(), &args);
+    assert!(root.join("tkt-core").exists());
+    std::fs::write(&config, "[plugins.\"tkt@tkt\"]\nenabled = true\n").unwrap();
+    let shared = base.path().join(".agents/skills");
+    assert!(deploy(base.path(), &["--root", shared.to_str().unwrap()])
+        .contains("skipped: Codex plugin"));
 }

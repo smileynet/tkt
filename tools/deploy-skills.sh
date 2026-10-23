@@ -77,6 +77,22 @@ claude_plugin_installed() {
   { grep -oE "\"$PLUGIN_NAME@[^\"]+\"" "$f" || true; } | head -1 | tr -d '"'
 }
 
+# Codex plugin choices live in the user config (CODEX_HOME supports isolated tests).
+codex_plugin_installed() {
+  local config="${CODEX_HOME:-$HOME/.codex}/config.toml"
+  [[ -f "$config" ]] || return 0
+  awk '
+    /^\[/ { active = ($0 ~ /^\[plugins\.["\047]tkt@[^"\047]+["\047]\]/) }
+    active && /^enabled[[:space:]]*=[[:space:]]*true[[:space:]]*(#.*)?$/ { print "tkt"; exit }
+  ' "$config"
+}
+
+codex_reads() {
+  local root="${1%/}" parent
+  parent="$(basename "$(dirname "$root")")"
+  [[ "$(basename "$root")" == "skills" && ( "$parent" == ".codex" || "$parent" == ".agents" ) ]]
+}
+
 # True for roots Claude Code scans: any <x>/.claude/skills, and a project-level
 # <proj>/.agents/skills (not the user-level ~/.agents/skills, which it doesn't read).
 claude_reads() {
@@ -92,7 +108,7 @@ claude_reads() {
 skip_for_plugin() {
   local root="$1" plugin="$2"
   echo ""
-  echo "root: $root  (skipped: Claude plugin $plugin is installed; --allow-dual to copy anyway)"
+  echo "root: $root  (skipped: $plugin is installed; --allow-dual to copy anyway)"
   for prev in $(read_manifest "$root"); do
     echo "  remove  $prev (duplicate of the plugin)"
     $DRY_RUN || rm -rf "${root:?}/$prev"
@@ -174,9 +190,15 @@ do_install() {
   local refused_total=0
   local plugin=""
   $ALLOW_DUAL || plugin="$(claude_plugin_installed)"
+  local codex_plugin=""
+  $ALLOW_DUAL || codex_plugin="$(codex_plugin_installed)"
   for root in "${ROOTS[@]}"; do
+    if [[ -n "$codex_plugin" ]] && codex_reads "$root"; then
+      skip_for_plugin "$root" "Codex plugin $codex_plugin"
+      continue
+    fi
     if [[ -n "$plugin" ]] && claude_reads "$root"; then
-      skip_for_plugin "$root" "$plugin"
+      skip_for_plugin "$root" "Claude plugin $plugin"
       continue
     fi
     echo ""

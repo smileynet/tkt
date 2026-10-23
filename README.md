@@ -74,6 +74,24 @@ tkt --version
 
 **Requirement:** `git` on PATH (any version).
 
+### Codex plugin
+
+Install the workflow skills from the Codex marketplace:
+
+```sh
+codex plugin marketplace add smileynet/tkt
+codex plugin add tkt@tkt
+```
+
+The plugin supplies four workflow skills; install the `tkt` CLI separately using
+one of the methods above.
+
+For local development, replace `smileynet/tkt` with the checkout's absolute path.
+After edits, run `codex plugin add tkt@tkt` again to refresh the cached copy,
+then start a new chat. The skill installer skips Codex scan roots when this plugin
+is enabled, removing only copies it previously installed. `--allow-dual` overrides
+that guard.
+
 ## Usage
 
 ### See what's ready to work on
