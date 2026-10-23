@@ -9,13 +9,13 @@
   "source": "https://github.com/smileynet/grey-matter",
   "sourceTree": "per-file SHA-256 values identify the canonical source bytes",
   "files": {
-    "tools/release.mjs": "bd3a1c5369867559e29e3c9463218d6020dbc398a6479b677203b63baf5317e3",
+    "tools/release.mjs": "80cc78ebd88b1431a133edb4c7856b345657976a4865ce05b08d623022d75d9c",
     "tools/release-artifacts.mjs": "df22e1f9cf17065abb7da60449ff3c14a2a7f2af51372733369d0bda450a984d",
     "tools/release-version.mjs": "c00161120615abb0e848161854493046b1f94a48d8355e9232ffcebc2e140c5f",
     "tools/release-git.mjs": "c4ac780f207e2025ff6a6409c874af5ee8858ea9c70daabaea745209c890b548",
-    "tools/release-product.mjs": "1aad5d1c6203ed962bf404681ae119e9871b0a7c25c9b3697788b397b22922b5",
-    "tools/release-native.mjs": "82369f435a8894526a1f4385b59863f8e360f536713e6e6629e9a97d8465a973",
-    "tools/release-verify.mjs": "3f9efb62f5b903d0c4bba701b86cbd627e494b8e179b9fdcb6592e647f8367c1",
+    "tools/release-product.mjs": "3a06a50e34eb3f5cf647c9b08dd725c705e4883b3bafb222bb01865daff2478a",
+    "tools/release-native.mjs": "7f20a08ff225852a16e21d772425d4a5debeba51fa010ce9a6121c203b5725e4",
+    "tools/release-verify.mjs": "d6cff2891c590dd1b8a81a1c653375d1f0846f3e21f621bb94689676e18af3ef",
     "tools/check-skill-syntax.mjs": "91b85fe5781e08d44915c45eb95f2deaf9ed96f5f36ee73088218f68f70e1a84",
     "tools/probe-claude-validation.mjs": "eb91b5cce1610f6c8c4da1c40c7e0c8a8b3222cf093f408583114bbc7f5fafcb",
     "tools/LICENSE-grey-matter.txt": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"

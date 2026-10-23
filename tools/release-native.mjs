@@ -18,7 +18,7 @@ const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const profile = '(version 1)(allow default)(deny network*)(allow network-outbound (remote ip "localhost:*"))(allow network-inbound (local ip "localhost:*"))';
 function canonical(path) {
-  if (existsSync(path)) return realpathSync(path);
+  if (existsSync(path)) return realpathSync.native(path);
   const parent = dirname(path);
   if (parent === path) throw new ReleaseError(`path has no accessible filesystem root: ${path}`);
   return join(canonical(parent), basename(path));
@@ -75,7 +75,7 @@ async function catalog(binary, env, cwd) {
 }
 
 export async function verifyNative({ artifacts, out, execute = false, codex = "codex", claude = "claude", agy = "agy", progress = () => {} }) {
-  artifacts = realpathSync(resolve(artifacts)); out = canonical(resolve(out));
+  artifacts = realpathSync.native(resolve(artifacts)); out = canonical(resolve(out));
   const metadata = verifyArtifacts(artifacts);
   const result = { schema: 1, status: "not-run", mode: execute ? "native-evidence" : "dry-run", publishable: false, candidateSha: metadata.candidateSha, product: metadata.name, version: metadata.version, platform: { os: process.platform, release: release(), arch: arch() }, isolation: { homes: "disposable", credentials: "environment allowlist; no user configuration", network: process.platform === "darwin" ? "loopback-only sandbox" : "not-enforced" }, plan: metadata.assets.map((asset) => ({ host: asset.host, asset: asset.name, sha256: asset.sha256, binary: { codex, claude, agy }[asset.host] })), rows: [], pending: ["product", "scope", "compatibility", "upgrade", "remaining-platforms"] };
   if (!execute) return result;
@@ -110,13 +110,13 @@ export async function verifyNative({ artifacts, out, execute = false, codex = "c
         const market = JSON.parse(readFileSync(join(pack, ".agents/plugins/marketplace.json"))).name;
         await run(codex, ["plugin", "marketplace", "add", pack, "--json"]);
         const installed = JSON.parse(await run(codex, ["plugin", "add", `${metadata.name}@${market}`, "--json"]));
-        const cache = realpathSync(installed.installedPath);
-        if (!cache.startsWith(realpathSync(home) + sep)) throw new ReleaseError("Codex install escaped the disposable home");
+        const cache = realpathSync.native(installed.installedPath);
+        if (!cache.startsWith(realpathSync.native(home) + sep)) throw new ReleaseError("Codex install escaped the disposable home");
         for (const [file, record] of Object.entries(asset.files)) if (hash(readFileSync(join(cache, file))) !== record.sha256) throw new ReleaseError(`Codex installed bytes differ: ${file}`);
         const response = await catalog(codex, env, workspace);
         const errors = response.data.flatMap((group) => group.errors);
         if (errors.length) throw new ReleaseError(`Codex skill catalog errors: ${encode(errors)}`);
-        const loaded = response.data.flatMap((group) => group.skills).filter((skill) => realpathSync(skill.path).startsWith(cache + sep));
+        const loaded = response.data.flatMap((group) => group.skills).filter((skill) => realpathSync.native(skill.path).startsWith(cache + sep));
         requireExactNames(loaded.map((skill) => basename(dirname(skill.path))), expected);
         row.catalog = { skills: loaded.map((skill) => ({ name: skill.name, path: skill.path })), errors, installedFilesMatched: Object.keys(asset.files).length };
       } else if (asset.host === "claude") {
@@ -140,8 +140,8 @@ export async function verifyNative({ artifacts, out, execute = false, codex = "c
           const text = readFileSync(join(pack, "skills", name, "SKILL.md"), "utf8"), fields = parse(text.split(/^---\s*$/m)[1]);
           if (loaded.find((skill) => skill.name === `${metadata.name}:${name}`).model_invocable !== !fields["disable-model-invocation"]) throw new ReleaseError(`agy invocation policy differs: ${name}`);
         }
-        const cache = realpathSync(dirname(dirname(dirname(loaded[0].path))));
-        if (!cache.startsWith(realpathSync(home) + sep)) throw new ReleaseError("agy install escaped the disposable home");
+        const cache = realpathSync.native(dirname(dirname(dirname(loaded[0].path))));
+        if (!cache.startsWith(realpathSync.native(home) + sep)) throw new ReleaseError("agy install escaped the disposable home");
         for (const [file, record] of Object.entries(asset.files)) if (hash(readFileSync(join(cache, file))) !== record.sha256) throw new ReleaseError(`agy installed bytes differ: ${file}`);
         row.catalog = { skills: loaded, numTurns: listing.num_turns, invocationPoliciesMatched: true, installedFilesMatched: Object.keys(asset.files).length };
       }

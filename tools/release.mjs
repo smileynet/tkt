@@ -14,16 +14,16 @@ import { buildArtifacts, verifyArtifacts } from "./release-artifacts.mjs";
 
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const hash = (text) => createHash("sha256").update(text).digest("hex");
-const root = (repo) => realpathSync(git(repo, ["rev-parse", "--show-toplevel"]).trim());
+const root = (repo) => realpathSync.native(git(repo, ["rev-parse", "--show-toplevel"]).trim());
 function canonical(path) {
-  if (existsSync(path)) return realpathSync(path);
+  if (existsSync(path)) return realpathSync.native(path);
   const parent = dirname(path);
   if (parent === path) throw new ReleaseError(`path has no accessible filesystem root: ${path}`);
   return join(canonical(parent), basename(path));
 }
-const common = (repo) => realpathSync(resolve(repo, git(repo, ["rev-parse", "--git-common-dir"]).trim()));
+const common = (repo) => realpathSync.native(resolve(repo, git(repo, ["rev-parse", "--git-common-dir"]).trim()));
 function worktreeIdentity(repo, worktree) {
-  return { root: root(worktree), path: realpathSync(worktree), common: common(worktree), expectedCommon: common(repo) };
+  return { root: root(worktree), path: realpathSync.native(worktree), common: common(worktree), expectedCommon: common(repo) };
 }
 const head = (repo) => git(repo, ["rev-parse", "HEAD"]).trim();
 const status = (repo) => git(repo, ["status", "--porcelain=v1", "-z"]);
@@ -64,7 +64,7 @@ function plan(options, previous) {
   const branch = `codex/release-${edits.product.name}-${options.version}-${sourceSha.slice(0, 8)}`;
   const worktree = canonical(resolve(options.worktree ?? previous?.worktree ?? join(out, "worktree")));
   if (worktree === repo || (previous && (previous.worktree !== worktree || previous.branch !== branch || previous.date !== date))) throw new ReleaseError("candidate worktree or release identity differs from preparation state");
-  if (!previous && existsSync(worktree) && (root(worktree) !== realpathSync(worktree) || common(worktree) !== common(repo) || head(worktree) !== sourceSha || status(worktree))) throw new ReleaseError(`provided worktree must be clean at the source commit in this repository: ${JSON.stringify(worktreeIdentity(repo, worktree))}`);
+  if (!previous && existsSync(worktree) && (root(worktree) !== realpathSync.native(worktree) || common(worktree) !== common(repo) || head(worktree) !== sourceSha || status(worktree))) throw new ReleaseError(`provided worktree must be clean at the source commit in this repository: ${JSON.stringify(worktreeIdentity(repo, worktree))}`);
   const inside = relative(repo, out);
   if (!inside.startsWith(".." + sep) && inside !== ".." && !isAbsolute(inside) && command(repo, ["check-ignore", "-q", inside]).status !== 0) throw new ReleaseError("output inside the source repository must be gitignored");
   const fileHashes = Object.fromEntries([...edits.files].map(([file, text]) => [file, hash(text)]));
@@ -116,7 +116,7 @@ export function prepare(options) {
   if (!existsSync(worktree)) {
     git(repo, ["worktree", "add", "-b", branch, worktree, sourceSha]);
   } else {
-    if (root(worktree) !== realpathSync(worktree) || common(worktree) !== common(repo)) throw new ReleaseError(`candidate is not a worktree of this repository: ${JSON.stringify(worktreeIdentity(repo, worktree))}`);
+    if (root(worktree) !== realpathSync.native(worktree) || common(worktree) !== common(repo)) throw new ReleaseError(`candidate is not a worktree of this repository: ${JSON.stringify(worktreeIdentity(repo, worktree))}`);
     const current = command(worktree, ["symbolic-ref", "--short", "HEAD"]);
     if (current.status !== 0 || current.stdout.trim() !== branch) {
       if (previous || head(worktree) !== sourceSha || status(worktree)) throw new ReleaseError("provided worktree is not clean at the planned source");

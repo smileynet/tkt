@@ -13,13 +13,13 @@ import { inspectVersions, ReleaseError } from "./release-version.mjs";
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 function canonical(path) {
-  if (existsSync(path)) return realpathSync(path);
+  if (existsSync(path)) return realpathSync.native(path);
   const parent = dirname(path);
   if (parent === path) throw new ReleaseError(`path has no accessible filesystem root: ${path}`);
   return join(canonical(parent), basename(path));
 }
 export function verifyProduct({ repo, sha, out, execute = false, progress = () => {} }) {
-  repo = realpathSync(git(resolve(repo), ["rev-parse", "--show-toplevel"]).trim()); out = canonical(resolve(out));
+  repo = realpathSync.native(git(resolve(repo), ["rev-parse", "--show-toplevel"]).trim()); out = canonical(resolve(out));
   if (!/^[a-f0-9]{40}$/.test(sha)) throw new ReleaseError("product verification requires a full candidate commit SHA");
   const clean = () => {
     if (git(repo, ["rev-parse", "HEAD"]).trim() !== sha || git(repo, ["status", "--porcelain=v1", "-z"])) throw new ReleaseError("product candidate must be clean at the requested commit");

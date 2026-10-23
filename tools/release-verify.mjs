@@ -14,7 +14,7 @@ import { verifyNative } from "./release-native.mjs";
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const digest = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
 function canonical(path) {
-  if (existsSync(path)) return realpathSync(path);
+  if (existsSync(path)) return realpathSync.native(path);
   const parent = dirname(path);
   if (parent === path) throw new ReleaseError(`path has no accessible filesystem root: ${path}`);
   return resolve(canonical(parent), basename(path));
@@ -24,7 +24,7 @@ export function requireMatchingIdentity(product, metadata) {
 }
 export async function verifyCandidate(options) {
   if (options.execute && options.dryRun) throw new ReleaseError("--execute and --dry-run cannot combine");
-  const repo = realpathSync(git(resolve(options.repo), ["rev-parse", "--show-toplevel"]).trim()), out = canonical(resolve(options.out)), artifacts = realpathSync(resolve(options.artifacts));
+  const repo = realpathSync.native(git(resolve(options.repo), ["rev-parse", "--show-toplevel"]).trim()), out = canonical(resolve(options.out)), artifacts = realpathSync.native(resolve(options.artifacts));
   const productOptions = { repo, sha: options.sha, out: resolve(out, "product"), progress: options.progress };
   const nativeOptions = { artifacts, out: resolve(out, "native"), codex: options.codex, claude: options.claude, agy: options.agy, progress: options.progress };
   const product = verifyProduct(productOptions), metadata = verifyArtifacts(artifacts);
