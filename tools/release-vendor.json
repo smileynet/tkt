@@ -12,7 +12,7 @@
     "tools/release.mjs": "80cc78ebd88b1431a133edb4c7856b345657976a4865ce05b08d623022d75d9c",
     "tools/release-artifacts.mjs": "df22e1f9cf17065abb7da60449ff3c14a2a7f2af51372733369d0bda450a984d",
     "tools/release-version.mjs": "c00161120615abb0e848161854493046b1f94a48d8355e9232ffcebc2e140c5f",
-    "tools/release-git.mjs": "9cb94c7c25c4575a8054edd01a48d9db1d1457de19a6b191cef0306107753d27",
+    "tools/release-git.mjs": "b4b99967e4522c8c8de16d87887011a0b7eaea4303702c542a3b0ebde89f16c0",
     "tools/release-product.mjs": "3a06a50e34eb3f5cf647c9b08dd725c705e4883b3bafb222bb01865daff2478a",
     "tools/release-native.mjs": "7f20a08ff225852a16e21d772425d4a5debeba51fa010ce9a6121c203b5725e4",
     "tools/release-verify.mjs": "d6cff2891c590dd1b8a81a1c653375d1f0846f3e21f621bb94689676e18af3ef",

@@ -33,6 +33,8 @@ export function pushCandidateRefs({ repo, remote = "origin", branch, tag, candid
   if (urls.length !== 1 || !urls[0] || urls[0].startsWith("-")) throw new ReleaseError("candidate push requires exactly one push URL");
   const url = urls[0];
   if (git(repo, ["cat-file", "-t", candidateSha]).trim() !== "commit" || git(repo, ["cat-file", "-t", tagObject]).trim() !== "tag" || git(repo, ["rev-parse", `${tagObject}^{commit}`]).trim() !== candidateSha) throw new ReleaseError("annotated tag does not resolve to candidate commit");
+  const header = git(repo, ["cat-file", "-p", tagObject]).split("\n\n", 1)[0].split("\n");
+  if (!header.includes(`object ${candidateSha}`) || !header.includes("type commit") || !header.includes(`tag ${tag.slice("refs/tags/".length)}`)) throw new ReleaseError("annotated tag header differs from release identity");
   function inspect() {
     const refs = new Map(git(repo, ["ls-remote", "--refs", url, branch, tag]).trim().split("\n").filter(Boolean).map((line) => {
       const fields = line.split(/\s+/);
