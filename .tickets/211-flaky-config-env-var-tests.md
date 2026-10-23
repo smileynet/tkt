@@ -1,7 +1,7 @@
 ---
 id: "211"
 title: "config tests race on TKT_NO_USER_CONFIG (set_var/remove_var across parallel tests)"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -26,4 +26,11 @@ Fix: pass the skip-user-config decision as a parameter, or serialize these tests
 
 ## Acceptance criteria
 
-- [ ] cargo test passes 20 consecutive runs of 'cargo test --bin tkt config::tests' with default parallelism
+- [x] cargo test passes 20 consecutive runs of 'cargo test --bin tkt config::tests' with default parallelism
+
+## Resolution (2026-10-23)
+
+done: tests call ProjectConfig::load_inner(dir, true) instead of setting the env var (commit above).
+
+### Verification
+1. ✓ cargo test passes 20 consecutive runs of 'cargo test --bin tkt config::tests' with default parallelism — "20 consecutive 'cargo test --bin tkt config::tests' runs: 20x 'ok. 10 passed; 0 failed' (before: 1 failure in 3). mise run check green. No test in src/config.rs mutates TKT_NO_USER_CONFIG anymore."
