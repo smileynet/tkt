@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.3.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.3.1 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -36,7 +36,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.3.0";
+const DEPLOY_VERSION = "1.3.1";
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const isFile = (p) => { try { return statSync(p).isFile(); } catch { return false; } };
@@ -313,6 +313,19 @@ function doUninstall(pack, args) {
   }
 }
 
+function markdownResources(text, visit) {
+  const code = [...text.matchAll(/```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`/g)].map((m) => [m.index, m.index + m[0].length]);
+  return text.replace(/(\[[^\]]*\]\()([^)]+)(\))/g, (whole, open, value, close, offset) => {
+    if (code.some(([start, end]) => start <= offset && offset < end)) return whole;
+    const href = value.trim().split(/\s+/)[0];
+    const target = href.split("#")[0];
+    if (!target || /^[a-z][a-z\d+.-]*:/i.test(target) || /[<>]/.test(target)) return whole;
+    if (!target.includes("/") && !/\.[a-z\d]+$/i.test(target)) return whole;
+    const rewritten = visit(decodeURIComponent(target));
+    return rewritten === undefined ? whole : open + value.replace(href, encodeURI(rewritten) + href.slice(target.length)) + close;
+  });
+}
+
 function agyResources(pack) {
   const files = new Set();
   const directories = new Set();
@@ -331,20 +344,13 @@ function agyResources(pack) {
     if (!isFile(at)) throw new Error(`package resource missing: ${rel}`);
     files.add(at);
     if (!at.endsWith(".md")) return;
-    // Examples are not runtime dependencies; keep concrete links outside code closed.
-    const text = readFileSync(at, "utf8").replace(/```[^\n]*\n[\s\S]*?```|`[^`\n]*`/g, "");
-    for (const match of text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)) {
-      const target = match[1].trim().split(/\s+/)[0].split("#")[0];
-      if (!target || /^[a-z][a-z\d+.-]*:/i.test(target) || /[<>]/.test(target)) continue;
-      if (!target.includes("/") && !/\.[a-z\d]+$/i.test(target)) continue;
-      include(resolve(dirname(at), decodeURIComponent(target)));
-    }
+    markdownResources(readFileSync(at, "utf8"), (target) => { include(resolve(dirname(at), target)); });
   };
   for (const skill of pack.skills) include(skill.src);
   return [...files].sort();
 }
 
-// Preserve source paths: flattening a skill changes the meaning of its relative resources.
+// Flat skills preserve native command names; linked resources are projected with them.
 function agyDeploy(pack, args) {
   const out = args.out ?? join(pack.dir, "dist", "agy-plugin");
   const errors = lint(pack);
@@ -353,17 +359,21 @@ function agyDeploy(pack, args) {
   const agyManifest = {
     name: m.name, displayName: m.displayName ?? m.name, version: m.version, description: m.description,
     author: m.author, keywords: m.keywords, repository: m.repository, license: m.license,
-    skills: pack.dirs.filter((d) => isDir(d) && d !== join(pack.dir, "skills")).map((d) => "./" + relative(pack.dir, d).split(sep).join("/")),
   };
   console.log(`\nagy plugin: ${tilde(out)}  (${pack.skills.length} skills, v${m.version})`);
   const resources = agyResources(pack);
+  const project = (file) => {
+    const skill = pack.skills.find((s) => file === s.src || file.startsWith(s.src + sep));
+    return skill ? join(out, "skills", skill.name, relative(skill.src, file)) : join(out, relative(pack.dir, file));
+  };
   if (args.dryRun) return;
   rmSync(out, { recursive: true, force: true });
   mkdirSync(join(out, "skills"), { recursive: true });
   for (const file of resources) {
-    const dest = join(out, relative(pack.dir, file));
+    const dest = project(file);
     mkdirSync(dirname(dest), { recursive: true });
     cpSync(file, dest);
+    if (file.endsWith(".md")) writeFileSync(dest, markdownResources(readFileSync(file, "utf8"), (target) => relative(dirname(dest), project(resolve(dirname(file), target))).split(sep).join("/") || "."));
   }
   writeFileSync(join(out, "plugin.json"), JSON.stringify(agyManifest, null, 2) + "\n");
   if (args.cmd !== "install") return;
