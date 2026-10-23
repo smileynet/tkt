@@ -15,10 +15,10 @@
     "tools/release-git.mjs": "7eea0e827a2b8a3f79dee6e362d11368bd0ee74adf67d31ac5ca9003450dc7c8",
     "tools/release-product.mjs": "3a06a50e34eb3f5cf647c9b08dd725c705e4883b3bafb222bb01865daff2478a",
     "tools/release-native.mjs": "7f20a08ff225852a16e21d772425d4a5debeba51fa010ce9a6121c203b5725e4",
-    "tools/release-verify.mjs": "d0cd51329ddee1b3727cef43a25127618f610e512e9801a6118da6e1efcea4e7",
+    "tools/release-verify.mjs": "ac03dfa912811f53e6f736c372379e3c2056710af037bdb1945437389963d86f",
     "tools/release-publish.mjs": "424620196136f79b682b0342571ffaa5d193e43791c7942741c8145d16a6ff3f",
     "tools/release-github.mjs": "991287bd4078e15665730b5a2612756f0772a0ab5568f86c97158e8f50b60ac1",
-    "tools/check-skill-syntax.mjs": "91b85fe5781e08d44915c45eb95f2deaf9ed96f5f36ee73088218f68f70e1a84",
+    "tools/check-skill-syntax.mjs": "35c3f52e0ccd9b6fb628b4dba03b5ff15d08314a8ce77a686b352ac857b67c8d",
     "tools/probe-claude-validation.mjs": "eb91b5cce1610f6c8c4da1c40c7e0c8a8b3222cf093f408583114bbc7f5fafcb",
     "tools/LICENSE-grey-matter.txt": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
   }

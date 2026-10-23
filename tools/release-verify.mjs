@@ -57,7 +57,7 @@ export function readCandidateEvidence({ artifacts, evidence, verificationSha256 
     const rows = native.rows.filter((row) => row.host === asset.host && row.asset === asset.name && row.assetSha256 === asset.sha256);
     if (rows.length !== 1 || rows[0].status !== "pass" || typeof rows[0].nativeVersion !== "string" || !rows[0].nativeVersion.trim() || !Array.isArray(rows[0].checks) || !rows[0].checks.length || rows[0].checks.some((check) => check.exit !== 0 || check.signal)) throw new ReleaseError("native artifact checks are missing, duplicate or failed");
   }
-  return { status: "pass", publishable: false, product: metadata.name, version: metadata.version, candidateSha: metadata.candidateSha, verificationSha256, pending, product, native };
+  return { status: "pass", publishable: false, product: metadata.name, version: metadata.version, candidateSha: metadata.candidateSha, verificationSha256, pending, productEvidence: product, nativeEvidence: native };
 }
 
 export async function verifyCandidate(options) {

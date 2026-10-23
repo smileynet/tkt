@@ -64,7 +64,7 @@ export function checkPack(pack) {
   return { status: errors.length ? "fail" : "pass", metrics, errors };
 }
 
-if (process.argv[1] && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(resolve(process.argv[1]))) {
+if (process.argv[1] && existsSync(resolve(process.argv[1])) && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(resolve(process.argv[1]))) {
   try {
     const args = process.argv.slice(2);
     if (args.length && (args.length !== 2 || args[0] !== "--pack")) throw new Error("usage: check-skill-syntax.mjs [--pack DIR]");
