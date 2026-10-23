@@ -90,9 +90,15 @@ impl ProjectConfig {
     /// Missing files are not errors — they just don't contribute values.
     /// Set TKT_NO_USER_CONFIG=1 to skip user config (for testing).
     pub fn load(tickets_dir: &Path) -> Self {
+        let skip_user = std::env::var("TKT_NO_USER_CONFIG").as_deref() == Ok("1");
+        Self::load_inner(tickets_dir, skip_user)
+    }
+
+    /// `load` with the user-config decision passed in, so tests needn't mutate the
+    /// process-global environment (which races across parallel tests).
+    fn load_inner(tickets_dir: &Path, skip_user: bool) -> Self {
         let project_path = tickets_dir.join("config.toml");
         let project_values = read_sectioned_config(&project_path);
-        let skip_user = std::env::var("TKT_NO_USER_CONFIG").as_deref() == Ok("1");
         let user_values = if skip_user {
             None
         } else {
@@ -554,10 +560,8 @@ mod tests {
 
     #[test]
     fn test_project_config_defaults() {
-        // Prevent ambient user config from affecting defaults
-        std::env::set_var("TKT_NO_USER_CONFIG", "1");
         let dir = tempfile::tempdir().unwrap();
-        let cfg = ProjectConfig::load(dir.path());
+        let cfg = ProjectConfig::load_inner(dir.path(), true);
         assert!(!cfg.close_require_resolution);
         assert!(cfg.close_require_checked_acs);
         assert!(!cfg.validate_strict);
@@ -566,7 +570,6 @@ mod tests {
         assert!(cfg.new_default_priority.is_empty());
         assert!(cfg.push_enabled);
         assert!(cfg.unknown_keys.is_empty());
-        std::env::remove_var("TKT_NO_USER_CONFIG");
     }
 
     #[test]
@@ -586,7 +589,7 @@ default_env = "corp"
 foo = "bar"
 "#;
         std::fs::write(dir.path().join("config.toml"), config_content).unwrap();
-        let cfg = ProjectConfig::load(dir.path());
+        let cfg = ProjectConfig::load_inner(dir.path(), true);
         assert!(cfg.close_require_resolution);
         assert!(!cfg.push_enabled);
         assert_eq!(cfg.ready_default_env, "corp");
@@ -595,26 +598,22 @@ foo = "bar"
 
     #[test]
     fn test_audit_resolution_baseline_id_parsed() {
-        std::env::set_var("TKT_NO_USER_CONFIG", "1");
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(
             dir.path().join("config.toml"),
             "[audit]\nresolution_baseline_id = \"36\"\n",
         )
         .unwrap();
-        let cfg = ProjectConfig::load(dir.path());
+        let cfg = ProjectConfig::load_inner(dir.path(), true);
         assert_eq!(cfg.audit_resolution_baseline_id, "36");
         assert!(cfg.unknown_keys.is_empty());
-        std::env::remove_var("TKT_NO_USER_CONFIG");
     }
 
     #[test]
     fn test_audit_resolution_baseline_id_default_empty() {
-        std::env::set_var("TKT_NO_USER_CONFIG", "1");
         let dir = tempfile::tempdir().unwrap();
-        let cfg = ProjectConfig::load(dir.path());
+        let cfg = ProjectConfig::load_inner(dir.path(), true);
         assert!(cfg.audit_resolution_baseline_id.is_empty());
-        std::env::remove_var("TKT_NO_USER_CONFIG");
     }
 
     #[test]
