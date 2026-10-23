@@ -70,6 +70,28 @@ features/behavior as they change; grey-matter wraps them from its own set. Skill
 frontmatter stays grey-matter safe-core (`name` + `description`; `compatibility` is
 allowed-but-inert) — no `triggers:`/`tools:` top-level keys.
 
+### Claude Code plugin (keep it current)
+
+tkt is also a Claude Code plugin: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`,
+with skills from the default `skills/` dir. grey-matter's plugin depends on it, and
+grey-matter's marketplace lists it as a `github` source. When a change touches skills or
+the CLI surface the skills describe:
+
+- **New or changed skill under `skills/`:** no manifest edit. The plugin picks it up as is.
+- **Users get changes only on a release.** A GitHub install is pinned to
+  `.claude-plugin/plugin.json`'s `version`. A push to `main` reaches nobody until the version
+  changes, and `claude plugin update` reports "already at the latest version" until then.
+  cargo-release bumps both plugin manifests (`pre-release-replacements` in `release.toml`).
+  `tests/plugin_manifests.rs` fails the gate if either drifts from `Cargo.toml`. Never
+  hand-edit `version` outside a release.
+- **Refresh this machine's install** as part of Deploy. Use a marketplace added from the
+  local checkout (`claude plugin marketplace add <path-to-tkt>`, once). It loads the files in
+  place, so run `/reload-plugins` or start a new session to pick up edits. For a GitHub
+  install, run `claude plugin marketplace update tkt`, then `claude plugin update tkt@tkt`
+  (this only changes anything after a release).
+- **Check a manifest or skill change** with `claude plugin validate .claude-plugin/plugin.json --strict`
+  and `claude --plugin-dir . plugin details tkt` (lists the skills, no model call).
+
 All three gate checks must pass with zero warnings before presenting work as done.
 
 ## tkt CLI (the product)
