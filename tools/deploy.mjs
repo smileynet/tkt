@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.3.1 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.3.2 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -36,7 +36,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.3.1";
+const DEPLOY_VERSION = "1.3.2";
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const isFile = (p) => { try { return statSync(p).isFile(); } catch { return false; } };
@@ -75,8 +75,22 @@ function frontmatterName(skillMd) {
 
 // name == dir, names unique once flattened, and no reference to a skill outside the pack
 // (metadata.deploy.forbidRefs: a pack that must work on its own lists its neighbours here).
+function legalFiles(pack) {
+  const files = [...(pack.deploy.legalFiles ?? [])];
+  for (const skill of pack.skills) {
+    for (const name of pack.deploy.skillLicenseFiles ?? []) files.push(relative(pack.dir, join(skill.src, name)));
+  }
+  return files;
+}
+
 function lint(pack) {
   const errors = [];
+  for (const file of legalFiles(pack)) {
+    const path = resolve(pack.dir, file);
+    if (!real(path).startsWith(real(pack.dir) + sep) || !isFile(path) || !readFileSync(path, "utf8").trim()) {
+      errors.push(`required legal artifact missing, empty or outside pack: ${file}`);
+    }
+  }
   const seen = new Map();
   const forbid = (pack.deploy.forbidRefs ?? []).map((r) => new RegExp(`\\b${r.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`));
   for (const s of pack.skills) {
@@ -347,6 +361,7 @@ function agyResources(pack) {
     markdownResources(readFileSync(at, "utf8"), (target) => { include(resolve(dirname(at), target)); });
   };
   for (const skill of pack.skills) include(skill.src);
+  for (const file of legalFiles(pack)) include(resolve(pack.dir, file));
   return [...files].sort();
 }
 
@@ -391,7 +406,7 @@ function agyDeploy(pack, args) {
 
 // Manifests agree with disk, with each other, and with the latest release tag.
 function doCheck(pack) {
-  const problems = [...inspectPortfolio(pack, args).findings];
+  const problems = [...lint(pack), ...inspectPortfolio(pack, args).findings];
   // Coverage: every SKILL.md under skills/ (up to two levels) is one the manifest loads.
   const loaded = new Set(pack.skills.map((s) => resolve(s.src)));
   const walk = (d, depth) => {

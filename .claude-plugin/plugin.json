@@ -27,6 +27,14 @@
         "wrap-session",
         "compass",
         "implement-spec"
+      ],
+      "legalFiles": [
+        "LICENSE",
+        "NOTICE",
+        "tools/LICENSE-grey-matter.txt"
+      ],
+      "skillLicenseFiles": [
+        "LICENSE"
       ]
     }
   }
