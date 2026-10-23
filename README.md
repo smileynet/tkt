@@ -87,7 +87,7 @@ The plugin supplies four workflow skills; install the `tkt` CLI separately using
 one of the methods above.
 
 For local development, replace `smileynet/tkt` with the checkout's absolute path.
-After edits, run `codex plugin add tkt@tkt` again to refresh the cached copy,
+After edits, run `node tools/deploy.mjs` once to refresh the cached plugin and harness roots,
 then start a new chat. The skill installer skips Codex scan roots when this plugin
 is enabled, removing only copies it previously installed. `--allow-dual` overrides
 that guard.

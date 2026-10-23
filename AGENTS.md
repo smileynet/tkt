@@ -58,17 +58,18 @@ each commit.
 cargo build --release && cargo install --path . && bash tools/deploy-skills.sh
 ```
 
-`tools/deploy-skills.sh` deploys tkt's core skills (`skills/<name>/`, currently `tkt-core`
-plus the session-workflow trio `tkt-orient` → `tkt-work` → `tkt-reconcile` — every
-distributed skill is `tkt-`-prefixed for ownership clarity) to every agent harness scan root
-following grey-matter conventions:
-copy (not symlink), manifest-tracked (`.installed-by-tkt.json`), name==dir + global-unique
-lint, and it only ever touches skills it installed (`--force` to replace a foreign dir,
-`--dry-run`/`list`/`uninstall` for the rest), and packages + installs the global Antigravity
-(`agy`) plugin (`plugin.json` + `skills/`) into `~/.gemini/config/plugins/tkt/`. tkt owns these skills so they track tool
-features/behavior as they change; grey-matter wraps them from its own set. Skill
-frontmatter stays grey-matter safe-core (`name` + `description`; `compatibility` is
-allowed-but-inert) — no `triggers:`/`tools:` top-level keys.
+`node tools/deploy.mjs` deploys skills and refreshes the enabled Codex plugin from this
+checkout, then packages Antigravity when `~/.gemini` exists. `bash tools/deploy-skills.sh` is a compatibility
+entry point to the same command; run either once after skill or guidance changes.
+The engine is vendored from grey-matter's `scripts/deploy.mjs`; change harness behavior
+there and copy it here. Pack-specific forbidden skill references live in
+`.claude-plugin/plugin.json` under `metadata.deploy.forbidRefs`.
+
+The harness table chooses roots so each harness sees a skill once, including installed
+plugins. Only manifest-owned copies are pruned. Use `--dry-run`, `list`, `audit`, and
+`check` to inspect deployment; `--allow-dual` is an explicit duplicate override.
+Codex must use this checkout as its local marketplace. A plugin refresh failure stops
+deployment before existing skill copies are removed. Start a new chat after refresh.
 
 ### Claude Code plugin (keep it current)
 
@@ -81,8 +82,8 @@ the CLI surface the skills describe:
 - **Users get changes only on a release.** A GitHub install is pinned to
   `.claude-plugin/plugin.json`'s `version`. A push to `main` reaches nobody until the version
   changes, and `claude plugin update` reports "already at the latest version" until then.
-  cargo-release bumps both plugin manifests (`pre-release-replacements` in `release.toml`).
-  `tests/plugin_manifests.rs` fails the gate if either drifts from `Cargo.toml`. Never
+  cargo-release bumps all plugin manifests (`pre-release-replacements` in `release.toml`).
+  `tests/plugin_manifests.rs` fails the gate if any drift from `Cargo.toml`. Never
   hand-edit `version` outside a release.
 - **Refresh this machine's install** as part of Deploy. Use a marketplace added from the
   local checkout (`claude plugin marketplace add <path-to-tkt>`, once). It loads the files in
