@@ -73,8 +73,8 @@ allowed-but-inert) — no `triggers:`/`tools:` top-level keys.
 ### Claude Code plugin (keep it current)
 
 tkt is also a Claude Code plugin: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`,
-with skills from the default `skills/` dir. grey-matter's plugin depends on it, and
-grey-matter's marketplace lists it as a `github` source. When a change touches skills or
+with skills from the default `skills/` dir. grey-matter's plugin depends on it as
+`tkt@tkt` (this marketplace), so keep the plugin and marketplace name `tkt`. When a change touches skills or
 the CLI surface the skills describe:
 
 - **New or changed skill under `skills/`:** no manifest edit. The plugin picks it up as is.
