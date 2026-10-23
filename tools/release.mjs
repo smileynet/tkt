@@ -2,12 +2,14 @@
 // Prepare a local draft candidate; dry-run by default. No publishing or installation.
 // Usage: node scripts/release.mjs prepare --repo DIR --version X.Y.Z --out DIR
 //        [--execute] [--worktree EXISTING_WORKTREE] [--date YYYY-MM-DD]
+//        node scripts/release.mjs verify --repo DIR --sha SHA --artifacts DIR --out DIR [--execute]
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { randomUUID, createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { git, command } from "./release-git.mjs";
 import { ReleaseError, versionEdits, stableVersion, greaterVersion } from "./release-version.mjs";
+import { verifyCandidate } from "./release-verify.mjs";
 import { buildArtifacts, verifyArtifacts } from "./release-artifacts.mjs";
 
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
@@ -178,16 +180,18 @@ export function prepare(options) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const args = process.argv.slice(2), mode = args.shift(), options = {};
+    const named = mode === "prepare" ? ["--repo", "--version", "--out", "--worktree", "--date"] : mode === "verify" ? ["--repo", "--sha", "--artifacts", "--out", "--codex", "--claude", "--agy"] : [];
     while (args.length) {
       const key = args.shift();
       if (key === "--execute") options.execute = true;
       else if (key === "--dry-run") options.dryRun = true;
-      else if (["--repo", "--version", "--out", "--worktree", "--date"].includes(key) && args.length) options[key.slice(2)] = args.shift();
+      else if (named.includes(key) && args.length) options[key.slice(2)] = args.shift();
       else throw new ReleaseError(`unknown/incomplete option: ${key}`);
     }
-    if (mode !== "prepare" || !options.repo || !options.version || !options.out || (options.execute && options.dryRun)) throw new ReleaseError("usage: prepare --repo DIR --version X.Y.Z --out DIR [--execute | --dry-run]");
-    options.progress = (phase) => { if (["fetch", "worktree", "versioned", "committed", "draft"].includes(phase)) console.error(`prepare: ${phase}`); };
-    console.log(encode(prepare(options)));
+    if (!["prepare", "verify"].includes(mode) || !options.repo || !options.out || (mode === "prepare" ? !options.version : !options.sha || !options.artifacts) || (options.execute && options.dryRun)) throw new ReleaseError("usage: prepare --repo DIR --version X.Y.Z --out DIR OR verify --repo DIR --sha SHA --artifacts DIR --out DIR [--execute | --dry-run]");
+    options.progress = (phase) => { if (mode === "verify" || ["fetch", "worktree", "versioned", "committed", "draft"].includes(phase)) console.error(`${mode}: ${phase}`); };
+    const result = mode === "prepare" ? prepare(options) : await verifyCandidate(options);
+    console.log(encode(result)); process.exitCode = result.status === "fail" ? 1 : 0;
   } catch (error) {
     const validation = error instanceof ReleaseError;
     console.error(encode({ status: validation ? "fail" : "error", errors: [error.message] }));

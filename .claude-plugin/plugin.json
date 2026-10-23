@@ -47,7 +47,8 @@
         "tools/probe-claude-validation.mjs",
         "tools/deploy.mjs",
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        "tools/release-verify.mjs"
       ]
     }
   }

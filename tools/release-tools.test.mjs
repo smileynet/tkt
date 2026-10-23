@@ -12,7 +12,7 @@ const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 test("vendored release files match their reviewed ownership inventory", () => {
   const inventory = JSON.parse(readFileSync(join(tools, "release-vendor.json")));
   assert.equal(inventory.owner, "smileynet/grey-matter-release-tools");
-  assert.equal(Object.keys(inventory.files).length, 9);
+  assert.equal(Object.keys(inventory.files).length, 10);
   assert.deepEqual(JSON.parse(readFileSync(join(repo, "package.json"))).devDependencies, inventory.dependencies);
   for (const [file, expected] of Object.entries(inventory.files)) {
     assert.match(file, /^tools\/[a-zA-Z0-9.-]+$/); assert.equal(sha(readFileSync(join(repo, file))), expected, file);
@@ -21,7 +21,7 @@ test("vendored release files match their reviewed ownership inventory", () => {
 test("release entry points contain no legacy publisher or implicit bump path", () => {
   const shell = readFileSync(join(tools, "release.sh"), "utf8"), mise = readFileSync(join(repo, "mise.toml"), "utf8");
   assert.doesNotMatch(shell + mise, /cargo release|gh release create|git push|release:patch|release:minor|release:major/);
-  assert.match(shell, /prepare\|verify-product\|verify-native/);
+  assert.match(shell, /prepare\|verify\|verify-product\|verify-native/);
   const failed = spawnSync("bash", [join(tools, "release.sh"), "patch", "--execute"], { encoding: "utf8" }); assert.equal(failed.status, 2); assert.match(failed.stderr, /legacy publication is disabled/);
 });
 test("Node dependencies are pinned maintainer prerequisites, outside Rust dependencies", () => {

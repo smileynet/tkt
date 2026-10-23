@@ -24,6 +24,12 @@ notes and sealed plugin bundles. Cargo.toml owns the version; preparation derive
 root Cargo.lock and all plugin manifests from it. It creates no tag or publication.
 Old patch/minor/major shell modes and automatic mise bump aliases are removed.
 
+`verify` coordinates fresh product/native checks for one clean commit and matching
+sealed artifacts through `node tools/release.mjs verify --repo DIR --sha SHA
+--artifacts DIR --out NEW_DIR`. Add `--execute` for actual checks. It binds the child
+reports to the same identity, rejects old output and retains all remaining release
+gates. Preparation state and sealed artifacts stay unchanged.
+
 `verify-product` forwards to `tools/release-product.mjs`; `verify-native` forwards to
 `tools/release-native.mjs`. Both default to inspection, with explicit `--execute` for
 actual checks. Read the [preparation guide](https://github.com/smileynet/grey-matter/blob/main/docs/agents/release-preparation.md)
