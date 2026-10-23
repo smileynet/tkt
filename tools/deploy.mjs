@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.1.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.2.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -10,10 +10,10 @@
 //
 // Usage:
 //   node deploy.mjs [install] [--dry-run] [--force] [--link] [--allow-dual] [--no-agy]
-//                   [--project] [--root DIR]... [--pack DIR]
+//                   [--project] [--root DIR]... [--pack DIR] [--portfolio FILE]
 //   node deploy.mjs list | uninstall [--dry-run] [--root DIR]...
 //   node deploy.mjs check            # manifests consistent with disk and tags (exit 1 on drift)
-//   node deploy.mjs audit [--strict] # unowned dirs, shared names, skills a harness sees twice
+//   node deploy.mjs audit [--strict] [--json] [--portfolio FILE] # unowned dirs, shared names, skills a harness sees twice
 //   node deploy.mjs agy [build|install] [--out DIR]
 //
 // Install with no --root picks roots from the harness table: of the harnesses present here
@@ -30,12 +30,13 @@ import {
   cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, renameSync, unlinkSync, readdirSync, readFileSync, realpathSync, rmSync, statSync,
   symlinkSync, writeFileSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.1.0";
+const DEPLOY_VERSION = "1.2.0";
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const isFile = (p) => { try { return statSync(p).isFile(); } catch { return false; } };
@@ -102,7 +103,7 @@ const HARNESSES = () => [
   { id: "kiro", home: join(HOME, ".kiro"), own: join(HOME, ".kiro", "skills"),
     reads: [{ root: join(HOME, ".kiro", "skills") }], project: [".kiro"] },
   { id: "codex", home: CODEX_HOME(), own: join(CODEX_HOME(), "skills"),
-    reads: [{ root: join(CODEX_HOME(), "skills") }, { root: SHARED(), claimed: true }],
+    reads: [{ root: join(CODEX_HOME(), "skills") }, { root: SHARED() }],
     project: [".codex", ".agents"], plugin: codexPlugin },
   { id: "claude", home: join(HOME, ".claude"), own: join(HOME, ".claude", "skills"),
     reads: [{ root: join(HOME, ".claude", "skills") }], project: [".claude", ".agents"], plugin: claudePlugin },
@@ -248,7 +249,7 @@ function installRoot(pack, root, args) {
 // --- Commands ----------------------------------------------------------------------------
 function doInstall(pack, args) {
   if (!pack.skills.length) { console.error(`no skills found for ${pack.name}`); process.exit(1); }
-  const errors = lint(pack);
+  const errors = [...lint(pack), ...inspectPortfolio(pack, args).findings];
   if (errors.length) { console.error("install aborted, lint failed:"); for (const e of errors) console.error("  - " + e); process.exit(1); }
   if (!args.roots.length) {
     refreshCodex(pack, args);
@@ -343,7 +344,7 @@ function agyDeploy(pack, args) {
 
 // Manifests agree with disk, with each other, and with the latest release tag.
 function doCheck(pack) {
-  const problems = [];
+  const problems = [...inspectPortfolio(pack, args).findings];
   // Coverage: every SKILL.md under skills/ (up to two levels) is one the manifest loads.
   const loaded = new Set(pack.skills.map((s) => resolve(s.src)));
   const walk = (d, depth) => {
@@ -412,7 +413,10 @@ function doCheck(pack) {
 function doAudit(pack, args) {
   const harnesses = HARNESSES();
   const roots = uniqReal([...knownRoots({ roots: [] }), ...[".agents", ".claude", ".codex", ".opencode", ".kiro"].map((d) => resolve(d, "skills"))].filter(isDir));
-  const findings = [];
+  const portfolio = inspectPortfolio(pack, args);
+  const findings = [...portfolio.findings];
+  const notices = [...portfolio.notices];
+  const inventory = [];
   const contents = new Map(); // root -> Map(name -> [packs])
   for (const root of roots.filter(isDir)) {
     const owners = new Map();
@@ -422,48 +426,135 @@ function doAudit(pack, args) {
     }
     const names = readdirSync(root).filter((n) => !n.startsWith("."));
     contents.set(root, new Map(names.map((n) => [n, owners.get(n) ?? []])));
-    const unowned = names.filter((n) => !owners.has(n));
+    const unowned = names.filter((n) => !owners.has(n) && !portfolio.legacy?.entries.some((e) => {
+      const declaredRoot = portfolio.legacy.root.replace(/^~(?=\/)/, HOME);
+      return real(root) === real(declaredRoot) && e.name === n && e.disposition === "keep-user-managed" && treeHash(join(root, n)) === e.treeSha256;
+    }));
+    const retained = names.filter((n) => !owners.has(n) && !unowned.includes(n));
+    if (retained.length) notices.push(`${tilde(root)}: ${retained.length} retained user-managed directories (not installer-owned)`);
     if (unowned.length) findings.push(`${tilde(root)}: ${unowned.length} unowned: ${unowned.join(" ")}`);
     for (const [n, ps] of owners) if (ps.length > 1) findings.push(`${tilde(root)}: "${n}" claimed by ${ps.join(", ")}`);
   }
-  // Claude plugins: read each installed plugin's skills from its install path.
-  const cache = process.env.CLAUDE_CODE_PLUGIN_CACHE_DIR || join(HOME, ".claude", "plugins");
-  const claudeSkills = new Map();
-  for (const [id, installs] of Object.entries(readJson(join(cache, "installed_plugins.json"))?.plugins ?? {})) {
-    const at = installs?.[0]?.installPath;
-    const m = at && readJson(join(at, ".claude-plugin", "plugin.json"));
-    if (!m) continue;
-    const pk = loadPackQuiet(at, m);
-    for (const s of pk) claudeSkills.set(s, [...(claudeSkills.get(s) ?? []), `plugin ${id}`]);
+  const pluginSkills = { claude: new Map(), codex: new Map() };
+  const addPlugin = (harness, id, at, manifest) => {
+    if (!manifest) { findings.push(`${harness} plugin ${id}: installed manifest missing at ${at}`); return; }
+    const names = discoverPluginSkills(at, manifest);
+    for (const n of names) pluginSkills[harness].set(n, [...(pluginSkills[harness].get(n) ?? []), `plugin ${id}`]);
+    const expected = portfolio.packs.find((p) => p.name === manifest.name && p.skills);
+    if (expected) {
+      const missing = expected.skills.map((s) => s.name).filter((n) => !names.includes(n));
+      const extra = names.filter((n) => !expected.skills.some((s) => s.name === n));
+      if (missing.length || extra.length) findings.push(`${harness} plugin ${id}: source mismatch (missing: ${missing.join(", ")}; extra: ${extra.join(", ")})`);
+    }
+    inventory.push({ harness, id, path: at, skills: names });
+  };
+  const claudeCache = process.env.CLAUDE_CODE_PLUGIN_CACHE_DIR || join(HOME, ".claude", "plugins");
+  for (const [id, installs] of Object.entries(readJson(join(claudeCache, "installed_plugins.json"))?.plugins ?? {})) {
+    for (const installed of installs) {
+      const at = installed.installPath;
+      if (at) addPlugin("claude", id, at, readJson(join(at, ".claude-plugin", "plugin.json")));
+      else findings.push(`claude plugin ${id}: installPath missing`);
+    }
+  }
+  if (isFile(join(CODEX_HOME(), "config.toml"))) {
+    const r = spawnSync("codex", ["plugin", "list", "--json"], { encoding: "utf8" });
+    if (r.error || r.status !== 0) findings.push(`codex installed inventory unavailable: ${r.error?.message ?? r.stderr}`);
+    else {
+      const listed = JSON.parse(r.stdout);
+      for (const installed of listed.installed.filter((p) => p.enabled)) {
+        const at = installed.installedPath || join(CODEX_HOME(), "plugins", "cache", installed.marketplaceName, installed.name, installed.version);
+        const portable = readJson(join(at, "plugin.json"));
+        const overlay = portable?.extensions?.["com.openai"];
+        const manifest = overlay ? { ...portable, ...overlay } : readJson(join(at, ".codex-plugin", "plugin.json")) ?? portable;
+        addPlugin("codex", installed.pluginId, at, manifest);
+      }
+    }
   }
   for (const h of harnesses.filter((h) => isDir(h.home))) {
-    const seen = new Map(h.id === "claude" ? claudeSkills : []);
-    const codex = h.id === "codex" && codexPlugin(pack);
-    if (codex) for (const s of pack.skills) seen.set(s.name, [codex]);
+    const seen = new Map(pluginSkills[h.id] ?? []);
     const rootsRead = uniqReal([...h.reads.map((x) => x.root), ...roots.filter((r) => readersOf(r, [h]).length)].filter(isDir));
     for (const r of rootsRead) for (const n of contents.get(r)?.keys() ?? []) seen.set(n, [...(seen.get(n) ?? []), tilde(r)]);
     const dupes = [...seen].filter(([, src]) => src.length > 1);
     if (dupes.length) findings.push(`${h.id} sees ${dupes.length} skill(s) twice: ${dupes.map(([n, s]) => `${n} (${s.join(" + ")})`).join("; ")}`);
   }
-  if (!findings.length) console.log("audit: clean (every dir owned, no harness sees a skill twice)");
+  if (args.json) {
+    console.log(JSON.stringify({ status: findings.length ? "fail" : "pass", metrics: { plugins: inventory.length, packs: portfolio.packs.length }, inventory, findings, notices, errors: [] }, null, 2));
+    if (args.strict && findings.length) process.exit(1);
+    return;
+  }
+  for (const n of notices) console.log(`note: ${n}`);
+  for (const p of inventory) console.log(`${p.harness} ${p.id}: ${p.skills.length} cached skills at ${p.path}`);
+  if (!findings.length) console.log("audit: clean (every directory owned or explicitly retained, no harness sees a skill twice)");
   else { console.log(`audit: ${findings.length} finding(s)`); for (const f of findings) console.log("  - " + f); }
   if (args.strict && findings.length) process.exit(1);
 }
 
-function loadPackQuiet(dir, manifest) {
-  const dirs = [...new Set(["./skills", ...[].concat(manifest.skills ?? [])].map((p) => resolve(dir, p)))];
+function discoverPluginSkills(dir, manifest) {
   const names = [];
-  for (const d of dirs) {
-    if (isFile(join(d, "SKILL.md"))) names.push(basename(d));
-    else if (isDir(d)) for (const n of readdirSync(d)) if (isFile(join(d, n, "SKILL.md"))) names.push(n);
+  const visited = new Set();
+  const walk = (at) => {
+    if (!isDir(at) || visited.has(real(at))) return;
+    visited.add(real(at));
+    if (isFile(join(at, "SKILL.md"))) { names.push(frontmatterName(join(at, "SKILL.md")) ?? basename(at)); return; }
+    for (const name of readdirSync(at).filter((n) => !n.startsWith("."))) walk(join(at, name));
+  };
+  for (const rel of [].concat(manifest.skills ?? ["./skills"])) {
+    const at = resolve(dir, rel);
+    if (relative(dir, at).startsWith("..") || relative(dir, at).startsWith(sep)) throw new Error(`plugin skill path escapes package: ${rel}`);
+    walk(at);
   }
   return names;
+}
+
+function treeHash(dir) {
+  const entries = [];
+  const walk = (at) => {
+    for (const n of readdirSync(at)) {
+      const p = join(at, n);
+      if (isDir(p)) walk(p);
+      else if (isFile(p)) entries.push(p);
+    }
+  };
+  walk(dir);
+  const hash = createHash("sha256");
+  for (const p of entries.sort()) hash.update(relative(dir, p).split(sep).join("/")).update("\0").update(readFileSync(p)).update("\0");
+  return hash.digest("hex");
+}
+
+function inspectPortfolio(pack, args) {
+  const at = args.portfolio ?? join(pack.dir, "skill-packs.json");
+  const config = readJson(at);
+  if (!config) {
+    if (args.portfolio) throw new Error(`cannot read portfolio ${at}`);
+    return { packs: [pack], findings: [], notices: [] };
+  }
+  const packs = [], findings = [], notices = [], names = new Map();
+  for (const entry of config.packs) {
+    const dir = resolve(dirname(at), entry.path);
+    if (!isDir(dir)) {
+      if (!entry.optional) findings.push(`portfolio ${entry.name}: registered path missing (${dir})`);
+      continue;
+    }
+    const item = entry.skillRoots ? { name: entry.name, dir, skills: entry.skillRoots.flatMap((rel) => discoverPluginSkills(dir, { skills: [rel] }).map((name) => ({ name }))) } : loadPack(dir);
+    item.inventoryOnly = entry.inventoryOnly ?? false;
+    packs.push(item);
+    for (const skill of item.skills) names.set(skill.name, [...(names.get(skill.name) ?? []), { pack: item.name, inventoryOnly: entry.inventoryOnly ?? false }]);
+    if (entry.engine) {
+      const engine = join(dir, entry.engine);
+      if (!isFile(engine) || !readFileSync(engine).equals(readFileSync(fileURLToPath(import.meta.url)))) findings.push(`portfolio ${entry.name}: vendored deployer drift at ${engine}`);
+    }
+  }
+  for (const [name, owners] of names) if (owners.length > 1) {
+    const active = owners.filter((p) => !p.inventoryOnly);
+    (active.length > 1 ? findings : notices).push(`cross-pack ${active.length > 1 ? "collision" : "overlap (inventory-only)"}: ${name} (${owners.map((p) => p.pack).join(", ")})`);
+  }
+  return { packs, findings, notices, legacy: config.legacyInventory && readJson(resolve(dirname(at), config.legacyInventory)) };
 }
 
 // --- Main --------------------------------------------------------------------------------
 function parseArgs(argv) {
   const args = { cmd: "install", sub: null, dryRun: false, force: false, link: false, allowDual: false,
-    noAgy: false, strict: false, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
+    noAgy: false, strict: false, json: false, portfolio: null, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -475,6 +566,8 @@ function parseArgs(argv) {
     else if (a === "--allow-dual") args.allowDual = true;
     else if (a === "--no-agy") args.noAgy = true;
     else if (a === "--strict") args.strict = true;
+    else if (a === "--json") args.json = true;
+    else if (a === "--portfolio") args.portfolio = resolve(rest[++i]);
     else if (a === "--project") args.roots.push(resolve(process.cwd(), ".agents", "skills"));
     else if (a === "--root") args.roots.push(resolve(rest[++i]));
     else if (a === "--pack") args.pack = resolve(rest[++i]);
@@ -492,4 +585,11 @@ else if (args.cmd === "uninstall") doUninstall(pack, args);
 else if (args.cmd === "check") doCheck(pack);
 else if (args.cmd === "audit") doAudit(pack, args);
 else if (args.cmd === "agy") agyDeploy(pack, { ...args, cmd: args.sub ?? "build" });
-else doInstall(pack, args);
+else if (args.portfolio) {
+  const portfolio = inspectPortfolio(pack, args);
+  if (portfolio.findings.length) {
+    console.error(JSON.stringify({ status: "fail", metrics: { packs: portfolio.packs.length }, errors: portfolio.findings }));
+    process.exit(1);
+  }
+  for (const item of portfolio.packs.filter((p) => !p.inventoryOnly)) doInstall(item, { ...args, portfolio: null });
+} else doInstall(pack, args);
