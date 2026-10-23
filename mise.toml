@@ -41,7 +41,7 @@ cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 """
 
 [tasks.deploy]
-description = "Deploy tkt skills and steering to agent harnesses"
+description = "Deploy tkt skills to agent harness scan roots and refresh the Antigravity (agy) plugin"
 run = "tools/deploy-skills.sh"
 
 [tasks."deploy:dry-run"]

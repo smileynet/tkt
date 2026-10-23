@@ -36,16 +36,21 @@ GitHub Actions runs this same gate automatically for every push and pull request
 That automated check complements, but does not replace, the required local check before
 each commit.
 
-### Session workflow (commit + push cadence)
+### Session workflow (commit + push + deploy cadence)
 
 - **Always commit after completing a task** — each logical unit of work ends in a commit
   with a `type(scope): what changed` message. Don't leave finished work uncommitted.
 - **Always push after committing** (a remote exists). Before pushing, `git fetch` and
   verify no upstream divergence; fast-forward or rebase cleanly, otherwise report the
   upstream state before proceeding.
+- **Deploy by default.** Prefer to deploy changes (`cargo install --path .` when Rust code
+  changed; `bash tools/deploy-skills.sh` when `skills/`, `plugin.json`, or `tools/deploy-skills.sh`
+  changed, which refreshes both the harness scan roots and the Antigravity `agy` plugin) as
+  part of finishing the work, unless the user says otherwise.
 - For code changes, the verification gate above must pass before the commit. For
   docs/tickets/tooling-only changes, the gate's build/test step doesn't apply, but still
-  commit + push on completion.
+  commit + push (and run `bash tools/deploy-skills.sh` if skills or plugin files changed) on
+  completion.
 
 ### Deploy (run after pulling or making changes)
 
