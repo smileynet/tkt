@@ -1,43 +1,18 @@
 # mise task definitions for tkt
 # Run with: mise run <task>
 
-[tools]
-"cargo:cargo-release" = "latest"
-"cargo:git-cliff" = "latest"
-
 [tasks.release]
-description = "Cut a release (dry-run by default, pass --execute to ship)"
-run = """
-#!/usr/bin/env bash
-set -euo pipefail
+description = "Prepare or verify a local release candidate (read-only by default)"
+run = "bash tools/release.sh"
 
-echo "=== Pre-release gates ==="
-cargo fmt --check || { echo "❌ fmt check failed"; exit 1; }
-cargo clippy --all-targets -- -D warnings || { echo "❌ clippy failed"; exit 1; }
-cargo test || { echo "❌ tests failed"; exit 1; }
-echo "✓ All gates passed"
-echo ""
-
-echo "=== Running cargo release ==="
-cargo release "${@:-patch}"
-"""
-
-[tasks."release:patch"]
-description = "Release a patch version (dry-run)"
-run = "mise run release -- patch"
-
-[tasks."release:minor"]
-description = "Release a minor version (dry-run)"
-run = "mise run release -- minor"
-
-[tasks."release:major"]
-description = "Release a major version (dry-run)"
-run = "mise run release -- major"
+[tasks."release:tools"]
+description = "Verify vendored release tools and entry points"
+run = "node --test tools/release-tools.test.mjs"
 
 [tasks.check]
-description = "Run the full verification gate (fmt + clippy + test)"
+description = "Run release-tool, fmt, clippy and Rust test gates"
 run = """
-cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+node --test tools/release-tools.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 """
 
 [tasks.deploy]

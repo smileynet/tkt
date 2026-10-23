@@ -14,6 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Install maintainer Node runtime
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Install locked maintainer dependencies
+        run: npm ci --ignore-scripts
+
       - name: Install mise
         uses: jdx/mise-action@v5
 

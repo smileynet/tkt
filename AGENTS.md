@@ -25,10 +25,13 @@ cargo fmt                      # format (must produce no diff)
 ### Verification gate (run before every commit)
 
 ```bash
-mise run check   # canonical, PATH-order-independent
+mise run check   # release-tool fixtures + Rust gate, PATH-order-independent
 # equivalent raw form:
-cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+node --test tools/release-tools.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 ```
+
+Maintainer verification needs Node 22+ and `npm ci --ignore-scripts`; these pinned
+Node packages support release tooling, not the installed Rust CLI.
 
 Use `--check` (not bare `cargo fmt`) — bare `cargo fmt` mutates in place and exits 0 regardless, so it cannot gate a diff or reveal a broken formatter.
 
@@ -90,7 +93,7 @@ the CLI surface the skills describe:
 - **Existing cached Claude installs need a version bump.** New installs from a
   main-backed marketplace can receive current main; version fields do not snapshot
   source. Stable/pinned delivery follows the [release contract](docs/releasing.md).
-  cargo-release bumps all plugin manifests (`pre-release-replacements` in `release.toml`).
+  Local preparation updates Cargo/lock and all plugin manifests from one approved version.
   `tests/plugin_manifests.rs` fails the gate if any drift from `Cargo.toml`. Never
   hand-edit `version` outside a release.
 - **Refresh this machine's install** as part of Deploy. Use a marketplace added from the

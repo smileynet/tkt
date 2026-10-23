@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "dependencies": {
+    "smol-toml": "1.9.1",
+    "tar": "7.5.22",
+    "yaml": "2.9.1"
+  },
+  "owner": "smileynet/grey-matter-release-tools",
+  "source": "https://github.com/smileynet/grey-matter",
+  "sourceTree": "per-file SHA-256 values identify the canonical source bytes",
+  "files": {
+    "tools/release.mjs": "1d7b94c2ace3c1d40a3c136ae16f253463a627ea7b23229342942b80f21431a9",
+    "tools/release-artifacts.mjs": "df22e1f9cf17065abb7da60449ff3c14a2a7f2af51372733369d0bda450a984d",
+    "tools/release-version.mjs": "c00161120615abb0e848161854493046b1f94a48d8355e9232ffcebc2e140c5f",
+    "tools/release-git.mjs": "c4ac780f207e2025ff6a6409c874af5ee8858ea9c70daabaea745209c890b548",
+    "tools/release-product.mjs": "1aad5d1c6203ed962bf404681ae119e9871b0a7c25c9b3697788b397b22922b5",
+    "tools/release-native.mjs": "82369f435a8894526a1f4385b59863f8e360f536713e6e6629e9a97d8465a973",
+    "tools/check-skill-syntax.mjs": "91b85fe5781e08d44915c45eb95f2deaf9ed96f5f36ee73088218f68f70e1a84",
+    "tools/probe-claude-validation.mjs": "eb91b5cce1610f6c8c4da1c40c7e0c8a8b3222cf093f408583114bbc7f5fafcb",
+    "tools/LICENSE-grey-matter.txt": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
+  }
+}

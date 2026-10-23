@@ -1,6 +1,7 @@
 tkt
 
-The vendored tools/deploy.mjs comes from smileynet/grey-matter under MIT.
+The vendored tools/deploy.mjs and the files listed in tools/release-vendor.json
+come from smileynet/grey-matter under MIT.
 The upstream distribution's MIT license and retained copyright notice are
 included in tools/LICENSE-grey-matter.txt. This provenance does not assign
-individual authorship of the deployer. tkt's own license remains in LICENSE.
+individual authorship of these tools. tkt's own license remains in LICENSE.
