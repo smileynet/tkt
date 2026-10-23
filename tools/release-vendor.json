@@ -9,7 +9,7 @@
   "source": "https://github.com/smileynet/grey-matter",
   "sourceTree": "per-file SHA-256 values identify the canonical source bytes",
   "files": {
-    "tools/release.mjs": "81fc55e6d7664979507b8c61cce0a1e332214e4b44ab509b182b7646a894bb66",
+    "tools/release.mjs": "bd3a1c5369867559e29e3c9463218d6020dbc398a6479b677203b63baf5317e3",
     "tools/release-artifacts.mjs": "df22e1f9cf17065abb7da60449ff3c14a2a7f2af51372733369d0bda450a984d",
     "tools/release-version.mjs": "c00161120615abb0e848161854493046b1f94a48d8355e9232ffcebc2e140c5f",
     "tools/release-git.mjs": "c4ac780f207e2025ff6a6409c874af5ee8858ea9c70daabaea745209c890b548",
