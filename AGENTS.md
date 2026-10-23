@@ -89,6 +89,12 @@ the CLI surface the skills describe:
   place, so run `/reload-plugins` or start a new session to pick up edits. For a GitHub
   install, run `claude plugin marketplace update tkt`, then `claude plugin update tkt@tkt`
   (this only changes anything after a release).
+- **One install path per harness (guarded).** A skill must never load twice in one harness.
+  With the plugin installed, `tools/deploy-skills.sh` skips every root Claude Code reads (any
+  `.claude/skills`, and a project `.agents/skills`). It also removes copies it put there
+  earlier and never touches foreign dirs. `--allow-dual` overrides this; don't use it in a
+  normal deploy. Any new deploy path, or a new harness root that Claude Code reads, must keep
+  this guard (`tests/deploy_skills.rs` covers it).
 - **Check a manifest or skill change** with `claude plugin validate .claude-plugin/plugin.json --strict`
   and `claude --plugin-dir . plugin details tkt` (lists the skills, no model call).
 

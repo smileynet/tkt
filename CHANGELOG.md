@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- tkt is installable as a Claude Code plugin: `/plugin marketplace add smileynet/tkt`, then
+  `/plugin install tkt@tkt`
+
+### Changed
+
+- `tools/deploy-skills.sh` won't copy skills where Claude Code already loads them from the tkt
+  plugin, and it removes copies it put there before, so a skill is never listed twice
+  (`--allow-dual` overrides)
+
 ## [0.4.0] - 2026-10-19
 
 ### Added

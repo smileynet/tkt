@@ -10,7 +10,7 @@ set -euo pipefail
 # wrapper around these; this script is the tkt-repo-local deploy path.
 #
 # Usage:
-#   tools/deploy-skills.sh [--dry-run] [--force] [--root DIR]...
+#   tools/deploy-skills.sh [--dry-run] [--force] [--allow-dual] [--root DIR]...
 #   tools/deploy-skills.sh list
 #   tools/deploy-skills.sh uninstall [--dry-run] [--root DIR]...
 #
@@ -19,6 +19,14 @@ set -euo pipefail
 #   --force     overwrite a same-name dir in a root that this installer did not
 #               install (default: refuse)
 #   --root DIR  install into DIR instead of the default roots (repeatable)
+#   --allow-dual  copy into a root Claude Code reads even though the tkt Claude
+#               plugin is installed (each skill then lists twice)
+#
+# Dual-deploy guard: when Claude Code has the tkt plugin installed
+# (installed_plugins.json under $CLAUDE_CODE_PLUGIN_CACHE_DIR or ~/.claude/plugins),
+# every root Claude Code reads (any .claude/skills, and a project .agents/skills) is
+# skipped, and copies this installer put there before are removed, so a skill never
+# loads twice (tkt-core and tkt:tkt-core). Other harness roots are unaffected.
 #
 # Default roots: every known harness skills root whose parent exists, since each
 # harness scans its own root (kiro ~/.kiro/skills, codex ~/.codex/skills, Claude
@@ -36,6 +44,7 @@ PLUGIN_NAME="tkt"
 CMD="install"
 DRY_RUN=false
 FORCE=false
+ALLOW_DUAL=false
 EXPLICIT_ROOTS=false
 ROOTS=()
 
@@ -44,6 +53,7 @@ while [[ $# -gt 0 ]]; do
     install|list|uninstall) CMD="$1" ;;
     --dry-run) DRY_RUN=true ;;
     --force) FORCE=true ;;
+    --allow-dual) ALLOW_DUAL=true ;;
     --root) shift; ROOTS+=("$1"); EXPLICIT_ROOTS=true ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -57,6 +67,38 @@ if [[ ${#ROOTS[@]} -eq 0 ]]; then
   done
   [[ ${#ROOTS[@]} -eq 0 ]] && ROOTS=("$HOME/.agents/skills")
 fi
+
+# --- Dual-deploy guard (Claude Code plugin) ---
+# Echoes the installed tkt Claude plugin id (e.g. tkt@tkt), or nothing.
+claude_plugin_installed() {
+  local f="${CLAUDE_CODE_PLUGIN_CACHE_DIR:-$HOME/.claude/plugins}/installed_plugins.json"
+  [[ -f "$f" ]] || return 0
+  # `|| true`: no match is the normal case, not an error under `set -euo pipefail`.
+  { grep -oE "\"$PLUGIN_NAME@[^\"]+\"" "$f" || true; } | head -1 | tr -d '"'
+}
+
+# True for roots Claude Code scans: any <x>/.claude/skills, and a project-level
+# <proj>/.agents/skills (not the user-level ~/.agents/skills, which it doesn't read).
+claude_reads() {
+  local root="${1%/}" parent
+  parent="$(basename "$(dirname "$root")")"
+  [[ "$(basename "$root")" == "skills" ]] || return 1
+  [[ "$parent" == ".claude" ]] && return 0
+  [[ "$parent" == ".agents" && "$root" != "$HOME/.agents/skills" ]]
+}
+
+# Claude Code already loads these skills from the plugin: leave the root alone and
+# take back copies we put there earlier (manifest-tracked only, never foreign).
+skip_for_plugin() {
+  local root="$1" plugin="$2"
+  echo ""
+  echo "root: $root  (skipped: Claude plugin $plugin is installed; --allow-dual to copy anyway)"
+  for prev in $(read_manifest "$root"); do
+    echo "  remove  $prev (duplicate of the plugin)"
+    $DRY_RUN || rm -rf "${root:?}/$prev"
+  done
+  $DRY_RUN || rm -f "$root/$MANIFEST_NAME"
+}
 
 # --- Discover skills: every skills/<name>/ with a SKILL.md (flat layout) ---
 discover() {
@@ -130,7 +172,13 @@ do_install() {
   if ! lint; then echo "install aborted: lint failed" >&2; exit 1; fi
 
   local refused_total=0
+  local plugin=""
+  $ALLOW_DUAL || plugin="$(claude_plugin_installed)"
   for root in "${ROOTS[@]}"; do
+    if [[ -n "$plugin" ]] && claude_reads "$root"; then
+      skip_for_plugin "$root" "$plugin"
+      continue
+    fi
     echo ""
     echo "root: $root  ($($DRY_RUN && echo dry-run || echo copy))"
     $DRY_RUN || mkdir -p "$root"
