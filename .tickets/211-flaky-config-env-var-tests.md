@@ -1,7 +1,7 @@
 ---
 id: "211"
 title: "config tests race on TKT_NO_USER_CONFIG (set_var/remove_var across parallel tests)"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
