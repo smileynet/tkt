@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.3.2 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.4.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -36,7 +36,8 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.3.2";
+const DEPLOY_VERSION = "1.4.0";
+export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const isFile = (p) => { try { return statSync(p).isFile(); } catch { return false; } };
@@ -49,10 +50,10 @@ const uniqReal = (roots) => roots.filter((r, i) => roots.findIndex((q) => real(q
 const tilde = (p) => (p.startsWith(HOME + sep) ? "~" + p.slice(HOME.length) : p);
 
 // --- The pack ----------------------------------------------------------------------------
-function loadPack(dir) {
+export function loadPack(dir) {
   const manifestPath = join(dir, ".claude-plugin", "plugin.json");
   const manifest = readJson(manifestPath);
-  if (!manifest?.name) { console.error(`no pack manifest (name) at ${manifestPath}`); process.exit(1); }
+  if (!manifest?.name) throw new PackError(`no pack manifest (name) at ${manifestPath}`);
   const listed = [].concat(manifest.skills ?? []);
   const dirs = [...new Set(["./skills", ...listed].map((p) => resolve(dir, p)))];
   const skills = [];
@@ -83,7 +84,7 @@ function legalFiles(pack) {
   return files;
 }
 
-function lint(pack) {
+export function lint(pack) {
   const errors = [];
   for (const file of legalFiles(pack)) {
     const path = resolve(pack.dir, file);
@@ -340,14 +341,14 @@ function markdownResources(text, visit) {
   });
 }
 
-function agyResources(pack) {
+export function agyResources(pack) {
   const files = new Set();
   const directories = new Set();
   const include = (at) => {
     const rel = relative(pack.dir, at);
-    if (rel === ".." || rel.startsWith(".." + sep)) throw new Error(`package resource escapes pack: ${at}`);
-    if (!exists(at)) throw new Error(`package resource missing: ${rel}`);
-    if (!real(at).startsWith(real(pack.dir) + sep)) throw new Error(`package resource escapes pack: ${at}`);
+    if (rel === ".." || rel.startsWith(".." + sep)) throw new PackError(`package resource escapes pack: ${at}`);
+    if (!exists(at)) throw new PackError(`package resource missing: ${rel}`);
+    if (!real(at).startsWith(real(pack.dir) + sep)) throw new PackError(`package resource escapes pack: ${at}`);
     if (isDir(at)) {
       if (directories.has(real(at))) return;
       directories.add(real(at));
@@ -355,13 +356,13 @@ function agyResources(pack) {
       return;
     }
     if (files.has(at)) return;
-    if (!isFile(at)) throw new Error(`package resource missing: ${rel}`);
+    if (!isFile(at)) throw new PackError(`package resource missing: ${rel}`);
     files.add(at);
     if (!at.endsWith(".md")) return;
     markdownResources(readFileSync(at, "utf8"), (target) => { include(resolve(dirname(at), target)); });
   };
   for (const skill of pack.skills) include(skill.src);
-  for (const file of legalFiles(pack)) include(resolve(pack.dir, file));
+  for (const file of [...legalFiles(pack), ...(pack.deploy.runtimeFiles ?? [])]) include(resolve(pack.dir, file));
   return [...files].sort();
 }
 
@@ -405,7 +406,7 @@ function agyDeploy(pack, args) {
 }
 
 // Manifests agree with disk, with each other, and with the latest release tag.
-function doCheck(pack) {
+function doCheck(pack, args) {
   const problems = [...lint(pack), ...inspectPortfolio(pack, args).findings];
   // Coverage: every SKILL.md under skills/ (up to two levels) is one the manifest loads.
   const loaded = new Set(pack.skills.map((s) => resolve(s.src)));
@@ -640,18 +641,20 @@ function parseArgs(argv) {
   return args;
 }
 
-const args = parseArgs(process.argv);
-const pack = loadPack(args.pack);
-if (args.cmd === "list") doList(pack, args);
-else if (args.cmd === "uninstall") doUninstall(pack, args);
-else if (args.cmd === "check") doCheck(pack);
-else if (args.cmd === "audit") doAudit(pack, args);
-else if (args.cmd === "agy") agyDeploy(pack, { ...args, cmd: args.sub ?? "build" });
-else if (args.portfolio) {
-  const portfolio = inspectPortfolio(pack, args);
-  if (portfolio.findings.length) {
-    console.error(JSON.stringify({ status: "fail", metrics: { packs: portfolio.packs.length }, errors: portfolio.findings }));
-    process.exit(1);
-  }
-  for (const item of portfolio.packs.filter((p) => !p.inventoryOnly)) doInstall(item, { ...args, portfolio: null });
-} else doInstall(pack, args);
+if (process.argv[1] && real(fileURLToPath(import.meta.url)) === real(process.argv[1])) {
+  const args = parseArgs(process.argv);
+  const pack = loadPack(args.pack);
+  if (args.cmd === "list") doList(pack, args);
+  else if (args.cmd === "uninstall") doUninstall(pack, args);
+  else if (args.cmd === "check") doCheck(pack, args);
+  else if (args.cmd === "audit") doAudit(pack, args);
+  else if (args.cmd === "agy") agyDeploy(pack, { ...args, cmd: args.sub ?? "build" });
+  else if (args.portfolio) {
+    const portfolio = inspectPortfolio(pack, args);
+    if (portfolio.findings.length) {
+      console.error(JSON.stringify({ status: "fail", metrics: { packs: portfolio.packs.length }, errors: portfolio.findings }));
+      process.exit(1);
+    }
+    for (const item of portfolio.packs.filter((p) => !p.inventoryOnly)) doInstall(item, { ...args, portfolio: null });
+  } else doInstall(pack, args);
+}
