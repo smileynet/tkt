@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { ReleaseError } from "./release-version.mjs";
 
 export function gitEnvironment(extra = {}) {
-  const env = { ...process.env, GIT_OPTIONAL_LOCKS: "0", ...extra };
+  const env = { ...process.env, GIT_OPTIONAL_LOCKS: "0", ...extra, GIT_NO_REPLACE_OBJECTS: "1" };
   for (const key of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"]) delete env[key];
   return env;
 }

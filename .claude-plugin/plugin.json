@@ -50,7 +50,8 @@
         "package-lock.json",
         "tools/release-verify.mjs",
         "tools/release-publish.mjs",
-        "tools/release-github.mjs"
+        "tools/release-github.mjs",
+        "tools/release-staging.mjs"
       ]
     }
   }
