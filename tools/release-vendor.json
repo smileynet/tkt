@@ -16,6 +16,7 @@
     "tools/release-product.mjs": "3a06a50e34eb3f5cf647c9b08dd725c705e4883b3bafb222bb01865daff2478a",
     "tools/release-native.mjs": "7f20a08ff225852a16e21d772425d4a5debeba51fa010ce9a6121c203b5725e4",
     "tools/release-verify.mjs": "d6cff2891c590dd1b8a81a1c653375d1f0846f3e21f621bb94689676e18af3ef",
+    "tools/release-publish.mjs": "784fad3d9d7f9635da32c013eca7021287e0e44aa54c9dd98e60e9b1b3b018e8",
     "tools/check-skill-syntax.mjs": "91b85fe5781e08d44915c45eb95f2deaf9ed96f5f36ee73088218f68f70e1a84",
     "tools/probe-claude-validation.mjs": "eb91b5cce1610f6c8c4da1c40c7e0c8a8b3222cf093f408583114bbc7f5fafcb",
     "tools/LICENSE-grey-matter.txt": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
