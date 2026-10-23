@@ -1,5 +1,6 @@
 // Reconcile one assigned GitHub publisher through a supplied API adapter.
-// Library only: no CLI, credentials, process execution or live adapter is provided.
+// Library only: API reconciliation and explicit Git promotion; no publication CLI.
+import { pushStableRef } from "./release-git.mjs";
 import { createHash } from "node:crypto";
 import { stableVersion, ReleaseError } from "./release-version.mjs";
 
@@ -80,4 +81,16 @@ export async function reconcileGithubRelease({ candidate, api, publisher, execut
     await apply("publish draft", () => api.publish(repo, releaseId), (state) => state.phase === "published");
   }
   return result();
+}
+
+// Re-observe immutable bytes before and after promoting the release-only channel.
+export async function promotePublishedStable({ repo, remote = "origin", candidate, api, publisher, execute = false }) {
+  if (typeof execute !== "boolean") throw new ReleaseError("stable execution mode must be boolean");
+  const published = await reconcileGithubRelease({ candidate, api, publisher });
+  if (published.phase !== "published" || !published.immutable) throw new ReleaseError("stable requires the complete immutable published release");
+  const bound = { ...candidate, releaseId: published.releaseId };
+  const stable = pushStableRef({ repo, remote, candidateSha: bound.candidateSha, execute });
+  const checked = await reconcileGithubRelease({ candidate: bound, api, publisher });
+  if (checked.phase !== "published" || !checked.immutable) throw new ReleaseError("publication changed during stable promotion; inspect without rolling refs back");
+  return { ...stable, releaseId: checked.releaseId, url: checked.url, publication: "verified" };
 }

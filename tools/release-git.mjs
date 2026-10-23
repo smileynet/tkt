@@ -28,10 +28,7 @@ export function pushCandidateRefs({ repo, remote = "origin", branch, tag, candid
     if (typeof ref !== "string" || !ref || ref.startsWith("-") || command(repo, ["check-ref-format", ref]).status !== 0) throw new ReleaseError("invalid full release ref");
   }
   if (!branch.startsWith("refs/heads/") || branch === "refs/heads/stable" || !tag.startsWith("refs/tags/")) throw new ReleaseError("candidate push requires a branch other than stable and a tag");
-  if (typeof remote !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(remote)) throw new ReleaseError("invalid remote name");
-  const urls = git(repo, ["remote", "get-url", "--push", "--all", remote]).trim().split("\n");
-  if (urls.length !== 1 || !urls[0] || urls[0].startsWith("-")) throw new ReleaseError("candidate push requires exactly one push URL");
-  const url = urls[0];
+  const url = pushUrl(repo, remote);
   if (git(repo, ["cat-file", "-t", candidateSha]).trim() !== "commit" || git(repo, ["cat-file", "-t", tagObject]).trim() !== "tag" || git(repo, ["rev-parse", `${tagObject}^{commit}`]).trim() !== candidateSha) throw new ReleaseError("annotated tag does not resolve to candidate commit");
   const header = git(repo, ["cat-file", "-p", tagObject]).split("\n\n", 1)[0].split("\n");
   if (!header.includes(`object ${candidateSha}`) || !header.includes("type commit") || !header.includes(`tag ${tag.slice("refs/tags/".length)}`)) throw new ReleaseError("annotated tag header differs from release identity");
@@ -54,4 +51,37 @@ export function pushCandidateRefs({ repo, remote = "origin", branch, tag, candid
     if (!matches()) throw new ReleaseError(`atomic candidate push was not observed (exit ${push.status}); inspect and resume the same identity; no sequential fallback`);
   }
   return { status: "pass", mode: execute ? "candidate-push" : "dry-run", complete: matches(), refs: observed };
+}
+
+function pushUrl(repo, remote) {
+  if (typeof remote !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(remote)) throw new ReleaseError("invalid remote name");
+  const urls = git(repo, ["remote", "get-url", "--push", "--all", remote]).trim().split("\n");
+  if (urls.length !== 1 || !urls[0] || urls[0].startsWith("-")) throw new ReleaseError("candidate push requires exactly one push URL");
+  return urls[0];
+}
+
+// This transport primitive must be called only after publication gates are checked.
+export function pushStableRef({ repo, remote = "origin", candidateSha, execute = false }) {
+  if (typeof execute !== "boolean" || !/^[a-f0-9]{40}$/.test(candidateSha) || git(repo, ["cat-file", "-t", candidateSha]).trim() !== "commit") throw new ReleaseError("invalid stable identity or execution mode");
+  const url = pushUrl(repo, remote), ref = "refs/heads/stable";
+  function inspect() {
+    const lines = git(repo, ["ls-remote", "--refs", url, ref]).trim().split("\n").filter(Boolean);
+    if (lines.length > 1) throw new ReleaseError("duplicate stable ref response");
+    if (!lines.length) return null;
+    const [sha, name, extra] = lines[0].split(/\s+/);
+    if (extra || name !== ref || !/^[a-f0-9]{40}$/.test(sha)) throw new ReleaseError("invalid stable ref response");
+    if (sha !== candidateSha && command(repo, ["merge-base", "--is-ancestor", sha, candidateSha]).status !== 0) throw new ReleaseError("stable is divergent or ancestry is unavailable; refusing to force");
+    return sha;
+  }
+  let observed = inspect();
+  if (execute && observed !== candidateSha) {
+    let failure;
+    try {
+      const pushed = command(repo, ["push", "--atomic", "--no-follow-tags", "--recurse-submodules=no", url, `${candidateSha}:${ref}`]);
+      if (pushed.status !== 0) failure = `exit ${pushed.status}`;
+    } catch (error) { failure = error.message; }
+    observed = inspect();
+    if (observed !== candidateSha) throw new ReleaseError(`stable promotion was not observed${failure ? ` (${failure})` : ""}; resume promotion without publishing again`);
+  }
+  return { status: "pass", mode: execute ? "stable-promotion" : "dry-run", complete: observed === candidateSha, sha: observed };
 }
