@@ -59,7 +59,8 @@ distributed skill is `tkt-`-prefixed for ownership clarity) to every agent harne
 following grey-matter conventions:
 copy (not symlink), manifest-tracked (`.installed-by-tkt.json`), name==dir + global-unique
 lint, and it only ever touches skills it installed (`--force` to replace a foreign dir,
-`--dry-run`/`list`/`uninstall` for the rest). tkt owns these skills so they track tool
+`--dry-run`/`list`/`uninstall` for the rest), and packages + installs the global Antigravity
+(`agy`) plugin (`plugin.json` + `skills/`) into `~/.gemini/config/plugins/tkt/`. tkt owns these skills so they track tool
 features/behavior as they change; grey-matter wraps them from its own set. Skill
 frontmatter stays grey-matter safe-core (`name` + `description`; `compatibility` is
 allowed-but-inert) — no `triggers:`/`tools:` top-level keys.

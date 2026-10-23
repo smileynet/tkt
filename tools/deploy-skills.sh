@@ -22,16 +22,21 @@ set -euo pipefail
 #
 # Default roots: every known harness skills root whose parent exists, since each
 # harness scans its own root (kiro ~/.kiro/skills, codex ~/.codex/skills, Claude
-# ~/.claude/skills, plus the cross-client ~/.agents/skills).
+# ~/.claude/skills, plus the cross-client ~/.agents/skills). On default install
+# (no explicit --root), also packages and installs the Antigravity (agy) plugin
+# into ~/.gemini/config/plugins/tkt/ (via `agy plugin validate/install` if agy
+# is on PATH, or direct copy if ~/.gemini/config/plugins exists).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_DIR="$REPO_ROOT/skills"
 MANIFEST_NAME=".installed-by-tkt.json"
+PLUGIN_NAME="tkt"
 
 CMD="install"
 DRY_RUN=false
 FORCE=false
+EXPLICIT_ROOTS=false
 ROOTS=()
 
 while [[ $# -gt 0 ]]; do
@@ -39,7 +44,7 @@ while [[ $# -gt 0 ]]; do
     install|list|uninstall) CMD="$1" ;;
     --dry-run) DRY_RUN=true ;;
     --force) FORCE=true ;;
-    --root) shift; ROOTS+=("$1") ;;
+    --root) shift; ROOTS+=("$1"); EXPLICIT_ROOTS=true ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -160,15 +165,56 @@ do_install() {
     write_manifest "$root" "${SKILL_NAMES[@]}"
   done
 
-  # --- Steering ---
-  # tkt ships no steering files: steering is kiro-only (not cross-compatible with
-  # codex/claude/other harnesses), so all agent guidance lives in skills/ instead.
-  # The former frontier-work.md steering is now the tkt-work skill.
+  # --- Antigravity (agy) plugin ---
+  # On agy, global skill discovery is plugin-driven (~/.gemini/config/plugins/<name>/).
+  # Package plugin.json + skills/ and install when running with default roots.
+  if ! $EXPLICIT_ROOTS; then
+    deploy_agy_plugin
+  fi
 
   echo ""
   echo "$($DRY_RUN && echo '(dry-run) would install' || echo installed) ${#SKILL_NAMES[@]} skills into ${#ROOTS[@]} root(s)."
   [[ $refused_total -gt 0 ]] && echo "$refused_total refused (foreign dirs); re-run with --force to overwrite."
   return 0
+}
+
+deploy_agy_plugin() {
+  local plugins_root="$HOME/.gemini/config/plugins"
+  local plugin_dest="$plugins_root/$PLUGIN_NAME"
+  local has_agy=false
+  command -v agy >/dev/null 2>&1 && has_agy=true
+
+  if ! $has_agy && [[ ! -d "$plugins_root" ]]; then
+    return 0
+  fi
+
+  echo ""
+  echo "agy plugin: $plugin_dest  ($($DRY_RUN && echo dry-run || echo plugin))"
+  if $DRY_RUN; then
+    echo "  would package $REPO_ROOT/plugin.json + ${#SKILL_NAMES[@]} skills -> $plugin_dest"
+    return 0
+  fi
+
+  local stage_dir
+  stage_dir="$(mktemp -d "${TMPDIR:-/tmp}/tkt-agy-plugin.XXXXXX")"
+  mkdir -p "$stage_dir/skills"
+  cp "$REPO_ROOT/plugin.json" "$stage_dir/plugin.json"
+  for name in "${SKILL_NAMES[@]}"; do
+    cp -R "$SKILLS_DIR/$name" "$stage_dir/skills/$name"
+  done
+
+  if $has_agy; then
+    echo "  validating: agy plugin validate --strict"
+    agy plugin validate "$stage_dir" --strict >/dev/null
+    echo "  installing: agy plugin install"
+    agy plugin install "$stage_dir"
+  else
+    mkdir -p "$plugins_root"
+    rm -rf "$plugin_dest"
+    cp -R "$stage_dir" "$plugin_dest"
+    echo "  copied plugin bundle (${#SKILL_NAMES[@]} skills) -> $plugin_dest"
+  fi
+  rm -rf "$stage_dir"
 }
 
 do_list() {
@@ -179,6 +225,13 @@ do_list() {
     if [[ -z "${names// }" ]]; then echo "  (nothing installed by tkt)"; continue; fi
     for n in $names; do echo "  $n"; done
   done
+  if ! $EXPLICIT_ROOTS && [[ -d "$HOME/.gemini/config/plugins/$PLUGIN_NAME" ]]; then
+    echo ""
+    echo "agy plugin: $HOME/.gemini/config/plugins/$PLUGIN_NAME"
+    for d in "$HOME/.gemini/config/plugins/$PLUGIN_NAME/skills"/*/; do
+      [[ -f "${d}SKILL.md" ]] && echo "  $(basename "$d")"
+    done
+  fi
 }
 
 do_uninstall() {
@@ -193,6 +246,12 @@ do_uninstall() {
     done
     $DRY_RUN || rm -f "$root/$MANIFEST_NAME"
   done
+  if ! $EXPLICIT_ROOTS && [[ -d "$HOME/.gemini/config/plugins/$PLUGIN_NAME" ]]; then
+    echo ""
+    echo "agy plugin: $HOME/.gemini/config/plugins/$PLUGIN_NAME  ($($DRY_RUN && echo dry-run || echo uninstall))"
+    echo "  remove  $PLUGIN_NAME"
+    $DRY_RUN || rm -rf "$HOME/.gemini/config/plugins/$PLUGIN_NAME"
+  fi
 }
 
 case "$CMD" in

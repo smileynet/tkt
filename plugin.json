@@ -1,10 +1,10 @@
 {
-  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "tkt",
+  "displayName": "tkt",
   "version": "0.4.0",
-  "description": "Track tasks as markdown files in your git repo",
+  "description": "Git-native ticket tracker and workflow skills (tkt-core, tkt-orient, tkt-work, tkt-reconcile): track tasks as markdown files in .tickets/ and work the dependency-graph frontier.",
   "author": {"name": "smileynet"},
   "repository": "https://github.com/smileynet/tkt",
   "license": "MIT",
-  "keywords": ["tickets", "task-management", "dependencies", "frontier"]
+  "keywords": ["tickets", "task-management", "dependencies", "frontier", "tkt"]
 }
