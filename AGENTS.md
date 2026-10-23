@@ -44,18 +44,19 @@ each commit.
   verify no upstream divergence; fast-forward or rebase cleanly, otherwise report the
   upstream state before proceeding.
 - **Deploy by default.** Prefer to deploy changes (`cargo install --path .` when Rust code
-  changed; `bash tools/deploy-skills.sh` when `skills/`, `plugin.json`, or `tools/deploy-skills.sh`
+  changed; `node tools/deploy.mjs` when skills, guidance, plugin manifests or deployment tooling
   changed, which refreshes both the harness scan roots and the Antigravity `agy` plugin) as
   part of finishing the work, unless the user says otherwise.
 - For code changes, the verification gate above must pass before the commit. For
   docs/tickets/tooling-only changes, the gate's build/test step doesn't apply, but still
-  commit + push (and run `bash tools/deploy-skills.sh` if skills or plugin files changed) on
+  commit + push (and run `node tools/deploy.mjs` once if skills or guidance changed) on
   completion.
 
 ### Deploy (run after pulling or making changes)
 
 ```bash
-cargo build --release && cargo install --path . && bash tools/deploy-skills.sh
+cargo install --path .     # when Rust code changed
+node tools/deploy.mjs     # once after skill/guidance/plugin changes
 ```
 
 `node tools/deploy.mjs` deploys skills and refreshes the enabled Codex plugin from this
@@ -71,6 +72,13 @@ plugins. Only manifest-owned copies are pruned. Use `--dry-run`, `list`, `audit`
 Codex must use this checkout as its local marketplace. A plugin refresh failure stops
 deployment before existing skill copies are removed. Start a new chat after refresh.
 
+### Releases
+
+Read [release guidance](docs/releasing.md) before preparing, staging, publishing or
+resuming a release. It links the coordinated contract and current tooling gaps.
+The generated dist workflow is the sole GitHub publisher; local tooling must not
+create a second release. Current work stops at staged candidates.
+
 ### Claude Code plugin (keep it current)
 
 tkt is also a Claude Code plugin: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`,
@@ -79,9 +87,9 @@ with skills from the default `skills/` dir. grey-matter's plugin depends on it a
 the CLI surface the skills describe:
 
 - **New or changed skill under `skills/`:** no manifest edit. The plugin picks it up as is.
-- **Users get changes only on a release.** A GitHub install is pinned to
-  `.claude-plugin/plugin.json`'s `version`. A push to `main` reaches nobody until the version
-  changes, and `claude plugin update` reports "already at the latest version" until then.
+- **Existing cached Claude installs need a version bump.** New installs from a
+  main-backed marketplace can receive current main; version fields do not snapshot
+  source. Stable/pinned delivery follows the [release contract](docs/releasing.md).
   cargo-release bumps all plugin manifests (`pre-release-replacements` in `release.toml`).
   `tests/plugin_manifests.rs` fails the gate if any drift from `Cargo.toml`. Never
   hand-edit `version` outside a release.
@@ -91,7 +99,7 @@ the CLI surface the skills describe:
   install, run `claude plugin marketplace update tkt`, then `claude plugin update tkt@tkt`
   (this only changes anything after a release).
 - **One install path per harness (guarded).** A skill must never load twice in one harness.
-  With the plugin installed, `tools/deploy-skills.sh` skips every root Claude Code reads (any
+  With the plugin installed, `tools/deploy.mjs` skips every root Claude Code reads (any
   `.claude/skills`, and a project `.agents/skills`). It also removes copies it put there
   earlier and never touches foreign dirs. `--allow-dual` overrides this; don't use it in a
   normal deploy. Any new deploy path, or a new harness root that Claude Code reads, must keep
