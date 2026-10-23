@@ -1,0 +1,12 @@
+{
+  "name": "tkt",
+  "description": "tkt: git-native ticket tracking and its agent workflow skills.",
+  "owner": { "name": "smileynet" },
+  "plugins": [
+    {
+      "name": "tkt",
+      "source": "./",
+      "description": "Git-native ticket tracker workflow skills (tkt-core, tkt-orient, tkt-work, tkt-reconcile)."
+    }
+  ]
+}
