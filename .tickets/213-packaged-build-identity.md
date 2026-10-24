@@ -1,7 +1,7 @@
 ---
 id: "213"
 title: "Use packaged VCS metadata instead of an unrelated ancestor Git hash"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
