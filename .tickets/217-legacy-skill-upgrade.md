@@ -1,7 +1,7 @@
 ---
 id: "217"
 title: "Migrate v0.4 bare skill symlinks before plugin upgrades"
-status: open
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -38,6 +38,15 @@ candidate evidence remains reusable.
 
 ## Acceptance criteria
 
-- [ ] Preview leaves all three original links unchanged; execution removes only matching links.
-- [ ] Foreign content, unrelated files and source bytes survive; repeat and dangling-link controls pass.
-- [ ] README upgrade instructions and isolated tests cover all former roots; regenerate the tkt candidate.
+- [x] Preview leaves all three original links unchanged; execution removes only matching links.
+- [x] Foreign content, unrelated files and source bytes survive; repeat and dangling-link controls pass.
+- [x] README upgrade instructions and isolated tests cover all former roots; regenerate the tkt candidate.
+
+## Resolution (2026-10-24)
+
+done: added preview-first, explicit-source migration for v0.4 installer skill symlinks, preserving foreign content and documenting the required upgrade sequence; coordinated candidate/install gates remain tracked by grey-matter 67/69.
+
+### Verification
+1. ✓ A dry-run inventories the v0.4 installer symlinks without mutation and execute removes only links proven to target the explicitly supplied old tkt skill directory. — "node --test tools/release-tools.test.mjs tools/release-ci.test.mjs: 37 passed, including seven isolated migration cases covering preview, all three old roots, exact target matching and no partial cleanup."
+2. ✓ Regular directories, links to other targets, and unrelated user files remain unchanged; second execution is identical and removed/dangling old-source cases are explicit. — "Focused tests prove foreign directories/links, unrelated files and original source bytes survive; second execution removes zero; dangling and relative-link controls pass. Actual v0.4.0 archived installer reproduction now has legacyLoads=false, newCoreLoads=true and sourcePreserved=true after the explicit migration."
+3. ✓ Upgrade guidance and isolated tests cover all three former harness roots and bind candidate regeneration to the documentation/runtime change. — "39d8bdf commits the helper, gate import, README upgrade and release guidance; fresh prose review CLEAN; source smoke builds 3 closed bundles; new approved 0.5.0 candidate prepared from this source in a separate clean worktree. Local deploy ran once; strict portfolio audit passes with 19 plugins, 4 packs and zero findings/errors."
