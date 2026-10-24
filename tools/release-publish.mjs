@@ -21,8 +21,8 @@ function identity(candidate, publisher) {
   return { repository: candidate.repository, tag: `v${candidate.version}`, sha: candidate.candidateSha, title: candidate.title, notes: candidate.notes, assets, tagObject: candidate.tagObject, releaseId: candidate.releaseId ?? null };
 }
 
-export async function reconcileGithubRelease({ candidate, api, publisher, execute = false, progress = () => {}, observe = () => {} }) {
-  if (typeof execute !== "boolean") throw new ReleaseError("publication execution mode must be boolean");
+export async function reconcileGithubRelease({ candidate, api, publisher, execute = false, publish = true, progress = () => {}, observe = () => {} }) {
+  if (typeof execute !== "boolean" || typeof publish !== "boolean") throw new ReleaseError("publication execution mode and publish flag must be boolean");
   const expected = identity(candidate, publisher), repo = expected.repository;
   let releaseId = expected.releaseId;
   function observed(state) {
@@ -60,7 +60,7 @@ export async function reconcileGithubRelease({ candidate, api, publisher, execut
     return observed({ phase: release.draft ? "draft" : "published", release, missing });
   }
   let snapshot = await inspect();
-  const result = () => ({ status: "pass", mode: execute ? "publisher-reconciliation" : "dry-run", publisher, phase: snapshot.phase, releaseId, url: snapshot.release?.html_url ?? null, immutable: snapshot.release?.immutable ?? false, missingAssets: snapshot.missing });
+  const result = () => ({ status: "pass", mode: execute ? (publish ? "publisher-reconciliation" : "draft-reconciliation") : "dry-run", publisher, phase: snapshot.phase, releaseId, url: snapshot.release?.html_url ?? null, immutable: snapshot.release?.immutable ?? false, missingAssets: snapshot.missing });
   if (!execute || snapshot.phase === "published") return result();
   if (await api.immutableEnabled(repo) !== true) throw new ReleaseError("repository release immutability must be enabled before publication");
 
@@ -82,8 +82,9 @@ export async function reconcileGithubRelease({ candidate, api, publisher, execut
   }
   // Reinspect immediately before publication; no remembered phase can waive a gate.
   snapshot = await inspect();
-  if (snapshot.phase === "draft") {
-    if (snapshot.missing.length || await api.immutableEnabled(repo) !== true) throw new ReleaseError("assets or repository immutability changed before publication");
+  if (snapshot.phase === "draft" && snapshot.missing.length) throw new ReleaseError("assets changed before draft staging completed");
+  if (snapshot.phase === "draft" && publish) {
+    if (await api.immutableEnabled(repo) !== true) throw new ReleaseError("assets or repository immutability changed before publication");
     await apply("publish draft", () => api.publish(repo, releaseId), (state) => state.phase === "published");
   }
   return result();
