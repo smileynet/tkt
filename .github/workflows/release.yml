@@ -9,9 +9,6 @@ on:
         type: string
 permissions:
   contents: read
-defaults:
-  run:
-    shell: bash
 jobs:
   plan:
     runs-on: ubuntu-22.04
@@ -43,7 +40,7 @@ jobs:
       - name: Cache dist
         uses: actions/upload-artifact@v7
         with:
-          name: cargo-dist-cache
+          name: cargo-dist-cache-attempt-${{ github.run_attempt }}
           path: ~/.cargo/bin/dist
           if-no-files-found: error
       - id: plan
@@ -55,7 +52,7 @@ jobs:
       - name: Upload dist-manifest.json
         uses: actions/upload-artifact@v7
         with:
-          name: artifacts-plan-dist-manifest
+          name: artifacts-plan-dist-manifest-attempt-${{ github.run_attempt }}
           path: plan-dist-manifest.json
           if-no-files-found: error
   build-local-artifacts:
@@ -101,7 +98,7 @@ jobs:
       - name: Fetch local artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: artifacts-*
+          pattern: artifacts-*-attempt-${{ github.run_attempt }}
           path: target/distrib/
           merge-multiple: true
           digest-mismatch: error
@@ -126,7 +123,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: artifacts-build-local-${{ join(matrix.targets, '_') }}
+          name: artifacts-build-local-${{ join(matrix.targets, '_') }}-attempt-${{ github.run_attempt }}
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
@@ -157,14 +154,14 @@ jobs:
       - name: Install cached dist
         uses: actions/download-artifact@v8
         with:
-          name: cargo-dist-cache
+          name: cargo-dist-cache-attempt-${{ github.run_attempt }}
           path: ~/.cargo/bin/
           digest-mismatch: error
       - run: chmod +x ~/.cargo/bin/dist
       - name: Fetch local artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: artifacts-*
+          pattern: artifacts-*-attempt-${{ github.run_attempt }}
           path: target/distrib/
           merge-multiple: true
           digest-mismatch: error
@@ -183,7 +180,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: artifacts-build-global
+          name: artifacts-build-global-attempt-${{ github.run_attempt }}
           path: |
             ${{ steps.cargo-dist.outputs.paths }}
             ${{ env.BUILD_MANIFEST_NAME }}
@@ -213,7 +210,7 @@ jobs:
         run: cargo package --locked --target-dir target/crate-stage
       - uses: actions/upload-artifact@v7
         with:
-          name: artifacts-crate
+          name: artifacts-crate-attempt-${{ github.run_attempt }}
           path: target/crate-stage/package/*.crate
           if-no-files-found: error
   seal-stage:
@@ -238,7 +235,7 @@ jobs:
           EXPECTED_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
       - uses: actions/download-artifact@v8
         with:
-          pattern: artifacts-*
+          pattern: artifacts-*-attempt-${{ github.run_attempt }}
           path: target/stage-input
           merge-multiple: true
           digest-mismatch: error

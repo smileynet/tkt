@@ -30,7 +30,9 @@ gh workflow run release.yml --repo smileynet/tkt --ref CANDIDATE_BRANCH \
 The workflow must already be registered on the default branch. Every job refuses to build
 unless the expected SHA, run SHA and checked-out SHA agree. Preserve the completed
 run ID, attempt, artifact IDs/digests/expiration and the seal hash for later review.
-The final artifact is named `tkt-sealed-stage-RUN_ID-ATTEMPT`.
+The final artifact is named `tkt-sealed-stage-RUN_ID-ATTEMPT`. Intermediate
+uploads/downloads also include the attempt. Use **Re-run all jobs** after a failure;
+rerunning only failed jobs cannot substitute inputs from an older attempt.
 
 Publication integration remains unfinished. A future publisher must read the later
 review commit, verify run provenance and every sealed file, and download those exact

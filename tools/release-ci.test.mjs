@@ -64,3 +64,20 @@ test("CI seal validates sidecar checksum syntax and exact bytes before output", 
     writeFileSync(join(f.input, name), `${digest}  ${parent}\n`); assert.equal(f.run().status, "pass");
   } finally { f.clean(); }
 });
+
+test("Windows dist bootstrap retains the native PowerShell execution shell", () => {
+  const workflow = parse(readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8"));
+  const job = workflow.jobs["build-local-artifacts"], install = job.steps.find((step) => step.name === "Install dist");
+  const windowsShell = install.shell ?? job.defaults?.run?.shell ?? workflow.defaults?.run?.shell ?? "pwsh";
+  assert.equal(windowsShell, "pwsh", "PowerShell irm/iex bootstrap must not execute in bash");
+});
+
+test("CI intermediate uploads and downloads are isolated by run attempt", () => {
+  const workflow = parse(readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8"));
+  for (const [name, job] of Object.entries(workflow.jobs)) for (const step of job.steps) {
+    if (name === "seal-stage" && step.uses?.startsWith("actions/upload-artifact@")) continue;
+    if (step.uses?.startsWith("actions/upload-artifact@") || step.uses?.startsWith("actions/download-artifact@")) {
+      assert.ok((step.with.name ?? step.with.pattern).includes("attempt-${{ github.run_attempt }}"), `${name}: ${step.with.name ?? step.with.pattern}`);
+    }
+  }
+});
