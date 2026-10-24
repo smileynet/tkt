@@ -13,8 +13,9 @@ const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 test("vendored release files match their reviewed ownership inventory", () => {
   const inventory = JSON.parse(readFileSync(join(tools, "release-vendor.json")));
   assert.equal(inventory.owner, "smileynet/grey-matter-release-tools");
-  assert.equal(Object.keys(inventory.files).length, 16);
+  assert.equal(Object.keys(inventory.files).length, 17);
   assert.ok(inventory.files["tools/release-publish.mjs"]);
+  assert.ok(inventory.files["tools/release-ci-artifacts.mjs"]);
   assert.deepEqual(JSON.parse(readFileSync(join(repo, "package.json"))).devDependencies, inventory.dependencies);
   for (const [file, expected] of Object.entries(inventory.files)) {
     assert.match(file, /^tools\/[a-zA-Z0-9.-]+$/); assert.equal(sha(readFileSync(join(repo, file))), expected, file);

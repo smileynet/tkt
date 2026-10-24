@@ -3,7 +3,8 @@
   "dependencies": {
     "smol-toml": "1.9.1",
     "tar": "7.5.22",
-    "yaml": "2.9.1"
+    "yaml": "2.9.1",
+    "yauzl": "3.4.0"
   },
   "owner": "smileynet/grey-matter-release-tools",
   "source": "https://github.com/smileynet/grey-matter",
@@ -22,6 +23,7 @@
     "tools/release-publication.mjs": "e5d0a3a17a5eead0c36c3f3b024130bb28dc2b44c5174be594e54ec13a9a6bdd",
     "tools/release-registry.mjs": "48742177ccf4e75b25a1bc2ff8c335981f695c894fb933ed3f1e6f0a53c4abe4",
     "tools/release-development.mjs": "228fb0245a5906fb9f21055b1ace82c8f614546eb9ad514353e5a1811fe95b81",
+    "tools/release-ci-artifacts.mjs": "d18b06ab66e78ca33c3e626cf9b855661bb77d477c9bd3e064433aaab2feda9e",
     "tools/check-skill-syntax.mjs": "35c3f52e0ccd9b6fb628b4dba03b5ff15d08314a8ce77a686b352ac857b67c8d",
     "tools/probe-claude-validation.mjs": "eb91b5cce1610f6c8c4da1c40c7e0c8a8b3222cf093f408583114bbc7f5fafcb",
     "tools/LICENSE-grey-matter.txt": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"

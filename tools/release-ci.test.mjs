@@ -81,3 +81,10 @@ test("CI intermediate uploads and downloads are isolated by run attempt", () => 
     }
   }
 });
+
+test("CI candidate identity refuses source edits even when HEAD and versions still match", () => {
+  const f = fixture(); try {
+    const cargo = join(f.repo, "Cargo.toml"); writeFileSync(cargo, readFileSync(cargo, "utf8") + "\n# changed input\n");
+    assert.throws(() => ciIdentity(f.repo, f.env), /clean candidate/);
+  } finally { f.clean(); }
+});

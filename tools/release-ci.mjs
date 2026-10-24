@@ -15,6 +15,7 @@ export function ciIdentity(repo, env = process.env) {
   const git = (...args) => execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", env: gitEnvironment() }).trim();
   const sha = git("rev-parse", "HEAD");
   if (!/^[a-f0-9]{40}$/.test(env.EXPECTED_CANDIDATE_SHA ?? "") || sha !== env.EXPECTED_CANDIDATE_SHA || sha !== env.GITHUB_SHA || env.GITHUB_REPOSITORY !== "smileynet/tkt") throw new ReleaseError("CI checkout, run and expected candidate must identify smileynet/tkt at the same commit");
+  if (git("status", "--porcelain", "--untracked-files=all")) throw new ReleaseError("CI staging requires a clean candidate checkout");
   const product = inspectVersions((file) => readFileSync(join(repo, file), "utf8"), (file) => existsSync(join(repo, file)));
   if (product.name !== "tkt" || product.kind !== "cargo") throw new ReleaseError("CI staging requires the tkt Cargo product");
   return { product: "tkt", version: product.version, candidateSha: sha, tag: `v${product.version}` };

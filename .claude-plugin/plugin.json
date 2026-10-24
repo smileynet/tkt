@@ -54,7 +54,8 @@
         "tools/release-staging.mjs",
         "tools/release-publication.mjs",
         "tools/release-registry.mjs",
-        "tools/release-development.mjs"
+        "tools/release-development.mjs",
+        "tools/release-ci-artifacts.mjs"
       ]
     }
   }
