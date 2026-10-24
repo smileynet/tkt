@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { git, requireGithubRemote } from "./release-git.mjs";
 import { ReleaseError } from "./release-version.mjs";
 import { publishTktCi } from "./release-tkt-ci.mjs";
+import { publicationFailure } from "./release-publish.mjs";
 
 export function stagedLocations({ reviewRepo, index }) {
   if (typeof index !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(index) || index.split("/").some((part) => !part || part === "." || part === "..")) throw new ReleaseError("invalid staged index path");
@@ -43,5 +44,5 @@ export async function runPublisher(options, services) {
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try { console.log(JSON.stringify(await runPublisher(publisherOptions(process.argv.slice(2))), null, 2)); }
-  catch (error) { console.log(JSON.stringify({ status: error instanceof ReleaseError ? "fail" : "error", errors: [error.message] })); process.exitCode = error instanceof ReleaseError ? 1 : 2; }
+  catch (error) { console.log(JSON.stringify(publicationFailure(error))); process.exitCode = error instanceof ReleaseError ? 1 : 2; }
 }

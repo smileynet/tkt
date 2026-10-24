@@ -4,6 +4,10 @@ import { pushStableRef } from "./release-git.mjs";
 import { createHash } from "node:crypto";
 import { stableVersion, ReleaseError } from "./release-version.mjs";
 
+export function publicationFailure(error) {
+  return { status: error instanceof ReleaseError ? "fail" : "error", errors: [error.message], ...(error.publication ? { publication: error.publication } : {}) };
+}
+
 function identity(candidate, publisher) {
   if (!candidate || !["grey-matter", "tkt"].includes(candidate.product) || !stableVersion(candidate.version) || !/^[a-f0-9]{40}$/.test(candidate.candidateSha) || !/^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(candidate.repository)) throw new ReleaseError("invalid publication identity");
   if (publisher !== (candidate.product === "tkt" ? "cargo-dist" : "local")) throw new ReleaseError(`the sole publisher for ${candidate.product} is ${candidate.product === "tkt" ? "cargo-dist" : "local"}`);

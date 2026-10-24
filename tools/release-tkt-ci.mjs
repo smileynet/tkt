@@ -41,34 +41,50 @@ export async function publishTktCi(options, {
   if (sealed.length !== 1) throw new ReleaseError("reviewed CI assets must contain exactly one tkt crate");
   const crate = { name: "tkt", version: candidate.version, bytes: sealed[0].bytes, sha256: sealed[0].sha256 };
   if (!execute) return { status: "pass", mode: "dry-run", publisher: "cargo-dist", candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, ciStage: candidate.ciStage, assetNames: candidate.assets.map((asset) => asset.name), writes: false, plan: ["verify exact CI dispatch and immutable policy", "check development integration", "atomic candidate/tag/main refs", "prepare Cargo before durable intent", "reconcile registry and immutable GitHub", "verify stable"] };
-  await requireTktPublisherRun({ candidate, context: options.context, actions });
-  api ??= githubReleaseApi({ execute: true });
-  if (typeof options.developmentOut !== "string" || typeof options.getToken !== "function") throw new ReleaseError("CI publisher requires an owned development output and delayed credential callback");
-  const tagObject = git(repo, ["hash-object", "-t", "tag", "-w", "--stdin"], { input: spec.tagRecord }).trim();
-  if (tagObject !== spec.tagObject) throw new ReleaseError("imported annotated tag differs from review");
-  const full = { ...candidate, tagObject };
-  const tag = `refs/tags/v${candidate.version}`;
-  requireCandidateTag({ repo, candidateSha: candidate.candidateSha, tagObject, tag });
-  let development = null;
-  // A completed immutable publication is independent of later development changes.
-  const published = (await api.releases(candidate.repository)).some(release => release.tag_name === `v${candidate.version}` && release.draft === false);
-  if (published) {
-    const observed = await reconcileTktPublication({ candidate: full, crate, api, registry });
-    if (observed.github.phase !== "published" || !observed.github.immutable || observed.registry.phase !== "published") throw new ReleaseError("published GitHub release lacks confirmed matching registry publication; inspect before recovery");
-  } else {
-    if (await api.immutableEnabled(candidate.repository) !== true) throw new ReleaseError("repository release immutability must be enabled before pushing candidate refs");
-    development = await prepareMain({ repo, remote, candidateSha: candidate.candidateSha, product: "tkt", version: candidate.version, out: options.developmentOut, execute: true });
-    if (development?.status !== "pass" || development.candidateSha !== candidate.candidateSha || !/^[a-f0-9]{40}$/.test(development.developmentSha)) throw new ReleaseError("development integration was not verified");
-    check();
+  const publication = { product: "tkt", version: candidate.version, candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, github: { phase: "not-observed" }, registry: { phase: "not-observed" }, stable: { phase: "not-attempted", url: `https://github.com/${candidate.repository}/tree/stable` } };
+  const observe = (state) => {
+    if (state.channel === "github") publication.github = { phase: state.phase, releaseId: state.releaseId, url: state.url, immutable: state.immutable, missingAssets: state.missingAssets, observedAt: new Date().toISOString() };
+    else if (state.channel === "registry") publication.registry = { phase: state.phase, sha256: crate.sha256, url: state.phase === "published" ? `https://crates.io/crates/tkt/${crate.version}` : null, observedAt: new Date().toISOString() };
+    options.observe?.(state);
+  };
+  try {
     await requireTktPublisherRun({ candidate, context: options.context, actions });
-    const refs = await pushCandidate({ repo, remote, branch: spec.branch, tag, tagObject, candidateSha: candidate.candidateSha, developmentSha: development.developmentSha, execute: true });
-    if (refs?.status !== "pass" || refs.complete !== true) throw new ReleaseError("atomic candidate refs were not observed");
+    api ??= githubReleaseApi({ execute: true });
+    if (typeof options.developmentOut !== "string" || typeof options.getToken !== "function") throw new ReleaseError("CI publisher requires an owned development output and delayed credential callback");
+    const tagObject = git(repo, ["hash-object", "-t", "tag", "-w", "--stdin"], { input: spec.tagRecord }).trim();
+    if (tagObject !== spec.tagObject) throw new ReleaseError("imported annotated tag differs from review");
+    const full = { ...candidate, tagObject };
+    const tag = `refs/tags/v${candidate.version}`;
+    requireCandidateTag({ repo, candidateSha: candidate.candidateSha, tagObject, tag });
+    let development = null;
+    // A completed immutable publication is independent of later development changes.
+    const published = (await api.releases(candidate.repository)).some(release => release.tag_name === `v${candidate.version}` && release.draft === false);
+    if (published) {
+      const observed = await reconcileTktPublication({ candidate: full, crate, api, registry, observe });
+      if (observed.github.phase !== "published" || !observed.github.immutable || observed.registry.phase !== "published") throw new ReleaseError("published GitHub release lacks confirmed matching registry publication; inspect before recovery");
+    } else {
+      if (await api.immutableEnabled(candidate.repository) !== true) throw new ReleaseError("repository release immutability must be enabled before pushing candidate refs");
+      development = await prepareMain({ repo, remote, candidateSha: candidate.candidateSha, product: "tkt", version: candidate.version, out: options.developmentOut, execute: true });
+      if (development?.status !== "pass" || development.candidateSha !== candidate.candidateSha || !/^[a-f0-9]{40}$/.test(development.developmentSha)) throw new ReleaseError("development integration was not verified");
+      check();
+      await requireTktPublisherRun({ candidate, context: options.context, actions });
+      const refs = await pushCandidate({ repo, remote, branch: spec.branch, tag, tagObject, candidateSha: candidate.candidateSha, developmentSha: development.developmentSha, execute: true });
+      if (refs?.status !== "pass" || refs.complete !== true) throw new ReleaseError("atomic candidate refs were not observed");
+    }
+    await requireTktPublisherRun({ candidate, context: options.context, actions });
+    check();
+    const result = await reconcileTktPublication({ candidate: full, crate, api, registry, execute: true, retryUnconfirmed, observe,
+      prepareUpload: (sealedCrate) => prepareUpload({ repo, candidateSha: candidate.candidateSha, crate: sealedCrate, cargo: options.cargo, rustc: options.rustc, getToken: options.getToken }),
+      promoteStable: async (published) => {
+        publication.stable.phase = "unconfirmed";
+        const stable = await promoteStable({ repo, remote, candidate: published, api, publisher: "cargo-dist", execute: true });
+        if (stable?.status === "pass" && stable.complete === true && stable.sha === candidate.candidateSha) publication.stable = { ...publication.stable, phase: "verified", sha: stable.sha, observedAt: new Date().toISOString() };
+        return stable;
+      },
+    });
+    return { ...result, candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, development, ciStage: candidate.ciStage, directorySubmission: "not-requested", marketplaceUrl: `https://github.com/${candidate.repository}/tree/stable` };
+  } catch (error) {
+    error.publication = publication;
+    throw error;
   }
-  await requireTktPublisherRun({ candidate, context: options.context, actions });
-  check();
-  const result = await reconcileTktPublication({ candidate: full, crate, api, registry, execute: true, retryUnconfirmed, observe: options.observe,
-    prepareUpload: (sealedCrate) => prepareUpload({ repo, candidateSha: candidate.candidateSha, crate: sealedCrate, cargo: options.cargo, rustc: options.rustc, getToken: options.getToken }),
-    promoteStable: (published) => promoteStable({ repo, remote, candidate: published, api, publisher: "cargo-dist", execute: true }),
-  });
-  return { ...result, candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, development, ciStage: candidate.ciStage, directorySubmission: "not-requested", marketplaceUrl: `https://github.com/${candidate.repository}/tree/stable` };
 }

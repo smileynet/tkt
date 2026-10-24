@@ -12,7 +12,7 @@ import { ReleaseError } from "./release-version.mjs";
 import { readStagedCandidate } from "./release-staging.mjs";
 import { githubReleaseApi } from "./release-github.mjs";
 import { prepareDevelopment } from "./release-development.mjs";
-import { reconcileGithubRelease, promotePublishedStable } from "./release-publish.mjs";
+import { publicationFailure, reconcileGithubRelease, promotePublishedStable } from "./release-publish.mjs";
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 function canonical(path) {
@@ -73,7 +73,7 @@ export async function publishStaged(options, { api, prepareMain = prepareDevelop
     save({ phase: "candidate-refs" });
     check();
     candidate.releaseId = state.releaseId ?? undefined;
-    const observe = (snapshot) => save({ github: snapshot, releaseId: snapshot.releaseId });
+    const observe = (snapshot) => save({ github: { ...snapshot, observedAt: new Date().toISOString() }, releaseId: snapshot.releaseId });
     let development = state.development ?? null, published;
     const completed = (await api.releases(candidate.repository)).some(release => release.tag_name === `v${candidate.version}` && release.draft === false);
     if (completed) {
@@ -91,12 +91,18 @@ export async function publishStaged(options, { api, prepareMain = prepareDevelop
       published = await reconcileGithubRelease({ candidate, api, publisher: "local", execute: true, observe });
     }
     save({ phase: "stable", releaseId: published.releaseId }); check();
+    save({ stable: { phase: "unconfirmed", url: `https://github.com/${candidate.repository}/tree/stable` } });
     const stable = await promoteStable({ repo, remote, candidate: { ...candidate, releaseId: state.releaseId }, api, publisher: "local", execute: true });
     if (!stable.complete) throw new ReleaseError("stable promotion was not observed");
+    save({ stable: { phase: "verified", sha: candidate.candidateSha, url: `https://github.com/${candidate.repository}/tree/stable`, observedAt: new Date().toISOString() } });
     const result = { status: "pass", mode: "published", candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, development, github: published, stable, registry: "not-applicable", directorySubmission: "not-requested", marketplaceUrl: `https://github.com/${candidate.repository}/tree/stable` };
     save({ phase: "complete", result }); return result;
   } catch (error) {
-    if (ownsState) save({ phase: "interrupted", error: error.message });
+    if (ownsState) {
+      save({ phase: "interrupted", error: error.message });
+      const github = state.github;
+      error.publication = { product: candidate.product, version: candidate.version, candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, github: github ? { phase: github.phase, releaseId: github.releaseId, url: github.url, immutable: github.immutable, missingAssets: github.missingAssets, observedAt: github.observedAt } : { phase: "not-observed" }, registry: { phase: "not-applicable" }, stable: state.stable ?? { phase: "not-attempted" } };
+    }
     throw error;
   } finally {
     if (lock !== undefined) closeSync(lock);
@@ -115,5 +121,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     }
     if (["repo", "reviewRepo", "reviewSha", "index", "product", "artifacts", "evidence", "tagObject", "state"].some((key) => !options[key])) throw new ReleaseError("usage: publish|resume --repo DIR --review-repo DIR --review-sha SHA --index FILE --product grey-matter --artifacts DIR --evidence DIR --tag-object SHA --state FILE [--execute | --dry-run]");
     console.log(encode(await publishStaged(options)));
-  } catch (error) { console.error(encode({ status: error instanceof ReleaseError ? "fail" : "error", errors: [error.message] })); process.exitCode = error instanceof ReleaseError ? 1 : 2; }
+  } catch (error) { console.error(encode(publicationFailure(error))); process.exitCode = error instanceof ReleaseError ? 1 : 2; }
 }
