@@ -9,7 +9,6 @@
 
 # Project conventions
 .scratch/
-!.scratch/HANDOFF.md
 .references/
 
 # Generated project-local Kiro skill/steering deployment (source: crew-research)

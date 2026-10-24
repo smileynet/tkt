@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { parse as parseToml } from "smol-toml";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -48,5 +49,29 @@ test("standalone Node, bash and mise preparation inspect without output or versi
       const result = spawnSync(binary, invocation, { cwd: repo, encoding: "utf8", env: { ...process.env, MISE_TRUSTED_CONFIG_PATHS: repo, MISE_STATE_DIR: join(temp, "mise-state"), MISE_CACHE_DIR: join(temp, "mise-cache") } });
       assert.equal(result.status, 0, `${binary}: ${result.stdout}${result.stderr}`); const report = JSON.parse(result.stdout); assert.equal(report.mode, "dry-run"); assert.equal(report.publishable, false); assert.equal(report.sourceSha, before); assert.equal(existsSync(output), false); assert.equal(git("rev-parse", "HEAD"), before); assert.equal(git("status", "--porcelain"), ""); assert.equal(git("tag", "--list"), "");
     }
+  } finally { rmSync(temp, { recursive: true, force: true }); }
+});
+
+test("Cargo package excludes tracked scratch while retaining source and license", () => {
+  const temp = mkdtempSync(join(tmpdir(), "tkt package exclusions "));
+  const git = (...args) => execFileSync("git", ["-C", temp, ...args], { encoding: "utf8", stdio: "pipe" });
+  const policy = parseToml(readFileSync(join(repo, "Cargo.toml"), "utf8")).package.exclude;
+  try {
+    mkdirSync(join(temp, "src")); mkdirSync(join(temp, ".scratch"));
+    writeFileSync(join(temp, "src/main.rs"), "fn main() {}\n");
+    writeFileSync(join(temp, "LICENSE"), "Fixture license\n");
+    writeFileSync(join(temp, ".scratch/HANDOFF.md"), "Internal planning fixture\n");
+    writeFileSync(join(temp, "Cargo.toml"), '[package]\nname="package-exclusions-fixture"\nversion="0.0.0"\nedition="2021"\nlicense="MIT"\n');
+    git("init"); git("add", ".");
+    git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", `core.hooksPath=${join(temp, "no-hooks")}`, "commit", "-m", "Tracked scratch fixture");
+    const list = (exclude) => {
+      writeFileSync(join(temp, "Cargo.toml"), `[package]\nname="package-exclusions-fixture"\nversion="0.0.0"\nedition="2021"\nlicense="MIT"\nexclude=${JSON.stringify(exclude)}\n`);
+      return execFileSync("cargo", ["package", "--list", "--offline", "--allow-dirty"], { cwd: temp, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim().split(/\r?\n/);
+    };
+    assert.ok(list(policy.filter((entry) => entry !== ".scratch/")).includes(".scratch/HANDOFF.md"), "seed reproduces old archive leak");
+    const actual = list(policy);
+    assert.ok(!actual.some((entry) => entry.startsWith(".scratch/")), "actual Cargo policy excludes tracked scratch");
+    assert.ok(actual.includes("src/main.rs")); assert.ok(actual.includes("LICENSE"));
+    assert.equal(readFileSync(join(temp, ".scratch/HANDOFF.md"), "utf8"), "Internal planning fixture\n");
   } finally { rmSync(temp, { recursive: true, force: true }); }
 });
