@@ -41,3 +41,21 @@ jobs:
         run: mise run check
         env:
           DO_NOT_TRACK: "1"
+
+  msrv:
+    name: Minimum supported Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Read declared minimum
+        id: msrv
+        run: python3 -c 'import tomllib; print("version=" + tomllib.load(open("Cargo.toml", "rb"))["package"]["rust-version"])' >> "$GITHUB_OUTPUT"
+
+      - name: Install declared minimum
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+
+      - name: Check locked binary at minimum Rust
+        run: cargo check --locked --bin tkt
