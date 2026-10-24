@@ -13,6 +13,8 @@ jobs:
     env:
       DO_NOT_TRACK: '1'
     steps:
+      - name: Preserve repository file bytes
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
         with:
           ref: b2425c93f94a0b56a87cb6496ecbadaf381922bf
@@ -27,10 +29,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - uses: jdx/mise-action@v5
+      - name: Install pinned workflow generator
+        run: cargo install cargo-dist --version 0.32.0 --locked
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: cargo fetch --locked
       - name: Node release and migration safety fixtures
         run: node --test tools/release-tools.test.mjs tools/release-ci.test.mjs
       - run: cargo fmt --check
+        if: success() || failure()
       - run: cargo clippy --all-targets -- -D warnings
+        if: success() || failure()
       - run: cargo test --locked
+        if: success() || failure()
