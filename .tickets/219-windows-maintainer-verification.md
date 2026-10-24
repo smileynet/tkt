@@ -1,7 +1,7 @@
 ---
 id: "219"
 title: "Make release generation and deployment fixtures portable on Windows"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -65,9 +65,9 @@ and repeat affected source/artifact/product/native gates for the replacement.
 
 ## Acceptance criteria
 
-- [ ] Windows Node release and workflow-generation fixtures pass without skipping generator or package exclusion checks.
-- [ ] Deployment integration tests invoke the canonical Node deployer on Windows and preserve duplicate/foreign ownership assertions.
-- [ ] A full hosted Windows check and the existing macOS/Linux gates pass with exact source evidence.
+- [x] Windows Node release and workflow-generation fixtures pass without skipping generator or package exclusion checks.
+- [x] Deployment integration tests invoke the canonical Node deployer on Windows and preserve duplicate/foreign ownership assertions.
+- [x] A full hosted Windows check and the existing macOS/Linux gates pass with exact source evidence.
 
 
 ## Verified diagnosis and source corrections (2026-10-24)
@@ -100,3 +100,12 @@ Windows, fmt and Clippy pass, then 295 Rust tests pass (191 unit + 6 deploy +
 95 platform-applicable CLI + 3 manifest). The Unix-only post-commit permission
 fixture is absent on Windows. Its Linux setup failure is tracked by ticket 220;
 wait for that correction's full Linux check before closing the cross-platform gate.
+
+## Resolution (2026-10-24)
+
+done: portable Windows release verification now runs in permanent Windows/Linux CI; temporary aliases, package separators and WSL launcher assumptions are corrected
+
+### Verification
+1. ✓ Windows Node release and workflow-generation fixtures pass without skipping generator or package exclusion checks — "Source c0359f8 native-canonicalizes the generator temp directory and normalizes Cargo listing separators. Windows diagnostic 40080923092 proves expanded paths generate successfully and Cargo emits src backslash main.rs. CI 40081866652 on 468684dd6ff13b7c33c7d59e43d234400f392d80 passes 36 Node cases, with only the separate relative-symlink case skipped; real generation and package closure cases pass."
+2. ✓ Deployment integration tests invoke the canonical Node deployer on Windows and preserve duplicate/foreign ownership assertions — "The six tests/deploy_skills.rs fixtures invoke node tools/deploy.mjs directly. Hosted Windows and Ubuntu logs in CI 40081866652 both report all six deployment tests passing with the duplicate and foreign-file assertions intact."
+3. ✓ A full hosted Windows check and the existing macOS/Linux gates pass with exact source evidence — "Fresh macOS mise run check passes 37 Node fixtures, fmt, Clippy and 296 Rust tests. Hosted exact-source CI 40081866652 passes full Ubuntu and Windows checks, both hook jobs and MSRV; Windows has 295 applicable Rust tests and the documented relative-symlink Node skip. Linux fixture blocker 220 is fixed and closed."
