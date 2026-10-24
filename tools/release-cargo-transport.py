@@ -152,6 +152,10 @@ def outer():
                 relative = str(path.relative_to(source))
                 require(not relative.endswith((".cargo/config", ".cargo/config.toml")) and relative != ".gitmodules", "source Cargo configuration or submodule overrides are forbidden")
             require(not (source / ".git/objects/info/alternates").exists(), "external object store")
+            expected = inventory(source)
+            for ancestor in [source, *source.parents]:
+                for name in [".cargo/config", ".cargo/config.toml"]:
+                    require(not (ancestor / name).exists() and not (ancestor / name).is_symlink(), "ancestor Cargo configuration is forbidden")
             config = '[registry]\ndefault="' + policy["registry"] + '"\ncredential-provider=["/tmp/release-helpers/provider"]\n[registries.crates-io]\nprotocol="sparse"\n'
             if policy["registry"] == "release-probe":
                 config += '[registries.release-probe]\nindex=' + json.dumps(policy["index"]) + '\ncredential-provider=["/tmp/release-helpers/provider"]\n'
@@ -159,7 +163,7 @@ def outer():
             # Fetch public locked dependencies before entering the namespace or accepting a token.
             phase("dependency-fetch")
             run([policy["cargo"], "fetch", "--locked"], source, env)
-            expected = inventory(source)
+            require(inventory(source) == expected, "dependency fetch changed candidate inputs")
             phase("snapshot-sealing")
             helpers = root / "helpers"
             helpers.mkdir()
@@ -228,10 +232,12 @@ def outer():
             inner_env = {"PATH": "/usr/bin:/bin", "LANG": "C", "HOME": "/tmp/release-home", "CARGO_HOME": "/tmp/release-home", "TMPDIR": "/tmp/release-tmp", "RUSTC": policy["rustc"], "CARGO_HTTP_PROXY": "", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_OPTIONAL_LOCKS": "0", "GIT_NO_REPLACE_OBJECTS": "1", "RELEASE_CARGO_POLICY": "/tmp/release-helpers/policy.json"}
             for key, value in inner_env.items():
                 args.extend(["--setenv", key, value])
-            args.extend(["--chdir", "/tmp/release-candidate", "/usr/bin/python3", "/tmp/release-helpers/transport.py", "--inner"])
+            args.extend(["--chdir", "/tmp/release-candidate"])
+            require(len(args) + 6 <= 9000, "bubblewrap argument limit")
             arg_fd = sealed(("\0".join(args) + "\0").encode())
             phase("namespace-setup")
-            child = subprocess.Popen(["/usr/bin/bwrap", "--args", str(arg_fd)], env=env, pass_fds=descriptors, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            # v0.6.1 parses only options from --args; its command stays on real argv.
+            child = subprocess.Popen(["/usr/bin/bwrap", "--args", str(arg_fd), "--", "/usr/bin/python3", "/tmp/release-helpers/transport.py", "--inner"], env=env, pass_fds=descriptors, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             try:
                 prepared = line(child.stdout, 600)
             except (RuntimeError, ValueError) as error:
