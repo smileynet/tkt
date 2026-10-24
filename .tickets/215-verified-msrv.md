@@ -1,7 +1,7 @@
 ---
 id: "215"
 title: "Make the declared Rust minimum pass a locked build"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
