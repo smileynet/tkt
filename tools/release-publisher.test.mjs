@@ -33,6 +33,24 @@ test("publisher workflow is manual, serialized, defaults to planning and isolate
   assert.ok(job.steps.filter((step) => step.run?.includes("npm ci")).every((step) => !step.env?.RELEASE_CARGO_TOKEN));
   assert.doesNotMatch(job.steps.map((step) => step.run ?? "").join("\n"), /cargo publish|gh release create|git push/);
 });
+test("publisher and nonpublishing product probe share the complete toolchain", () => {
+  const action = parse(readFileSync(join(repo, ".github/actions/publication-toolchain/action.yml"), "utf8"));
+  const steps = action.runs.steps;
+  const mise = steps.find(step => step.uses?.startsWith("jdx/mise-action@"));
+  assert.equal(mise.with.version, "2026.10.18"); assert.equal(mise.with.persist_github_token, false);
+  const rust = steps.find(step => step.uses?.startsWith("dtolnay/rust-toolchain@"));
+  assert.equal(rust.with.toolchain, "1.99.1");
+  assert.deepEqual(rust.with.components.split(/,\s*/), ["rustfmt", "clippy"]);
+  assert.ok(steps.some(step => step.run?.includes("v0.32.0/cargo-dist-installer.sh")));
+  for (const file of ["publish.yml", "publication-product-probe.yml"]) {
+    const workflow = parse(readFileSync(join(repo, ".github/workflows", file), "utf8"));
+    assert.ok(Object.values(workflow.jobs).every(job => job.steps.some(step => step.uses === "./candidate/.github/actions/publication-toolchain")));
+  }
+  const source = readFileSync(join(repo, ".github/workflows/publication-product-probe.yml"), "utf8"), probe = parse(source);
+  assert.deepEqual(probe.permissions, { contents: "read" });
+  assert.doesNotMatch(source, /secrets\.|publish-reviewed\.mjs|gh auth|git push|cargo publish/);
+  assert.match(source, /prepareDevelopment\(/);
+});
 async function fixture(fn) {
   const root = mkdtempSync(join(tmpdir(), "tkt publication dispatch ")), review = join(root, "review"); mkdirSync(review);
   const branch = "refs/heads/codex/release-tkt-0.5.0-fixture";

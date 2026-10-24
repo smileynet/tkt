@@ -1,0 +1,30 @@
+name: Publication toolchain
+description: Install the same pinned tools for publication and its nonpublishing product probe
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: '22'
+        package-manager-cache: false
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.99.1
+        components: rustfmt, clippy
+    - uses: jdx/mise-action@v5
+      with:
+        version: 2026.10.18
+        install: false
+        env: false
+        export_path: false
+        persist_github_token: false
+    - name: Install pinned workflow generator
+      shell: bash
+      run: |
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.32.0/cargo-dist-installer.sh | sh
+        echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+    - name: Install namespace runtime
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes bubblewrap

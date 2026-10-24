@@ -1,0 +1,48 @@
+name: Publication product probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  product:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./candidate/.github/actions/publication-toolchain
+      - name: Install locked probe dependencies
+        working-directory: candidate
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run actual development product gate without publication credentials
+        working-directory: candidate
+        env:
+          MISE_TRUSTED_CONFIG_PATHS: ${{ runner.temp }}/tkt-product-development/worktree
+        run: |
+          git config --global user.name 'tkt product probe'
+          git config --global user.email 'probe@users.noreply.github.com'
+          node --input-type=module <<'JS' > "$RUNNER_TEMP/tkt-product-result.json"
+          import { readFileSync, existsSync } from 'node:fs';
+          import { join } from 'node:path';
+          import { prepareDevelopment } from './tools/release-development.mjs';
+          import { inspectVersions } from './tools/release-version.mjs';
+          const repo = process.cwd();
+          const identity = inspectVersions(file => readFileSync(join(repo, file), 'utf8'), file => existsSync(join(repo, file)));
+          const result = prepareDevelopment({ repo, candidateSha: process.env.GITHUB_SHA, product: 'tkt', version: identity.version, out: join(process.env.RUNNER_TEMP, 'tkt-product-development'), execute: true });
+          console.log(JSON.stringify(result, null, 2));
+          JS
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: publication-product-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/tkt-product-result.json
+            ${{ runner.temp }}/tkt-product-development/development.json
+            ${{ runner.temp }}/tkt-product-development/bootstrap-*.log
+            ${{ runner.temp }}/tkt-product-development/product-*/*.json
+            ${{ runner.temp }}/tkt-product-development/product-*/*.log
+          if-no-files-found: error
