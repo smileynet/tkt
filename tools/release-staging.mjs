@@ -35,6 +35,17 @@ export function readStagedCandidate({ reviewRepo, reviewSha, indexFile, product,
     requireMatchingIdentity({ product: "tkt", ...ci }, { name: "tkt", ...entry });
     if (ci.repository !== entry.repository) throw new ReleaseError("reviewed CI repository differs from staged candidate");
   }
+  let publication;
+  if (entry.publication !== undefined) {
+    const spec = entry.publication;
+    if (product !== "tkt" || spec?.workflowSha !== entry.candidateSha || !Number.isSafeInteger(spec.workflowId) || spec.workflowId <= 0 || typeof spec.branch !== "string" || !spec.branch.startsWith(`refs/heads/codex/release-tkt-${entry.version}-`) || !/^[a-f0-9]{40}$/.test(spec.tag?.objectSha)) throw new ReleaseError("invalid reviewed tkt publisher identity");
+    git(reviewRepo, ["check-ref-format", spec.branch]);
+    const record = committed(spec.tag.file);
+    if (Buffer.byteLength(record) > 65536 || createHash("sha1").update(`tag ${Buffer.byteLength(record)}\0`).update(record).digest("hex") !== spec.tag.objectSha) throw new ReleaseError("reviewed tag record differs from its annotated object");
+    const header = record.split("\n\n", 1)[0].split("\n");
+    if (!header.includes(`object ${entry.candidateSha}`) || !header.includes("type commit") || !header.includes(`tag v${entry.version}`)) throw new ReleaseError("reviewed tag record differs from candidate identity");
+    publication = { workflowSha: spec.workflowSha, workflowId: spec.workflowId, branch: spec.branch, tagObject: spec.tag.objectSha, tagRecord: record };
+  }
   const metadata = verifyArtifacts(artifacts);
   requireMatchingIdentity(entry, metadata);
   if (hash(readFileSync(resolve(artifacts, "release-metadata.json"))) !== entry.metadataSha256) throw new ReleaseError("staged artifact metadata changed");
@@ -54,7 +65,7 @@ export function readStagedCandidate({ reviewRepo, reviewSha, indexFile, product,
     const bytes = readFileSync(resolve(artifacts, name));
     return { name, bytes, size: bytes.length, sha256: hash(bytes) };
   });
-  return { repository: entry.repository, product, version: entry.version, candidateSha: entry.candidateSha, title: `v${entry.version}`, notes, assets, gates: { status: "pass", product, version: entry.version, candidateSha: entry.candidateSha, pending: [] }, staging: { reviewSha, indexFile, verificationSha256: verification.verificationSha256, ...(ci ? { ci } : {}) } };
+  return { repository: entry.repository, product, version: entry.version, candidateSha: entry.candidateSha, title: `v${entry.version}`, notes, assets, gates: { status: "pass", product, version: entry.version, candidateSha: entry.candidateSha, pending: [] }, staging: { reviewSha, indexFile, verificationSha256: verification.verificationSha256, ...(ci ? { ci } : {}), ...(publication ? { publication } : {}) } };
 }
 
 export async function readStagedTktCandidate({ api, now, ...options }) {
