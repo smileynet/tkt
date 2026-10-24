@@ -1,7 +1,7 @@
 ---
 id: "214"
 title: "Limit the published crate to CLI runtime source and required notices"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -21,6 +21,15 @@ Source evidence: `cargo package --locked` archive at grey-matter `.scratch/tkt-p
 
 ## Acceptance criteria
 
-- [ ] Required CLI source, build script, lockfile, notices and user docs are retained; plugin/maintainer files are excluded.
-- [ ] Real Cargo regression fails under the old policy and passes under the new policy; the full project gate passes.
-- [ ] Fresh clean package builds; archive closure, VCS metadata and binary version match the source commit; no upload occurs.
+- [x] Required CLI source, build script, lockfile, notices and user docs are retained; plugin/maintainer files are excluded.
+- [x] Real Cargo regression fails under the old policy and passes under the new policy; the full project gate passes.
+- [x] Fresh clean package builds; archive closure, VCS metadata and binary version match the source commit; no upload occurs.
+
+## Resolution (2026-10-24)
+
+done: anchor the Cargo allowlist at package root; retain required CLI inputs and prove a clean extracted crate builds with matching source identity.
+
+### Verification
+1. ✓ Real Cargo packaging includes required CLI source, build script, lockfile, license and user docs while excluding plugin and maintainer resources. — "Clean cargo package at 62250e45bde3f1f012e0cacf907d2c76f5ecec21 contains 50 files: src, build script, Cargo metadata/lock, license and user docs only; no plugin or maintainer resources."
+2. ✓ A seeded Cargo regression fails with the previous broad package policy and passes with the explicit include policy; the full maintainer gate passes. — "Real Cargo fixture reproduces broad-policy leakage and nested README/LICENSE/build.rs leakage; anchored policy passes. mise run check passes 7 Node checks, 296 Rust tests, fmt and clippy."
+3. ✓ A fresh clean crate builds and its contents, VCS identity and binary version are checked without registry publication. — "cargo package --locked builds fresh extracted crate; archive VCS SHA matches 62250e4 and binary reports tkt 0.4.0 (62250e4). Archive SHA256 ef2a46f0754cb8521b967496538cd015eb2ba36871c6f83172cf53a12dd901c4. Durable evidence in grey-matter docs/agents/research/evidence/crate-runtime-closure-20261023.json; no upload."
