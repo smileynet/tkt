@@ -61,7 +61,8 @@
         "tools/release-registry.mjs",
         "tools/release-development.mjs",
         "tools/release-ci-artifacts.mjs",
-        "tools/release-tkt-publication.mjs"
+        "tools/release-tkt-publication.mjs",
+        "tools/release-cargo-credentials.mjs"
       ]
     }
   }

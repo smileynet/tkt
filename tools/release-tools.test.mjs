@@ -8,16 +8,18 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { credentialReply } from "./release-cargo-credentials.mjs";
 const tools = dirname(fileURLToPath(import.meta.url)), repo = dirname(tools);
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 test("vendored release files match their reviewed ownership inventory", () => {
   const inventory = JSON.parse(readFileSync(join(tools, "release-vendor.json")));
   assert.equal(inventory.owner, "smileynet/grey-matter-release-tools");
-  assert.equal(Object.keys(inventory.files).length, 18);
+  assert.equal(Object.keys(inventory.files).length, 19);
   assert.ok(inventory.files["tools/release-publish.mjs"]);
   assert.ok(inventory.files["tools/release-ci-artifacts.mjs"]);
   assert.ok(inventory.files["tools/release-tkt-publication.mjs"]);
+  assert.ok(inventory.files["tools/release-cargo-credentials.mjs"]);
   assert.deepEqual(JSON.parse(readFileSync(join(repo, "package.json"))).devDependencies, inventory.dependencies);
   for (const [file, expected] of Object.entries(inventory.files)) {
     assert.match(file, /^tools\/[a-zA-Z0-9.-]+$/); assert.equal(sha(readFileSync(join(repo, file))), expected, file);
@@ -26,6 +28,12 @@ test("vendored release files match their reviewed ownership inventory", () => {
 test("standalone publication core refuses a competing local tkt publisher", async () => {
   const { reconcileGithubRelease } = await import("./release-publish.mjs");
   await assert.rejects(reconcileGithubRelease({ candidate: { product: "tkt", version: "0.4.0", candidateSha: "a".repeat(40), repository: "example/tkt" }, publisher: "local", api: {} }), /sole publisher/);
+});
+test("standalone Cargo credential provider refuses changed seals and never caches read credentials", () => {
+  const policy = { name: "tkt", version: "0.5.0", sha256: "a".repeat(64), index: "sparse+https://index.crates.io/" };
+  const request = { v: 1, kind: "get", operation: "read", registry: { "index-url": policy.index }, args: [] };
+  assert.deepEqual(credentialReply(request, policy, "fixture-token").Ok, { kind: "get", token: "fixture-token", cache: "never", operation_independent: false });
+  assert.equal(credentialReply({ ...request, operation: "publish", name: "tkt", vers: "0.5.0", cksum: "b".repeat(64) }, policy, "fixture-token").Err.kind, "other");
 });
 test("release entry points contain no legacy publisher or implicit bump path", () => {
   const shell = readFileSync(join(tools, "release.sh"), "utf8"), mise = readFileSync(join(repo, "mise.toml"), "utf8");

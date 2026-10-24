@@ -23,6 +23,7 @@
     "tools/release-publication.mjs": "e5d0a3a17a5eead0c36c3f3b024130bb28dc2b44c5174be594e54ec13a9a6bdd",
     "tools/release-registry.mjs": "73d0e49fc1eb9a92969d2d1b3b5d6dc2233dfed5e42fdcd56987e6a07b2f6d75",
     "tools/release-tkt-publication.mjs": "6f615e2004365fb0a065dac36ac9b36ecc8dbfc2f0189e38ea79583ed1a10f11",
+    "tools/release-cargo-credentials.mjs": "38b0249b810b5523fc7933679f3d70b0f625390edd802b5b01e0ae99b5f6dbfc",
     "tools/release-development.mjs": "228fb0245a5906fb9f21055b1ace82c8f614546eb9ad514353e5a1811fe95b81",
     "tools/release-ci-artifacts.mjs": "7d5d84d2a9766f2daed58d7dff2fac6509c7599b546a49d875f1d0f47fd5f7ca",
     "tools/check-skill-syntax.mjs": "35c3f52e0ccd9b6fb628b4dba03b5ff15d08314a8ce77a686b352ac857b67c8d",
