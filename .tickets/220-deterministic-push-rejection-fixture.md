@@ -1,7 +1,7 @@
 ---
 id: "220"
 title: "Make post-commit push rejection fixture deterministic"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -46,8 +46,8 @@ The runtime CLI and publication behavior need no change.
 
 ## Acceptance criteria
 
-- [ ] The integration test rejects only the push after a successful fetch and local close commit, then asserts preserved state and recovery output.
-- [ ] Full local and hosted Linux checks pass without recursive remote permission mutation.
+- [x] The integration test rejects only the push after a successful fetch and local close commit, then asserts preserved state and recovery output.
+- [x] Full local and hosted Linux checks pass without recursive remote permission mutation.
 
 
 ## Implemented and locally verified
@@ -60,3 +60,11 @@ recovery, retained-commit and retained-ticket assertions remain.
 The dangling-template reproduction changed from exit 101 (ENOENT at fixture setup)
 to exit 0 (one passed test). A fresh `mise run check` passes 37 Node tests, fmt,
 Clippy and all 296 Rust tests. Hosted Linux verification remains required.
+
+## Resolution (2026-10-24)
+
+done: deterministic post-commit push rejection fixture preserves the original recovery contract and removes filesystem-walk setup failures
+
+### Verification
+1. ✓ The integration test rejects only the push after a successful fetch and local close commit, then asserts preserved state and recovery output — "Source 468684d replaces recursive chmod with an explicit pre-receive rejection hook and retains every exit/recovery/local-state assertion. A dangling Git template makes the old fixture fail ENOENT (exit 101); the corrected exact test passes (exit 0)."
+2. ✓ Full local and hosted Linux checks pass without recursive remote permission mutation — "Fresh mise run check: 37 Node tests, fmt, Clippy, 296 Rust tests pass. Hosted CI 40081866652 on exact 468684dd6ff13b7c33c7d59e43d234400f392d80 succeeds for full Ubuntu/Windows checks, both hook jobs and MSRV."
