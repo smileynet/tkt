@@ -94,6 +94,7 @@ test("built identity belongs to packaged source or its own checkout across rebui
     cpSync(join(repo, "build.rs"), join(dir, "build.rs"));
     writeFileSync(join(dir, "Cargo.toml"), '[package]\nname="identity-fixture"\nversion="0.0.0"\nedition="2021"\n[build-dependencies]\nserde_json="1"\n');
     writeFileSync(join(dir, "src/main.rs"), 'fn main() { print!("{}", env!("TKT_GIT_HASH")); }\n');
+    cpSync(join(repo, "Cargo.lock"), join(dir, "Cargo.lock"));
     writeFileSync(join(dir, ".gitignore"), "target/\n");
   };
   const build = (dir, extra = {}) => {

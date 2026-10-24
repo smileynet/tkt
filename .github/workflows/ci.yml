@@ -37,6 +37,9 @@ jobs:
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.32.0/cargo-dist-installer.sh | sh
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
+      - name: Fetch locked test dependencies
+        run: cargo fetch --locked
+
       - name: Verification gate
         run: mise run check
         env:
