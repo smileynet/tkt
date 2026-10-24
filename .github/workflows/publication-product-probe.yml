@@ -44,7 +44,7 @@ jobs:
       - name: Diagnose temporary workspace and package paths
         run: |-
           node --input-type=module <<'DIAGNOSTIC'
-          import {cpSync,mkdtempSync,readFileSync,writeFileSync,realpathSync,readdirSync,rmSync} from 'node:fs';
+          import {cpSync,mkdtempSync,readFileSync,writeFileSync,realpathSync,readdirSync,mkdirSync,rmSync} from 'node:fs';
           import {tmpdir} from 'node:os';
           import {join} from 'node:path';
           import {spawnSync} from 'node:child_process';
@@ -52,9 +52,17 @@ jobs:
           const repo=process.cwd();
           function run(binary,args,cwd){const r=spawnSync(binary,args,{cwd,encoding:'utf8',maxBuffer:8*1024*1024});console.log(JSON.stringify({binary,args,cwd,status:r.status,error:r.error?.message,stdout:r.stdout,stderr:r.stderr}));return r;}
           console.log(JSON.stringify({tmpdir:tmpdir(),canonicalTemp:realpathSync(tmpdir()),path:process.env.PATH}));
-          run('cargo',['package','--list','--offline','--allow-dirty'],repo);
-          for(const canonical of [false,true]){
-           const temp=mkdtempSync(join(canonical?realpathSync(tmpdir()):tmpdir(),'dist-windows-probe-'));
+          const packageTemp=mkdtempSync(join(tmpdir(),'package-fixture-'));
+          try{
+           mkdirSync(join(packageTemp,'src'));writeFileSync(join(packageTemp,'src/main.rs'),'fn main() {}\n');
+           const policy=parse(readFileSync(join(repo,'Cargo.toml'),'utf8')).package;
+           for(const f of ['README.md','CHANGELOG.md','LICENSE','build.rs'])writeFileSync(join(packageTemp,f),'Fixture\n');
+           writeFileSync(join(packageTemp,'Cargo.toml'),stringify({package:{name:'package-exclusions-fixture',version:'0.0.0',edition:'2021',license:'MIT',include:policy.include}}));
+           run('git',['init'],packageTemp);run('git',['add','.'],packageTemp);run('git',['-c','user.name=Probe','-c','user.email=probe@example.invalid','commit','-m','Probe'],packageTemp);
+           run('cargo',['package','--list','--offline','--allow-dirty'],packageTemp);
+          }finally{rmSync(packageTemp,{recursive:true,force:true});}
+          for(const [canonical,base] of [['native',realpathSync.native(tmpdir())],['workspace-drive',process.env.RUNNER_TEMP]]){
+           const temp=mkdtempSync(join(base,'dist-windows-probe-'));
            try{
             for(const f of ['Cargo.toml','Cargo.lock','build.rs','src','README.md','CHANGELOG.md','LICENSE'])cpSync(join(repo,f),join(temp,f),{recursive:true});
             const cfg=parse(readFileSync(join(temp,'Cargo.toml'),'utf8'));cfg.workspace.metadata.dist['allow-dirty']=[];writeFileSync(join(temp,'Cargo.toml'),stringify(cfg));
