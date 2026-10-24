@@ -1,10 +1,18 @@
 {
   "name": "tkt",
   "displayName": "tkt",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Git-native ticket tracker and workflow skills (tkt-core, tkt-orient, tkt-work, tkt-reconcile): track tasks as markdown files in .tickets/ and work the dependency-graph frontier.",
-  "author": {"name": "smileynet"},
+  "author": {
+    "name": "smileynet"
+  },
   "repository": "https://github.com/smileynet/tkt",
   "license": "MIT",
-  "keywords": ["tickets", "task-management", "dependencies", "frontier", "tkt"]
+  "keywords": [
+    "tickets",
+    "task-management",
+    "dependencies",
+    "frontier",
+    "tkt"
+  ]
 }
