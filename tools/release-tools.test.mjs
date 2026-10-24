@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import "./claude-hooks.test.mjs";
 import { parse as parseToml } from "smol-toml";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

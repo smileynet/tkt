@@ -9,6 +9,21 @@ permissions:
   contents: read
 
 jobs:
+  plugin-hooks:
+    name: Claude hook fixtures (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Verify guarded session context
+        run: node --test tools/claude-hooks.test.mjs
+
   check:
     runs-on: ubuntu-latest
     steps:

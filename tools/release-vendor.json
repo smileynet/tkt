@@ -11,7 +11,7 @@
   "sourceTree": "per-file SHA-256 values identify the canonical source bytes",
   "files": {
     "tools/release.mjs": "80cc78ebd88b1431a133edb4c7856b345657976a4865ce05b08d623022d75d9c",
-    "tools/release-artifacts.mjs": "df22e1f9cf17065abb7da60449ff3c14a2a7f2af51372733369d0bda450a984d",
+    "tools/release-artifacts.mjs": "b719eae3637dff1d017db76eff28e9dd6ca8d9ed86b9a7bbe4394195ef588540",
     "tools/release-version.mjs": "c00161120615abb0e848161854493046b1f94a48d8355e9232ffcebc2e140c5f",
     "tools/release-git.mjs": "ee25375dc7b4bbb9e80d520ae069d667a4898124587072783f773e1d6b6c311c",
     "tools/release-product.mjs": "3a06a50e34eb3f5cf647c9b08dd725c705e4883b3bafb222bb01865daff2478a",

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Claude Code sessions show the launch project's ticket frontier and work in progress when tkt is on PATH. Requires Claude 2.1.310+ and Node 22+.
 
 - tkt is installable as a Claude Code plugin: `/plugin marketplace add smileynet/tkt`, then
   `/plugin install tkt@tkt`

@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/.claude-plugin/hooks/session-start.mjs"],
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -33,6 +33,17 @@ function json(path) {
 }
 const encoded = (value) => JSON.stringify(value, null, 2) + "\n";
 
+function claudeFiles(pack) {
+  const files = pack.deploy.claudeFiles ?? [];
+  if (!Array.isArray(files) || files.some((path) => typeof path !== "string" || !path.startsWith(".claude-plugin/"))) throw new ArtifactError("Claude-only files must stay under .claude-plugin/");
+  for (const path of files) {
+    distributable(path);
+    if (!lstatSync(join(pack.dir, path)).isFile()) throw new ArtifactError(`Claude-only resource is not a regular file: ${path}`);
+  }
+  if (pack.manifest.hooks !== undefined && (typeof pack.manifest.hooks !== "string" || !files.includes(pack.manifest.hooks.replace(/^\.\//, "")))) throw new ArtifactError("Claude hook config must be declared in claudeFiles");
+  return files;
+}
+
 function safePath(path) {
   if (!path || isAbsolute(path) || /[\\:\x00-\x1f]/.test(path) || path.replace(/\/$/, "").split("/").some((part) => !part || part === ".." || part === ".")) throw new ArtifactError(`unsafe archive path: ${path}`);
 }
@@ -98,6 +109,8 @@ function validatePack(dir, host, identity) {
     const errors = lint(pack);
     if (errors.length) throw new ArtifactError(errors.join("; "));
     agyResources(pack);
+    if (host === "claude") claudeFiles(pack);
+    else if (pack.manifest.hooks !== undefined || pack.deploy.claudeFiles !== undefined) throw new ArtifactError("Claude hook declaration leaked into Codex bundle");
   } else {
     const skills = readdirSync(join(dir, "skills")).map((name) => ({ name, src: join(dir, "skills", name) }));
     agyResources({ dir, skills, deploy: {} });
@@ -142,6 +155,8 @@ export function buildArtifacts({ repo, ref, out, compatibility = { status: "not-
     const versionState = inspectVersions((file) => read(join(source, file), "utf8"), (file) => existsSync(join(source, file)));
     const identity = { name: versionState.name, version: versionState.version, skills: pack.skills.length };
     const resources = agyResources(pack);
+    const privateFiles = claudeFiles(pack);
+    if (resources.some((path) => privateFiles.includes(relative(source, path).split(sep).join("/")))) throw new ArtifactError("Claude-only files must not enter shared resource closure");
     const staged = join(temp, "assets");
     mkdirSync(staged);
     const metadata = { schema: 1, ...identity, candidateSha, tag: `v${identity.version}`, compatibility, verification: { structural: "pass", native: "not-run", platforms: [] }, assets: [] };
@@ -154,6 +169,7 @@ export function buildArtifacts({ repo, ref, out, compatibility = { status: "not-
         execFileSync(process.execPath, [join(source, script), "agy", "build", "--out", tree], { encoding: "utf8" });
       } else {
         const files = new Set(resources.map((path) => relative(source, path).split(sep).join("/")));
+        if (host === "claude") for (const path of privateFiles) files.add(path);
         for (const root of [".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json"]) if (existsSync(join(source, root))) files.add(root);
         for (const path of [...files].sort()) {
           distributable(path);
@@ -161,6 +177,12 @@ export function buildArtifacts({ repo, ref, out, compatibility = { status: "not-
           mkdirSync(dirname(dest), { recursive: true });
           cpSync(join(source, path), dest);
           chmodSync(dest, lstatSync(join(source, path)).mode & 0o777);
+        }
+        if (host === "codex") {
+          const manifest = json(join(tree, ".claude-plugin/plugin.json"));
+          delete manifest.hooks;
+          if (manifest.metadata?.deploy) delete manifest.metadata.deploy.claudeFiles;
+          writeFileSync(join(tree, ".claude-plugin/plugin.json"), encoded(manifest));
         }
       }
       let install = "agy plugin install /absolute/path/to/extracted-plugin";

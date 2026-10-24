@@ -9,6 +9,7 @@
   "homepage": "https://github.com/smileynet/tkt",
   "repository": "https://github.com/smileynet/tkt",
   "license": "MIT",
+  "hooks": "./.claude-plugin/claude-hooks.json",
   "keywords": [
     "tickets",
     "task-management",
@@ -18,6 +19,10 @@
   ],
   "metadata": {
     "deploy": {
+      "claudeFiles": [
+        ".claude-plugin/claude-hooks.json",
+        ".claude-plugin/hooks/session-start.mjs"
+      ],
       "forbidRefs": [
         "frontier-work",
         "read-handoff",

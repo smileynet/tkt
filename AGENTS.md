@@ -84,6 +84,14 @@ create a second release. Current work stops at staged candidates.
 
 ### Claude Code plugin (keep it current)
 
+The Claude-only SessionStart hook adds the launch project's frontier and in-progress
+tickets to context when `.tickets/` and the `tkt` executable exist. It runs on each
+SessionStart event, including resume and compact, and emits no partial context on
+failure. It targets Claude 2.1.310+ and Node 22+. Private hook config/scripts live in
+`.claude-plugin/` and `metadata.deploy.claudeFiles`; never put them in shared
+`runtimeFiles` or Markdown resource links. Codex explicitly selects no hooks, and
+release packaging ships these private files only in the Claude archive.
+
 tkt is also a Claude Code plugin: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`,
 with skills from the default `skills/` dir. grey-matter's plugin depends on it as
 `tkt@tkt` (this marketplace), so keep the plugin and marketplace name `tkt`. When a change touches skills or
