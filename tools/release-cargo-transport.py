@@ -20,6 +20,7 @@ import sys
 import tempfile
 
 PHASE = "initialization"
+CREDENTIAL_RELEASED = False
 
 
 def phase(name):
@@ -49,11 +50,14 @@ def line(stream, timeout):
 
 def run(args, cwd, env, timeout=600):
     result = subprocess.run(args, cwd=cwd, env=env, capture_output=True, timeout=timeout)
+    if result.returncode != 0 and not CREDENTIAL_RELEASED:
+        sys.stderr.write(result.stderr[-8192:].decode("utf8", errors="replace"))
     require(result.returncode == 0, "command failed")
     return result.stdout.decode("utf8")
 
 
 def inventory(root):
+    root = root.resolve()
     result = {}
     for path in sorted(root.rglob("*")):
         relative = str(path.relative_to(root))
@@ -65,6 +69,7 @@ def inventory(root):
             result[relative] = {"kind": "file", "mode": stat.S_IMODE(info.st_mode), "sha256": sha(path.read_bytes()), "size": info.st_size}
         else:
             require(stat.S_ISDIR(info.st_mode), "nonregular snapshot input")
+            result[relative] = {"kind": "directory", "mode": stat.S_IMODE(info.st_mode)}
     return result
 
 
@@ -73,6 +78,7 @@ def git(repo, env, *args):
 
 
 def inner():
+    global CREDENTIAL_RELEASED
     phase("mounted-inventory")
     require(str(Path(__file__)) == "/tmp/release-helpers/transport.py", "inner entry requires private mounted helpers")
     policy = json.loads(Path("/tmp/release-helpers/policy.json").read_text())
@@ -80,16 +86,25 @@ def inner():
     source = Path("/tmp/release-candidate")
     env = dict(os.environ)
     home = Path("/tmp/release-home")
+    phase("cache-copy")
     for path in Path("/tmp/release-cache").rglob("*"):
         if path.is_file():
             destination = home / path.relative_to("/tmp/release-cache")
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(path.read_bytes())
     def verify():
-        require(inventory(source) == expected, "mounted candidate differs")
+        phase("source-inventory")
+        observed = inventory(source)
+        if observed != expected and not CREDENTIAL_RELEASED:
+            difference = [key for key in sorted(set(expected) | set(observed)) if expected.get(key) != observed.get(key)]
+            sys.stderr.write(json.dumps({"inventoryDifferences": [{"path": key, "expected": expected.get(key), "observed": observed.get(key)} for key in difference[:8]], "total": len(difference)}) + "\n")
+        require(observed == expected, "mounted candidate differs")
+        phase("candidate-head")
         require(git(source, env, "rev-parse", "HEAD").strip() == policy["candidateSha"], "candidate Git identity differs")
+        phase("candidate-clean")
         require(not git(source, env, "status", "--porcelain", "--untracked-files=all").strip(), "candidate is dirty")
     verify()
+    phase("git-integrity")
     git(source, env, "fsck", "--full", "--strict")
     phase("package-preflight")
     command = [policy["cargo"], "package", "--registry", policy["registry"], "--locked", "--no-verify", "--target-dir", "/tmp/release-target"]
@@ -98,11 +113,12 @@ def inner():
     require(archive.stat().st_size == policy["size"] and sha(archive.read_bytes()) == policy["sha256"], "preflight differs from seal")
     verify()
     phase("intent-wait")
-    emit({"phase": "prepared", "candidateSha": policy["candidateSha"], "sha256": policy["sha256"], "size": policy["size"], "inventorySha256": sha(json.dumps(expected, sort_keys=True).encode()), "files": len(expected)})
+    emit({"phase": "prepared", "candidateSha": policy["candidateSha"], "sha256": policy["sha256"], "size": policy["size"], "inventorySha256": sha(json.dumps(expected, sort_keys=True).encode()), "files": sum(item["kind"] != "directory" for item in expected.values())})
     request = line(sys.stdin, 1800)
     if request == {"action": "close"}:
         return
     require(set(request) == {"action", "token"} and request["action"] == "publish", "unexpected attempt command")
+    CREDENTIAL_RELEASED = True
     token = request["token"]
     require(isinstance(token, str) and 0 < len(token) <= 8192 and all(33 <= ord(char) <= 126 for char in token), "invalid credential")
     require(policy["registry"] != "release-probe" or token == "local-probe-only", "real credential forbidden for probe")
@@ -175,13 +191,17 @@ def outer():
             (helpers / "inventory.json").write_text(json.dumps(expected, sort_keys=True))
             inputs = [(source, "/tmp/release-candidate"), (helpers, "/tmp/release-helpers")]
             files = []
-            directories = set()
+            directories = {}
             symlinks = []
             for base, destination in inputs:
                 for relative, item in inventory(base).items():
                     target = destination + "/" + relative
-                    directories.update(str(parent) for parent in Path(target).parents if str(parent).startswith(destination))
-                    if item["kind"] == "symlink":
+                    for parent in Path(target).parents:
+                        if str(parent).startswith(destination):
+                            directories.setdefault(str(parent), 0o755)
+                    if item["kind"] == "directory":
+                        directories[target] = item["mode"]
+                    elif item["kind"] == "symlink":
                         symlinks.append((item["target"], target))
                     else:
                         files.append((base / relative, target, item))
@@ -191,7 +211,9 @@ def outer():
                         require(not path.is_symlink(), "cache symlink")
                         if path.is_file():
                             target = "/tmp/release-cache/" + str(path.relative_to(home))
-                            directories.update(str(parent) for parent in Path(target).parents if str(parent).startswith("/tmp/release-cache"))
+                            for parent in Path(target).parents:
+                                if str(parent).startswith("/tmp/release-cache"):
+                                    directories.setdefault(str(parent), 0o755)
                             files.append((path, target, {"mode": 0o444, "sha256": sha(path.read_bytes()), "size": path.stat().st_size}))
             files.append((home / "config.toml", "/tmp/release-home/config.toml", {"mode": 0o444, "sha256": sha((home / "config.toml").read_bytes()), "size": (home / "config.toml").stat().st_size}))
             require(len(files) <= 10000 and sum(item["size"] for _, _, item in files) <= 256 * 1024 * 1024, "snapshot resource limit")
@@ -207,8 +229,8 @@ def outer():
             args.extend(["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp"])
             for directory in ["candidate", "helpers", "cache", "home", "target", "tmp"]:
                 args.extend(["--tmpfs", "/tmp/release-" + directory])
-            for directory in sorted(directories):
-                args.extend(["--dir", directory])
+            for directory, mode in sorted(directories.items()):
+                args.extend(["--perms", format(mode, "o"), "--dir", directory])
             seals = fcntl.F_SEAL_WRITE | fcntl.F_SEAL_GROW | fcntl.F_SEAL_SHRINK | fcntl.F_SEAL_SEAL
             def sealed(data, mode=0o444):
                 descriptor = os.memfd_create("release-input", os.MFD_ALLOW_SEALING | os.MFD_CLOEXEC)
@@ -249,6 +271,8 @@ def outer():
                 raise RuntimeError("private preflight process failed") from error
             if prepared.get("status") == "error":
                 phase(prepared.get("phase", "private-preflight"))
+                _, diagnostic = child.communicate(timeout=10)
+                sys.stderr.write(diagnostic[:8192])
             require(prepared.get("status") == "pass" and prepared.get("phase") == "prepared", "private preflight failed")
             emit({key: value for key, value in prepared.items() if key != "status"})
             phase("intent-wait")
