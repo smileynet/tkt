@@ -13,6 +13,7 @@ from pathlib import Path
 import resource
 import select
 import shlex
+import shutil
 import signal
 import stat
 import subprocess
@@ -278,6 +279,8 @@ def outer():
                 _, diagnostic = child.communicate(timeout=10)
                 sys.stderr.write(diagnostic[:8192])
             require(prepared.get("status") == "pass" and prepared.get("phase") == "prepared", "private preflight failed")
+            # All private inputs now live in sealed descriptors/mounts, not this tree.
+            shutil.rmtree(root)
             emit({key: value for key, value in prepared.items() if key != "status"})
             phase("intent-wait")
             request = line(sys.stdin, 1800)
