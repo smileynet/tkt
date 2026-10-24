@@ -50,7 +50,7 @@ release gate is limited to the completed blocker table above and #146.
 | 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | backlog |
 | 186 | Reconcile or retire the historical parity harness | backlog |
 | 190 | Parse known config keys into strict typed policies | backlog |
-| 206 | Grandfather pre-protocol corpus from audit missing-resolution (ADR 0003) | backlog |
+| 206 | Grandfather pre-protocol corpus from audit missing-resolution (ADR 0003) | ✅ done |
 | 191 | Centralize mutation effects and dry-run policy after #136 | backlog |
 
 ## v0.5.0 — agent experience and extensions
@@ -86,7 +86,7 @@ three roots first (`192`, `193`, `194`), their dependents, then the docs pass la
 
 | ID | Work | Status |
 |---:|---|---|
-| 192 | parent field: schema, parse, serialize | open |
+| 192 | parent field: schema, parse, serialize | ✅ done |
 | 193 | `[labels.*]` config: parse single-select + closed-value namespaces | backlog |
 | 194 | assignee field + claim-by-assignment + frontier honors it | backlog |
 | 195 | parent validation: dangling + cycle checks (after 192) | backlog |
