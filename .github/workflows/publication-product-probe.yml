@@ -1,19 +1,19 @@
-name: Frozen candidate Windows verification
+name: Frozen Windows generator diagnosis
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
 permissions:
   contents: read
 defaults:
   run:
     shell: bash
 jobs:
-  windows-candidate:
+  diagnostic:
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     env:
-      DO_NOT_TRACK: '1'
+      DO_NOT_TRACK: "1"
     steps:
-      - name: Preserve repository file bytes
+      - name: Preserve Git bytes
         run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
         with:
@@ -21,24 +21,46 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: "22"
           package-manager-cache: false
-      - name: Prove exact candidate checkout
-        run: |
-          node -e "const {execFileSync}=require('node:child_process'); const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(sha!=='b2425c93f94a0b56a87cb6496ecbadaf381922bf') process.exit(1); console.log('candidateSha='+sha);"
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-      - uses: jdx/mise-action@v5
-      - name: Install pinned workflow generator
-        run: cargo install cargo-dist --version 0.32.0 --locked
+      - name: Install verified pinned native generator
+        shell: pwsh
+        run: |-
+          $base = 'https://github.com/axodotdev/cargo-dist/releases/download/v0.32.0/cargo-dist-x86_64-pc-windows-msvc.zip'
+          $archive = Join-Path $env:RUNNER_TEMP 'cargo-dist.zip'
+          Invoke-WebRequest $base -OutFile $archive
+          $expected = ((Invoke-WebRequest "$base.sha256").Content.Trim() -split '\s+')[0]
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
+          if ($actual -ne $expected) { throw 'cargo-dist checksum mismatch' }
+          $destination = Join-Path $env:RUNNER_TEMP 'cargo-dist-native'
+          Expand-Archive $archive -DestinationPath $destination
+          $binary = Get-ChildItem $destination -Filter dist.exe -Recurse | Select-Object -First 1
+          if (!$binary) { throw 'Missing native dist.exe' }
+          $binary.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: cargo fetch --locked
-      - name: Node release and migration safety fixtures
-        run: node --test tools/release-tools.test.mjs tools/release-ci.test.mjs
-      - run: cargo fmt --check
-        if: success() || failure()
-      - run: cargo clippy --all-targets -- -D warnings
-        if: success() || failure()
-      - run: cargo test --locked
-        if: success() || failure()
+      - name: Diagnose temporary workspace and package paths
+        run: |-
+          node --input-type=module <<'DIAGNOSTIC'
+          import {cpSync,mkdtempSync,readFileSync,writeFileSync,realpathSync,readdirSync,rmSync} from 'node:fs';
+          import {tmpdir} from 'node:os';
+          import {join} from 'node:path';
+          import {spawnSync} from 'node:child_process';
+          import {parse,stringify} from 'smol-toml';
+          const repo=process.cwd();
+          function run(binary,args,cwd){const r=spawnSync(binary,args,{cwd,encoding:'utf8',maxBuffer:8*1024*1024});console.log(JSON.stringify({binary,args,cwd,status:r.status,error:r.error?.message,stdout:r.stdout,stderr:r.stderr}));return r;}
+          console.log(JSON.stringify({tmpdir:tmpdir(),canonicalTemp:realpathSync(tmpdir()),path:process.env.PATH}));
+          run('cargo',['package','--list','--offline','--allow-dirty'],repo);
+          for(const canonical of [false,true]){
+           const temp=mkdtempSync(join(canonical?realpathSync(tmpdir()):tmpdir(),'dist-windows-probe-'));
+           try{
+            for(const f of ['Cargo.toml','Cargo.lock','build.rs','src','README.md','CHANGELOG.md','LICENSE'])cpSync(join(repo,f),join(temp,f),{recursive:true});
+            const cfg=parse(readFileSync(join(temp,'Cargo.toml'),'utf8'));cfg.workspace.metadata.dist['allow-dirty']=[];writeFileSync(join(temp,'Cargo.toml'),stringify(cfg));
+            console.log(JSON.stringify({canonical,temp,files:readdirSync(temp),manifest:readFileSync(join(temp,'Cargo.toml'),'utf8')}));
+            run('git',['init'],temp);run('git',['remote','add','origin','https://github.com/smileynet/tkt.git'],temp);run('git',['add','.'],temp);run('git',['-c','user.name=Probe','-c','user.email=probe@example.invalid','commit','-m','Probe'],temp);
+            run('cargo',['metadata','--format-version','1','--no-deps'],temp);
+            run('dist',['generate','--mode','ci'],temp);
+           }finally{rmSync(temp,{recursive:true,force:true});}
+          }
+
+          DIAGNOSTIC
