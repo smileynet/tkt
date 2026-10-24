@@ -48,3 +48,15 @@ The runtime CLI and publication behavior need no change.
 
 - [ ] The integration test rejects only the push after a successful fetch and local close commit, then asserts preserved state and recovery output.
 - [ ] Full local and hosted Linux checks pass without recursive remote permission mutation.
+
+
+## Implemented and locally verified
+
+The remote now has a fixture-owned executable `pre-receive` hook that returns 1;
+its hook path is configured explicitly on that bare remote. Recursive chmod and
+the single-use directory walker are removed. All existing exit-code, actionable
+recovery, retained-commit and retained-ticket assertions remain.
+
+The dangling-template reproduction changed from exit 101 (ENOENT at fixture setup)
+to exit 0 (one passed test). A fresh `mise run check` passes 37 Node tests, fmt,
+Clippy and all 296 Rust tests. Hosted Linux verification remains required.

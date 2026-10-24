@@ -89,3 +89,14 @@ using a checksum-verified pinned Windows cargo-dist binary.
 Local `mise run check` passes: 37 Node fixtures, fmt, Clippy and 296 Rust tests
 (191 unit + 6 deploy + 96 CLI + 3 manifest). Hosted verification of the corrected
 source is still required; diagnostic success alone does not close this ticket.
+
+
+## Hosted Windows result
+
+[Windows job 120835268220](https://github.com/smileynet/tkt/actions/runs/40081307626/job/120835268220)
+on exact source `c0359f8c9975a9b4c172f5a5f1c5f1f9e83de16d` passed the full gate:
+36 Node tests pass, one relative-symlink migration case is explicitly skipped on
+Windows, fmt and Clippy pass, then 295 Rust tests pass (191 unit + 6 deploy +
+95 platform-applicable CLI + 3 manifest). The Unix-only post-commit permission
+fixture is absent on Windows. Its Linux setup failure is tracked by ticket 220;
+wait for that correction's full Linux check before closing the cross-platform gate.
