@@ -13,10 +13,41 @@ tags: ["stream:tooling"]
 
 # Make the declared Rust minimum pass a locked build
 
+## Intent source
+
+Found during grey-matter release-readiness audit 70, implementing the user's
+request to address outstanding findings and stage tkt 0.5.0 without publication.
+
 ## What to build
 
-TBD
+Source users can build the locked project with its declared minimum Rust version.
+CI enforces that support contract and the README states the same prerequisite.
+Keep CLI behavior and binary platforms unchanged.
+
+## Context and research
+
+Read `Cargo.toml`, `Cargo.lock`, `.github/workflows/ci.yml`, then `README.md`.
+At source `b2d2321`, package rust-version is 1.80; locked clap 4.6.4,
+clap_builder 4.6.2, clap_derive 4.6.4 and clap_lex 1.1.0 require Rust 1.85
+and edition 2024. Dev getrandom 0.4.3 also requires 1.85. Metadata establishes
+the incompatibility; no 1.80 compiler invocation has run yet. Lockfile v4 itself
+is supported by Cargo 1.80.
+
+[Audited evidence and sources](https://github.com/smileynet/grey-matter/blob/5286232/docs/agents/research/tkt-msrv-evidence.md).
+Primary references: [Cargo rust-version](https://doc.rust-lang.org/stable/cargo/reference/rust-version.html),
+[Rust 2024 release](https://doc.rust-lang.org/edition-guide/rust-2024/index.html),
+[Cargo changelog](https://doc.rust-lang.org/stable/cargo/CHANGELOG.html#cargo-178-2024-05-02).
+
+First reproduce with hosted `cargo +1.80.0 check --locked --bin tkt`, retaining
+exact SHA and diagnostics. Then either raise the honest minimum (1.85 is the
+metadata-supported candidate) or deliberately pin compatible dependencies with
+justification. Prove the selected minimum on a hosted locked build; don't use
+ignore-rust-version or claim metadata inspection is compiler execution.
+No toolchain install on the disk-constrained local workspace. This ticket does
+not publish anything or authorize an unrelated dependency update.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] Hosted Rust 1.80 locked binary check retains exact failing SHA and diagnostic.
+- [ ] Hosted locked binary check passes on the declared minimum.
+- [ ] Manifest, README and CI declare the same supported minimum.
