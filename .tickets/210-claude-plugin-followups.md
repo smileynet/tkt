@@ -1,7 +1,7 @@
 ---
 id: "210"
 title: "Claude plugin follow-ups: SessionStart frontier hook; deploy-skills skips ~/.claude/skills when the plugin is installed"
-status: open
+status: in_progress
 blocked_by: ["209"]
 priority: low
 validation_criteria:
