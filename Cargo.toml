@@ -56,5 +56,5 @@ cargo-dist-version = "0.32.0"
 install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
-# Don't complain about our self-hosted runner modifications
+# The checked generator wrapper replaces publishing jobs with read-only staging
 allow-dirty = ["ci"]

@@ -290,6 +290,10 @@ Before each commit, run `mise run check`. GitHub Actions runs that same verifica
 gate on every push and pull request, but the automated check does not replace local
 verification.
 
+## Release maintenance
+
+[Release staging](docs/release-staging.md) covers the pinned generator, maintainer checks and manual artifact builds. Publication integration is still in progress.
+
 ## License
 
 [MIT](LICENSE)

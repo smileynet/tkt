@@ -12,7 +12,7 @@ run = "node --test tools/release-tools.test.mjs"
 [tasks.check]
 description = "Run release-tool, fmt, clippy and Rust test gates"
 run = """
-node --test tools/release-tools.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+node --test tools/release-tools.test.mjs tools/release-ci.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 """
 
 [tasks.deploy]
