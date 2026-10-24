@@ -353,7 +353,7 @@ function doUninstall(pack, args) {
 
 function markdownResources(text, visit) {
   const code = [...text.matchAll(/```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`/g)].map((m) => [m.index, m.index + m[0].length]);
-  return text.replace(/(\[[^\]]*\]\()([^)]+)(\))/g, (whole, open, value, close, offset) => {
+  return text.replace(/(\[[^\[\]]*\]\()([^)]+)(\))/g, (whole, open, value, close, offset) => {
     if (code.some(([start, end]) => start <= offset && offset < end)) return whole;
     const href = value.trim().split(/\s+/)[0];
     const target = href.split("#")[0];
