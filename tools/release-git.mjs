@@ -21,30 +21,35 @@ export function git(repo, args, options) {
   return result.stdout;
 }
 
-// Push only a sealed candidate branch and annotated tag; stable is a later step.
-export function pushCandidateRefs({ repo, remote = "origin", branch, tag, candidateSha, tagObject, execute = false }) {
+// Push sealed candidate refs and an optional checked development integration; stable follows later.
+export function pushCandidateRefs({ repo, remote = "origin", branch, tag, candidateSha, tagObject, developmentSha, execute = false }) {
   if (typeof execute !== "boolean" || !/^[a-f0-9]{40}$/.test(candidateSha) || !/^[a-f0-9]{40}$/.test(tagObject)) throw new ReleaseError("invalid candidate ref identity or execution mode");
   for (const ref of [branch, tag]) {
     if (typeof ref !== "string" || !ref || ref.startsWith("-") || command(repo, ["check-ref-format", ref]).status !== 0) throw new ReleaseError("invalid full release ref");
   }
   if (!branch.startsWith("refs/heads/") || branch === "refs/heads/stable" || !tag.startsWith("refs/tags/")) throw new ReleaseError("candidate push requires a branch other than stable and a tag");
+  if (developmentSha !== undefined && (!/^[a-f0-9]{40}$/.test(developmentSha) || git(repo, ["cat-file", "-t", developmentSha]).trim() !== "commit" || command(repo, ["merge-base", "--is-ancestor", candidateSha, developmentSha]).status !== 0)) throw new ReleaseError("development integration must contain the exact candidate commit");
+  const developmentRef = developmentSha === undefined ? [] : ["refs/heads/main"];
+  if (developmentSha !== undefined && branch === "refs/heads/main") throw new ReleaseError("candidate branch must be distinct from development main");
   const url = pushUrl(repo, remote);
   requireCandidateTag({ repo, candidateSha, tagObject, tag });
   function inspect() {
-    const refs = new Map(git(repo, ["ls-remote", "--refs", url, branch, tag]).trim().split("\n").filter(Boolean).map((line) => {
+    const refs = new Map(git(repo, ["ls-remote", "--refs", url, branch, tag, ...developmentRef]).trim().split("\n").filter(Boolean).map((line) => {
       const fields = line.split(/\s+/);
-      if (fields.length !== 2 || !/^[a-f0-9]{40}$/.test(fields[0]) || ![branch, tag].includes(fields[1])) throw new ReleaseError("invalid remote ref response");
+      if (fields.length !== 2 || !/^[a-f0-9]{40}$/.test(fields[0]) || ![branch, tag, ...developmentRef].includes(fields[1])) throw new ReleaseError("invalid remote ref response");
       return [fields[1], fields[0]];
     }));
     if (refs.has(tag) && refs.get(tag) !== tagObject) throw new ReleaseError("remote release tag differs; refusing replacement");
     const old = refs.get(branch);
     if (old && old !== candidateSha && command(repo, ["merge-base", "--is-ancestor", old, candidateSha]).status !== 0) throw new ReleaseError("remote candidate branch is divergent or ancestry is unavailable");
-    return { branch: old ?? null, tag: refs.get(tag) ?? null };
+    const main = refs.get("refs/heads/main");
+    if (developmentSha !== undefined && (!main || (main !== developmentSha && command(repo, ["merge-base", "--is-ancestor", main, developmentSha]).status !== 0))) throw new ReleaseError("development main is missing, divergent or advanced beyond the verified integration; fetch and recheck it");
+    return { branch: old ?? null, tag: refs.get(tag) ?? null, ...(developmentSha === undefined ? {} : { development: main }) };
   }
   let observed = inspect();
-  const matches = () => observed.branch === candidateSha && observed.tag === tagObject;
+  const matches = () => observed.branch === candidateSha && observed.tag === tagObject && (developmentSha === undefined || observed.development === developmentSha);
   if (execute && !matches()) {
-    const push = command(repo, ["-c", "push.followTags=false", "push", "--atomic", "--no-follow-tags", "--recurse-submodules=no", url, `${candidateSha}:${branch}`, `${tagObject}:${tag}`]);
+    const push = command(repo, ["-c", "push.followTags=false", "push", "--atomic", "--no-follow-tags", "--recurse-submodules=no", url, `${candidateSha}:${branch}`, `${tagObject}:${tag}`, ...(developmentSha === undefined ? [] : [`${developmentSha}:refs/heads/main`])]);
     observed = inspect();
     if (!matches()) throw new ReleaseError(`atomic candidate push was not observed (exit ${push.status}); inspect and resume the same identity; no sequential fallback`);
   }
