@@ -1,7 +1,7 @@
 ---
 id: "219"
 title: "Make release generation and deployment fixtures portable on Windows"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
