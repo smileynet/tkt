@@ -63,7 +63,7 @@ test("Cargo package excludes tracked scratch while retaining source and license"
     writeFileSync(join(temp, "src/main.rs"), "fn main() {}\n");
     writeFileSync(join(temp, "LICENSE"), "Fixture license\n");
     for (const file of ["README.md", "CHANGELOG.md", "build.rs"]) writeFileSync(join(temp, file), "Fixture\n");
-    for (const file of ["tools/maintainer.mjs", ".claude-plugin/plugin.json", "skills/demo/SKILL.md", "package.json"]) writeFileSync(join(temp, file), "Maintainer fixture\n");
+    for (const file of ["tools/maintainer.mjs", ".claude-plugin/plugin.json", "skills/demo/SKILL.md", "package.json", "tools/README.md", "tools/LICENSE", "tools/build.rs"]) writeFileSync(join(temp, file), "Maintainer fixture\n");
     writeFileSync(join(temp, ".scratch/HANDOFF.md"), "Internal planning fixture\n");
     writeFileSync(join(temp, "Cargo.toml"), '[package]\nname="package-exclusions-fixture"\nversion="0.0.0"\nedition="2021"\nlicense="MIT"\n');
     git("init"); git("add", ".");
@@ -77,7 +77,7 @@ test("Cargo package excludes tracked scratch while retaining source and license"
     const actual = list(policy);
     assert.ok(!actual.some((entry) => entry.startsWith(".scratch/")), "actual Cargo policy excludes tracked scratch");
     for (const file of ["src/main.rs", "LICENSE", "README.md", "CHANGELOG.md", "build.rs", "Cargo.toml", "Cargo.lock"]) assert.ok(actual.includes(file), `required ${file}`);
-    for (const file of ["tools/maintainer.mjs", ".claude-plugin/plugin.json", "skills/demo/SKILL.md", "package.json"]) assert.ok(!actual.includes(file), `unrelated ${file}`);
+    for (const file of ["tools/maintainer.mjs", ".claude-plugin/plugin.json", "skills/demo/SKILL.md", "package.json", "tools/README.md", "tools/LICENSE", "tools/build.rs"]) assert.ok(!actual.includes(file), `unrelated ${file}`);
     assert.equal(readFileSync(join(temp, ".scratch/HANDOFF.md"), "utf8"), "Internal planning fixture\n");
   } finally { rmSync(temp, { recursive: true, force: true }); }
 });
