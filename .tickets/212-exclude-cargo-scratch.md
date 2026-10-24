@@ -1,7 +1,7 @@
 ---
 id: "212"
 title: "Exclude tracked scratch artifacts from the published crate"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
