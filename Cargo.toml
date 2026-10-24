@@ -11,7 +11,7 @@ documentation = "https://github.com/smileynet/tkt#usage"
 readme = "README.md"
 keywords = ["tickets", "task-management", "git", "todo", "markdown"]
 categories = ["command-line-utilities", "development-tools"]
-exclude = [".scratch/", ".tickets/", ".memory/", ".codex/", ".github/", "tests/"]
+include = ["src/**", "build.rs", "Cargo.toml", "Cargo.lock", "README.md", "CHANGELOG.md", "LICENSE"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

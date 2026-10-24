@@ -55,23 +55,29 @@ test("standalone Node, bash and mise preparation inspect without output or versi
 test("Cargo package excludes tracked scratch while retaining source and license", () => {
   const temp = mkdtempSync(join(tmpdir(), "tkt package exclusions "));
   const git = (...args) => execFileSync("git", ["-C", temp, ...args], { encoding: "utf8", stdio: "pipe" });
-  const policy = parseToml(readFileSync(join(repo, "Cargo.toml"), "utf8")).package.exclude;
+  const pkg = parseToml(readFileSync(join(repo, "Cargo.toml"), "utf8")).package;
+  const policy = Object.fromEntries(["include", "exclude"].filter((key) => Object.hasOwn(pkg, key)).map((key) => [key, pkg[key]]));
+  const oldExcludes = [".scratch/", ".tickets/", ".memory/", ".codex/", ".github/", "tests/"];
   try {
-    mkdirSync(join(temp, "src")); mkdirSync(join(temp, ".scratch"));
+    for (const dir of ["src", ".scratch", "tools", ".claude-plugin", "skills/demo"]) mkdirSync(join(temp, dir), { recursive: true });
     writeFileSync(join(temp, "src/main.rs"), "fn main() {}\n");
     writeFileSync(join(temp, "LICENSE"), "Fixture license\n");
+    for (const file of ["README.md", "CHANGELOG.md", "build.rs"]) writeFileSync(join(temp, file), "Fixture\n");
+    for (const file of ["tools/maintainer.mjs", ".claude-plugin/plugin.json", "skills/demo/SKILL.md", "package.json"]) writeFileSync(join(temp, file), "Maintainer fixture\n");
     writeFileSync(join(temp, ".scratch/HANDOFF.md"), "Internal planning fixture\n");
     writeFileSync(join(temp, "Cargo.toml"), '[package]\nname="package-exclusions-fixture"\nversion="0.0.0"\nedition="2021"\nlicense="MIT"\n');
     git("init"); git("add", ".");
     git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", `core.hooksPath=${join(temp, "no-hooks")}`, "commit", "-m", "Tracked scratch fixture");
-    const list = (exclude) => {
-      writeFileSync(join(temp, "Cargo.toml"), `[package]\nname="package-exclusions-fixture"\nversion="0.0.0"\nedition="2021"\nlicense="MIT"\nexclude=${JSON.stringify(exclude)}\n`);
+    const list = (selection) => {
+      writeFileSync(join(temp, "Cargo.toml"), `[package]\nname="package-exclusions-fixture"\nversion="0.0.0"\nedition="2021"\nlicense="MIT"\n${Object.entries(selection).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join("\n")}\n`);
       return execFileSync("cargo", ["package", "--list", "--offline", "--allow-dirty"], { cwd: temp, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim().split(/\r?\n/);
     };
-    assert.ok(list(policy.filter((entry) => entry !== ".scratch/")).includes(".scratch/HANDOFF.md"), "seed reproduces old archive leak");
+    assert.ok(list({ exclude: oldExcludes.filter((entry) => entry !== ".scratch/") }).includes(".scratch/HANDOFF.md"), "seed reproduces old archive leak");
+    assert.ok(list({ exclude: oldExcludes }).includes("tools/maintainer.mjs"), "previous exclusions leaked maintainer files");
     const actual = list(policy);
     assert.ok(!actual.some((entry) => entry.startsWith(".scratch/")), "actual Cargo policy excludes tracked scratch");
-    assert.ok(actual.includes("src/main.rs")); assert.ok(actual.includes("LICENSE"));
+    for (const file of ["src/main.rs", "LICENSE", "README.md", "CHANGELOG.md", "build.rs", "Cargo.toml", "Cargo.lock"]) assert.ok(actual.includes(file), `required ${file}`);
+    for (const file of ["tools/maintainer.mjs", ".claude-plugin/plugin.json", "skills/demo/SKILL.md", "package.json"]) assert.ok(!actual.includes(file), `unrelated ${file}`);
     assert.equal(readFileSync(join(temp, ".scratch/HANDOFF.md"), "utf8"), "Internal planning fixture\n");
   } finally { rmSync(temp, { recursive: true, force: true }); }
 });
