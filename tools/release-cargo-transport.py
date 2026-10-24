@@ -134,6 +134,10 @@ def inner():
 
 def outer():
     require(sys.platform == "linux" and len(sys.argv) == 1, "Linux protocol entry required")
+    # Parent death must unwind temporary trees, not bypass their context managers.
+    def terminate(signum, _frame):
+        raise SystemExit(128 + signum)
+    signal.signal(signal.SIGTERM, terminate)
     parent = os.getppid()
     require(parent != 1 and ctypes.CDLL(None, use_errno=True).prctl(1, signal.SIGTERM) == 0 and os.getppid() == parent, "parent lifecycle unavailable")
     policy = line(sys.stdin, 30)

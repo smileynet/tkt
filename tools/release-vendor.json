@@ -26,7 +26,7 @@
     "tools/release-tkt-ci.mjs": "8dd1c0e7505537b9b2c7429b1768f329039783bbee59ba9d00a7756a98a7f9e7",
     "tools/release-cargo-credentials.mjs": "38b0249b810b5523fc7933679f3d70b0f625390edd802b5b01e0ae99b5f6dbfc",
     "tools/release-cargo-upload.mjs": "dcded68ef82b73dc33edd77f6181fdb7cc4bd52011bc3e46238b32fe4d6ea794",
-    "tools/release-cargo-transport.py": "819595bf3edbccf03a98e5a62c204d2f8f9b366e5438ee7268d812557927d755",
+    "tools/release-cargo-transport.py": "f0e60864d1c6eb7c1d929e534989bda14364ba74318d0c2e6f595c9307fccd4a",
     "tools/release-development.mjs": "228fb0245a5906fb9f21055b1ace82c8f614546eb9ad514353e5a1811fe95b81",
     "tools/release-ci-artifacts.mjs": "7d5d84d2a9766f2daed58d7dff2fac6509c7599b546a49d875f1d0f47fd5f7ca",
     "tools/check-skill-syntax.mjs": "35c3f52e0ccd9b6fb628b4dba03b5ff15d08314a8ce77a686b352ac857b67c8d",
