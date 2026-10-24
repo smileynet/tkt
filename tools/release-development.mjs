@@ -3,9 +3,9 @@ import { closeSync, existsSync, mkdirSync, openSync, readFileSync, realpathSync,
 import { createHash, randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { basename, dirname, join, resolve, sep } from "node:path";
-import { command, git, gitEnvironment } from "./release-git.mjs";
+import { command, git } from "./release-git.mjs";
 import { greaterVersion, inspectVersions, ReleaseError, stableVersion } from "./release-version.mjs";
-import { verifyProduct } from "./release-product.mjs";
+import { productEnvironment, verifyProduct } from "./release-product.mjs";
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 function versions(repo, sha) {
@@ -68,8 +68,7 @@ export function prepareDevelopment({ repo, remote = "origin", candidateSha, prod
   save({ phase: "checking", mainSha, developmentSha, checkoutFrom: head });
   git(worktree, ["checkout", "--detach", developmentSha]);
   const bootstrap = join(out, `bootstrap-${randomUUID()}.log`), fd = openSync(bootstrap, "wx");
-  const bootstrapEnv = gitEnvironment();
-  for (const key of Object.keys(bootstrapEnv)) if (/^(npm_config_|npm_token$|node_auth_token$)/i.test(key)) delete bootstrapEnv[key];
+  const bootstrapEnv = productEnvironment();
   Object.assign(bootstrapEnv, { NPM_CONFIG_USERCONFIG: join(out, "empty-user.npmrc"), NPM_CONFIG_GLOBALCONFIG: join(out, "empty-global.npmrc"), NPM_CONFIG_CACHE: join(out, "npm-cache"), NPM_CONFIG_REGISTRY: "https://registry.npmjs.org" });
   let installed;
   try { installed = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], { cwd: worktree, stdio: ["ignore", fd, fd], env: bootstrapEnv, shell: process.platform === "win32" }); }

@@ -7,11 +7,16 @@ import { spawnSync } from "node:child_process";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { arch, release, platform } from "node:os";
-import { git, gitEnvironment } from "./release-git.mjs";
+import { git } from "./release-git.mjs";
 import { inspectVersions, ReleaseError } from "./release-version.mjs";
 
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+// Product code needs the toolchain and host paths, never the publisher's credentials.
+export function productEnvironment() {
+  const keys = /^(PATH|HOME|USERPROFILE|SYSTEMROOT|WINDIR|COMSPEC|PATHEXT|TMPDIR|TMP|TEMP|APPDATA|LOCALAPPDATA|PROGRAMFILES|PROGRAMFILES\(X86\)|NUMBER_OF_PROCESSORS|LANG|LC_[A-Z_]+|TZ|TERM|NO_COLOR|FORCE_COLOR|CI|GITHUB_ACTIONS|RUNNER_OS|RUNNER_ARCH|RUNNER_TEMP|CARGO_HOME|RUSTUP_HOME|RUSTUP_TOOLCHAIN|MISE_DATA_DIR|MISE_CACHE_DIR|MISE_CONFIG_DIR|MISE_TRUSTED_CONFIG_PATHS|XDG_CACHE_HOME|XDG_CONFIG_HOME|XDG_DATA_HOME|XDG_STATE_HOME)$/i;
+  return Object.fromEntries(Object.entries(process.env).filter(([key]) => keys.test(key)));
+}
 function canonical(path) {
   if (existsSync(path)) return realpathSync.native(path);
   const parent = dirname(path);
@@ -41,7 +46,7 @@ export function verifyProduct({ repo, sha, out, execute = false, progress = () =
     progress(`product ${index + 1}/${commands.length}: ${args.join(" ")}`);
     const log = `${index + 1}-product.log`, fd = openSync(join(out, log), "wx"), started = new Date().toISOString();
     let run;
-    try { run = spawnSync(args[0], args.slice(1), { cwd: repo, stdio: ["ignore", fd, fd], windowsHide: true, env: gitEnvironment() }); }
+    try { run = spawnSync(args[0], args.slice(1), { cwd: repo, stdio: ["ignore", fd, fd], windowsHide: true, env: productEnvironment() }); }
     finally { closeSync(fd); }
     result.checks.push({ command: args, started, finished: new Date().toISOString(), exit: run.status, signal: run.signal, error: run.error?.message ?? null, log, sha256: digest(readFileSync(join(out, log))) });
     result.status = run.error || run.status !== 0 ? "fail" : "pass";
