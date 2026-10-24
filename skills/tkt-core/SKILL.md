@@ -29,6 +29,11 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 
 For full flags and options, see [commands.md](references/commands.md).
 
+**Creation/edit traps:** `tkt new` seeds a `TBD` body; fill its intent and acceptance
+criteria before validating an open ticket. Use backlog only for genuinely deferred
+work. `tkt edit --blocked-by` replaces the whole list: read the existing blockers,
+combine them with the new IDs, and pass the complete set.
+
 ---
 
 ## Status lifecycle

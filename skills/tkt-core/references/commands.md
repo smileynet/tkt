@@ -95,6 +95,10 @@ When a context is active:
 | `--validation "..."` | Validation criteria (repeatable). Alias: `--vc` | none |
 | `--requires R,R` | Machine capabilities required (e.g., `gpu,linux,corp`) | none |
 
+**After creation:** replace the generated `TBD` body and acceptance placeholders
+before validating an open ticket; otherwise `stub-body` warns. Creation has no
+`--body` or `--body-file` flag. Do not hide actionable work in backlog to silence it.
+
 ## Edit flags
 
 | Flag | Effect |
@@ -107,6 +111,10 @@ When a context is active:
 | `--spec S` | Set spec link (pass `''` to clear) |
 | `--ac N,N` | Check acceptance criteria boxes (1-based) |
 | `--validation "..."` | Replace validation criteria list. Alias: `--vc` |
+
+**Dependency edits replace:** `--blocked-by` replaces the entire list. To add a
+blocker, read the current IDs, combine them with the addition, and pass the full set.
+There are no `--add-blocked-by` or `--remove-blocked-by` flags.
 
 ## Close flags
 
