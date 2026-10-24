@@ -1,48 +1,36 @@
-name: Publication product probe
+name: Frozen candidate Windows verification
 on:
   workflow_dispatch:
 permissions:
   contents: read
+defaults:
+  run:
+    shell: bash
 jobs:
-  product:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 60
+  windows-candidate:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      DO_NOT_TRACK: '1'
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.sha }}
-          path: candidate
-          fetch-depth: 0
+          ref: b2425c93f94a0b56a87cb6496ecbadaf381922bf
           persist-credentials: false
-      - uses: ./candidate/.github/actions/publication-toolchain
-      - name: Install locked probe dependencies
-        working-directory: candidate
-        run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Run actual development product gate without publication credentials
-        working-directory: candidate
-        env:
-          MISE_TRUSTED_CONFIG_PATHS: ${{ runner.temp }}/tkt-product-development/worktree
-        run: |
-          git config --global user.name 'tkt product probe'
-          git config --global user.email 'probe@users.noreply.github.com'
-          node --input-type=module <<'JS' > "$RUNNER_TEMP/tkt-product-result.json"
-          import { readFileSync, existsSync } from 'node:fs';
-          import { join } from 'node:path';
-          import { prepareDevelopment } from './tools/release-development.mjs';
-          import { inspectVersions } from './tools/release-version.mjs';
-          const repo = process.cwd();
-          const identity = inspectVersions(file => readFileSync(join(repo, file), 'utf8'), file => existsSync(join(repo, file)));
-          const result = prepareDevelopment({ repo, candidateSha: process.env.GITHUB_SHA, product: 'tkt', version: identity.version, out: join(process.env.RUNNER_TEMP, 'tkt-product-development'), execute: true });
-          console.log(JSON.stringify(result, null, 2));
-          JS
-      - uses: actions/upload-artifact@v7
-        if: always()
+      - uses: actions/setup-node@v7
         with:
-          name: publication-product-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/tkt-product-result.json
-            ${{ runner.temp }}/tkt-product-development/development.json
-            ${{ runner.temp }}/tkt-product-development/bootstrap-*.log
-            ${{ runner.temp }}/tkt-product-development/product-*/*.json
-            ${{ runner.temp }}/tkt-product-development/product-*/*.log
-          if-no-files-found: error
+          node-version: '22'
+          package-manager-cache: false
+      - name: Prove exact candidate checkout
+        run: |
+          node -e "const {execFileSync}=require('node:child_process'); const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(sha!=='b2425c93f94a0b56a87cb6496ecbadaf381922bf') process.exit(1); console.log('candidateSha='+sha);"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: cargo fetch --locked
+      - name: Node release and migration safety fixtures
+        run: node --test tools/release-tools.test.mjs tools/release-ci.test.mjs
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --locked
