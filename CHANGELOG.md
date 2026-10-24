@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Upgrades from v0.4.0 can preview and remove old skill symlinks before installing the four workflow skills, while preserving unrelated files and source checkouts.
 - Local Claude plugin audits use the active checkout rather than stale cache folders. Failed or foreign source checks preserve existing skill copies during deployment.
 - Plugin archives retain their referenced runtime resources and license notices when extracted away from the source checkout.
 - Packaged binaries report their own source identity, and published crates exclude scratch, plugin packages and maintainer files.

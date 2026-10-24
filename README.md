@@ -78,6 +78,27 @@ tkt --version
 
 **Requirement:** `git` on PATH.
 
+### Upgrading skills from v0.4.0
+
+The v0.4.0 installer linked one skill named `tkt` into the Kiro, Claude and Codex
+skill roots. The new plugins provide four `tkt-*` skills. Before installing a
+plugin or deploying the new skills, remove the old links from a current source
+checkout (Node 22+):
+
+```sh
+node tools/migrate-legacy-skills.mjs --source /absolute/path/to/old-tkt/skills/tkt
+# Inspect the JSON plan, then apply the same source:
+node tools/migrate-legacy-skills.mjs --source /absolute/path/to/old-tkt/skills/tkt --execute
+```
+
+Use the old link target, even if you upgraded that checkout and `skills/tkt` no
+longer exists. The command defaults to a preview and removes only matching symlinks;
+it preserves their targets. A regular directory, a link to another source, or a root
+outside your home stops cleanup before any changes. Review those cases manually.
+Then install the plugin below or run `node tools/deploy.mjs` once for bare skills.
+Restart chats to discard previously loaded skills. This migration does not change
+legacy steering files or install the Rust CLI.
+
 ### Codex plugin
 
 Install the workflow skills from the Codex marketplace:
