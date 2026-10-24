@@ -73,10 +73,10 @@ cargo install --path tkt
 
 ```bash
 tkt --version
-# → tkt 0.2.1 (ea047fb)
+# → tkt <version> (<commit>)
 ```
 
-**Requirement:** `git` on PATH (any version).
+**Requirement:** `git` on PATH.
 
 ### Codex plugin
 
@@ -95,6 +95,28 @@ After edits, run `node tools/deploy.mjs` once to refresh the cached plugin and h
 then start a new chat. The skill installer skips Codex scan roots when this plugin
 is enabled, removing only copies it previously installed. `--allow-dual` overrides
 that guard.
+
+### Claude Code and Antigravity
+
+```sh
+claude plugin marketplace add smileynet/tkt
+claude plugin install tkt@tkt
+```
+
+The Claude plugin supplies the four workflow skills and session context from the
+launch project's tickets. Its hook requires Claude 2.1.310+ and Node 22+. Install
+the CLI separately; plugins do not supply the Rust binary. Codex and Antigravity
+receive no Claude hooks.
+
+For a source checkout, `node tools/deploy.mjs` deploys the skills once per supported
+harness and builds the Antigravity plugin when configured. Node 22+ is a maintainer
+prerequisite, separate from the installed tkt binary's Git requirement.
+
+GitHub marketplace and source-clone examples follow the development default branch.
+Stable plugins use the release-only `stable` ref after verified publication; version
+fields do not pin a default-branch install. Prebuilt/registry commands install published
+versions, not staged candidates. See [release maintenance](docs/releasing.md) for
+channels and update boundaries, and restart chats after plugin refresh.
 
 ## Usage
 
@@ -226,6 +248,10 @@ require_resolution = false  # require --note when closing
 # Project-specific ratchet: grandfather historical closures below this numeric ID.
 missing_resolution_before_id = "36"
 
+[audit]
+# Separate resolution-quality cutoff; acceptance/evidence checks still apply.
+resolution_baseline_id = "36"
+
 [ready]
 default_env = ""            # filter frontier by environment
 
@@ -296,7 +322,11 @@ verification.
 
 ## Release maintenance
 
-[Release staging](docs/release-staging.md) covers the pinned generator, maintainer checks and manual artifact builds. Publication integration is still in progress.
+[Release staging](docs/release-staging.md) covers the pinned generator and manual
+artifact builds. [Release maintenance](docs/releasing.md) covers preparation,
+verification, the sole reviewed CI publisher and recovery. Maintainers need Node
+22+, locked npm dependencies, mise, Rust and cargo-dist 0.32.0. Publication requires
+separate authorization after candidate, install and final audit gates.
 
 ## License
 

@@ -37,7 +37,9 @@ rerunning only failed jobs cannot substitute inputs from an older attempt.
 The separate manual publisher now reads the later review commit, verifies run
 provenance and downloads those sealed files. It must not rebuild or replace expired
 artifacts: stage again and repeat review after retention expires. The prepared Cargo
-transport and durable intent barrier are implemented and mock/native-tested; the
-runner-loss probe and integrated independent review remain required before release.
+transport and durable intent barrier are implemented and mock/native-tested. Ticket
+68 accepted scoped Linux parent-loss/product evidence and integrated independent
+review. Fresh final-candidate, install/upgrade, platform and audit gates remain;
+source-version probes do not validate the approved 0.5.0 candidate.
 See [release maintenance](releasing.md) for the manual workflow, staging carrier and
 local dispatch/observation boundaries. Staging itself still performs no publication.

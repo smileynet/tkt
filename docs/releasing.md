@@ -5,7 +5,8 @@ for version authorities, modes, channels and recovery. Its
 [research](https://github.com/smileynet/grey-matter/blob/main/docs/agents/research/github-release-strategy.md)
 records primary GitHub/cargo-release/dist sources and non-atomic publication warnings.
 Current authorization stops at reviewed, staged candidates. Publication capability
-is implemented for testing; integrated review and final release gates remain open.
+and integrated independent review are complete; final candidate, install, audit and
+staging gates remain open.
 
 ## Local preparation and verification
 
@@ -57,7 +58,7 @@ is configured, and package caching is explicitly disabled. These sources were re
 
 All open tickets ship or receive explicit user deferral before a release. Record the
 approved version/scope, exact commit, notes, assets/hashes, platform gaps and tested
-compatibility. Tickets 67–69 in grey-matter retain integration/candidate tests; 70–71
+compatibility. Tickets 67/69 in grey-matter retain candidate/install tests; 70–71
 own final audit/staging. No preparation command publishes a crate, GitHub release,
 tag or stable ref. The candidate index needs review before separate publication.
 
@@ -86,8 +87,17 @@ Production execution requires separately authorized immutable-release enablement
 and a `CARGO_REGISTRY_TOKEN` repository secret. The secret is exposed only to the
 publisher step and read by its delayed credential callback. Preparation subprocesses
 receive sanitized environments. Do not configure settings/secrets or execute
-publication as part of staging. Runner-loss proof and integrated independent review
-remain ticket 68 gates; no production publication has been exercised.
+publication as part of staging. Ticket 68 accepted scoped Linux parent-loss and
+product-gate evidence and integrated Standards/Spec review. The product probe used
+0.4.0 source, not the final 0.5.0 candidate; no production publication has run.
+
+The shared publication-toolchain action supplies Node 22, Cargo/Rust 1.99.1 with
+rustfmt/clippy, mise 2026.10.18, cargo-dist 0.32.0 and bubblewrap. The read-only
+`publication-product-probe.yml` uses that same setup and runs the actual development
+product gate. Both use the exact owned clone's mise trust path. Stable-only recovery
+re-observes matching immutable GitHub and registry publication, then skips development
+and candidate ref updates. Failure JSON retains C/R and last observed channel
+statuses/URLs, with stable unconfirmed until its result is verified.
 
 Local maintenance uses `node tools/deploy.mjs` once after skill/guidance/plugin edits.
 The bash deploy wrapper is an alternative. Install the CLI with `cargo install --path .`

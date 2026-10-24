@@ -27,7 +27,7 @@ cargo fmt                      # format (must produce no diff)
 ```bash
 mise run check   # release-tool fixtures + Rust gate, PATH-order-independent
 # equivalent raw form:
-node --test tools/release-tools.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+node --test tools/release-tools.test.mjs tools/release-ci.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 ```
 
 Maintainer verification needs Node 22+ and `npm ci --ignore-scripts`; these pinned
@@ -50,10 +50,10 @@ each commit.
   changed; `node tools/deploy.mjs` when skills, guidance, plugin manifests or deployment tooling
   changed, which refreshes both the harness scan roots and the Antigravity `agy` plugin) as
   part of finishing the work, unless the user says otherwise.
-- For code changes, the verification gate above must pass before the commit. For
-  docs/tickets/tooling-only changes, the gate's build/test step doesn't apply, but still
-  commit + push (and run `node tools/deploy.mjs` once if skills or guidance changed) on
-  completion.
+- Run the full gate for Rust changes; run applicable Node/workflow fixtures for
+  tooling changes. Docs/ticket-only edits need accuracy, links and scope checks;
+  they do not require rebuilding Rust. Commit + push each completed unit and deploy
+  once when skills or guidance changed.
 
 ### Deploy (run after pulling or making changes)
 
@@ -112,7 +112,8 @@ the CLI surface the skills describe:
   loads the folder directly, so reload plugins or start a new session after edits.
   Audit uses that active folder rather than a historical cache. For a GitHub
   install, run `claude plugin marketplace update tkt`, then `claude plugin update tkt@tkt`
-  (this only changes anything after a release).
+  (cached updates depend on the manifest version; new default-ref installs can
+  receive unreleased files).
 - **One install path per harness (guarded).** A skill must never load twice in one harness.
   With the plugin installed, `tools/deploy.mjs` skips every root Claude Code reads (any
   `.claude/skills`, and a project `.agents/skills`). It also removes copies it put there
@@ -244,4 +245,4 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 - After any code change, run `cargo install --path .` BEFORE end-to-end testing with the installed `tkt` binary — `tkt --version` git hash must match HEAD, or you are testing a stale binary (validated 2026-08-26: closed #131 against a stale binary that still reproduced the bug)
 - Windows: use `git commit -F <file>` for multi-line or bracket/quote-containing commit messages — inline `-m` gets mangled by PowerShell quoting
 - crates.io name availability: use `cargo search <name>`, NOT raw `curl` to the API (returns 403 "violation of API data access policy" for automated requests); a 404 on the web page also confirms availability
-- Release CI is generated through `node tools/generate-release-workflow.mjs --write` using cargo-dist 0.32.0. Never hand-edit `.github/workflows/release.yml`; `mise run check` checks real generation. See `docs/release-staging.md`. Staging is build-only; publication integration remains unfinished.
+- Release CI is generated through `node tools/generate-release-workflow.mjs --write` using cargo-dist 0.32.0. Never hand-edit `.github/workflows/release.yml`; `mise run check` checks real generation. See `docs/release-staging.md`. Staging is build-only; the separate manual `publish.yml` owns reviewed publication. Final candidate/install/audit/staging gates remain open.
