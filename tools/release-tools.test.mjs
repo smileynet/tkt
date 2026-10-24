@@ -9,17 +9,20 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { credentialReply } from "./release-cargo-credentials.mjs";
+import { cargoUploadPolicy, validateCargoUploadManifest } from "./release-cargo-upload.mjs";
 const tools = dirname(fileURLToPath(import.meta.url)), repo = dirname(tools);
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 test("vendored release files match their reviewed ownership inventory", () => {
   const inventory = JSON.parse(readFileSync(join(tools, "release-vendor.json")));
   assert.equal(inventory.owner, "smileynet/grey-matter-release-tools");
-  assert.equal(Object.keys(inventory.files).length, 19);
+  assert.equal(Object.keys(inventory.files).length, 21);
   assert.ok(inventory.files["tools/release-publish.mjs"]);
   assert.ok(inventory.files["tools/release-ci-artifacts.mjs"]);
   assert.ok(inventory.files["tools/release-tkt-publication.mjs"]);
   assert.ok(inventory.files["tools/release-cargo-credentials.mjs"]);
+  assert.ok(inventory.files["tools/release-cargo-upload.mjs"]);
+  assert.ok(inventory.files["tools/release-cargo-transport.py"]);
   assert.deepEqual(JSON.parse(readFileSync(join(repo, "package.json"))).devDependencies, inventory.dependencies);
   for (const [file, expected] of Object.entries(inventory.files)) {
     assert.match(file, /^tools\/[a-zA-Z0-9.-]+$/); assert.equal(sha(readFileSync(join(repo, file))), expected, file);
@@ -34,6 +37,13 @@ test("standalone Cargo credential provider refuses changed seals and never cache
   const request = { v: 1, kind: "get", operation: "read", registry: { "index-url": policy.index }, args: [] };
   assert.deepEqual(credentialReply(request, policy, "fixture-token").Ok, { kind: "get", token: "fixture-token", cache: "never", operation_independent: false });
   assert.equal(credentialReply({ ...request, operation: "publish", name: "tkt", vers: "0.5.0", cksum: "b".repeat(64) }, policy, "fixture-token").Err.kind, "other");
+});
+test("standalone prepared Cargo policy accepts this manifest and rejects token overrides", () => {
+  const manifest = parseToml(readFileSync(join(repo, "Cargo.toml"), "utf8"));
+  const bytes = Buffer.from("policy fixture only");
+  const options = { repo, candidateSha: "a".repeat(40), crate: { name: "tkt", version: manifest.package.version, bytes, sha256: sha(bytes) }, cargo: join(tools, "fixture-cargo"), rustc: join(tools, "fixture-rustc"), getToken: () => { throw Error("no credential during policy checks"); } };
+  assert.doesNotThrow(() => validateCargoUploadManifest(manifest, cargoUploadPolicy(options)));
+  assert.throws(() => cargoUploadPolicy({ ...options, token: "override" }), /overrides are forbidden/);
 });
 test("release entry points contain no legacy publisher or implicit bump path", () => {
   const shell = readFileSync(join(tools, "release.sh"), "utf8"), mise = readFileSync(join(repo, "mise.toml"), "utf8");

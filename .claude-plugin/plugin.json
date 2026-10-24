@@ -62,7 +62,9 @@
         "tools/release-development.mjs",
         "tools/release-ci-artifacts.mjs",
         "tools/release-tkt-publication.mjs",
-        "tools/release-cargo-credentials.mjs"
+        "tools/release-cargo-credentials.mjs",
+        "tools/release-cargo-upload.mjs",
+        "tools/release-cargo-transport.py"
       ]
     }
   }
