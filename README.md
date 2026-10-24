@@ -48,6 +48,8 @@ irm https://github.com/smileynet/tkt/releases/latest/download/tkt-installer.ps1 
 
 ### From crates.io
 
+Compiling tkt requires Rust 1.85.0 or newer.
+
 ```bash
 cargo install tkt
 ```
@@ -59,6 +61,8 @@ cargo binstall tkt
 ```
 
 ### From source
+
+Requires Rust 1.85.0 or newer.
 
 ```bash
 git clone https://github.com/smileynet/tkt.git

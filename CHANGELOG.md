@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** compiling tkt now requires Rust 1.85.0 or newer. Update Rust with
+  `rustup update stable`, or use a pre-built binary.
+
 - `tools/deploy-skills.sh` won't copy skills where Claude Code already loads them from the tkt
   plugin, and it removes copies it put there before, so a skill is never listed twice
   (`--allow-dual` overrides)

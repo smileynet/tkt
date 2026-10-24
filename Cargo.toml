@@ -2,7 +2,7 @@
 name = "tkt"
 version = "0.4.0"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.85.0"
 description = "Track tasks as markdown files in your git repo"
 license = "MIT"
 repository = "https://github.com/smileynet/tkt"
