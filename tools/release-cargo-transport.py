@@ -231,8 +231,16 @@ def outer():
             args.extend(["--chdir", "/tmp/release-candidate", "/usr/bin/python3", "/tmp/release-helpers/transport.py", "--inner"])
             arg_fd = sealed(("\0".join(args) + "\0").encode())
             phase("namespace-setup")
-            child = subprocess.Popen(["/usr/bin/bwrap", "--args", str(arg_fd)], env=env, pass_fds=descriptors, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
-            prepared = line(child.stdout, 600)
+            child = subprocess.Popen(["/usr/bin/bwrap", "--args", str(arg_fd)], env=env, pass_fds=descriptors, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                prepared = line(child.stdout, 600)
+            except (RuntimeError, ValueError) as error:
+                if child.poll() is None:
+                    child.kill()
+                _, diagnostic = child.communicate(timeout=10)
+                # The token callback cannot run until a prepared record is returned.
+                sys.stderr.write(diagnostic[:8192])
+                raise RuntimeError("private preflight process failed") from error
             if prepared.get("status") == "error":
                 phase(prepared.get("phase", "private-preflight"))
             require(prepared.get("status") == "pass" and prepared.get("phase") == "prepared", "private preflight failed")

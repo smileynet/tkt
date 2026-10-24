@@ -46,7 +46,7 @@ export async function prepareCargoUpload(options) {
   } catch { throw new ReleaseError("cannot read the exact candidate Cargo manifest"); }
   validateCargoUploadManifest(manifest, policy);
   const child = spawn("/usr/bin/python3", [helper], { detached: true, env: { PATH: "/usr/bin:/bin", LANG: "C" }, stdio: ["pipe", "pipe", "pipe"] });
-  let pending = "", waiting, terminal, attempted = false, closed = false;
+  let pending = "", diagnostic = "", preparing = true, waiting, terminal, attempted = false, closed = false;
   const queue = [];
   const fail = (message) => {
     terminal ??= new ReleaseError(message);
@@ -67,8 +67,8 @@ export async function prepareCargoUpload(options) {
       else fail("Cargo transport returned unsolicited protocol records");
     }
   });
-  // Child diagnostics are untrusted after a credential is released; never echo them.
-  child.stderr.resume();
+  // Only preparation can produce diagnostics: no credential callback has run then.
+  child.stderr.on("data", (data) => { if (preparing) diagnostic = (diagnostic + data.toString("utf8")).slice(0, 8192); });
   child.stdin.on("error", () => fail("Cargo transport input closed"));
   child.on("error", () => fail("Cargo transport could not start"));
   const ended = new Promise((resolve) => child.on("close", (code) => { fail("Cargo transport exited before completing its protocol"); resolve(code); }));
@@ -95,6 +95,7 @@ export async function prepareCargoUpload(options) {
     child.stdin.write(JSON.stringify(policy) + "\n");
     const evidence = await next();
     if (evidence.phase !== "prepared" || evidence.candidateSha !== policy.candidateSha || evidence.sha256 !== policy.sha256 || evidence.size !== policy.size || !/^[a-f0-9]{64}$/.test(evidence.inventorySha256) || !Number.isSafeInteger(evidence.files) || evidence.files < 1) throw new ReleaseError("Cargo preflight evidence differs from the reviewed identity");
+    preparing = false; diagnostic = "";
     return {
       evidence,
       async publish(crate) {
@@ -112,5 +113,9 @@ export async function prepareCargoUpload(options) {
       },
       close,
     };
-  } catch (error) { await close(); throw error; }
+  } catch (error) {
+    await close();
+    if (preparing && diagnostic.trim()) throw new ReleaseError(`${error.message}: ${diagnostic.trim()}`, { cause: error });
+    throw error;
+  }
 }
