@@ -30,9 +30,13 @@ export function cratesIoTkt({ request = fetch } = {}) {
   };
 }
 
+export function validateTktCrate(crate) {
+  if (crate?.name !== "tkt" || !stableVersion(crate.version) || !(crate.bytes instanceof Uint8Array) || !crate.bytes.byteLength || !/^[a-f0-9]{64}$/.test(crate.sha256) || checksum(crate.bytes) !== crate.sha256) throw new ReleaseError("invalid or changed sealed tkt crate");
+}
+
 export async function reconcileTktCrate({ crate, registry, execute = false, previouslyAttempted = false, retryUnconfirmed = false, observe = () => {} }) {
   if ([execute, previouslyAttempted, retryUnconfirmed].some((value) => typeof value !== "boolean")) throw new ReleaseError("registry execution/recovery flags must be boolean");
-  if (crate?.name !== "tkt" || !stableVersion(crate.version) || !(crate.bytes instanceof Uint8Array) || !crate.bytes.byteLength || !/^[a-f0-9]{64}$/.test(crate.sha256) || checksum(crate.bytes) !== crate.sha256) throw new ReleaseError("invalid or changed sealed tkt crate");
+  validateTktCrate(crate);
   async function inspect() {
     const state = await registry.inspect(crate.version);
     if (state?.name !== "tkt" || state.version !== crate.version || !["missing", "published"].includes(state.phase)) throw new ReleaseError("registry response belongs to another crate identity");
