@@ -37,7 +37,7 @@ export async function inspectCiArchive(bytes, expected) {
     names.add(file.name); assets.push({ name: file.name, bytes: local, size: local.length, sha256: file.sha256 });
   }
   if (files.size !== assets.length + 1 || !names.has(`tkt-${expected.version}.crate`)) throw new ReleaseError("CI archive has unexpected files or lacks the source crate");
-  return { record, assets, sealSha256: expected.sealSha256, zipSha256: expected.zipSha256 };
+  return { record, assets, seal: { name: "tkt-stage.json", bytes: sealed, size: sealed.length, sha256: expected.sealSha256 }, sealSha256: expected.sealSha256, zipSha256: expected.zipSha256 };
 }
 export async function readCiStage({ expected, api, now = Date.now() }) {
   const artifactName = checkedIdentity(expected);

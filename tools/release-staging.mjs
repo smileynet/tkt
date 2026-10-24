@@ -1,4 +1,5 @@
 // Read a reviewed staging index from an explicit Git commit, never a mutable sidecar.
+import { readCiStage } from "./release-ci-artifacts.mjs";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
@@ -27,6 +28,13 @@ export function readStagedCandidate({ reviewRepo, reviewSha, indexFile, product,
   if (index?.schema !== 1 || index.kind !== "release-staging" || index.status !== "staged" || !Array.isArray(index.entries) || index.entries.length !== 2 || new Set(index.entries.map((entry) => entry?.product)).size !== 2 || index.entries.some((entry) => !["grey-matter", "tkt"].includes(entry?.product))) throw new ReleaseError("staging index must identify both coordinated products exactly once");
   const entry = index.entries.find((item) => item.product === product);
   if (!entry || !stableVersion(entry.version) || !/^[a-f0-9]{40}$/.test(entry.candidateSha) || typeof entry.repository !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(entry.repository)) throw new ReleaseError("invalid staged candidate identity");
+  let ci;
+  if (product === "tkt") {
+    if (!/^[a-f0-9]{64}$/.test(entry.ci?.sha256)) throw new ReleaseError("tkt staging requires a reviewed CI identity digest");
+    ci = json(entry.ci?.file, entry.ci.sha256);
+    requireMatchingIdentity({ product: "tkt", ...ci }, { name: "tkt", ...entry });
+    if (ci.repository !== entry.repository) throw new ReleaseError("reviewed CI repository differs from staged candidate");
+  }
   const metadata = verifyArtifacts(artifacts);
   requireMatchingIdentity(entry, metadata);
   if (hash(readFileSync(resolve(artifacts, "release-metadata.json"))) !== entry.metadataSha256) throw new ReleaseError("staged artifact metadata changed");
@@ -46,5 +54,13 @@ export function readStagedCandidate({ reviewRepo, reviewSha, indexFile, product,
     const bytes = readFileSync(resolve(artifacts, name));
     return { name, bytes, size: bytes.length, sha256: hash(bytes) };
   });
-  return { repository: entry.repository, product, version: entry.version, candidateSha: entry.candidateSha, title: `v${entry.version}`, notes, assets, gates: { status: "pass", product, version: entry.version, candidateSha: entry.candidateSha, pending: [] }, staging: { reviewSha, indexFile, verificationSha256: verification.verificationSha256 } };
+  return { repository: entry.repository, product, version: entry.version, candidateSha: entry.candidateSha, title: `v${entry.version}`, notes, assets, gates: { status: "pass", product, version: entry.version, candidateSha: entry.candidateSha, pending: [] }, staging: { reviewSha, indexFile, verificationSha256: verification.verificationSha256, ...(ci ? { ci } : {}) } };
+}
+
+export async function readStagedTktCandidate({ api, now, ...options }) {
+  const candidate = readStagedCandidate({ ...options, product: "tkt" });
+  const ci = await readCiStage({ expected: candidate.staging.ci, api, now });
+  const assets = [...candidate.assets, ...ci.assets, ci.seal];
+  if (new Set(assets.map((asset) => asset.name.toLowerCase())).size !== assets.length) throw new ReleaseError("plugin and CI release assets have colliding names");
+  return { ...candidate, assets, ciStage: { ...ci.provenance, sealSha256: ci.sealSha256, zipSha256: ci.zipSha256 } };
 }
