@@ -36,7 +36,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.4.0";
+const DEPLOY_VERSION = "1.5.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -128,11 +128,33 @@ const HARNESSES = () => [
 ];
 
 // Claude Code: installed_plugins.json lists `<name>@<marketplace>` ids with their install path.
+const claudeCoverage = new Map();
 function claudePlugin(pack) {
+  if (claudeCoverage.has(pack.name)) return claudeCoverage.get(pack.name);
   const dir = process.env.CLAUDE_CODE_PLUGIN_CACHE_DIR || join(HOME, ".claude", "plugins");
   const data = readJson(join(dir, "installed_plugins.json"));
   const id = Object.keys(data?.plugins ?? {}).find((k) => k.startsWith(`${pack.name}@`));
   return id ? `Claude plugin ${id}` : null;
+}
+
+function claudeInventory() {
+  const result = spawnSync("claude", ["plugin", "list", "--json"], { encoding: "utf8" });
+  if (result.error || result.status !== 0) throw new PackError(`Claude installed inventory unavailable: ${result.error?.message ?? result.stderr}`);
+  const rows = JSON.parse(result.stdout);
+  if (!Array.isArray(rows) || rows.some((row) => typeof row?.id !== "string" || typeof row.enabled !== "boolean")) throw new PackError("invalid Claude installed inventory");
+  return rows;
+}
+
+function verifyClaudeSource(pack, args) {
+  if (!claudePlugin(pack)) return;
+  if (args.dryRun) { console.log(`\nwould verify Claude plugin ${pack.name} active source`); return; }
+  const rows = claudeInventory().filter((row) => row.enabled && row.id.startsWith(`${pack.name}@`));
+  if (!rows.length) { claudeCoverage.set(pack.name, null); return; }
+  if (rows.length !== 1 || typeof rows[0].readFromFolder !== "string" || !isDir(rows[0].readFromFolder) || real(rows[0].readFromFolder) !== real(pack.dir) || rows[0].folderVersion !== pack.version) {
+    throw new PackError(`${pack.name}: Claude must report this checkout/version through readFromFolder before deploy; update Claude and register this local marketplace`);
+  }
+  claudeCoverage.set(pack.name, `Claude plugin ${rows[0].id}`);
+  console.log(`\nverified Claude plugin ${rows[0].id}: reads ${pack.dir} directly; reload or start a new session`);
 }
 
 // Codex: enabled marketplace plugins are `[plugins."<name>@<marketplace>"] enabled = true`.
@@ -267,6 +289,7 @@ function doInstall(pack, args) {
   const errors = [...lint(pack), ...inspectPortfolio(pack, args).findings];
   if (errors.length) { console.error("install aborted, lint failed:"); for (const e of errors) console.error("  - " + e); process.exit(1); }
   if (!args.roots.length) {
+    verifyClaudeSource(pack, args);
     refreshCodex(pack, args);
     if (!args.allowDual) separatePluginRoots(pack, args);
   }
@@ -512,12 +535,19 @@ function doAudit(pack, args) {
     inventory.push({ harness, id, path: at, skills: names });
   };
   const claudeCache = process.env.CLAUDE_CODE_PLUGIN_CACHE_DIR || join(HOME, ".claude", "plugins");
-  for (const [id, installs] of Object.entries(readJson(join(claudeCache, "installed_plugins.json"))?.plugins ?? {})) {
-    for (const installed of installs) {
-      const at = installed.installPath;
-      if (at) addPlugin("claude", id, at, readJson(join(at, ".claude-plugin", "plugin.json")));
-      else findings.push(`claude plugin ${id}: installPath missing`);
-    }
+  if (Object.keys(readJson(join(claudeCache, "installed_plugins.json"))?.plugins ?? {}).length) {
+    try {
+      for (const installed of claudeInventory().filter((row) => row.enabled)) {
+        const at = installed.readFromFolder || installed.installPath;
+        if (typeof at === "string" && at) {
+          const expected = portfolio.packs.find((pack) => !pack.inventoryOnly && installed.id.startsWith(`${pack.name}@`));
+          if (expected && !installed.readFromFolder) findings.push(`claude plugin ${installed.id}: local source selection unverified (no readFromFolder); update Claude/register the local marketplace`);
+          if (installed.readFromFolder && expected && real(at) !== real(expected.dir)) findings.push(`claude plugin ${installed.id}: active folder differs from the registered checkout`);
+          addPlugin("claude", installed.id, at, readJson(join(at, ".claude-plugin", "plugin.json")));
+        }
+        else findings.push(`claude plugin ${installed.id}: active source path missing`);
+      }
+    } catch (error) { findings.push(error.message); }
   }
   if (isFile(join(CODEX_HOME(), "config.toml"))) {
     const r = spawnSync("codex", ["plugin", "list", "--json"], { encoding: "utf8" });

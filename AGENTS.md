@@ -62,8 +62,8 @@ cargo install --path .     # when Rust code changed
 node tools/deploy.mjs     # once after skill/guidance/plugin changes
 ```
 
-`node tools/deploy.mjs` deploys skills and refreshes the enabled Codex plugin from this
-checkout, then packages Antigravity when `~/.gemini` exists. `bash tools/deploy-skills.sh` is a compatibility
+`node tools/deploy.mjs` verifies Claude reads this checkout directly and refreshes the
+enabled Codex plugin, then packages Antigravity when `~/.gemini` exists. `bash tools/deploy-skills.sh` is a compatibility
 entry point to the same command; run either once after skill or guidance changes.
 The engine is vendored from grey-matter's `scripts/deploy.mjs`; change harness behavior
 there and copy it here. Pack-specific forbidden skill references live in
@@ -97,8 +97,11 @@ the CLI surface the skills describe:
   `tests/plugin_manifests.rs` fails the gate if any drift from `Cargo.toml`. Never
   hand-edit `version` outside a release.
 - **Refresh this machine's install** as part of Deploy. Use a marketplace added from the
-  local checkout (`claude plugin marketplace add <path-to-tkt>`, once). It loads the files in
-  place, so run `/reload-plugins` or start a new session to pick up edits. For a GitHub
+  local checkout (`claude plugin marketplace add <path-to-tkt>`, once). Deploy verifies
+  the enabled CLI row's `readFromFolder` and `folderVersion` match this checkout; update
+  Claude/register the correct marketplace if that observation fails. Current Claude
+  loads the folder directly, so reload plugins or start a new session after edits.
+  Audit uses that active folder rather than a historical cache. For a GitHub
   install, run `claude plugin marketplace update tkt`, then `claude plugin update tkt@tkt`
   (this only changes anything after a release).
 - **One install path per harness (guarded).** A skill must never load twice in one harness.

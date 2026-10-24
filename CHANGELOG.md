@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   plugin, and it removes copies it put there before, so a skill is never listed twice
   (`--allow-dual` overrides)
 
+### Fixed
+
+- Local Claude plugin audits use the active checkout rather than stale cache folders. Failed or foreign source checks preserve existing skill copies during deployment.
+
 ## [0.4.0] - 2026-10-19
 
 ### Added
