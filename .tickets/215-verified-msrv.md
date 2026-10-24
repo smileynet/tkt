@@ -1,7 +1,7 @@
 ---
 id: "215"
 title: "Make the declared Rust minimum pass a locked build"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -48,6 +48,15 @@ not publish anything or authorize an unrelated dependency update.
 
 ## Acceptance criteria
 
-- [ ] Hosted Rust 1.80 locked binary check retains exact failing SHA and diagnostic.
-- [ ] Hosted locked binary check passes on the declared minimum.
-- [ ] Manifest, README and CI declare the same supported minimum.
+- [x] Hosted Rust 1.80 locked binary check retains exact failing SHA and diagnostic.
+- [x] Hosted locked binary check passes on the declared minimum.
+- [x] Manifest, README and CI declare the same supported minimum.
+
+## Resolution (2026-10-24)
+
+done: declare Rust 1.85.0 and enforce a hosted locked binary check from the manifest; document the build prerequisite and upgrade path. The separately discovered cold-cache fixture failure is tracked by 216.
+
+### Verification
+1. ✓ A hosted locked binary check reproduces the Rust 1.80 dependency failure at the audited source SHA. — "Hosted run 40054220986 job 120753486806 at 3627d815130b2a43e3842dd6104d7ede5adaa275 used Cargo 1.80.1; cargo check --locked --bin tkt exited 101 on clap_lex edition2024."
+2. ✓ A hosted locked binary check passes at the declared minimum Rust version without ignore-rust-version. — "Hosted run 40054566229 job 120754556480 at a1fe66a7bb7e096ddf8f98fbe4d0f6779b5a5087 succeeded with exact Rust 1.85.0 and cargo check --locked --bin tkt."
+3. ✓ The manifest and README source-build prerequisite agree with the enforced CI minimum. — "Cargo.toml declares 1.85.0; README source/crates.io prerequisites agree; CI derives toolchain from that manifest. Local mise run check passed 14 Node and 296 Rust tests, fmt and clippy."
