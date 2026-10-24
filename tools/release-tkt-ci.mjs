@@ -43,19 +43,28 @@ export async function publishTktCi(options, {
   if (!execute) return { status: "pass", mode: "dry-run", publisher: "cargo-dist", candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, ciStage: candidate.ciStage, assetNames: candidate.assets.map((asset) => asset.name), writes: false, plan: ["verify exact CI dispatch and immutable policy", "check development integration", "atomic candidate/tag/main refs", "prepare Cargo before durable intent", "reconcile registry and immutable GitHub", "verify stable"] };
   await requireTktPublisherRun({ candidate, context: options.context, actions });
   api ??= githubReleaseApi({ execute: true });
-  if (await api.immutableEnabled(candidate.repository) !== true) throw new ReleaseError("repository release immutability must be enabled before pushing candidate refs");
   if (typeof options.developmentOut !== "string" || typeof options.getToken !== "function") throw new ReleaseError("CI publisher requires an owned development output and delayed credential callback");
-  const development = await prepareMain({ repo, remote, candidateSha: candidate.candidateSha, product: "tkt", version: candidate.version, out: options.developmentOut, execute: true });
-  if (development?.status !== "pass" || development.candidateSha !== candidate.candidateSha || !/^[a-f0-9]{40}$/.test(development.developmentSha)) throw new ReleaseError("development integration was not verified");
-  check();
   const tagObject = git(repo, ["hash-object", "-t", "tag", "-w", "--stdin"], { input: spec.tagRecord }).trim();
   if (tagObject !== spec.tagObject) throw new ReleaseError("imported annotated tag differs from review");
   const full = { ...candidate, tagObject };
   const tag = `refs/tags/v${candidate.version}`;
   requireCandidateTag({ repo, candidateSha: candidate.candidateSha, tagObject, tag });
+  let development = null;
+  // A completed immutable publication is independent of later development changes.
+  const published = (await api.releases(candidate.repository)).some(release => release.tag_name === `v${candidate.version}` && release.draft === false);
+  if (published) {
+    const observed = await reconcileTktPublication({ candidate: full, crate, api, registry });
+    if (observed.github.phase !== "published" || !observed.github.immutable || observed.registry.phase !== "published") throw new ReleaseError("published GitHub release lacks confirmed matching registry publication; inspect before recovery");
+  } else {
+    if (await api.immutableEnabled(candidate.repository) !== true) throw new ReleaseError("repository release immutability must be enabled before pushing candidate refs");
+    development = await prepareMain({ repo, remote, candidateSha: candidate.candidateSha, product: "tkt", version: candidate.version, out: options.developmentOut, execute: true });
+    if (development?.status !== "pass" || development.candidateSha !== candidate.candidateSha || !/^[a-f0-9]{40}$/.test(development.developmentSha)) throw new ReleaseError("development integration was not verified");
+    check();
+    await requireTktPublisherRun({ candidate, context: options.context, actions });
+    const refs = await pushCandidate({ repo, remote, branch: spec.branch, tag, tagObject, candidateSha: candidate.candidateSha, developmentSha: development.developmentSha, execute: true });
+    if (refs?.status !== "pass" || refs.complete !== true) throw new ReleaseError("atomic candidate refs were not observed");
+  }
   await requireTktPublisherRun({ candidate, context: options.context, actions });
-  const refs = await pushCandidate({ repo, remote, branch: spec.branch, tag, tagObject, candidateSha: candidate.candidateSha, developmentSha: development.developmentSha, execute: true });
-  if (refs?.status !== "pass" || refs.complete !== true) throw new ReleaseError("atomic candidate refs were not observed");
   check();
   const result = await reconcileTktPublication({ candidate: full, crate, api, registry, execute: true, retryUnconfirmed, observe: options.observe,
     prepareUpload: (sealedCrate) => prepareUpload({ repo, candidateSha: candidate.candidateSha, crate: sealedCrate, cargo: options.cargo, rustc: options.rustc, getToken: options.getToken }),

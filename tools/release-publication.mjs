@@ -71,17 +71,25 @@ export async function publishStaged(options, { api, prepareMain = prepareDevelop
     writeFileSync(lock, lockReceipt); closeSync(lock); lock = undefined;
     state = readRecovery(); ownsState = true;
     save({ phase: "candidate-refs" });
-    if (await api.immutableEnabled(candidate.repository) !== true) throw new ReleaseError("repository release immutability must be enabled before pushing candidate refs");
     check();
-    save({ phase: "development" });
-    const development = await prepareMain({ repo, remote, candidateSha: candidate.candidateSha, product: candidate.product, version: candidate.version, out: `${statePath}.development`, execute: true });
-    if (development?.status !== "pass" || development.candidateSha !== candidate.candidateSha || !/^[a-f0-9]{40}$/.test(development.developmentSha)) throw new ReleaseError("development integration was not verified");
-    save({ phase: "candidate-refs", development }); check();
-    const refs = pushCandidate({ repo, remote, branch, tag, candidateSha: candidate.candidateSha, tagObject: options.tagObject, developmentSha: development.developmentSha, execute: true });
-    if (!refs.complete) throw new ReleaseError("candidate ref publication was not observed");
-    save({ phase: "github" }); check();
     candidate.releaseId = state.releaseId ?? undefined;
-    const published = await reconcileGithubRelease({ candidate, api, publisher: "local", execute: true, observe: (snapshot) => save({ github: snapshot, releaseId: snapshot.releaseId }) });
+    const observe = (snapshot) => save({ github: snapshot, releaseId: snapshot.releaseId });
+    let development = state.development ?? null, published;
+    const completed = (await api.releases(candidate.repository)).some(release => release.tag_name === `v${candidate.version}` && release.draft === false);
+    if (completed) {
+      published = await reconcileGithubRelease({ candidate, api, publisher: "local", observe });
+      if (published.phase !== "published" || !published.immutable) throw new ReleaseError("stable recovery requires the matching complete immutable release");
+    } else {
+      if (await api.immutableEnabled(candidate.repository) !== true) throw new ReleaseError("repository release immutability must be enabled before pushing candidate refs");
+      save({ phase: "development" });
+      development = await prepareMain({ repo, remote, candidateSha: candidate.candidateSha, product: candidate.product, version: candidate.version, out: `${statePath}.development`, execute: true });
+      if (development?.status !== "pass" || development.candidateSha !== candidate.candidateSha || !/^[a-f0-9]{40}$/.test(development.developmentSha)) throw new ReleaseError("development integration was not verified");
+      save({ phase: "candidate-refs", development }); check();
+      const refs = pushCandidate({ repo, remote, branch, tag, candidateSha: candidate.candidateSha, tagObject: options.tagObject, developmentSha: development.developmentSha, execute: true });
+      if (!refs.complete) throw new ReleaseError("candidate ref publication was not observed");
+      save({ phase: "github" }); check();
+      published = await reconcileGithubRelease({ candidate, api, publisher: "local", execute: true, observe });
+    }
     save({ phase: "stable", releaseId: published.releaseId }); check();
     const stable = await promoteStable({ repo, remote, candidate: { ...candidate, releaseId: state.releaseId }, api, publisher: "local", execute: true });
     if (!stable.complete) throw new ReleaseError("stable promotion was not observed");
