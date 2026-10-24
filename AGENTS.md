@@ -79,8 +79,9 @@ deployment before existing skill copies are removed. Start a new chat after refr
 
 Read [release guidance](docs/releasing.md) before preparing, staging, publishing or
 resuming a release. It links the coordinated contract and current tooling gaps.
-The generated dist workflow is the sole GitHub publisher; local tooling must not
-create a second release. Current work stops at staged candidates.
+The manual `.github/workflows/publish.yml` is the sole GitHub publisher; the generated
+dist workflow only builds staging artifacts. Local tooling dispatches/observes CI and
+must not create a second release. Current authorization stops at staged candidates.
 
 ### Claude Code plugin (keep it current)
 

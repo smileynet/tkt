@@ -4,7 +4,8 @@ Read the [coordinated release contract](https://github.com/smileynet/grey-matter
 for version authorities, modes, channels and recovery. Its
 [research](https://github.com/smileynet/grey-matter/blob/main/docs/agents/research/github-release-strategy.md)
 records primary GitHub/cargo-release/dist sources and non-atomic publication warnings.
-Current work stops at reviewed, staged candidates; publication/resume is unfinished.
+Current authorization stops at reviewed, staged candidates. Publication capability
+is implemented for testing; integrated review and final release gates remain open.
 
 ## Local preparation and verification
 
@@ -60,10 +61,33 @@ compatibility. Tickets 67–69 in grey-matter retain integration/candidate tests
 own final audit/staging. No preparation command publishes a crate, GitHub release,
 tag or stable ref. The candidate index needs review before separate publication.
 
-Inspect release.toml, Cargo.toml workspace.metadata.dist and the generated
-.github/workflows/release.yml when implementing publication. Configure generated jobs
-through dist's generator. That workflow remains the sole GitHub publisher; local
-tooling must dispatch/observe its identity without creating a competing release.
+The generated `.github/workflows/release.yml` is build-only; configure those jobs
+through the checked dist generator. The separate manual `.github/workflows/publish.yml`
+is the sole publisher. It checks out exact candidate C and review R separately,
+uses Cargo/rustc 1.99.1 and the verified Linux namespace runtime, and calls
+`tools/publish-reviewed.mjs`. Its default is read-only planning. A fixed concurrency
+group serializes publication across versions, without canceling an active publisher.
+
+The review index directory contains `tkt/artifacts/` and `tkt/evidence/`. Commit the
+exact plugin bundles, metadata and verification logs there on the review branch;
+CI downloads the separate reviewed dist/crate archive using its bound Actions
+identity. These are reviewed bytes, not outputs rebuilt during publication.
+
+Local `tools/dispatch-publication.mjs` accepts `plan`, `dispatch` and `observe`,
+with `--review-repo DIR --review-sha R --index FILE --state EXTERNAL_FILE`.
+Without `--execute`, dispatch only plans. Authorized execution verifies the remote
+candidate branch and workflow, saves an external request receipt before POST,
+and dispatches CI. Repeating the command observes that request; it never sends it
+again automatically after timeout or runner loss. `observe` makes no remote writes.
+A completed run is not itself certification of published channels: read CI's
+per-channel result and reconcile the actual release, registry and stable state.
+
+Production execution requires separately authorized immutable-release enablement
+and a `CARGO_REGISTRY_TOKEN` repository secret. The secret is exposed only to the
+publisher step and read by its delayed credential callback. Preparation subprocesses
+receive sanitized environments. Do not configure settings/secrets or execute
+publication as part of staging. Runner-loss proof and integrated independent review
+remain ticket 68 gates; no production publication has been exercised.
 
 Local maintenance uses `node tools/deploy.mjs` once after skill/guidance/plugin edits.
 The bash deploy wrapper is an alternative. Install the CLI with `cargo install --path .`

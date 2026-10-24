@@ -1,0 +1,88 @@
+name: Publish reviewed tkt
+run-name: Publish reviewed tkt ${{ inputs.request_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      review_sha:
+        description: Exact staging review commit in smileynet/grey-matter
+        required: true
+        type: string
+      index_file:
+        description: Repository-relative committed staging index
+        required: true
+        type: string
+      request_id:
+        description: Unique dispatch correlation ID
+        required: true
+        type: string
+      execute:
+        description: Publish the reviewed identity (requires separate authorization)
+        default: false
+        type: boolean
+      retry_unconfirmed:
+        description: Explicitly permit recovery of an unconfirmed registry attempt
+        default: false
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: tkt-release-publisher
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'smileynet/tkt'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          repository: smileynet/grey-matter
+          ref: ${{ inputs.review_sha }}
+          path: review
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - name: Install locked publisher prerequisites
+        working-directory: candidate
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install verified namespace runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap
+      - name: Reconcile reviewed publication
+        working-directory: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_CARGO_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          REVIEW_SHA: ${{ inputs.review_sha }}
+          INDEX_FILE: ${{ inputs.index_file }}
+          EXECUTE_MODE: ${{ inputs.execute }}
+          RETRY_MODE: ${{ inputs.retry_unconfirmed }}
+        run: |
+          gh auth setup-git
+          git config --global user.name 'tkt release publisher'
+          git config --global user.email 'release@users.noreply.github.com'
+          args=(--repo "$GITHUB_WORKSPACE/candidate" --review-repo "$GITHUB_WORKSPACE/review" --review-sha "$REVIEW_SHA" --index "$INDEX_FILE" --development-out "$RUNNER_TEMP/tkt-release-development" --cargo "$(rustup which cargo)" --rustc "$(rustup which rustc)")
+          if [ "$EXECUTE_MODE" = true ]; then args+=(--execute); fi
+          if [ "$RETRY_MODE" = true ]; then args+=(--retry-unconfirmed); fi
+          node tools/publish-reviewed.mjs "${args[@]}" > "$RUNNER_TEMP/tkt-publication-result.json"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: tkt-publication-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/tkt-publication-result.json
+          if-no-files-found: error

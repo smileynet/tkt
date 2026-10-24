@@ -34,9 +34,10 @@ The final artifact is named `tkt-sealed-stage-RUN_ID-ATTEMPT`. Intermediate
 uploads/downloads also include the attempt. Use **Re-run all jobs** after a failure;
 rerunning only failed jobs cannot substitute inputs from an older attempt.
 
-Publication integration remains unfinished. A future publisher must read the later
-review commit, verify run provenance and every sealed file, and download those exact
-artifacts. It must not rebuild or silently replace expired artifacts. Stage again
-and repeat review if retention expires. Crate checksums alone do not establish that
-a future Cargo publish will upload the sealed bytes; that transport proof and a
-durable upload-attempt barrier remain release blockers.
+The separate manual publisher now reads the later review commit, verifies run
+provenance and downloads those sealed files. It must not rebuild or replace expired
+artifacts: stage again and repeat review after retention expires. The prepared Cargo
+transport and durable intent barrier are implemented and mock/native-tested; the
+runner-loss probe and integrated independent review remain required before release.
+See [release maintenance](releasing.md) for the manual workflow, staging carrier and
+local dispatch/observation boundaries. Staging itself still performs no publication.
