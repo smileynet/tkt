@@ -45,7 +45,7 @@ export function githubReleaseApi({ execute = false, run = (args, input) => spawn
       if (ref?.ref !== `refs/tags/${tag}` || ref.object?.type !== "tag" || !/^[a-f0-9]{40}$/.test(ref.object.sha)) throw new ReleaseError("remote release tag must be annotated");
       const object = request(`${base}/git/tags/${ref.object.sha}`);
       if (object?.sha !== ref.object.sha || object.tag !== tag || object.object?.type !== "commit" || !/^[a-f0-9]{40}$/.test(object.object.sha)) throw new ReleaseError("remote annotated tag identity differs");
-      return { sha: object.object.sha, annotated: true };
+      return { sha: object.object.sha, annotated: true, objectSha: ref.object.sha };
     },
     releases(repo) { writable(repo); return request(`${repository(repo)}/releases?per_page=100`, { pages: true }); },
     assets(repo, releaseId) { return request(`${repository(repo)}/releases/${id(releaseId)}/assets?per_page=100`, { pages: true }); },

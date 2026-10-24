@@ -51,7 +51,8 @@
         "tools/release-verify.mjs",
         "tools/release-publish.mjs",
         "tools/release-github.mjs",
-        "tools/release-staging.mjs"
+        "tools/release-staging.mjs",
+        "tools/release-publication.mjs"
       ]
     }
   }

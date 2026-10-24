@@ -29,9 +29,7 @@ export function pushCandidateRefs({ repo, remote = "origin", branch, tag, candid
   }
   if (!branch.startsWith("refs/heads/") || branch === "refs/heads/stable" || !tag.startsWith("refs/tags/")) throw new ReleaseError("candidate push requires a branch other than stable and a tag");
   const url = pushUrl(repo, remote);
-  if (git(repo, ["cat-file", "-t", candidateSha]).trim() !== "commit" || git(repo, ["cat-file", "-t", tagObject]).trim() !== "tag" || git(repo, ["rev-parse", `${tagObject}^{commit}`]).trim() !== candidateSha) throw new ReleaseError("annotated tag does not resolve to candidate commit");
-  const header = git(repo, ["cat-file", "-p", tagObject]).split("\n\n", 1)[0].split("\n");
-  if (!header.includes(`object ${candidateSha}`) || !header.includes("type commit") || !header.includes(`tag ${tag.slice("refs/tags/".length)}`)) throw new ReleaseError("annotated tag header differs from release identity");
+  requireCandidateTag({ repo, candidateSha, tagObject, tag });
   function inspect() {
     const refs = new Map(git(repo, ["ls-remote", "--refs", url, branch, tag]).trim().split("\n").filter(Boolean).map((line) => {
       const fields = line.split(/\s+/);
@@ -84,4 +82,32 @@ export function pushStableRef({ repo, remote = "origin", candidateSha, execute =
     if (observed !== candidateSha) throw new ReleaseError(`stable promotion was not observed${failure ? ` (${failure})` : ""}; resume promotion without publishing again`);
   }
   return { status: "pass", mode: execute ? "stable-promotion" : "dry-run", complete: observed === candidateSha, sha: observed };
+}
+
+// Compare the effective push URL, including Git's pushInsteadOf expansion.
+export function requireGithubRemote({ repo, repository, remote = "origin" }) {
+  if (typeof repository !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(repository)) throw new ReleaseError("invalid reviewed GitHub repository");
+  const url = pushUrl(repo, remote);
+  let path;
+  const scp = /^git@github\.com:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/.exec(url);
+  if (scp) path = scp[1];
+  else {
+    let parsed;
+    try { parsed = new URL(url); }
+    catch { throw new ReleaseError("release remote must use GitHub.com HTTPS or Git SSH"); }
+    const https = parsed.protocol === "https:" && !parsed.username && !parsed.password && (!parsed.port || parsed.port === "443");
+    const ssh = parsed.protocol === "ssh:" && parsed.username === "git" && !parsed.password && (!parsed.port || parsed.port === "22");
+    if (parsed.hostname !== "github.com" || parsed.search || parsed.hash || (!https && !ssh)) throw new ReleaseError("release remote must use GitHub.com HTTPS or Git SSH");
+    path = parsed.pathname.slice(1);
+  }
+  const name = path.replace(/\.git$/, "");
+  if (name.toLowerCase() !== repository.toLowerCase()) throw new ReleaseError("effective push remote differs from reviewed GitHub repository");
+  return { repository, remote, status: "pass" };
+}
+
+export function requireCandidateTag({ repo, candidateSha, tagObject, tag }) {
+  if (!/^[a-f0-9]{40}$/.test(candidateSha) || !/^[a-f0-9]{40}$/.test(tagObject) || typeof tag !== "string" || !tag.startsWith("refs/tags/")) throw new ReleaseError("invalid annotated tag identity");
+  if (git(repo, ["cat-file", "-t", candidateSha]).trim() !== "commit" || git(repo, ["cat-file", "-t", tagObject]).trim() !== "tag" || git(repo, ["rev-parse", `${tagObject}^{commit}`]).trim() !== candidateSha) throw new ReleaseError("annotated tag does not resolve to candidate commit");
+  const header = git(repo, ["cat-file", "-p", tagObject]).split("\n\n", 1)[0].split("\n");
+  if (!header.includes(`object ${candidateSha}`) || !header.includes("type commit") || !header.includes(`tag ${tag.slice("refs/tags/".length)}`)) throw new ReleaseError("annotated tag header differs from release identity");
 }

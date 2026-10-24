@@ -7,6 +7,7 @@ import { stableVersion, ReleaseError } from "./release-version.mjs";
 function identity(candidate, publisher) {
   if (!candidate || !["grey-matter", "tkt"].includes(candidate.product) || !stableVersion(candidate.version) || !/^[a-f0-9]{40}$/.test(candidate.candidateSha) || !/^[A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(candidate.repository)) throw new ReleaseError("invalid publication identity");
   if (publisher !== (candidate.product === "tkt" ? "cargo-dist" : "local")) throw new ReleaseError(`the sole publisher for ${candidate.product} is ${candidate.product === "tkt" ? "cargo-dist" : "local"}`);
+  if (candidate.tagObject !== undefined && !/^[a-f0-9]{40}$/.test(candidate.tagObject)) throw new ReleaseError("invalid sealed tag object");
   const gates = candidate.gates;
   if (gates?.status !== "pass" || gates.candidateSha !== candidate.candidateSha || gates.product !== candidate.product || gates.version !== candidate.version || !Array.isArray(gates.pending) || gates.pending.length) throw new ReleaseError("candidate gates are incomplete or belong to another identity");
   if (typeof candidate.title !== "string" || !candidate.title.trim() || typeof candidate.notes !== "string" || !candidate.notes.trim()) throw new ReleaseError("publication requires reviewed notes and title");
@@ -17,16 +18,21 @@ function identity(candidate, publisher) {
     assets.set(asset.name, { name: asset.name, bytes: asset.bytes, size: asset.size, digest: `sha256:${asset.sha256}` });
   }
   if (candidate.releaseId !== undefined && (!Number.isSafeInteger(candidate.releaseId) || candidate.releaseId <= 0)) throw new ReleaseError("invalid persisted release ID");
-  return { repository: candidate.repository, tag: `v${candidate.version}`, sha: candidate.candidateSha, title: candidate.title, notes: candidate.notes, assets, releaseId: candidate.releaseId ?? null };
+  return { repository: candidate.repository, tag: `v${candidate.version}`, sha: candidate.candidateSha, title: candidate.title, notes: candidate.notes, assets, tagObject: candidate.tagObject, releaseId: candidate.releaseId ?? null };
 }
 
-export async function reconcileGithubRelease({ candidate, api, publisher, execute = false, progress = () => {} }) {
+export async function reconcileGithubRelease({ candidate, api, publisher, execute = false, progress = () => {}, observe = () => {} }) {
   if (typeof execute !== "boolean") throw new ReleaseError("publication execution mode must be boolean");
   const expected = identity(candidate, publisher), repo = expected.repository;
   let releaseId = expected.releaseId;
+  function observed(state) {
+    observe({ phase: state.phase, releaseId, url: state.release?.html_url ?? null, immutable: state.release?.immutable ?? false, missingAssets: state.missing });
+    return state;
+  }
   async function inspect() {
     const tag = await api.tag(repo, expected.tag);
     if (!tag || tag.sha !== expected.sha || tag.annotated !== true) throw new ReleaseError("remote tag must be annotated and resolve to the candidate commit");
+    if (expected.tagObject && tag.objectSha !== expected.tagObject) throw new ReleaseError("remote annotated tag object differs from the sealed object");
     // The adapter must paginate authenticated list results; by-tag 404 misses drafts.
     const releases = await api.releases(repo);
     if (!Array.isArray(releases) || releases.some((item) => !item || typeof item.tag_name !== "string" || !Number.isSafeInteger(item.id) || item.id <= 0)) throw new ReleaseError("invalid release-list response");
@@ -35,7 +41,7 @@ export async function reconcileGithubRelease({ candidate, api, publisher, execut
     const release = matches[0];
     if (!release) {
       if (releaseId !== null) throw new ReleaseError("observed release ID disappeared; refusing a replacement");
-      return { phase: "missing", release: null, missing: [...expected.assets.keys()] };
+      return observed({ phase: "missing", release: null, missing: [...expected.assets.keys()] });
     }
     if (releaseId !== null && release.id !== releaseId) throw new ReleaseError("release ID changed during publication");
     releaseId = release.id;
@@ -51,7 +57,7 @@ export async function reconcileGithubRelease({ candidate, api, publisher, execut
     }
     const missing = [...expected.assets.keys()].filter((name) => !seen.has(name));
     if (!release.draft && (!release.immutable || missing.length)) throw new ReleaseError("published release is not immutable or has missing assets");
-    return { phase: release.draft ? "draft" : "published", release, missing };
+    return observed({ phase: release.draft ? "draft" : "published", release, missing });
   }
   let snapshot = await inspect();
   const result = () => ({ status: "pass", mode: execute ? "publisher-reconciliation" : "dry-run", publisher, phase: snapshot.phase, releaseId, url: snapshot.release?.html_url ?? null, immutable: snapshot.release?.immutable ?? false, missingAssets: snapshot.missing });
