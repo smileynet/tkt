@@ -11,6 +11,7 @@ import { git, requireGithubRemote, requireCandidateTag, pushCandidateRefs } from
 import { ReleaseError } from "./release-version.mjs";
 import { readStagedCandidate } from "./release-staging.mjs";
 import { githubReleaseApi } from "./release-github.mjs";
+import { prepareDevelopment } from "./release-development.mjs";
 import { reconcileGithubRelease, promotePublishedStable } from "./release-publish.mjs";
 const encode = (value) => JSON.stringify(value, null, 2) + "\n";
 const hash = (value) => createHash("sha256").update(value).digest("hex");
@@ -18,7 +19,7 @@ function canonical(path) {
   if (existsSync(path)) return realpathSync.native(path);
   return resolve(canonical(dirname(path)), basename(path));
 }
-export async function publishStaged(options, { api, pushCandidate = pushCandidateRefs, promoteStable = promotePublishedStable } = {}) {
+export async function publishStaged(options, { api, prepareMain = prepareDevelopment, pushCandidate = pushCandidateRefs, promoteStable = promotePublishedStable } = {}) {
   const execute = options.execute === undefined ? false : options.execute;
   if (typeof execute !== "boolean" || (execute && options.dryRun) || !["publish", "resume"].includes(options.mode)) throw new ReleaseError("invalid publication mode");
   if (options.product === "tkt") throw new ReleaseError("tkt publication belongs to cargo-dist CI; its integration is not enabled here");
@@ -51,7 +52,7 @@ export async function publishStaged(options, { api, pushCandidate = pushCandidat
     return state;
   }
   let state = readRecovery();
-  if (!execute) return { status: "pass", mode: "dry-run", candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, publisher: "local", previousPhase: state.phase, assetNames: candidate.assets.map((asset) => asset.name), plan: ["atomic candidate refs", "reconcile immutable GitHub release", "verify and promote stable"], writes: false };
+  if (!execute) return { status: "pass", mode: "dry-run", candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, publisher: "local", previousPhase: state.phase, assetNames: candidate.assets.map((asset) => asset.name), plan: ["prepare and fully check development integration", "atomic development/candidate/tag refs", "reconcile immutable GitHub release", "verify and promote stable"], writes: false };
   const save = (fields) => {
     Object.assign(state, fields);
     if (fields.phase && fields.phase !== "interrupted") delete state.error;
@@ -72,7 +73,11 @@ export async function publishStaged(options, { api, pushCandidate = pushCandidat
     save({ phase: "candidate-refs" });
     if (await api.immutableEnabled(candidate.repository) !== true) throw new ReleaseError("repository release immutability must be enabled before pushing candidate refs");
     check();
-    const refs = pushCandidate({ repo, remote, branch, tag, candidateSha: candidate.candidateSha, tagObject: options.tagObject, execute: true });
+    save({ phase: "development" });
+    const development = await prepareMain({ repo, remote, candidateSha: candidate.candidateSha, product: candidate.product, version: candidate.version, out: `${statePath}.development`, execute: true });
+    if (development?.status !== "pass" || development.candidateSha !== candidate.candidateSha || !/^[a-f0-9]{40}$/.test(development.developmentSha)) throw new ReleaseError("development integration was not verified");
+    save({ phase: "candidate-refs", development }); check();
+    const refs = pushCandidate({ repo, remote, branch, tag, candidateSha: candidate.candidateSha, tagObject: options.tagObject, developmentSha: development.developmentSha, execute: true });
     if (!refs.complete) throw new ReleaseError("candidate ref publication was not observed");
     save({ phase: "github" }); check();
     candidate.releaseId = state.releaseId ?? undefined;
@@ -80,7 +85,7 @@ export async function publishStaged(options, { api, pushCandidate = pushCandidat
     save({ phase: "stable", releaseId: published.releaseId }); check();
     const stable = await promoteStable({ repo, remote, candidate: { ...candidate, releaseId: state.releaseId }, api, publisher: "local", execute: true });
     if (!stable.complete) throw new ReleaseError("stable promotion was not observed");
-    const result = { status: "pass", mode: "published", candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, github: published, stable, registry: "not-applicable", directorySubmission: "not-requested", marketplaceUrl: `https://github.com/${candidate.repository}/tree/stable` };
+    const result = { status: "pass", mode: "published", candidateSha: candidate.candidateSha, reviewSha: options.reviewSha, development, github: published, stable, registry: "not-applicable", directorySubmission: "not-requested", marketplaceUrl: `https://github.com/${candidate.repository}/tree/stable` };
     save({ phase: "complete", result }); return result;
   } catch (error) {
     if (ownsState) save({ phase: "interrupted", error: error.message });

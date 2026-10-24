@@ -53,7 +53,8 @@
         "tools/release-github.mjs",
         "tools/release-staging.mjs",
         "tools/release-publication.mjs",
-        "tools/release-registry.mjs"
+        "tools/release-registry.mjs",
+        "tools/release-development.mjs"
       ]
     }
   }
