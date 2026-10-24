@@ -17,12 +17,13 @@ function fixture() {
   const git = (...args) => execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
   git("init"); git("add", "."); git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", `core.hooksPath=${join(root, "no-hooks")}`, "commit", "-m", "Candidate");
   const env = { EXPECTED_CANDIDATE_SHA: git("rev-parse", "HEAD"), GITHUB_SHA: git("rev-parse", "HEAD"), GITHUB_REPOSITORY: "smileynet/tkt", GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "2" };
+  const identity = ciIdentity(repo, env);
   const targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"];
   const artifacts = Object.fromEntries(targets.map((target) => [`tkt-${target}.zip`, { kind: "executable-zip", target_triples: [target] }]));
-  const plan = { dist_version: "0.32.0", announcement_tag: "v0.4.0", releases: [{ app_name: "tkt", app_version: "0.4.0", artifacts: Object.keys(artifacts) }], artifacts };
+  const plan = { dist_version: "0.32.0", announcement_tag: identity.tag, releases: [{ app_name: "tkt", app_version: identity.version, artifacts: Object.keys(artifacts) }], artifacts };
   const writePlan = () => writeFileSync(join(input, "plan-dist-manifest.json"), JSON.stringify(plan)); writePlan();
   for (const name of Object.keys(artifacts)) writeFileSync(join(input, name), `sealed ${name}`);
-  const source = join(root, "crate-source"), prefix = "tkt-0.4.0"; mkdirSync(join(source, prefix), { recursive: true });
+  const source = join(root, "crate-source"), prefix = `tkt-${identity.version}`; mkdirSync(join(source, prefix), { recursive: true });
   const crate = (sha = env.GITHUB_SHA) => { writeFileSync(join(source, prefix, ".cargo_vcs_info.json"), JSON.stringify({ git: { sha1: sha }, path_in_vcs: "" })); tar.create({ file: join(input, `${prefix}.crate`), cwd: source, sync: true, gzip: true }, [`${prefix}/.cargo_vcs_info.json`]); }; crate();
   return { repo, input, output, env, plan, writePlan, crate, run: () => sealStage({ repo, input, output, env }), clean: () => rmSync(root, { recursive: true, force: true }) };
 }
