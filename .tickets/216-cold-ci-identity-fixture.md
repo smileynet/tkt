@@ -1,7 +1,7 @@
 ---
 id: "216"
 title: "Run identity verification on a cold CI cache"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -36,6 +36,14 @@ this cold-runner condition. No publication or release ref changes are in scope.
 
 ## Acceptance criteria
 
-- [ ] A clean hosted full check passes its identity fixture.
-- [ ] The temporary fixture starts with the project Cargo.lock.
-- [ ] CI fetches locked dependencies before the offline tests.
+- [x] A clean hosted full check passes its identity fixture.
+- [x] The temporary fixture starts with the project Cargo.lock.
+- [x] CI fetches locked dependencies before the offline tests.
+
+## Resolution (2026-10-24)
+
+done: fetch locked dependencies on clean CI runners and seed the identity fixture from the project lockfile, preserving its offline rebuild and identity assertions.
+
+### Verification
+1. ✓ A clean hosted check job completes the offline identity fixture after fetching locked dependencies. — "Hosted full-check job 120754556236 in run 40054566229 at a1fe66a7bb7e096ddf8f98fbe4d0f6779b5a5087 passed the offline identity fixture, all 14 Node checks and 296 Rust tests with fmt/clippy."
+2. ✓ The identity fixture reuses Cargo.lock dependency versions instead of selecting uncached newer crates. — "tools/release-tools.test.mjs makeSource copies the project Cargo.lock before each temporary identity build; CI fetches with cargo fetch --locked before mise run check. Local full gate also passed."
