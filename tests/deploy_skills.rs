@@ -1,9 +1,9 @@
-//! Dual-deploy guard in tools/deploy-skills.sh.
+//! Dual-deploy guard in the canonical Node deployer.
 //!
 //! With the tkt Claude Code plugin installed, a root Claude Code reads (any
 //! `.claude/skills`, or a project `.agents/skills`) must not get copies too, or
 //! every skill lists twice (`tkt-core` and `tkt:tkt-core`). Each test runs the
-//! script against throwaway roots with a fake plugins dir
+//! deployer against throwaway roots with a fake plugins dir
 //! (`CLAUDE_CODE_PLUGIN_CACHE_DIR`), never a real harness root.
 
 use std::path::{Path, PathBuf};
@@ -14,7 +14,7 @@ use tempfile::TempDir;
 const MANIFEST: &str = ".installed-by-tkt.json";
 
 fn script() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("tools/deploy-skills.sh")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tools/deploy.mjs")
 }
 
 /// A temp tree with `plugins/installed_plugins.json` listing `plugin` (if any).
@@ -39,7 +39,7 @@ fn set_plugin(base: &Path, plugin: Option<&str>) {
 }
 
 fn deploy(base: &Path, args: &[&str]) -> String {
-    let out = Command::new("bash")
+    let out = Command::new("node")
         .arg(script())
         .args(args)
         .env("CLAUDE_CODE_PLUGIN_CACHE_DIR", base.join("plugins"))
@@ -52,7 +52,7 @@ fn deploy(base: &Path, args: &[&str]) -> String {
         String::from_utf8_lossy(&out.stdout),
         String::from_utf8_lossy(&out.stderr)
     );
-    assert!(out.status.success(), "deploy-skills.sh failed:\n{text}");
+    assert!(out.status.success(), "deploy.mjs failed:\n{text}");
     text
 }
 

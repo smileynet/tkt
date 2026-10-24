@@ -94,7 +94,7 @@ test("Cargo package excludes tracked scratch while retaining source and license"
     git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", `core.hooksPath=${join(temp, "no-hooks")}`, "commit", "-m", "Tracked scratch fixture");
     const list = (selection) => {
       writeFileSync(join(temp, "Cargo.toml"), `[package]\nname="package-exclusions-fixture"\nversion="0.0.0"\nedition="2021"\nlicense="MIT"\n${Object.entries(selection).map(([key, value]) => `${key}=${JSON.stringify(value)}`).join("\n")}\n`);
-      return execFileSync("cargo", ["package", "--list", "--offline", "--allow-dirty"], { cwd: temp, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim().split(/\r?\n/);
+      return execFileSync("cargo", ["package", "--list", "--offline", "--allow-dirty"], { cwd: temp, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim().split(/\r?\n/).map((file) => file.replaceAll("\\", "/"));
     };
     assert.ok(list({ exclude: oldExcludes.filter((entry) => entry !== ".scratch/") }).includes(".scratch/HANDOFF.md"), "seed reproduces old archive leak");
     assert.ok(list({ exclude: oldExcludes }).includes("tools/maintainer.mjs"), "previous exclusions leaked maintainer files");

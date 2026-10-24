@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Project cargo-dist's generated build jobs into a manual, nonpublishing workflow.
 // Usage: node tools/generate-release-workflow.mjs [--write]
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -68,7 +68,8 @@ export function stageWorkflow(generated) {
 }
 export function generateStageWorkflow(source = repo) {
   if (execFileSync("dist", ["--version"], { encoding: "utf8" }).trim() !== "cargo-dist 0.32.0") throw new ReleaseError("install cargo-dist 0.32.0 before generating release CI");
-  const temp = mkdtempSync(join(tmpdir(), "tkt dist generation "));
+  // cargo-dist cannot discover workspaces through Windows 8.3 path aliases.
+  const temp = realpathSync.native(mkdtempSync(join(tmpdir(), "tkt dist generation ")));
   try {
     for (const file of ["Cargo.toml", "Cargo.lock", "build.rs", "src", "README.md", "CHANGELOG.md", "LICENSE"]) cpSync(join(source, file), join(temp, file), { recursive: true });
     const config = parseToml(readFileSync(join(temp, "Cargo.toml"), "utf8"));

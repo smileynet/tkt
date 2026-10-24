@@ -68,3 +68,24 @@ and repeat affected source/artifact/product/native gates for the replacement.
 - [ ] Windows Node release and workflow-generation fixtures pass without skipping generator or package exclusion checks.
 - [ ] Deployment integration tests invoke the canonical Node deployer on Windows and preserve duplicate/foreign ownership assertions.
 - [ ] A full hosted Windows check and the existing macOS/Linux gates pass with exact source evidence.
+
+
+## Verified diagnosis and source corrections (2026-10-24)
+
+[Diagnostic run 40080923092](https://github.com/smileynet/tkt/actions/runs/40080923092)
+compares actual Windows paths against the same frozen candidate. Native
+`realpathSync.native` expands `RUNNER~1` to `runneradmin`; cargo-dist generates
+successfully in that expanded directory and on the workspace drive. The earlier
+[run 40080726605](https://github.com/smileynet/tkt/actions/runs/40080726605)
+shows Cargo metadata succeeding while cargo-dist fails through the short alias.
+The minimal Cargo fixture prints `src\main.rs`, proving the assertion mismatch.
+
+Source corrections: native-canonicalize the generator's owned temporary directory;
+normalize Cargo listing separators before comparing package membership; invoke the
+canonical Node deployer in the six deployment integration fixtures. CI now runs
+its complete verification gate on Linux and Windows, preserving checkout bytes and
+using a checksum-verified pinned Windows cargo-dist binary.
+
+Local `mise run check` passes: 37 Node fixtures, fmt, Clippy and 296 Rust tests
+(191 unit + 6 deploy + 96 CLI + 3 manifest). Hosted verification of the corrected
+source is still required; diagnostic success alone does not close this ticket.

@@ -25,8 +25,16 @@ jobs:
         run: node --test tools/claude-hooks.test.mjs
 
   check:
-    runs-on: ubuntu-latest
+    name: Full verification (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
+      - name: Preserve repository file bytes
+        run: git config --global core.autocrlf false
+
       - uses: actions/checkout@v6
 
       - name: Install maintainer Node runtime
@@ -47,10 +55,29 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install pinned workflow generator
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.32.0/cargo-dist-installer.sh | sh
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Install verified Windows workflow generator
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $base = 'https://github.com/axodotdev/cargo-dist/releases/download/v0.32.0/cargo-dist-x86_64-pc-windows-msvc.zip'
+          $archive = Join-Path $env:RUNNER_TEMP 'cargo-dist.zip'
+          Invoke-WebRequest $base -OutFile $archive
+          $checksumFile = "$archive.sha256"
+          Invoke-WebRequest "$base.sha256" -OutFile $checksumFile
+          $expected = ([System.IO.File]::ReadAllText($checksumFile).Trim() -split '\s+')[0]
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
+          if ($actual -ne $expected) { throw 'cargo-dist checksum mismatch' }
+          $destination = Join-Path $env:RUNNER_TEMP 'cargo-dist-native'
+          Expand-Archive $archive -DestinationPath $destination
+          $binary = Get-ChildItem $destination -Filter dist.exe -Recurse | Select-Object -First 1
+          if (!$binary) { throw 'Missing native dist.exe' }
+          $binary.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Fetch locked test dependencies
         run: cargo fetch --locked
