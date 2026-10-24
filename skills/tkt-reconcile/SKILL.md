@@ -14,8 +14,25 @@ Review all tickets against session context, then re-organize the plan to match c
 Read all open tickets and the current plan (`docs/plan.md`, session decisions, stated priorities). If the session is scoped to one or more **work streams** (tags), note them. Build a mental map of: what's planned, what's tracked, what's stale, which stream each ticket belongs to.
 
 ```bash
-tkt context          # show the active tag context (if any)
-tkt query --tag <stream>   # tickets in one stream
+tkt context    # inspect the effective context
+tkt query      # matching and untagged tickets
+```
+
+Read existing ticket frontmatter for tag vocabulary; `query` omits tags.
+`TKT_CONTEXT` overrides the stored context. For a temporary stream query, change
+only that command's environment, preserving the stored context and any existing
+environment override. In a POSIX shell:
+
+```bash
+TKT_CONTEXT=ink tkt query
+```
+
+In PowerShell:
+
+```powershell
+$prior = $env:TKT_CONTEXT
+try { $env:TKT_CONTEXT = 'ink'; tkt query }
+finally { $env:TKT_CONTEXT = $prior }
 ```
 
 ### 2. Audit each open ticket
@@ -76,7 +93,7 @@ Three independent axes — don't conflate them:
 - Set via `tkt edit <id> --priority high|medium|low`
 
 **Work-stream tag** (`--tags <stream>`): which parallel thread the ticket belongs to.
-- Tag each ticket with its stream (`ink`, `platform`, `config`, …) using the project's established tag vocabulary (`tkt query --tag <name>` to see it)
+- Tag each ticket with its stream (`ink`, `platform`, `config`, …) using the `tags` in existing ticket frontmatter as the project's vocabulary
 - One tag per ticket is the norm; add a second only when work genuinely spans streams
 - Scope a session to a stream with `tkt context <stream>` so `tkt ready` and new-ticket tagging focus on that thread; clear with `tkt context --clear`
 - Omit tags in single-stream projects or for cross-cutting work
