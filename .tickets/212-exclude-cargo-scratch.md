@@ -15,8 +15,12 @@ tags: ["stream:tooling"]
 
 ## What to build
 
-TBD
+Real `cargo package --locked` on approved initial candidate `8c4038574c2a5bb58086909859cd14b6071115f6` (0.5.0) created an archive containing `.scratch/HANDOFF.md`. The file is tracked, so Git ignore alone does not exclude it. Add `.scratch/` to Cargo package exclusions; retain the local handoff but remove the tracked scratch exception after routing any still-current decisions to the plan/tickets. Seed a tracked scratch fixture and test real Cargo listing/packaging semantics. Preserve source, notices, clean Git identity and no-upload operation. This blocks coordinated grey-matter preparation 67 and final audit 70 until closed.
+
+Primary sources: [Cargo package metadata](https://doc.rust-lang.org/cargo/commands/cargo-package.html#cargo_vcs_infojson-format), [Cargo build-script rerun rules](https://doc.rust-lang.org/cargo/reference/build-scripts.html#change-detection). Local evidence is committed in grey-matter `docs/agents/research/evidence/registry-initial-package-findings-20261023.json`. No registry publication was run.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] Cargo excludes tracked scratch while retaining source/notices.
+- [ ] Old exclusion policy fails a real Cargo fixture; repaired policy passes.
+- [ ] Fresh package builds, archive exclusions/identity are inspected, replay hash matches and the project gate passes.

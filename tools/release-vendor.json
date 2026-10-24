@@ -20,6 +20,7 @@
     "tools/release-github.mjs": "2a16cae7e4b3bfe7843cd29e68c778574c6fe20392e393bdf49d78f4e77d03e0",
     "tools/release-staging.mjs": "81f601c59d97b996e6d9e5722d8a356ce73218435c35668b65696cfaab7f272f",
     "tools/release-publication.mjs": "5c0ecc9b4224f7146453b8c7f08f9dd49cb9a97bce6956ff460d7aaf26d39805",
+    "tools/release-registry.mjs": "48742177ccf4e75b25a1bc2ff8c335981f695c894fb933ed3f1e6f0a53c4abe4",
     "tools/check-skill-syntax.mjs": "35c3f52e0ccd9b6fb628b4dba03b5ff15d08314a8ce77a686b352ac857b67c8d",
     "tools/probe-claude-validation.mjs": "eb91b5cce1610f6c8c4da1c40c7e0c8a8b3222cf093f408583114bbc7f5fafcb",
     "tools/LICENSE-grey-matter.txt": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
