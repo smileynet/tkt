@@ -260,9 +260,14 @@ function release(pack, root, why, dryRun) {
 function installRoot(pack, root, args) {
   const resources = agyResources(pack);
   const shared = resources.filter((file) => !pack.skills.some((skill) => file.startsWith(skill.src + sep)));
+  let hasShared = shared.length > 0;
+  for (const file of resources.filter((file) => file.endsWith(".md"))) markdownResources(readFileSync(file, "utf8"), (target) => {
+    const source = resolve(dirname(file), target);
+    if (isDir(source) && !pack.skills.some((skill) => source === skill.src || source.startsWith(skill.src + sep))) hasShared = true;
+  });
   const sharedRoot = join(root, resourceName(pack));
   const ownsShared = readJson(join(root, manifestName(pack)))?.resources === resourceName(pack);
-  if (shared.length && exists(sharedRoot) && !ownsShared) throw new PackError(`refusing foreign resource directory: ${sharedRoot}`);
+  if (hasShared && exists(sharedRoot) && !ownsShared) throw new PackError(`refusing foreign resource directory: ${sharedRoot}`);
   const project = (file) => projectResource(pack, file, root, sharedRoot);
   let copied = false;
   const directories = new Set();
@@ -291,7 +296,7 @@ function installRoot(pack, root, args) {
       catch { action = "copied  (link failed, fell back to copy)"; }
     }
     if (!linked) {
-      if (!copied && shared.length) {
+      if (!copied && hasShared) {
         rmIfExists(sharedRoot);
         copyResources(shared, project, directories);
       }
@@ -303,11 +308,11 @@ function installRoot(pack, root, args) {
   if (!args.dryRun) {
     for (const target of directories) {
       const roots = installed.map((name) => join(root, name));
-      if (copied && shared.length) roots.push(sharedRoot);
+      if (copied && hasShared) roots.push(sharedRoot);
       if (roots.some((base) => target === base || target.startsWith(base + sep))) mkdirSync(target, { recursive: true });
     }
-    if ((!copied || !shared.length) && ownsShared) rmIfExists(sharedRoot);
-    writeOwned(pack, root, installed, args.link ? "link" : "copy", copied && shared.length ? resourceName(pack) : undefined);
+    if ((!copied || !hasShared) && ownsShared) rmIfExists(sharedRoot);
+    writeOwned(pack, root, installed, args.link ? "link" : "copy", copied && hasShared ? resourceName(pack) : undefined);
   }
   if (refused) console.log(`  ${refused} refused (foreign dirs); re-run with --force to overwrite.`);
 }
