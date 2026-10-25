@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// deploy.mjs 1.4.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.6.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
 // under `metadata.deploy`). This file owns WHERE and HOW: the harness table below, copy or
-// link into skill roots, an ownership manifest per root, plugin packaging, and the rule that
+// link into skill roots, self-contained shared resources, ownership manifests, plugin packaging, and the rule that
 // no harness sees a skill twice. Other projects vendor this file at tools/deploy.mjs; it is
 // dependency-free and finds its pack as the parent of its own directory (or --pack DIR).
 //
@@ -36,7 +36,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.5.0";
+const DEPLOY_VERSION = "1.6.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -235,11 +235,12 @@ function chooseRoots(present, candidates) {
 
 // --- Ownership manifest ------------------------------------------------------------------
 const manifestName = (pack) => `.installed-by-${pack.name}.json`;
+const resourceName = (pack) => `.resources-${pack.name}`;
 const readOwned = (pack, root) => readJson(join(root, manifestName(pack)))?.installed ?? [];
-function writeOwned(pack, root, names, mode) {
+function writeOwned(pack, root, names, mode, resources) {
   writeFileSync(join(root, manifestName(pack)), JSON.stringify({
     installer: `deploy.mjs ${DEPLOY_VERSION}`, pack: pack.name, repo: pack.dir, mode,
-    installedAt: new Date().toISOString(), installed: names.slice().sort(),
+    installedAt: new Date().toISOString(), installed: names.slice().sort(), resources,
   }, null, 2) + "\n");
 }
 function rmIfExists(p) { if (exists(p)) { rmSync(p, { recursive: true, force: true }); return ""; } return " (already gone)"; }
@@ -250,10 +251,21 @@ function release(pack, root, why, dryRun) {
   if (!names.length) return;
   console.log(`\nroot: ${root}  (${why})`);
   for (const n of names) console.log(`  remove  ${n}${dryRun ? "" : rmIfExists(join(root, n))}`);
-  if (!dryRun) rmSync(join(root, manifestName(pack)), { force: true });
+  if (!dryRun) {
+    if (readJson(join(root, manifestName(pack)))?.resources === resourceName(pack)) rmIfExists(join(root, resourceName(pack)));
+    rmSync(join(root, manifestName(pack)), { force: true });
+  }
 }
 
 function installRoot(pack, root, args) {
+  const resources = agyResources(pack);
+  const shared = resources.filter((file) => !pack.skills.some((skill) => file.startsWith(skill.src + sep)));
+  const sharedRoot = join(root, resourceName(pack));
+  const ownsShared = readJson(join(root, manifestName(pack)))?.resources === resourceName(pack);
+  if (shared.length && exists(sharedRoot) && !ownsShared) throw new PackError(`refusing foreign resource directory: ${sharedRoot}`);
+  const project = (file) => projectResource(pack, file, root, sharedRoot);
+  let copied = false;
+  const directories = new Set();
   if (!args.dryRun) mkdirSync(root, { recursive: true });
   const owned = new Set(readOwned(pack, root));
   const desired = new Set(pack.skills.map((s) => s.name));
@@ -273,13 +285,30 @@ function installRoot(pack, root, args) {
     if (args.dryRun) { console.log(`  ${exists(dest) ? "replace" : "create "} ${s.name}`); continue; }
     rmIfExists(dest);
     let action = "copied ";
+    let linked = false;
     if (args.link) {
-      try { symlinkSync(s.src, dest, platform() === "win32" ? "junction" : "dir"); action = "linked "; }
-      catch { cpSync(s.src, dest, { recursive: true }); action = "copied  (link failed, fell back to copy)"; }
-    } else cpSync(s.src, dest, { recursive: true });
+      try { symlinkSync(s.src, dest, platform() === "win32" ? "junction" : "dir"); action = "linked "; linked = true; }
+      catch { action = "copied  (link failed, fell back to copy)"; }
+    }
+    if (!linked) {
+      if (!copied && shared.length) {
+        rmIfExists(sharedRoot);
+        copyResources(shared, project, directories);
+      }
+      copied = true;
+      copyResources(resources.filter((file) => file.startsWith(s.src + sep)), project, directories);
+    }
     console.log(`  ${action} ${s.name}`);
   }
-  if (!args.dryRun) writeOwned(pack, root, installed, args.link ? "link" : "copy");
+  if (!args.dryRun) {
+    for (const target of directories) {
+      const roots = installed.map((name) => join(root, name));
+      if (copied && shared.length) roots.push(sharedRoot);
+      if (roots.some((base) => target === base || target.startsWith(base + sep))) mkdirSync(target, { recursive: true });
+    }
+    if ((!copied || !shared.length) && ownsShared) rmIfExists(sharedRoot);
+    writeOwned(pack, root, installed, args.link ? "link" : "copy", copied && shared.length ? resourceName(pack) : undefined);
+  }
   if (refused) console.log(`  ${refused} refused (foreign dirs); re-run with --force to overwrite.`);
 }
 
@@ -389,6 +418,27 @@ export function agyResources(pack) {
   return [...files].sort();
 }
 
+// Both copy-mode roots and plugin packages relocate the same closed set of resources.
+function projectResource(pack, file, skillRoot, sharedRoot) {
+  const skill = pack.skills.find((s) => file === s.src || file.startsWith(s.src + sep));
+  return skill ? join(skillRoot, skill.name, relative(skill.src, file)) : join(sharedRoot, relative(pack.dir, file));
+}
+
+function copyResources(files, project, directories = new Set()) {
+  for (const file of files) {
+    const dest = project(file);
+    mkdirSync(dirname(dest), { recursive: true });
+    cpSync(file, dest, { dereference: true });
+    if (file.endsWith(".md")) writeFileSync(dest, markdownResources(readFileSync(file, "utf8"), (target) => {
+      const source = resolve(dirname(file), target);
+      const relocated = project(source);
+      if (isDir(source)) directories.add(relocated);
+      return relative(dirname(dest), relocated).split(sep).join("/") || ".";
+    }));
+  }
+  return directories;
+}
+
 // Flat skills preserve native command names; linked resources are projected with them.
 function agyDeploy(pack, args) {
   const out = args.out ?? join(pack.dir, "dist", "agy-plugin");
@@ -401,19 +451,11 @@ function agyDeploy(pack, args) {
   };
   console.log(`\nagy plugin: ${tilde(out)}  (${pack.skills.length} skills, v${m.version})`);
   const resources = agyResources(pack);
-  const project = (file) => {
-    const skill = pack.skills.find((s) => file === s.src || file.startsWith(s.src + sep));
-    return skill ? join(out, "skills", skill.name, relative(skill.src, file)) : join(out, relative(pack.dir, file));
-  };
+  const project = (file) => projectResource(pack, file, join(out, "skills"), out);
   if (args.dryRun) return;
   rmSync(out, { recursive: true, force: true });
   mkdirSync(join(out, "skills"), { recursive: true });
-  for (const file of resources) {
-    const dest = project(file);
-    mkdirSync(dirname(dest), { recursive: true });
-    cpSync(file, dest);
-    if (file.endsWith(".md")) writeFileSync(dest, markdownResources(readFileSync(file, "utf8"), (target) => relative(dirname(dest), project(resolve(dirname(file), target))).split(sep).join("/") || "."));
-  }
+  for (const target of copyResources(resources, project)) mkdirSync(target, { recursive: true });
   writeFileSync(join(out, "plugin.json"), JSON.stringify(agyManifest, null, 2) + "\n");
   if (args.cmd !== "install") return;
   const hasAgy = spawnSync("agy", ["--version"], { stdio: "ignore" }).error?.code !== "ENOENT";
@@ -496,6 +538,29 @@ function doCheck(pack, args) {
 }
 
 // What is in every skill root here, who owns it, and what each harness ends up seeing.
+function installedResourceFindings(root, manifest) {
+  const findings = [];
+  const paths = manifest.installed.map((name) => join(root, name)).filter((path) => isDir(path) && !lstatSync(path).isSymbolicLink());
+  if (manifest.resources) {
+    if (manifest.resources !== resourceName({ name: manifest.pack })) return [`${tilde(root)}: invalid owned resource directory`];
+    const shared = join(root, manifest.resources);
+    if (!isDir(shared) || lstatSync(shared).isSymbolicLink()) findings.push(`${tilde(shared)}: installed resource directory missing or linked`);
+    else paths.push(shared);
+  }
+  for (const path of paths) for (const entry of readdirSync(path, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+    const file = join(entry.parentPath, entry.name);
+    markdownResources(readFileSync(file, "utf8"), (target) => {
+      const at = resolve(dirname(file), target);
+      const rel = relative(root, at);
+      if (rel === ".." || rel.startsWith(".." + sep)) findings.push(`${tilde(file)}: installed resource escapes root: ${target}`);
+      else if (!exists(at)) findings.push(`${tilde(file)}: installed resource missing: ${target}`);
+      else if (real(at) !== real(root) && !real(at).startsWith(real(root) + sep)) findings.push(`${tilde(file)}: installed resource escapes root: ${target}`);
+    });
+  }
+  return findings;
+}
+
 function doAudit(pack, args) {
   const harnesses = HARNESSES();
   const roots = uniqReal([...knownRoots({ roots: [] }), ...[".agents", ".claude", ".codex", ".opencode", ".kiro"].map((d) => resolve(d, "skills"))].filter(isDir));
@@ -508,7 +573,9 @@ function doAudit(pack, args) {
     const owners = new Map();
     for (const f of readdirSync(root).filter((f) => /^\.installed-by-.+\.json$/.test(f))) {
       const p = f.slice(".installed-by-".length, -".json".length);
-      for (const n of readJson(join(root, f))?.installed ?? []) owners.set(n, [...(owners.get(n) ?? []), p]);
+      const manifest = readJson(join(root, f));
+      for (const n of manifest?.installed ?? []) owners.set(n, [...(owners.get(n) ?? []), p]);
+      if (manifest?.installed) findings.push(...installedResourceFindings(root, manifest));
     }
     const names = readdirSync(root).filter((n) => !n.startsWith("."));
     contents.set(root, new Map(names.map((n) => [n, owners.get(n) ?? []])));
