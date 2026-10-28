@@ -2,7 +2,7 @@
 id: "194"
 title: "assignee field + claim-by-assignment + frontier honors it"
 status: backlog
-blocked_by: []
+blocked_by: ["224"]
 priority: high
 validation_criteria:
   - "Ticket struct has assignee: Option<String>, parsed/serialized like spec"
