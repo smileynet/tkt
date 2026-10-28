@@ -5,9 +5,9 @@ status: open
 blocked_by: []
 priority: high
 validation_criteria:
-  - "One signed agents field parses into typed Any, AnyOf, or AnyExcept variants"
-  - "A process-scoped agent identity drives one shared ready and claim eligibility check"
-  - "new, batch, edit, ready, claim, query, capabilities, validation, docs, and distributed skills expose the contract consistently"
+  - "mise run check exits 0"
+  - "cargo test agent_eligibility -- --nocapture reports all agent-eligibility tests passed"
+  - "tkt capabilities reports global --agent, ticket --agents and --exclude-agents, and claim --force"
 tags: ["frontier", "data-model"]
 ---
 
