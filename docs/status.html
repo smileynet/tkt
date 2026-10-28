@@ -115,7 +115,7 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
-    "id": "2026-10-28-agent-model-review",
+    "id": "2026-10-28-agent-eligibility",
     "date": "2026-10-28",
     "kind": "decision",
     "title": "Agent routing now has one source-backed identity and policy model",
@@ -126,22 +126,15 @@ details.row .body{padding:0 0 14px}
       "One typed decision prevents discovery and claim rules from drifting."
     ],
     "visual": {
-      "type": "steps",
-      "items": [
-        { "label": "Review real code paths", "state": "done" },
-        { "label": "Approve refined contract", "state": "now" },
-        { "label": "Implement one matcher", "state": "next" }
-      ],
-      "caption": "The model is source-backed and ready for a contract decision; implementation has not started."
+      "type": "image",
+      "src": "agent-eligibility-model.svg",
+      "alt": "Diagram showing one signed agents field parsed into Any, AnyOf, or AnyExcept, then checked against process-scoped identity to drive both ready visibility and claim behavior.",
+      "caption": "One persisted fact and one invocation identity produce the same decision everywhere."
     },
     "fidelity": "wireframe",
-    "try": {
-      "label": "Review the refined proposal",
-      "href": "../.tickets/224-agent-eligibility-policy.md"
-    },
     "asks": [
       {
-        "id": "refined-agent-policy-approval",
+        "id": "agent-policy-approval",
         "question": "Approve process-scoped identity and the signed agents list?",
         "recommendation": "Approve the refined contract",
         "impact": "Approval makes the ticket agent-ready without introducing shared-host identity drift.",
@@ -154,58 +147,11 @@ details.row .body{padding:0 0 14px}
       }
     ],
     "links": [
-      { "label": "Refined proposal", "href": "../.tickets/224-agent-eligibility-policy.md" },
-      { "label": "Related assignee work", "href": "../.tickets/194-assignee-field-and-claim.md" }
-    ],
-    "details": "The current ready path filters in src/commands/ready.rs while claim has a separate status-only path in src/commands/claim.rs; the proposal now requires one exhaustive matcher for both.\nIdentity is --agent over TKT_AGENT, never shared project or user config, because several harnesses can run concurrently as one OS user.\nPersistence uses one agents list: positive names mean AnyOf, all !-prefixed names mean AnyExcept, and an absent field means Any. Empty, duplicate, mixed-sign, and invalid values are rejected at parse time.",
-    "workstreams": ["Agent routing", "Frontier", "Data model"]
-  },
-  {
-    "id": "2026-10-28-agent-eligibility",
-    "date": "2026-10-28",
-    "kind": "decision",
-    "title": "You can review how tickets will route work to the right agents",
-    "summary": "The proposal separates agent routing from work-stream tags, machine capabilities, and ownership after claim. It covers named agents, agent pools, and explicit exclusions without contradictory settings.",
-    "changes": [
-      "Leave work available to every agent by default.",
-      "Name a pool when any listed agent may pick it up.",
-      "Exclude named agents when everyone else remains eligible."
-    ],
-    "visual": {
-      "type": "metrics",
-      "items": [
-        { "value": "Any", "label": "Default visibility" },
-        { "value": "Any-of", "label": "Named agent pool" },
-        { "value": "Any-except", "label": "Explicit exclusion" }
-      ],
-      "caption": "Three mutually exclusive modes prevent contradictory allow and deny settings."
-    },
-    "fidelity": "wireframe",
-    "try": {
-      "label": "Review the proposal",
-      "href": "../.tickets/224-agent-eligibility-policy.md"
-    },
-    "asks": [
-      {
-        "id": "agent-policy-approval",
-        "question": "Should this routing model become the implementation contract?",
-        "recommendation": "Approve the proposed model",
-        "impact": "Approval lets implementation start with stable ready and claim semantics.",
-        "options": [
-          "Approve the proposed model",
-          "Revise the claim behavior",
-          "Revisit the data model"
-        ],
-        "status": "answered",
-        "answer": "Superseded by the source-backed data-model review"
-      }
-    ],
-    "links": [
       { "label": "Proposal ticket", "href": "../.tickets/224-agent-eligibility-policy.md" },
       { "label": "Related assignee work", "href": "../.tickets/194-assignee-field-and-claim.md" }
     ],
-    "details": "Status: proposed, not implemented. The persisted model is Any | AnyOf(NonEmptyAgentSet) | AnyExcept(NonEmptyAgentSet).\nFlow: ticket policy → canonical agent identity → ready visibility and guarded claim.\nMachine capabilities remain in requires; post-claim ownership remains in assignee. The assignee work is now sequenced behind this proposal so both reuse one identity model.",
-    "workstreams": ["Agent routing", "Frontier"]
+    "details": "Proposal\nPersisted policy: one optional agents list. Omit it for everyone; [codex] names one eligible agent; [claude, kiro] allows either; [!antigravity] allows everyone except that agent. Positive and negative names cannot be mixed.\nDomain model: AgentId is a validated lowercase slug. AgentEligibility is Any, AnyOf(NonEmptyAgentSet), or AnyExcept(NonEmptyAgentSet). Empty sets, duplicates, mixed signs, and invalid ids fail at the parse boundary; deterministic ordering keeps serialization stable.\nCaller identity: global --agent overrides TKT_AGENT. Identity is never stored in project or user config because several harnesses can run concurrently as one OS user.\nEvaluation: AgentEligibility.check(identity) returns eligible, identity required, not listed, or explicitly excluded. Both ready and claim use this one exhaustive decision; claim --force is the explicit scheduling override.\nBehavior: an unidentified invocation sees unrestricted work and ready reports how many restricted tickets it hid. Query keeps its existing tag-context behavior but is never agent-filtered.\nBoundaries: tags remain work-stream scope, requires remains machine capability, and assignee remains ownership after claim. Multi-agent staffing and security authorization are outside this proposal.",
+    "workstreams": ["Agent routing", "Frontier", "Data model"]
   },
   {
     "id": "2026-10-27-plan-drift",

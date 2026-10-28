@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 390" role="img" aria-labelledby="title desc">
+  <title id="title">Proposed agent eligibility data model</title>
+  <desc id="desc">A ticket's signed agents list is parsed into one of three typed policy variants. That policy checks the process-scoped agent identity once, producing consistent ready visibility and claim behavior.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#56d4f0"/>
+    </marker>
+  </defs>
+  <rect width="960" height="390" rx="18" fill="#0e1830"/>
+  <text x="36" y="42" fill="#e8eef9" font-family="system-ui, sans-serif" font-size="25" font-weight="600">One stored policy + one caller identity → one decision</text>
+
+  <rect x="36" y="72" width="250" height="274" rx="14" fill="#162540" stroke="#3b82e0" stroke-width="2"/>
+  <text x="58" y="108" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="17">TICKET FRONTMATTER</text>
+  <text x="58" y="145" fill="#56d4f0" font-family="ui-monospace, monospace" font-size="28" font-weight="600">agents</text>
+  <text x="58" y="181" fill="#e8eef9" font-family="ui-monospace, monospace" font-size="19">absent</text>
+  <text x="164" y="181" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="18">everyone</text>
+  <text x="58" y="219" fill="#e8eef9" font-family="ui-monospace, monospace" font-size="18">[codex, kiro]</text>
+  <text x="58" y="247" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="17">any named agent</text>
+  <text x="58" y="285" fill="#e8eef9" font-family="ui-monospace, monospace" font-size="18">[!antigravity]</text>
+  <text x="58" y="313" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="17">everyone except</text>
+
+  <path d="M 296 209 H 332" fill="none" stroke="#56d4f0" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="302" y="194" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="15">parse</text>
+
+  <rect x="344" y="72" width="272" height="274" rx="14" fill="#162540" stroke="#3b82e0" stroke-width="2"/>
+  <text x="366" y="108" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="17">TYPED DOMAIN</text>
+  <text x="366" y="145" fill="#56d4f0" font-family="system-ui, sans-serif" font-size="25" font-weight="600">AgentEligibility</text>
+  <rect x="366" y="168" width="228" height="42" rx="9" fill="#0a1120"/>
+  <text x="386" y="196" fill="#e8eef9" font-family="ui-monospace, monospace" font-size="19">Any</text>
+  <rect x="366" y="220" width="228" height="42" rx="9" fill="#0a1120"/>
+  <text x="386" y="248" fill="#e8eef9" font-family="ui-monospace, monospace" font-size="19">AnyOf(set)</text>
+  <rect x="366" y="272" width="228" height="42" rx="9" fill="#0a1120"/>
+  <text x="386" y="300" fill="#e8eef9" font-family="ui-monospace, monospace" font-size="18">AnyExcept(set)</text>
+  <text x="366" y="335" fill="#7fe0b0" font-family="system-ui, sans-serif" font-size="16">invalid input → parse error</text>
+
+  <path d="M 626 209 H 654" fill="none" stroke="#56d4f0" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="666" y="72" width="258" height="274" rx="14" fill="#162540" stroke="#3b82e0" stroke-width="2"/>
+  <text x="688" y="108" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="17">ONE EVALUATION</text>
+  <text x="688" y="145" fill="#56d4f0" font-family="ui-monospace, monospace" font-size="25" font-weight="600">check(identity)</text>
+  <text x="688" y="180" fill="#e8eef9" font-family="system-ui, sans-serif" font-size="18">identity source</text>
+  <text x="688" y="207" fill="#e8eef9" font-family="ui-monospace, monospace" font-size="18">--agent &gt; TKT_AGENT</text>
+  <path d="M 688 228 H 902" fill="none" stroke="#27395a" stroke-width="2"/>
+  <text x="688" y="260" fill="#7fe0b0" font-family="system-ui, sans-serif" font-size="18" font-weight="600">Eligible</text>
+  <text x="790" y="260" fill="#e8eef9" font-family="system-ui, sans-serif" font-size="17">show · allow</text>
+  <text x="688" y="295" fill="#ffc857" font-family="system-ui, sans-serif" font-size="18" font-weight="600">Mismatch</text>
+  <text x="810" y="295" fill="#e8eef9" font-family="system-ui, sans-serif" font-size="16">hide · explain</text>
+  <text x="688" y="327" fill="#a3b3cf" font-family="system-ui, sans-serif" font-size="16">one result drives ready + claim</text>
+</svg>
