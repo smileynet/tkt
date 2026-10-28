@@ -10,6 +10,9 @@ Single Rust binary. Originally ported from a Python implementation (now removed)
 
 See `.memory/specs/workspace-layout.md` for the full source tree.
 
+**Dashboard:** update `docs/status.html` after completed work worth surfacing; edit only
+its `gm-config` and `gm-entries` JSON blocks, then run the delivery-dashboard checker.
+
 ## Commands
 
 ```bash
