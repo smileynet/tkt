@@ -5,9 +5,9 @@ status: open
 blocked_by: []
 priority: high
 validation_criteria:
-  - "Agent eligibility parses into one typed any, any-of, or any-except policy"
-  - "ready filters restricted tickets using one canonical agent identity"
-  - "new, batch, edit, query, capabilities, validation, docs, and distributed skills expose the policy consistently"
+  - "One signed agents field parses into typed Any, AnyOf, or AnyExcept variants"
+  - "A process-scoped agent identity drives one shared ready and claim eligibility check"
+  - "new, batch, edit, ready, claim, query, capabilities, validation, docs, and distributed skills expose the contract consistently"
 tags: ["frontier", "data-model"]
 ---
 
@@ -19,24 +19,65 @@ Let a ticket describe which agent identities may pick it up before assignment, w
 overloading work-stream tags, machine capabilities, or post-claim ownership.
 
 The user asked to express policies such as "Codex", "Claude or Kiro", and "not
-Antigravity". Persist that as one fact and parse it at the frontmatter boundary into a
-sum type equivalent to:
+Antigravity". Persist that as one signed list and parse it at the frontmatter boundary
+into:
 
-```text
-Any | AnyOf(NonEmptyAgentSet) | AnyExcept(NonEmptyAgentSet)
+```rust
+struct AgentId(String);
+struct NonEmptyAgentSet(BTreeSet<AgentId>);
+
+enum AgentEligibility {
+    Any,
+    AnyOf(NonEmptyAgentSet),
+    AnyExcept(NonEmptyAgentSet),
+}
+
+enum AgentEligibilityMismatch {
+    IdentityRequired,
+    NotInAllowList,
+    ExplicitlyExcluded,
+}
 ```
 
-Use a validated, open-ended `AgentId` value rather than a fixed enum. Multiple names in
-`AnyOf` mean any listed agent may claim the ticket; requiring several agents to work
-together is a separate staffing concern. An omitted policy is `Any`, preserving every
-existing ticket's behavior.
+`AgentId` is an open-ended, canonical lowercase slug built only through a validating
+parser. The non-empty set rejects duplicates and serializes in deterministic order.
+Multiple names in `AnyOf` mean any listed agent may claim the ticket; requiring several
+agents to work together is a separate staffing concern.
+
+Use the existing list-shaped frontmatter rather than adding a scalar expression language:
+
+```yaml
+# omitted agents field = Any
+agents: ["codex"]
+agents: ["claude", "kiro"]
+agents: ["!antigravity"]
+```
+
+All entries must have the same sign. Positive names parse as `AnyOf`; names prefixed with
+`!` parse as `AnyExcept`. A present empty list, mixed signs, duplicates, or invalid ids
+fail at the parse boundary. Clearing the field restores `Any`, preserving every existing
+ticket's behavior with one canonical persisted representation.
 
 Expose an ergonomic CLI without creating two stored sources of truth: `--agents` maps to
 `AnyOf`, while `--exclude-agents` maps to `AnyExcept`, and the flags are mutually
-exclusive. `ready` filters by the canonical current agent identity. A mismatched or
-unidentified agent receives a clear claim error and may use an explicit force override;
-this is scheduling guidance, not a security boundary. `query` continues to expose the
-whole corpus and reports the structured policy.
+exclusive. On `edit`, an empty value removes the field.
+
+Current identity is invocation-scoped: global `--agent <id>` overrides `TKT_AGENT`.
+Do not store it in project or user configuration: Codex, Claude, Kiro, and Antigravity
+can run concurrently as the same OS user on the same machine. An unidentified invocation
+sees unrestricted work only; `ready` reports how many restricted tickets it hid and how
+to identify the caller.
+
+Put policy evaluation in one exhaustive method:
+
+```rust
+AgentEligibility::check(Option<&AgentId>) -> Result<(), AgentEligibilityMismatch>
+```
+
+Both `ready` and `claim` use that method. A restricted claim with no or mismatched
+identity returns the typed reason; `tkt claim <id> --force` is the explicit scheduling
+override. This is not a security boundary. `query` keeps its existing tag-context
+behavior, does not filter by current agent, and reports the structured policy.
 
 Keep the axes independent:
 
@@ -58,6 +99,17 @@ with a separate agent axis rather than weakening its all-of semantics. Update ev
 agent-facing surface listed in `.memory/agent-guidance-surfaces.md` when the CLI or
 frontmatter contract changes.
 
+Source-backed data-model review on 2026-10-28 found:
+
+- `ready` and `claim` are separate paths today, so a shared typed matcher is the
+  single source of eligibility truth.
+- Project/user config is machine- and user-scoped, but agent identity is
+  invocation-scoped when several harnesses share one host.
+- The narrow parser and ticket writer already support quoted lists, making one signed
+  `agents` list simpler and more canonical than a new scalar expression grammar.
+- `query` currently honors tag context; the new policy must not silently change that
+  contract or add agent filtering there.
+
 ## Out of scope
 
 - Authorization or protection against an agent that deliberately changes its identity
@@ -66,12 +118,14 @@ frontmatter contract changes.
 
 ## Acceptance criteria
 
-- [ ] Missing `agent_eligibility` parses as `Any`; explicit any-of and any-except values round-trip without loss
-- [ ] Empty agent sets, invalid agent ids, and mixed allow/exclude expressions fail once at the parse boundary with an actionable error
-- [ ] `ready` includes unrestricted and matching tickets while excluding any-of misses and any-except matches
-- [ ] Restricted claims with no or mismatched identity fail clearly; the documented explicit override succeeds
+- [ ] Missing `agents` parses as `Any`; homogeneous positive and negative lists round-trip as deterministic `AnyOf` and `AnyExcept` sets
+- [ ] Present-empty lists, duplicate ids, invalid ids, and mixed signs fail once at the parse boundary with an actionable error
+- [ ] Global `--agent` overrides `TKT_AGENT`; no project or user config stores the current agent identity
+- [ ] One exhaustive typed matcher returns eligible, identity-required, not-listed, or excluded outcomes and is used by both `ready` and `claim`
+- [ ] `ready` includes unrestricted and matching tickets, excludes misses, and reports hidden restricted work when identity is absent
+- [ ] Restricted claims fail with the typed reason; `claim --force` provides the documented explicit override
 - [ ] `new`, `batch`, and `edit` accept mutually exclusive allow/exclude flags and serialize one canonical field
-- [ ] Human and JSON `ready`/`query` output expose the policy without hiding the full corpus from `query`
+- [ ] Human and JSON output expose the policy; `query` remains tag-context scoped but never agent-filtered
 - [ ] Agent eligibility composes with `requires`, tag context, dependencies, and priority without changing their existing semantics
 - [ ] #194 reuses the same typed agent id and identity resolver for post-claim ownership
 - [ ] Capabilities, README, init guidance, distributed skills, and changelog describe the new contract consistently

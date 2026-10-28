@@ -115,6 +115,52 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-10-28-agent-model-review",
+    "date": "2026-10-28",
+    "kind": "decision",
+    "title": "Agent routing now has one source-backed identity and policy model",
+    "summary": "The refined proposal matches the actual parser and runtime: identity belongs to each invocation, one signed list stores the policy, and one typed matcher governs both discovery and claims.",
+    "changes": [
+      "Agents sharing one machine keep distinct process-scoped identities.",
+      "One signed list represents unrestricted, allow-list, or exclusion behavior.",
+      "One typed decision prevents discovery and claim rules from drifting."
+    ],
+    "visual": {
+      "type": "steps",
+      "items": [
+        { "label": "Review real code paths", "state": "done" },
+        { "label": "Approve refined contract", "state": "now" },
+        { "label": "Implement one matcher", "state": "next" }
+      ],
+      "caption": "The model is source-backed and ready for a contract decision; implementation has not started."
+    },
+    "fidelity": "wireframe",
+    "try": {
+      "label": "Review the refined proposal",
+      "href": "../.tickets/224-agent-eligibility-policy.md"
+    },
+    "asks": [
+      {
+        "id": "refined-agent-policy-approval",
+        "question": "Approve process-scoped identity and the signed agents list?",
+        "recommendation": "Approve the refined contract",
+        "impact": "Approval makes the ticket agent-ready without introducing shared-host identity drift.",
+        "options": [
+          "Approve the refined contract",
+          "Change the identity source",
+          "Change the stored syntax"
+        ],
+        "status": "open"
+      }
+    ],
+    "links": [
+      { "label": "Refined proposal", "href": "../.tickets/224-agent-eligibility-policy.md" },
+      { "label": "Related assignee work", "href": "../.tickets/194-assignee-field-and-claim.md" }
+    ],
+    "details": "The current ready path filters in src/commands/ready.rs while claim has a separate status-only path in src/commands/claim.rs; the proposal now requires one exhaustive matcher for both.\nIdentity is --agent over TKT_AGENT, never shared project or user config, because several harnesses can run concurrently as one OS user.\nPersistence uses one agents list: positive names mean AnyOf, all !-prefixed names mean AnyExcept, and an absent field means Any. Empty, duplicate, mixed-sign, and invalid values are rejected at parse time.",
+    "workstreams": ["Agent routing", "Frontier", "Data model"]
+  },
+  {
     "id": "2026-10-28-agent-eligibility",
     "date": "2026-10-28",
     "kind": "decision",
@@ -150,7 +196,8 @@ details.row .body{padding:0 0 14px}
           "Revise the claim behavior",
           "Revisit the data model"
         ],
-        "status": "open"
+        "status": "answered",
+        "answer": "Superseded by the source-backed data-model review"
       }
     ],
     "links": [
