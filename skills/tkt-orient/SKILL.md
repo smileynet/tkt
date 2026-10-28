@@ -9,6 +9,8 @@ Session-start bookend to `tkt-reconcile`. Read the reconciled plan + ticket stat
 
 This skill *reads* and *orients*. It does not re-prioritize or rewrite the plan (that's `tkt-reconcile`, at session end) and it does not claim-and-execute (that's `tkt-work`) — it stops at a proposal.
 
+Identify this invocation with `--agent <lowercase-slug>` or `TKT_AGENT` before using `ready` or `claim`. Unidentified calls see only unrestricted work; `ready` reports hidden agent-restricted tickets on stderr. `query` keeps tag context and lists all policies regardless of current agent. Agent eligibility is independent of tags and all-of machine `requires`. See `tkt-core` for allow/exclude flags and explicit claim overrides.
+
 ## Process
 
 ### 1. Read the reconciled state (internal — don't dump raw output)

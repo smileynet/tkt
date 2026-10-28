@@ -4,8 +4,8 @@ pub mod validate;
 pub use ticket::{
     corpus_index, find_ticket, frontier, frontier_with_capabilities, id_width, json_string_escape,
     load_corpus, max_id, new_ticket_text, resolve_blocked_by_ref, yaml_scalar_escape, AcSelection,
-    CorpusIndex, Env, NewTicketParams, Priority, Status, Ticket, TicketFile, ENV_VALUES,
-    STATUS_VALUES,
+    AgentEligibility, AgentEligibilityMismatch, AgentId, CorpusIndex, Env, NewTicketParams,
+    Priority, Status, Ticket, TicketFile, ENV_VALUES, STATUS_VALUES,
 };
 
 use std::path::Path;

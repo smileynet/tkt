@@ -19,6 +19,8 @@ pub fn run(
     status: Option<&str>,
     ac_indices: &[u32],
     validation_criteria: Option<&[String]>,
+    agents: Option<&[String]>,
+    exclude_agents: Option<&[String]>,
 ) -> Result<i32> {
     let ctx = MutationContext::open()?;
     let t = ctx.find_ticket(id)?;
@@ -133,6 +135,28 @@ pub fn run(
     if let Some(vc) = validation_criteria {
         file.set_validation_criteria(vc);
         changed.push("validation_criteria");
+    }
+    if let Some(values) = agents {
+        if values == [String::new()] {
+            file.set_agent_eligibility(&core::AgentEligibility::Any);
+        } else {
+            let policy = core::AgentEligibility::allow(values).map_err(|error| {
+                crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
+            })?;
+            file.set_agent_eligibility(&policy);
+        }
+        changed.push("agents");
+    }
+    if let Some(values) = exclude_agents {
+        if values == [String::new()] {
+            file.set_agent_eligibility(&core::AgentEligibility::Any);
+        } else {
+            let policy = core::AgentEligibility::exclude(values).map_err(|error| {
+                crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
+            })?;
+            file.set_agent_eligibility(&policy);
+        }
+        changed.push("agents");
     }
 
     if changed.is_empty() {

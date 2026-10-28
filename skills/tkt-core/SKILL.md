@@ -12,6 +12,7 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 
 | When I'm... | I want to... | Command |
 |---|---|---|
+| Routing tickets to agents | allow either named agent or exclude named agents | `tkt new <slug> --agents codex,claude` / `--exclude-agents antigravity` |
 | Starting a work session | see what's unblocked and prioritized | `tkt ready` |
 | Planning future work | create tickets without them cluttering the frontier | `tkt new <slug> --title "..." --status backlog` |
 | Ready to start something | promote a backlogged ticket to actionable | `tkt edit <id> --status open` |
@@ -35,6 +36,12 @@ work. `tkt edit --blocked-by` replaces the whole list: read the existing blocker
 combine them with the new IDs, and pass the complete set.
 
 ---
+
+## Agent eligibility
+
+Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; the flag wins and identity is never stored in config. `ready` and `claim` apply ticket agent eligibility. Missing identity sees unrestricted work only; `ready` reports hidden restricted work on stderr. Use `claim <id> --force` only as an explicit scheduling override.
+
+Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.
 
 ## Status lifecycle
 

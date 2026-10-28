@@ -46,6 +46,9 @@ Migrated work: `tkt close <id> --force --resolution "Migrated to <project> #<id>
 
 Tag new tickets with their work stream (`--tags <stream>`) in multi-stream projects — one tag is the norm.
 If a claim push is rejected, someone else got there first — pick the next frontier ticket.
+
+Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
+Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 "#;
 
 // --- Per-agent variants ---
@@ -66,6 +69,9 @@ Workflow: tkt ready → close <id> --check-all --resolution "done: what was ship
 For shared repos: tkt ready → claim <id> → work → close <id> --check-all --resolution "..."
 Discovered work: tkt new <slug> --title "..." (open, a separate ticket; --blocked-by if it depends on current work)
 Tag new tickets with their work stream (--tags <stream>) in multi-stream projects.
+
+Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
+Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 "#;
 
 const SNIPPET_CURSOR: &str = r#"---
@@ -101,6 +107,9 @@ Reach done only via `tkt close` — never hand-edit status to done (skips close 
 Create a separate, actionable ticket (defaults to open); add `--blocked-by` if it depends on current work.
 Only use `--status backlog` for work you're deliberately deferring:
 `tkt new <slug> --title "..." --tags <stream>`
+
+Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
+Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 "#;
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
@@ -129,6 +138,9 @@ Tag new tickets with their work stream (--tags <stream>) in multi-stream project
 ## Frontier Rule
 Pick the first ticket `tkt ready` lists — it already applies priority sorting
 (urgent > high > medium > low) then lowest-number-first.
+
+Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
+Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 "#;
 
 const SNIPPET_WINDSURF: &str = r#"---
@@ -150,6 +162,9 @@ Park: edit <id> --status backlog (deferred work only)
 Workflow: tkt ready → close <id> --check-all --resolution "done: description"
 Discovered work: tkt new <slug> --title "..." (open, a separate ticket; --blocked-by if it depends on current work)
 Tag new tickets with their work stream (--tags <stream>) in multi-stream projects.
+
+Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
+Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 "#;
 
 const DEFAULT_CONFIG: &str = r#"[push]

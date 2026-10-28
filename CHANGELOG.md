@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Tickets can allow or exclude named agents independently of tags and machine capabilities. Identify invocations with `--agent` or `TKT_AGENT`; discovery and claims share the policy, with `claim --force` as an explicit override.
 - Codex and Antigravity plugin packaging supplies the four ticket workflows: `tkt-core`, `tkt-orient`, `tkt-work` and `tkt-reconcile`. Install the tkt CLI separately.
 - `audit.resolution_baseline_id` can grandfather historical resolution-quality findings while keeping acceptance-criteria and evidence checks active.
 - Release maintenance can prepare and verify approved candidates without publication, then use a separately authorized reviewed CI publisher with per-channel recovery.

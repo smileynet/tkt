@@ -20,6 +20,8 @@ pub fn run(
     validation_criteria: &[String],
     explicit_tags: &[String],
     requires: &[String],
+    agents: &[String],
+    exclude_agents: &[String],
 ) -> Result<i32> {
     if let Some(s) = spec {
         if let Err(e) = validate::validate_free_text(s, "spec", 100) {
@@ -71,6 +73,17 @@ pub fn run(
     }
 
     let dir = tickets_dir()?;
+    let agent_eligibility = if !agents.is_empty() {
+        core::AgentEligibility::allow(agents).map_err(|error| {
+            crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
+        })?
+    } else if !exclude_agents.is_empty() {
+        core::AgentEligibility::exclude(exclude_agents).map_err(|error| {
+            crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
+        })?
+    } else {
+        core::AgentEligibility::Any
+    };
 
     // Enforce validation_criteria at creation if configured
     let pcfg = project_config(&dir);
@@ -118,6 +131,7 @@ pub fn run(
                     validation_criteria,
                     tags: &effective_tags,
                     requires,
+                    agent_eligibility: &agent_eligibility,
                 });
                 crate::core::atomic_write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));

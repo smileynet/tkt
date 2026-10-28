@@ -61,6 +61,10 @@ pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result
             fields.push(format!("\"spec\":\"{}\"", core::json_string_escape(spec)));
         }
 
+        fields.push(format!(
+            "\"agents\":{}",
+            serde_json::to_string(&t.agent_eligibility.signed_values())?
+        ));
         println!("{{{}}}", fields.join(","));
     }
     crate::RESULT_COUNT.store(count as i32, std::sync::atomic::Ordering::Relaxed);

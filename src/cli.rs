@@ -32,6 +32,10 @@ struct Cli {
     #[arg(short = 'o', long = "output", global = true)]
     output_format: Option<String>,
 
+    /// Current agent identity (overrides TKT_AGENT)
+    #[arg(long, global = true)]
+    agent: Option<String>,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -113,6 +117,12 @@ enum Commands {
         /// Machine capabilities required (e.g., gpu,linux,corp)
         #[arg(long = "requires", value_delimiter = ',')]
         requires: Vec<String>,
+        /// Agents allowed to pick up the ticket
+        #[arg(long, value_delimiter = ',', conflicts_with = "exclude_agents")]
+        agents: Vec<String>,
+        /// Agents excluded from picking up the ticket
+        #[arg(long, value_delimiter = ',')]
+        exclude_agents: Vec<String>,
     },
     /// Allocate N sequential ids in one commit/push
     Batch {
@@ -137,6 +147,10 @@ enum Commands {
         /// Machine capabilities required (e.g., gpu,linux,corp)
         #[arg(long = "requires", value_delimiter = ',')]
         requires: Vec<String>,
+        #[arg(long, value_delimiter = ',', conflicts_with = "exclude_agents")]
+        agents: Vec<String>,
+        #[arg(long, value_delimiter = ',')]
+        exclude_agents: Vec<String>,
     },
     /// Set, show, or clear the active tag context for scoped work
     Context {
@@ -147,7 +161,12 @@ enum Commands {
         clear: bool,
     },
     /// Mark open ticket in_progress (pushed = visible WIP)
-    Claim { id: String },
+    Claim {
+        id: String,
+        /// Override agent eligibility (scheduling override, not authorization)
+        #[arg(long)]
+        force: bool,
+    },
     /// Mark done, append dated Resolution, warn unchecked ACs
     Close {
         id: String,
@@ -191,6 +210,12 @@ enum Commands {
         /// Validation criteria (repeatable, replaces existing list)
         #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
         validation_criteria: Vec<String>,
+        /// Replace allowed agents; pass an empty value to clear
+        #[arg(long, value_delimiter = ',', conflicts_with = "exclude_agents")]
+        agents: Option<Vec<String>>,
+        /// Replace excluded agents; pass an empty value to clear
+        #[arg(long, value_delimiter = ',')]
+        exclude_agents: Option<Vec<String>>,
     },
     /// Move a ticket to a new id atomically
     Renumber {
@@ -345,173 +370,194 @@ pub fn run() -> i32 {
 
     // Extract notable flags before dispatch (command is moved into match)
     let flags = notable_flags(&cli.command);
-
-    let result = match cli.command {
-        Commands::Ready { json } => crate::commands::ready::run(json || json_output),
-        Commands::Init {
-            write,
-            target,
-            all,
-            agent_only,
-        } => crate::commands::init::run(write, target.as_deref(), all, agent_only),
-        Commands::Doctor { path, fix, strict } => {
-            crate::commands::doctor::run(path.as_deref(), fix, strict)
-        }
-        Commands::Lint { check, ids } => crate::commands::lint::run(check, &ids),
-        Commands::Migrate {
-            from,
-            detect,
-            confirm,
-        } => crate::commands::migrate::run(from.as_deref(), detect, confirm),
-        Commands::New {
-            slug,
-            title,
-            spec,
-            env,
-            priority,
-            status,
-            blocked_by,
-            validation_criteria,
-            tags,
-            requires,
-        } => crate::commands::new::run(
-            &slug,
-            title.as_deref(),
-            spec.as_deref(),
-            env.as_deref(),
-            priority.as_deref(),
-            status.as_deref(),
-            &blocked_by.unwrap_or_default(),
-            &validation_criteria,
-            &tags,
-            &requires,
-        ),
-        Commands::Batch {
-            items,
-            spec,
-            env,
-            priority,
-            status,
-            blocked_by,
-            validation_criteria,
-            tags,
-            requires,
-        } => crate::commands::batch::run(
-            &items,
-            spec.as_deref(),
-            env.as_deref(),
-            priority.as_deref(),
-            status.as_deref(),
-            &blocked_by.unwrap_or_default(),
-            &validation_criteria,
-            &tags,
-            &requires,
-        ),
-        Commands::Context { tags, clear } => crate::commands::context::run(&tags, clear),
-        Commands::Claim { id } => crate::commands::claim::run(&id),
-        Commands::Close {
-            id,
-            note,
-            resolution,
-            ac,
-            check_all,
-            force,
-            evidence,
-        } => {
-            let text = resolution.or(note);
-            crate::commands::close::run(
-                &id,
-                text.as_deref(),
-                &ac.unwrap_or_default(),
+    let result = (|| -> anyhow::Result<i32> {
+        let current_agent =
+            crate::core::AgentId::resolve(cli.agent.as_deref()).map_err(|error| {
+                crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
+            })?;
+        match cli.command {
+            Commands::Ready { json } => {
+                crate::commands::ready::run(json || json_output, current_agent.as_ref())
+            }
+            Commands::Init {
+                write,
+                target,
+                all,
+                agent_only,
+            } => crate::commands::init::run(write, target.as_deref(), all, agent_only),
+            Commands::Doctor { path, fix, strict } => {
+                crate::commands::doctor::run(path.as_deref(), fix, strict)
+            }
+            Commands::Lint { check, ids } => crate::commands::lint::run(check, &ids),
+            Commands::Migrate {
+                from,
+                detect,
+                confirm,
+            } => crate::commands::migrate::run(from.as_deref(), detect, confirm),
+            Commands::New {
+                slug,
+                title,
+                spec,
+                env,
+                priority,
+                status,
+                blocked_by,
+                validation_criteria,
+                tags,
+                requires,
+                agents,
+                exclude_agents,
+            } => crate::commands::new::run(
+                &slug,
+                title.as_deref(),
+                spec.as_deref(),
+                env.as_deref(),
+                priority.as_deref(),
+                status.as_deref(),
+                &blocked_by.unwrap_or_default(),
+                &validation_criteria,
+                &tags,
+                &requires,
+                &agents,
+                &exclude_agents,
+            ),
+            Commands::Batch {
+                items,
+                spec,
+                env,
+                priority,
+                status,
+                blocked_by,
+                validation_criteria,
+                tags,
+                requires,
+                agents,
+                exclude_agents,
+            } => crate::commands::batch::run(
+                &items,
+                spec.as_deref(),
+                env.as_deref(),
+                priority.as_deref(),
+                status.as_deref(),
+                &blocked_by.unwrap_or_default(),
+                &validation_criteria,
+                &tags,
+                &requires,
+                &agents,
+                &exclude_agents,
+            ),
+            Commands::Context { tags, clear } => crate::commands::context::run(&tags, clear),
+            Commands::Claim { id, force } => {
+                crate::commands::claim::run(&id, current_agent.as_ref(), force)
+            }
+            Commands::Close {
+                id,
+                note,
+                resolution,
+                ac,
                 check_all,
                 force,
-                &evidence,
-            )
-        }
-        Commands::Edit {
-            id,
-            title,
-            blocked_by,
-            env,
-            spec,
-            priority,
-            status,
-            ac,
-            validation_criteria,
-        } => crate::commands::edit::run(
-            &id,
-            title.as_deref(),
-            blocked_by.as_deref(),
-            env.as_deref(),
-            spec.as_deref(),
-            priority.as_deref(),
-            status.as_deref(),
-            &ac.unwrap_or_default(),
-            if validation_criteria.is_empty() {
-                None
-            } else {
-                Some(&validation_criteria)
-            },
-        ),
-        Commands::Renumber {
-            old_id,
-            new_id,
-            file,
-        } => crate::commands::renumber::run(&old_id, &new_id, file.as_deref()),
-        Commands::SyncPlan {
-            check,
-            fix,
-            strict,
-            brief,
-            plan,
-        } => crate::commands::sync_plan::run(check, fix, strict, brief, plan.as_deref()),
-        Commands::Validate {
-            strict,
-            brief,
-            fix,
-            dry_run,
-        } => {
-            if fix || dry_run {
-                crate::commands::validate::run_with_fix(strict, brief, dry_run)
-            } else {
-                crate::commands::validate::run(strict, brief)
+                evidence,
+            } => {
+                let text = resolution.or(note);
+                crate::commands::close::run(
+                    &id,
+                    text.as_deref(),
+                    &ac.unwrap_or_default(),
+                    check_all,
+                    force,
+                    &evidence,
+                )
             }
+            Commands::Edit {
+                id,
+                title,
+                blocked_by,
+                env,
+                spec,
+                priority,
+                status,
+                ac,
+                validation_criteria,
+                agents,
+                exclude_agents,
+            } => crate::commands::edit::run(
+                &id,
+                title.as_deref(),
+                blocked_by.as_deref(),
+                env.as_deref(),
+                spec.as_deref(),
+                priority.as_deref(),
+                status.as_deref(),
+                &ac.unwrap_or_default(),
+                if validation_criteria.is_empty() {
+                    None
+                } else {
+                    Some(&validation_criteria)
+                },
+                agents.as_deref(),
+                exclude_agents.as_deref(),
+            ),
+            Commands::Renumber {
+                old_id,
+                new_id,
+                file,
+            } => crate::commands::renumber::run(&old_id, &new_id, file.as_deref()),
+            Commands::SyncPlan {
+                check,
+                fix,
+                strict,
+                brief,
+                plan,
+            } => crate::commands::sync_plan::run(check, fix, strict, brief, plan.as_deref()),
+            Commands::Validate {
+                strict,
+                brief,
+                fix,
+                dry_run,
+            } => {
+                if fix || dry_run {
+                    crate::commands::validate::run_with_fix(strict, brief, dry_run)
+                } else {
+                    crate::commands::validate::run(strict, brief)
+                }
+            }
+            Commands::Query { status, priority } => {
+                crate::commands::query::run(status.as_deref(), priority.as_deref())
+            }
+            Commands::Blocked => crate::commands::blocked::run(),
+            Commands::Capabilities => crate::commands::capabilities::run(),
+            Commands::Rebase { dry_run } => crate::commands::rebase::run(
+                dry_run || crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed),
+            ),
+            Commands::Audit {
+                strict,
+                brief,
+                deep,
+            } => crate::commands::audit::run(strict, brief, deep),
+            Commands::Config {
+                set,
+                get,
+                unset,
+                list,
+                show,
+            } => crate::commands::config::run(
+                set.as_deref(),
+                get.as_deref(),
+                unset.as_deref(),
+                list,
+                show,
+            ),
+            Commands::Telemetry {
+                enable,
+                disable,
+                status,
+                show,
+                all,
+                clear,
+            } => crate::commands::telemetry::run(enable, disable, status, show, all, clear),
         }
-        Commands::Query { status, priority } => {
-            crate::commands::query::run(status.as_deref(), priority.as_deref())
-        }
-        Commands::Blocked => crate::commands::blocked::run(),
-        Commands::Capabilities => crate::commands::capabilities::run(),
-        Commands::Rebase { dry_run } => crate::commands::rebase::run(
-            dry_run || crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed),
-        ),
-        Commands::Audit {
-            strict,
-            brief,
-            deep,
-        } => crate::commands::audit::run(strict, brief, deep),
-        Commands::Config {
-            set,
-            get,
-            unset,
-            list,
-            show,
-        } => crate::commands::config::run(
-            set.as_deref(),
-            get.as_deref(),
-            unset.as_deref(),
-            list,
-            show,
-        ),
-        Commands::Telemetry {
-            enable,
-            disable,
-            status,
-            show,
-            all,
-            clear,
-        } => crate::commands::telemetry::run(enable, disable, status, show, all, clear),
-    };
+    })();
     let (exit_code, error_kind, json_error) = match result {
         Ok(code) => (code, None, None),
         Err(e) => {

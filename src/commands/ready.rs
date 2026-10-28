@@ -3,9 +3,9 @@
 use anyhow::Result;
 
 use crate::commands::common::{is_quiet, project_config, tickets_dir};
-use crate::core::{self, Status, Ticket};
+use crate::core::{self, AgentId, Status, Ticket};
 
-pub fn run(json: bool) -> Result<i32> {
+pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
     let dir = tickets_dir()?;
     let pcfg = project_config(&dir);
     let corpus = core::load_corpus(&dir)?;
@@ -21,7 +21,15 @@ pub fn run(json: bool) -> Result<i32> {
 
     // Apply context filter (unless bypass is active)
     let ctx = crate::context::load(&dir);
-    let front: Vec<&Ticket> = front.into_iter().filter(|t| ctx.matches(&t.tags)).collect();
+    let scoped: Vec<&Ticket> = front.into_iter().filter(|t| ctx.matches(&t.tags)).collect();
+    let hidden_restricted = scoped
+        .iter()
+        .filter(|ticket| ticket.agent_eligibility.check(agent).is_err())
+        .count();
+    let front: Vec<&Ticket> = scoped
+        .into_iter()
+        .filter(|ticket| ticket.agent_eligibility.check(agent).is_ok())
+        .collect();
 
     // Record frontier size for telemetry
     crate::RESULT_COUNT.store(front.len() as i32, std::sync::atomic::Ordering::Relaxed);
@@ -47,6 +55,9 @@ pub fn run(json: bool) -> Result<i32> {
         ),
     );
 
+    if hidden_restricted > 0 && agent.is_none() {
+        eprintln!("Hidden: {} agent-restricted ticket(s). Identify this invocation with --agent <id> or TKT_AGENT.", hidden_restricted);
+    }
     if json {
         for t in &front {
             let blocked_by: Vec<String> = t
@@ -78,6 +89,14 @@ pub fn run(json: bool) -> Result<i32> {
             if let Some(ref spec) = t.spec {
                 fields.push(format!("\"spec\":\"{}\"", core::json_string_escape(spec)));
             }
+            let agents = t
+                .agent_eligibility
+                .signed_values()
+                .iter()
+                .map(|agent| format!("\"{}\"", core::json_string_escape(agent)))
+                .collect::<Vec<_>>()
+                .join(",");
+            fields.push(format!("\"agents\":[{}]", agents));
             println!("{{{}}}", fields.join(","));
         }
     } else if is_quiet() {
@@ -96,7 +115,13 @@ pub fn run(json: bool) -> Result<i32> {
                     Some(core::Priority::Low) => "  [low]",
                     _ => "",
                 };
-                println!("  {}  {}{}", t.id, t.title, flag);
+                let agents = t.agent_eligibility.signed_values();
+                let policy = if agents.is_empty() {
+                    String::new()
+                } else {
+                    format!("  [agents: {}]", agents.join(", "))
+                };
+                println!("  {}  {}{}{}", t.id, t.title, flag, policy);
             }
         }
 

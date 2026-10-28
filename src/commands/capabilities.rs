@@ -6,6 +6,7 @@ pub fn run() -> Result<i32> {
     let version = env!("CARGO_PKG_VERSION");
     let json = serde_json::json!({
         "version": version,
+        "global_flags": {"agent": {"flag": "--agent", "type": "string", "environment": "TKT_AGENT", "description": "Invocation identity; CLI overrides environment; lowercase slug; never stored in config"}},
         "commands": {
             "ready": {
                 "description": "Show frontier (unblocked tickets)",
@@ -23,6 +24,8 @@ pub fn run() -> Result<i32> {
                 "inputSchema": {
                     "type": "object",
                     "properties": {
+                        "agents": {"type": "string", "description": "Comma-separated allow list; mutually exclusive with --exclude-agents"},
+                        "exclude_agents": {"type": "string", "description": "Comma-separated exclude list; mutually exclusive with --agents"},
                         "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "URL-safe ticket slug" },
                         "title": { "type": "string", "description": "Human-readable title" },
                         "blocked_by": { "type": "string", "description": "Comma-separated ticket IDs" },
@@ -41,6 +44,8 @@ pub fn run() -> Result<i32> {
                 "inputSchema": {
                     "type": "object",
                     "properties": {
+                        "agents": {"type": "string", "description": "Allow list; mutually exclusive with --exclude-agents; edit accepts empty to clear"},
+                        "exclude_agents": {"type": "string", "description": "Exclude list; mutually exclusive with --agents; edit accepts empty to clear"},
                         "items": { "type": "array", "items": { "type": "string" }, "description": "slug[:title] pairs" },
                         "blocked_by": { "type": "string", "description": "Comma-separated ticket IDs" },
                         "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] },
@@ -56,6 +61,7 @@ pub fn run() -> Result<i32> {
                 "inputSchema": {
                     "type": "object",
                     "properties": {
+                        "force": {"type": "boolean", "description": "Explicit scheduling override of agent eligibility"},
                         "id": { "type": "string", "description": "Ticket ID to claim" }
                     },
                     "required": ["id"]
@@ -82,6 +88,8 @@ pub fn run() -> Result<i32> {
                 "inputSchema": {
                     "type": "object",
                     "properties": {
+                        "agents": {"type": "string", "description": "Allow list; mutually exclusive with --exclude-agents; edit accepts empty to clear"},
+                        "exclude_agents": {"type": "string", "description": "Exclude list; mutually exclusive with --agents; edit accepts empty to clear"},
                         "id": { "type": "string", "description": "Ticket ID to edit" },
                         "title": { "type": "string" },
                         "blocked_by": { "type": "string", "description": "Comma-separated IDs (or '' to clear)" },

@@ -7,6 +7,8 @@ description: "End-of-session ticket + plan pass: make every ticket current, capt
 
 Review all tickets against session context, then re-organize the plan to match current priorities. Three outcomes: every planned item is tracked, every ticket is current, and the plan's ordering reflects the agreed priorities and work streams.
 
+Identify this invocation with `--agent <lowercase-slug>` or `TKT_AGENT` before using `ready` or `claim`. Unidentified calls see only unrestricted work; `ready` reports hidden agent-restricted tickets on stderr. `query` keeps tag context and lists all policies regardless of current agent. Agent eligibility is independent of tags and all-of machine `requires`. See `tkt-core` for allow/exclude flags and explicit claim overrides.
+
 ## Process
 
 ### 1. Gather context

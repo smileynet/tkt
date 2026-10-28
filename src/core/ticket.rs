@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
@@ -16,6 +16,8 @@ static RE_FM_KEY: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^([A-Za-z_][A-Za-z0-9_-]*)\s*:(.*)$").unwrap());
 static RE_NUMERIC_PREFIX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)(.*)$").unwrap());
 static RE_FILENAME_ID: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)-").unwrap());
+static RE_AGENT_ID: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[a-z0-9][a-z0-9-]*$").unwrap());
 
 // --- Enums ---
 
@@ -98,6 +100,165 @@ pub enum Priority {
     High,
     Medium,
     Low,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct AgentId(String);
+
+impl AgentId {
+    pub fn parse(value: &str) -> Result<Self> {
+        if !RE_AGENT_ID.is_match(value) {
+            bail!("invalid agent id {:?} (expected a lowercase slug)", value);
+        }
+        Ok(Self(value.to_string()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// Invocation identity is deliberately independent of machine/user configuration.
+    pub fn resolve(cli: Option<&str>) -> Result<Option<Self>> {
+        let env = std::env::var("TKT_AGENT")
+            .ok()
+            .filter(|value| !value.is_empty());
+        cli.or(env.as_deref()).map(Self::parse).transpose()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NonEmptyAgentSet(BTreeSet<AgentId>);
+
+impl NonEmptyAgentSet {
+    fn from_values(values: &[String], path: &Path) -> Result<Self> {
+        if values.is_empty() {
+            bail!("{}: agents must not be an empty list", path.display());
+        }
+        let mut set = BTreeSet::new();
+        for value in values {
+            let id = AgentId::parse(value)
+                .map_err(|error| anyhow::anyhow!("{}: agents: {}", path.display(), error))?;
+            if !set.insert(id) {
+                bail!("{}: duplicate agent id {:?}", path.display(), value);
+            }
+        }
+        Ok(Self(set))
+    }
+
+    pub fn contains(&self, agent: &AgentId) -> bool {
+        self.0.contains(agent)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &AgentId> {
+        self.0.iter()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AgentEligibility {
+    Any,
+    AnyOf(NonEmptyAgentSet),
+    AnyExcept(NonEmptyAgentSet),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AgentEligibilityMismatch {
+    IdentityRequired,
+    NotInAllowList,
+    ExplicitlyExcluded,
+}
+
+impl AgentEligibility {
+    fn parse(raw: Option<&str>, path: &Path) -> Result<Self> {
+        let Some(raw) = raw else { return Ok(Self::Any) };
+        let raw = raw.trim();
+        let values: Vec<&str> = if let Some(inner) =
+            raw.strip_prefix('[').and_then(|s| s.strip_suffix(']'))
+        {
+            if inner.trim().is_empty() {
+                bail!(
+                    "{}: agents must not be empty; omit the field to allow any agent",
+                    path.display()
+                );
+            }
+            inner.split(',').map(str::trim).collect()
+        } else if raw.starts_with('-') {
+            raw.lines()
+                .map(|line| {
+                    line.trim().strip_prefix('-').map(str::trim).ok_or_else(|| {
+                        anyhow::anyhow!("{}: agents must be a list of agent ids", path.display())
+                    })
+                })
+                .collect::<Result<_>>()?
+        } else {
+            bail!(
+                "{}: agents must be a list; use agents: [\"codex\"] or omit the field",
+                path.display()
+            );
+        };
+        let entries: Vec<String> = values.into_iter().map(yaml_scalar_decode).collect();
+        let excluded = entries[0].starts_with('!');
+        if entries
+            .iter()
+            .any(|value| value.starts_with('!') != excluded)
+        {
+            bail!(
+                "{}: agents must all be allowed names or all be !excluded names",
+                path.display()
+            );
+        }
+        let names: Vec<String> = entries
+            .iter()
+            .map(|value| value.strip_prefix('!').unwrap_or(value).to_string())
+            .collect();
+        let set = NonEmptyAgentSet::from_values(&names, path)?;
+        Ok(if excluded {
+            Self::AnyExcept(set)
+        } else {
+            Self::AnyOf(set)
+        })
+    }
+
+    pub fn check(&self, agent: Option<&AgentId>) -> Result<(), AgentEligibilityMismatch> {
+        match (self, agent) {
+            (Self::Any, _) => Ok(()),
+            (Self::AnyOf(_), None) | (Self::AnyExcept(_), None) => {
+                Err(AgentEligibilityMismatch::IdentityRequired)
+            }
+            (Self::AnyOf(agents), Some(agent)) if !agents.contains(agent) => {
+                Err(AgentEligibilityMismatch::NotInAllowList)
+            }
+            (Self::AnyExcept(agents), Some(agent)) if agents.contains(agent) => {
+                Err(AgentEligibilityMismatch::ExplicitlyExcluded)
+            }
+            (Self::AnyOf(_), Some(_)) | (Self::AnyExcept(_), Some(_)) => Ok(()),
+        }
+    }
+
+    pub fn allow(values: &[String]) -> Result<Self> {
+        Ok(Self::AnyOf(NonEmptyAgentSet::from_values(
+            values,
+            Path::new("--agents"),
+        )?))
+    }
+
+    pub fn exclude(values: &[String]) -> Result<Self> {
+        Ok(Self::AnyExcept(NonEmptyAgentSet::from_values(
+            values,
+            Path::new("--exclude-agents"),
+        )?))
+    }
+
+    pub fn signed_values(&self) -> Vec<String> {
+        match self {
+            Self::Any => Vec::new(),
+            Self::AnyOf(agents) => agents.iter().map(|id| id.as_str().to_string()).collect(),
+            Self::AnyExcept(agents) => agents
+                .iter()
+                .map(|id| format!("!{}", id.as_str()))
+                .collect(),
+        }
+    }
 }
 
 impl Priority {
@@ -342,6 +503,20 @@ impl TicketFile {
         self.set_field("validation_criteria", &lines);
     }
 
+    pub fn set_agent_eligibility(&mut self, eligibility: &AgentEligibility) {
+        let values = eligibility.signed_values();
+        if values.is_empty() {
+            self.remove_field("agents");
+            return;
+        }
+        let formatted = values
+            .iter()
+            .map(|value| format!("\"{}\"", yaml_scalar_escape(value)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        self.set_field("agents", &format!("[{}]", formatted));
+    }
+
     /// Append a resolution section to the body (idempotent — skips if already present).
     pub fn append_resolution(&mut self, date: &str, note: &str, spike_branch: Option<&str>) {
         if self.body.contains("## Resolution") {
@@ -461,6 +636,7 @@ pub struct Ticket {
     /// Machine capability requirements. Ticket only appears on frontier
     /// if the machine's capabilities are a superset of this list.
     pub requires: Vec<String>,
+    pub agent_eligibility: AgentEligibility,
     pub path: PathBuf,
     pub body: String,
     /// The underlying raw file for mutations.
@@ -515,6 +691,7 @@ impl Ticket {
             parse_validation_criteria(file.get("validation_criteria").unwrap_or(""));
 
         let tags = parse_tags(file.get("tags").unwrap_or(""));
+        let agent_eligibility = AgentEligibility::parse(file.get("agents"), &file.path)?;
 
         // `requires` is the canonical eligibility representation. Legacy `env`
         // contributes one capability only when no explicit requirements exist.
@@ -542,6 +719,7 @@ impl Ticket {
             validation_criteria,
             tags,
             requires,
+            agent_eligibility,
             path: file.path.clone(),
             body: file.body.clone(),
             file,
@@ -990,6 +1168,7 @@ pub struct NewTicketParams<'a> {
     pub validation_criteria: &'a [String],
     pub tags: &'a [String],
     pub requires: &'a [String],
+    pub agent_eligibility: &'a AgentEligibility,
 }
 
 /// Generate the text for a new ticket file.
@@ -1039,6 +1218,15 @@ pub fn new_ticket_text(p: &NewTicketParams) -> String {
             .collect::<Vec<_>>()
             .join(", ");
         fm_lines.push(format!("requires: [{}]", req_str));
+    }
+    let agents = p.agent_eligibility.signed_values();
+    if !agents.is_empty() {
+        let value = agents
+            .iter()
+            .map(|agent| format!("\"{}\"", yaml_scalar_escape(agent)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        fm_lines.push(format!("agents: [{}]", value));
     }
     let body = format!(
         "\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
@@ -1417,6 +1605,7 @@ spec: regex \d+
             validation_criteria: &[],
             tags: &[],
             requires: &[],
+            agent_eligibility: &AgentEligibility::Any,
         });
         assert!(text.contains(r#"title: "Fix \"ready\" command""#));
         let t = Ticket::parse_str(&text, Path::new("test.md")).unwrap();
@@ -1769,5 +1958,82 @@ parent: "epic\"01"
         assert_eq!(reparsed.validation_criteria.len(), 2);
         assert_eq!(reparsed.validation_criteria[0], "cargo test passes");
         assert_eq!(reparsed.validation_criteria[1], "clippy clean");
+    }
+}
+
+#[cfg(test)]
+mod agent_eligibility_tests {
+    use super::*;
+
+    #[test]
+    fn agent_eligibility_boundary_and_roundtrip() {
+        let path = Path::new("agents.md");
+        assert_eq!(
+            AgentEligibility::parse(None, path).unwrap(),
+            AgentEligibility::Any
+        );
+        for (raw, expected) in [
+            ("[kiro, claude]", vec!["claude", "kiro"]),
+            ("[\"!kiro\", \"!claude\"]", vec!["!claude", "!kiro"]),
+            ("\n  - codex", vec!["codex"]),
+        ] {
+            let policy = AgentEligibility::parse(Some(raw), path).unwrap();
+            assert_eq!(policy.signed_values(), expected);
+            let content = "---\nid: 01\ntitle: test\nstatus: open\nblocked_by: []\n---\n";
+            let mut file = TicketFile::parse_str(content, path).unwrap();
+            file.set_agent_eligibility(&policy);
+            assert_eq!(
+                Ticket::parse_str(&file.serialize(), path)
+                    .unwrap()
+                    .agent_eligibility,
+                policy
+            );
+            file.set_agent_eligibility(&AgentEligibility::Any);
+            assert!(file.get("agents").is_none());
+        }
+        for raw in [
+            "[]",
+            "[codex, codex]",
+            "[Codex]",
+            "[a_b]",
+            "[codex, !claude]",
+            "[\"\"]",
+            "[!]",
+            "[codex,]",
+            "codex",
+            "[codex",
+            "",
+        ] {
+            assert!(AgentEligibility::parse(Some(raw), path).is_err(), "{raw}");
+        }
+    }
+
+    #[test]
+    fn agent_eligibility_matcher_is_exhaustive() {
+        let codex = AgentId::parse("codex").unwrap();
+        let claude = AgentId::parse("claude").unwrap();
+        let allow = AgentEligibility::allow(&["codex".into()]).unwrap();
+        let exclude = AgentEligibility::exclude(&["codex".into()]).unwrap();
+        for identity in [None, Some(&codex), Some(&claude)] {
+            assert_eq!(AgentEligibility::Any.check(identity), Ok(()));
+        }
+        assert_eq!(
+            allow.check(None),
+            Err(AgentEligibilityMismatch::IdentityRequired)
+        );
+        assert_eq!(
+            exclude.check(None),
+            Err(AgentEligibilityMismatch::IdentityRequired)
+        );
+        assert_eq!(
+            allow.check(Some(&claude)),
+            Err(AgentEligibilityMismatch::NotInAllowList)
+        );
+        assert_eq!(
+            exclude.check(Some(&codex)),
+            Err(AgentEligibilityMismatch::ExplicitlyExcluded)
+        );
+        assert_eq!(allow.check(Some(&codex)), Ok(()));
+        assert_eq!(exclude.check(Some(&claude)), Ok(()));
     }
 }

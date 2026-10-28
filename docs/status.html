@@ -115,6 +115,43 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-10-28-agent-eligibility-delivered",
+    "date": "2026-10-28",
+    "kind": "shipped",
+    "title": "Route available work to the agents you choose",
+    "summary": "Allow named agents or exclude specific agents before work is claimed. Discovery and claims apply the same policy while work streams and machine requirements keep their own roles.",
+    "changes": [
+      "Allow either of several agents or exclude selected agents.",
+      "Keep concurrent agents on one machine independently identified.",
+      "Inspect every policy even when it hides work from your frontier."
+    ],
+    "fidelity": "live",
+    "visual": {
+      "type": "steps",
+      "items": [
+        {
+          "label": "Set eligibility",
+          "state": "done"
+        },
+        {
+          "label": "Identify the caller",
+          "state": "done"
+        },
+        {
+          "label": "Discover and claim",
+          "state": "done"
+        }
+      ]
+    },
+    "details": "Ticket #224. Validation: cargo test agent_eligibility -- --nocapture; mise run check; installed-binary identity and capabilities checks. One signed agents list is parsed into AgentEligibility; AgentId::resolve uses --agent before TKT_AGENT. Claim --force overrides scheduling eligibility. Policy output is a signed JSON array; [] means unrestricted. Reuse of AgentId and its resolver is recorded on #194.",
+    "links": [
+      {
+        "label": "Implementation ticket",
+        "href": "../.tickets/224-agent-eligibility-policy.md"
+      }
+    ]
+  },
+  {
     "id": "2026-10-28-agent-eligibility",
     "date": "2026-10-28",
     "kind": "decision",
@@ -143,15 +180,26 @@ details.row .body{padding:0 0 14px}
           "Change the identity source",
           "Change the stored syntax"
         ],
-        "status": "open"
+        "status": "answered",
+        "answer": "Approved through the request to implement this contract."
       }
     ],
     "links": [
-      { "label": "Proposal ticket", "href": "../.tickets/224-agent-eligibility-policy.md" },
-      { "label": "Related assignee work", "href": "../.tickets/194-assignee-field-and-claim.md" }
+      {
+        "label": "Proposal ticket",
+        "href": "../.tickets/224-agent-eligibility-policy.md"
+      },
+      {
+        "label": "Related assignee work",
+        "href": "../.tickets/194-assignee-field-and-claim.md"
+      }
     ],
     "details": "Proposal\nPersisted policy: one optional agents list. Omit it for everyone; [codex] names one eligible agent; [claude, kiro] allows either; [!antigravity] allows everyone except that agent. Positive and negative names cannot be mixed.\nDomain model: AgentId is a validated lowercase slug. AgentEligibility is Any, AnyOf(NonEmptyAgentSet), or AnyExcept(NonEmptyAgentSet). Empty sets, duplicates, mixed signs, and invalid ids fail at the parse boundary; deterministic ordering keeps serialization stable.\nCaller identity: global --agent overrides TKT_AGENT. Identity is never stored in project or user config because several harnesses can run concurrently as one OS user.\nEvaluation: AgentEligibility.check(identity) returns eligible, identity required, not listed, or explicitly excluded. Both ready and claim use this one exhaustive decision; claim --force is the explicit scheduling override.\nBehavior: an unidentified invocation sees unrestricted work and ready reports how many restricted tickets it hid. Query keeps its existing tag-context behavior but is never agent-filtered.\nBoundaries: tags remain work-stream scope, requires remains machine capability, and assignee remains ownership after claim. Multi-agent staffing and security authorization are outside this proposal.",
-    "workstreams": ["Agent routing", "Frontier", "Data model"]
+    "workstreams": [
+      "Agent routing",
+      "Frontier",
+      "Data model"
+    ]
   },
   {
     "id": "2026-10-27-plan-drift",
@@ -160,10 +208,16 @@ details.row .body{padding:0 0 14px}
     "title": "Plan checks can fail immediately after routine ticket changes",
     "summary": "A downstream report says claiming or closing work can leave the project plan stale, forcing a second repair commit. The open investigation will reproduce the behavior and choose one consistent ownership rule.",
     "links": [
-      { "label": "Open ticket", "href": "../.tickets/223-close-updates-plan-row.md" }
+      {
+        "label": "Open ticket",
+        "href": "../.tickets/223-close-updates-plan-row.md"
+      }
     ],
     "details": "Open ticket 223. It is ready and unblocked, but the downstream report is still unconfirmed. Acceptance covers claim, close, status edits, missing rows, repositories without a plan, and the documented behavior.",
-    "workstreams": ["Planning", "CLI"]
+    "workstreams": [
+      "Planning",
+      "CLI"
+    ]
   },
   {
     "id": "2026-10-26-guidance-paths",
@@ -172,10 +226,16 @@ details.row .body{padding:0 0 14px}
     "title": "Ticket-writing guidance needs one convention-neutral path rule",
     "summary": "Shipped guidance currently points adopters at an older knowledge layout. The open work is to confirm the mismatch and replace prescriptive examples with durable, convention-neutral paths.",
     "links": [
-      { "label": "Open ticket", "href": "../.tickets/221-skill-guidance-memory-paths.md" }
+      {
+        "label": "Open ticket",
+        "href": "../.tickets/221-skill-guidance-memory-paths.md"
+      }
     ],
     "details": "Open ticket 221. It is ready and unblocked. Validation requires each reported mismatch to be confirmed, rejected, or re-scoped with evidence before guidance changes.",
-    "workstreams": ["Guidance", "Repository conventions"]
+    "workstreams": [
+      "Guidance",
+      "Repository conventions"
+    ]
   },
   {
     "id": "2026-10-26-layout",
@@ -184,10 +244,16 @@ details.row .body{padding:0 0 14px}
     "title": "The repository layout is ready to move to the current convention",
     "summary": "The open migration will relocate legacy knowledge files, repair their references, and preserve the existing build and verification baseline.",
     "links": [
-      { "label": "Open ticket", "href": "../.tickets/222-adopt-grey-matter-repo-layout.md" }
+      {
+        "label": "Open ticket",
+        "href": "../.tickets/222-adopt-grey-matter-repo-layout.md"
+      }
     ],
     "details": "Open ticket 222. It is ready and unblocked. The migration covers the glossary, decision records, agent documentation, repository guidance, and link verification.",
-    "workstreams": ["Repository conventions", "Tooling"]
+    "workstreams": [
+      "Repository conventions",
+      "Tooling"
+    ]
   }
 ]
 </script>

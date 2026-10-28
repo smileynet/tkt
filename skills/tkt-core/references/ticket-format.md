@@ -72,6 +72,7 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 | `spec` | string | Links to originating spec slug |
 | `validation_criteria` | string array | Machine-checkable criteria for agent close gate |
 | `tags` | string array | Work-stream / categorization tags — the primary scoping mechanism for `tkt ready` and `tkt context`. Set via `--tags` at creation (recommended) or auto-applied from `tkt context`. |
+| `agents` | signed string array | Optional agent eligibility: `["codex", "claude"]` allows either; `["!antigravity"]` excludes. Omit for any agent. Empty, mixed-sign, duplicate, and invalid slug lists are errors; serialized names sort deterministically. |
 | `requires` | string array | Machine capabilities required (e.g., `gpu`, `linux`, `corp`). Ticket only appears in `tkt ready` if `machine.capabilities` config includes all listed values. Backward compat: if `env` is set and `requires` is empty, requires is synthesized from env. |
 
 ## Status Lifecycle
