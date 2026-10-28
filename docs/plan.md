@@ -82,12 +82,14 @@ Close the structural gaps surfaced by the grey-matter skill-adaptation work by
 adding native concepts (a `parent` relation, config-declared label namespaces, and
 an `assignee` field) rather than emulating them with tag conventions and an external
 lint script. All additive and backward compatible. Work in the order below: the
-three roots first (`192`, `193`, `194`), their dependents, then the docs pass last.
+relation and label roots first (`192`, `193`), then `194` (reusing the completed
+agent identity contract from `224`), their dependents, and the docs pass last.
 
 | ID | Work | Status |
 |---:|---|---|
 | 192 | parent field: schema, parse, serialize | ✅ done |
 | 193 | `[labels.*]` config: parse single-select + closed-value namespaces | backlog |
+| 224 | Agent eligibility policy and invocation-scoped identity | ✅ done |
 | 194 | assignee field + claim-by-assignment + frontier honors it | backlog |
 | 195 | parent validation: dangling + cycle checks (after 192) | backlog |
 | 196 | parent CLI + query/capabilities surface (after 192) | backlog |

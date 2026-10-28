@@ -1,7 +1,7 @@
 ---
 id: "224"
 title: "Let tickets declare which agents may pick them up"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -118,14 +118,23 @@ Source-backed data-model review on 2026-10-28 found:
 
 ## Acceptance criteria
 
-- [ ] Missing `agents` parses as `Any`; homogeneous positive and negative lists round-trip as deterministic `AnyOf` and `AnyExcept` sets
-- [ ] Present-empty lists, duplicate ids, invalid ids, and mixed signs fail once at the parse boundary with an actionable error
-- [ ] Global `--agent` overrides `TKT_AGENT`; no project or user config stores the current agent identity
-- [ ] One exhaustive typed matcher returns eligible, identity-required, not-listed, or excluded outcomes and is used by both `ready` and `claim`
-- [ ] `ready` includes unrestricted and matching tickets, excludes misses, and reports hidden restricted work when identity is absent
-- [ ] Restricted claims fail with the typed reason; `claim --force` provides the documented explicit override
-- [ ] `new`, `batch`, and `edit` accept mutually exclusive allow/exclude flags and serialize one canonical field
-- [ ] Human and JSON output expose the policy; `query` remains tag-context scoped but never agent-filtered
-- [ ] Agent eligibility composes with `requires`, tag context, dependencies, and priority without changing their existing semantics
-- [ ] #194 reuses the same typed agent id and identity resolver for post-claim ownership
-- [ ] Capabilities, README, init guidance, distributed skills, and changelog describe the new contract consistently
+- [x] Missing `agents` parses as `Any`; homogeneous positive and negative lists round-trip as deterministic `AnyOf` and `AnyExcept` sets
+- [x] Present-empty lists, duplicate ids, invalid ids, and mixed signs fail once at the parse boundary with an actionable error
+- [x] Global `--agent` overrides `TKT_AGENT`; no project or user config stores the current agent identity
+- [x] One exhaustive typed matcher returns eligible, identity-required, not-listed, or excluded outcomes and is used by both `ready` and `claim`
+- [x] `ready` includes unrestricted and matching tickets, excludes misses, and reports hidden restricted work when identity is absent
+- [x] Restricted claims fail with the typed reason; `claim --force` provides the documented explicit override
+- [x] `new`, `batch`, and `edit` accept mutually exclusive allow/exclude flags and serialize one canonical field
+- [x] Human and JSON output expose the policy; `query` remains tag-context scoped but never agent-filtered
+- [x] Agent eligibility composes with `requires`, tag context, dependencies, and priority without changing their existing semantics
+- [x] #194 reuses the same typed agent id and identity resolver for post-claim ownership
+- [x] Capabilities, README, init guidance, distributed skills, and changelog describe the new contract consistently
+
+## Resolution (2026-10-28)
+
+Implemented one signed agents list with validated AgentId and nonempty deterministic policy sets, a shared exhaustive matcher, invocation-scoped identity resolution, ready filtering and hidden-work hints, claim enforcement with explicit force override, creation/edit flags, query and capabilities policy output. Updated all guidance, changelog, dashboard and plan, and bound future assignee ownership to the shared AgentId resolver. Deployed skills and installed CLI; full gate and six focused tests passed.
+
+### Verification
+1. ✓ mise run check exits 0 — "mise exec node@22 -- mise run check exited 0: 37 Node fixtures; cargo fmt --check clean; clippy --all-targets -D warnings clean; Rust suites passed 193 unit, 4 eligibility integration, 6 deploy, 96 integration, 3 manifest tests."
+2. ✓ cargo test agent_eligibility -- --nocapture reports all agent-eligibility tests passed — "cargo test agent_eligibility -- --nocapture exited 0: 2 matcher/parser unit tests and 4 real-git integration tests passed. Installed tkt 0.4.0 (3105683) passed creation/edit, identity precedence, scoped frontier, unfiltered query, rejection/matching/force claims E2E."
+3. ✓ tkt capabilities reports global --agent, ticket --agents and --exclude-agents, and claim --force — "Installed tkt capabilities JSON exposes global_flags.agent with --agent and TKT_AGENT, agents/exclude_agents input properties on new/batch/edit, and claim.force; asserted by focused test and installed-binary E2E."
