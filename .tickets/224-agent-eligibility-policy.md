@@ -1,7 +1,7 @@
 ---
 id: "224"
 title: "Let tickets declare which agents may pick them up"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
