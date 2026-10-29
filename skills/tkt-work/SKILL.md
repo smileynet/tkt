@@ -107,7 +107,7 @@ The test: *could this realistically be worked next once its blockers clear?* If 
 - Do NOT carry implementation context from one ticket to another
 - Each ticket starts from its file + referenced context
 - If a ticket reveals new work: create a *separate* ticket for it rather than expanding the current one. Default it to `open` (or `--blocked-by` the current ticket if it truly depends on this work finishing) — only use `--status backlog` if it's genuinely deferred, not just "later." The goal is to keep the current ticket scoped, not to hide the new work.
-- If context is exhausted: `/handoff` and start fresh for the next ticket
+- If context is exhausted, record verified progress, remaining work, and relevant evidence in the ticket before starting a fresh session.
 
 ## The plan is authoritative
 

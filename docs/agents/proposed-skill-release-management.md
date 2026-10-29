@@ -1,5 +1,9 @@
 # Release Management
 
+> **Superseded proposal — not operational release guidance.** Retained for historical
+> context. Follow [current release maintenance](../releasing.md) for preparation,
+> staging, and separately authorized publication.
+
 Manage the full release lifecycle: version decisions, changelog curation, gated release execution, and post-release verification. Use when cutting a release, deciding version bumps, writing changelog entries, or troubleshooting release failures.
 
 Trigger: release, version bump, changelog, ship, publish, tag, cut a release, what version, prepare release, release failed.

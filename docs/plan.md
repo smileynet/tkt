@@ -163,3 +163,4 @@ release cycle.
 | ID | Work | Status |
 |---:|---|---|
 | 225 | Make upstream deployment validation enforce strict plugin and catalog checks | ✅ done |
+| 226 | Propose AGENTS.md restructuring while preserving guidance coverage | open |

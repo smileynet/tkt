@@ -31,6 +31,8 @@ skills/                — cross-harness skills (deployed as copy to ~/.{kiro,co
 plugin.json          — Antigravity (agy) / Agent Plugins manifest (packaged with skills/ by tools/deploy-skills.sh)
 GLOSSARY.md   — project glossary
 .tickets/            — tkt's own tickets (dogfooding)
-.references/         — cloned reference repos (gitignored): clispec, axocli, octo-cli
+.references/         — cloned reference repos (gitignored)
 TELEMETRY.md         — transparency document for telemetry collection
 ```
+
+See the [reference inventory and clone commands](../../../.references/README.md).
