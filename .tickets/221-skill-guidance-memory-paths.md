@@ -1,7 +1,7 @@
 ---
 id: "221"
 title: "Shipped tkt-core guidance prescribes .memory/adr and .memory/specs, contradicting grey-matter's no-.memory convention"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Each point below marked confirmed / rejected / re-scoped with evidence"
@@ -42,5 +42,13 @@ Suggestion only: make the examples convention-neutral ("the project's ADR direct
 
 ## Acceptance criteria
 
-- [ ] Each observed point marked confirmed / rejected / re-scoped
-- [ ] If changed: tkt-core references cite convention-neutral or grey-matter paths, and the pack is redeployed
+- [x] Each observed point marked confirmed / rejected / re-scoped
+- [x] If changed: tkt-core references cite convention-neutral or grey-matter paths, and the pack is redeployed
+
+## Resolution (2026-10-29)
+
+Verified reported examples, made shipped reference guidance convention-neutral, redeployed the pack, and updated the dashboard.
+
+### Verification
+1. ✓ Each point below marked confirmed / rejected / re-scoped with evidence — "Verification section dispositions all four observations with tracked-source and installed-guidance evidence."
+2. ✓ If changed: tkt-core references cite convention-neutral or grey-matter paths, and the skill pack is redeployed — "node tools/deploy.mjs exited 0 and refreshed four skills across harnesses; Claude validation passed (existing icon advisory); dashboard checker passed with zero warnings."
