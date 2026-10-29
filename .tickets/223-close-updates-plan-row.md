@@ -1,7 +1,7 @@
 ---
 id: "223"
 title: "close/claim leave docs/plan.md behind, so sync-plan --check fails after every close"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Each observed point marked confirmed / rejected / re-scoped with evidence"
