@@ -1,7 +1,7 @@
 ---
 id: "194"
 title: "assignee field + claim-by-assignment + frontier honors it"
-status: backlog
+status: open
 blocked_by: ["224"]
 priority: high
 validation_criteria:

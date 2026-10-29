@@ -90,7 +90,7 @@ agent identity contract from `224`), their dependents, and the docs pass last.
 | 192 | parent field: schema, parse, serialize | ✅ done |
 | 193 | `[labels.*]` config: parse single-select + closed-value namespaces | open |
 | 224 | Agent eligibility policy and invocation-scoped identity | ✅ done |
-| 194 | assignee field + claim-by-assignment + frontier honors it | backlog |
+| 194 | assignee field + claim-by-assignment + frontier honors it | open |
 | 195 | parent validation: dangling + cycle checks (after 192) | backlog |
 | 196 | parent CLI + query/capabilities surface (after 192) | backlog |
 | 197 | parent rollup + frontier semantics (after 192, 196) | backlog |
