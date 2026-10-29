@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.6.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.7.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -27,7 +27,7 @@
 // same name is refused unless --force. Codex refresh requires its CLI and a local marketplace.
 
 import {
-  cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, renameSync, unlinkSync, readdirSync, readFileSync, realpathSync, rmSync, statSync,
+  cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, renameSync, unlinkSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync,
   symlinkSync, writeFileSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
@@ -36,7 +36,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.6.0";
+const DEPLOY_VERSION = "1.7.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -245,11 +245,28 @@ function writeOwned(pack, root, names, mode, resources) {
 }
 function rmIfExists(p) { if (exists(p)) { rmSync(p, { recursive: true, force: true }); return ""; } return " (already gone)"; }
 
+// A dangling link whose target lies inside this pack's checkout was left by an earlier deploy
+// of this pack, for a skill since renamed or removed. Any other link is not provably ours.
+function deadLinks(pack, root) {
+  if (!isDir(root)) return [];
+  const homes = [resolve(pack.dir), real(pack.dir)];
+  return readdirSync(root).map((name) => ({ name, path: join(root, name) })).filter(({ path }) => lstatSync(path).isSymbolicLink() && !existsSync(path))
+    .map((link) => ({ ...link, target: resolve(root, readlinkSync(link.path)) }))
+    .filter(({ target }) => homes.some((home) => target.startsWith(home + sep)));
+}
+function removeDeadLinks(links, dryRun) {
+  for (const { name, path, target } of links) {
+    console.log(`  remove  dead link ${name} -> ${target}${dryRun ? " (dry-run)" : ""}`);
+    if (!dryRun) unlinkSync(path);
+  }
+}
+
 // Take back every copy this pack put in `root`, and its manifest. Never touches foreign dirs.
 function release(pack, root, why, dryRun) {
-  const names = readOwned(pack, root);
-  if (!names.length) return;
+  const names = readOwned(pack, root), links = deadLinks(pack, root);
+  if (!names.length && !links.length) return;
   console.log(`\nroot: ${root}  (${why})`);
+  removeDeadLinks(links, dryRun);
   for (const n of names) console.log(`  remove  ${n}${dryRun ? "" : rmIfExists(join(root, n))}`);
   if (!dryRun) {
     if (readJson(join(root, manifestName(pack)))?.resources === resourceName(pack)) rmIfExists(join(root, resourceName(pack)));
@@ -276,6 +293,7 @@ function installRoot(pack, root, args) {
   const desired = new Set(pack.skills.map((s) => s.name));
   console.log(`\nroot: ${root}  (${args.dryRun ? "dry-run" : args.link ? "link" : "copy"})`);
   for (const n of owned) if (!desired.has(n)) console.log(`  prune   ${n}${args.dryRun ? "" : rmIfExists(join(root, n))}`);
+  removeDeadLinks(deadLinks(pack, root), args.dryRun);
   // Record ONLY what was installed: a refused foreign dir must never become "owned" (ticket 26).
   const installed = [];
   let refused = 0;
