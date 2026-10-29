@@ -115,6 +115,14 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-10-29-wrap-guardrail",
+    "date": "2026-10-29",
+    "kind": "shipped",
+    "title": "Keep session checkpoints usable with the standalone workflow",
+    "summary": "A regression check now catches the external handoff command that previously slipped into the distributed skills.",
+    "details": "Wrap-session proved the guard red with a seeded /handoff invocation, then green after restoration. All 11 reference checkouts match the committed rehydration index. Dashboard migration is tracked in #228; the separate AGENTS.md restructuring proposal remains #226."
+  },
+  {
     "id": "2026-10-29-guidance-conformance",
     "date": "2026-10-29",
     "kind": "shipped",

@@ -6,7 +6,7 @@ import "./release-publisher.test.mjs";
 import { parse as parseToml } from "smol-toml";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
@@ -147,4 +147,13 @@ test("built identity belongs to packaged source or its own checkout across rebui
     const linked = commit(worktree, "Linked commit"); assert.equal(build(worktree), linked, "linked branch change rebuilds");
     git(worktree, "checkout", "--detach", git(source, "rev-parse", "main")); assert.equal(build(worktree), own, "detached switch rebuilds");
   } finally { rmSync(temp, { recursive: true, force: true }); }
+});
+
+test("distributed skills do not require the external handoff command", () => {
+  const skills = join(repo, "skills");
+  for (const entry of readdirSync(skills, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const file = join(skills, entry.name, "SKILL.md");
+    assert.doesNotMatch(readFileSync(file, "utf8"), /`\/handoff`/, `${entry.name} must support a tkt-only adopter`);
+  }
 });

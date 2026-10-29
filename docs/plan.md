@@ -164,3 +164,5 @@ release cycle.
 |---:|---|---|
 | 225 | Make upstream deployment validation enforce strict plugin and catalog checks | ✅ done |
 | 226 | Propose AGENTS.md restructuring while preserving guidance coverage | open |
+| 227 | Add a cancelled status and tkt cancel/reopen per ADR 0004 | open |
+| 228 | Migrate status dashboard to the current Plan-tab contract | open |
