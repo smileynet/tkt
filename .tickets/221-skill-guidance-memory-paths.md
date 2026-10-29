@@ -1,7 +1,7 @@
 ---
 id: "221"
 title: "Shipped tkt-core guidance prescribes .memory/adr and .memory/specs, contradicting grey-matter's no-.memory convention"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Each point below marked confirmed / rejected / re-scoped with evidence"
