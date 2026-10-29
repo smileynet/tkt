@@ -47,3 +47,8 @@ TBD
 ## Acceptance criteria
 
 - [ ] TBD
+
+## Pending close (2026-10-29)
+
+The 2026-10-29 scope review marked this for closure: `--template` is merged into #176's body-template work. With `allow_force = false` it
+stays open until #182 decides how to retire tickets whose criteria won't be met.

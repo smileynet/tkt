@@ -33,3 +33,9 @@ local state.
 - [ ] Parity documentation accurately states whether the harness runs from a clean checkout
 - [ ] If retained, fixtures and a supported reference implementation are available
 - [ ] If retired, obsolete parity instructions are removed and maintained Rust coverage is named
+
+## Re-triage (2026-10-29)
+
+`tests/parity/` still holds `README.md`, `run.sh` and `fixtures/` at main `980b043`.
+First check whether `run.sh` still runs against anything; then either retire the harness
+or document what it does today.

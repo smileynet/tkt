@@ -57,3 +57,8 @@ this ticket's sharper ACs and consumer evidence (grey-matter `verify-tkt-usage`
 false-flagging valid `--tags`/`--vc` flags and missing commands) were folded into #138.
 Implement on **#138**, not here. Kept (not closed) because project policy disables
 force-close and these ACs aren't honestly met yet — parked rather than gamed.
+
+## Pending close (2026-10-29)
+
+The 2026-10-29 scope review marked this for closure: it is a duplicate, folded into #138. With `allow_force = false` it
+stays open until #182 decides how to retire tickets whose criteria won't be met.

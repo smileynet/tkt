@@ -46,3 +46,8 @@ status: unconfirmed` verbatim.
 - [ ] Match keys on `Confirmation status: unconfirmed`, not the reporter value
 - [ ] "never accept on authority" reproduction rule preserved
 - [ ] Redeploy via tools/deploy-skills.sh picks up the change
+
+## Pending close (2026-10-29)
+
+The 2026-10-29 scope review marked this for closure: crew-research was retired in the 2026-10-26 cutover. With `allow_force = false` it
+stays open until #182 decides how to retire tickets whose criteria won't be met.

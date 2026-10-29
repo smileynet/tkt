@@ -12,8 +12,10 @@ validation_criteria:
 
 ## What to build
 
-TBD
+Re-triage 2026-10-29: no reproduction was ever recorded. Before any fix, capture the
+platform, config file paths, the consent command used and the sequence that shows
+consent reverting.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] Reproduction steps are recorded, then the root cause is fixed or documented

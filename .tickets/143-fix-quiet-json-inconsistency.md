@@ -12,8 +12,12 @@ validation_criteria:
 
 ## What to build
 
-TBD
+Observed on 0.5.0 (`a827bb6`, 2026-10-29): `tkt new d --title Delta -q -o json` printed a
+bare `04`, not JSON. Scripts that ask for `-o json` must always get JSON; `-q` should
+shrink the object (for example `{"id":"04"}`), not change the format.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] Every mutating command run with `-o json -q` prints exactly one valid JSON value
+- [ ] A test iterates the mutating commands under `-o json -q`
+- [ ] Help documents how `-q` and `-o json` combine

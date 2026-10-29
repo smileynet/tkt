@@ -104,3 +104,9 @@ Start with the **skill file** (lowest cost, highest portability). A single `SKIL
 - [ ] Decision recorded (ADR or ticket update) with rationale
 - [ ] If skill approach chosen: ship SKILL.md generation in `tkt init`
 - [ ] If hooks chosen: implement for at least one agent as proof of concept
+
+## Pending decision (2026-10-29)
+
+Partly delivered: 0.5.0 ships Claude, Codex and Antigravity plugins and a Claude
+SessionStart hook that injects the frontier. What is missing is the recorded decision
+(criterion 2). Write that decision, check what is met, and close; or retire via #182.

@@ -73,3 +73,21 @@ claims, and the existing `skills/tkt` package.
 
 - Teaching every harness to consume skills it does not natively support
 - Changing the ticket workflow itself
+
+## Rescope (2026-10-29)
+
+Most of this shipped in 0.5.0 through the shared deploy engine (`tools/deploy.mjs`,
+vendored from grey-matter; `tools/deploy-skills.sh` now forwards to it):
+
+- `--dry-run` plans every action without writing.
+- An ownership manifest records what the deployer installed; unowned same-named
+  directories are refused, not deleted.
+- Missing managed roots are created; OpenCode is covered (grey-matter's deploy tests
+  include an OpenCode-only home, served through `~/.claude/skills` or its own root).
+- Claude, Codex and Antigravity users can install the plugins without a checkout.
+
+Remaining gap: a user who installs only the binary (`cargo install tkt`) and uses
+OpenCode or Kiro still needs a repository checkout to get the four workflow skills.
+Narrow the work to that: package the skills with the binary and give it a deploy
+command. Check off the delivered criteria above with evidence when this ticket is
+worked.

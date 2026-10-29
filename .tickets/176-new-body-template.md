@@ -42,3 +42,8 @@ Blocked by #174 (the detector must exist so "still detectable" AC is testable).
 - [ ] `batch` uses the same template
 - [ ] Guidance surfaces updated per docs/agents/agent-guidance-surfaces.md
 - [ ] `mise run check` passes
+
+## Absorbs #87 (2026-10-29)
+
+`tkt new --template` (#87) is merged into this ticket: a clearer default body and named
+templates are one feature. #87 waits on #182 to close.

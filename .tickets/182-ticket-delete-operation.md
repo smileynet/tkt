@@ -84,3 +84,19 @@ tradeoffs above, then spawn a scoped implementation ticket. Parked in `backlog` 
 
 Discovered 2026-09-07. Related lifecycle constraints: #154 (forbid hand-editing `status: done`),
 renumber birth-window rule (IDs are contracts).
+
+## Waiting on this decision (2026-10-29 scope review)
+
+With `allow_force = false`, these tickets can't be closed honestly today because their
+criteria will never be met:
+
+- #208: duplicate, folded into #138.
+- #87: `new --template`, merged into #176.
+- #115: reviews recall telemetry; recall was retired in the 2026-10-26 cutover.
+- #161: changes crew-research's frontier-work; crew-research was retired in the same cutover.
+- #94: a test ticket with no content.
+- #69: integration exploration, partly delivered (0.5.0 plugins and SessionStart hook) but
+  with no recorded decision.
+
+grey-matter ticket 33 (check ACs on a superseded ticket) was migrated here and closed in
+grey-matter.
