@@ -88,7 +88,7 @@ agent identity contract from `224`), their dependents, and the docs pass last.
 | ID | Work | Status |
 |---:|---|---|
 | 192 | parent field: schema, parse, serialize | ✅ done |
-| 193 | `[labels.*]` config: parse single-select + closed-value namespaces | backlog |
+| 193 | `[labels.*]` config: parse single-select + closed-value namespaces | open |
 | 224 | Agent eligibility policy and invocation-scoped identity | ✅ done |
 | 194 | assignee field + claim-by-assignment + frontier honors it | backlog |
 | 195 | parent validation: dangling + cycle checks (after 192) | backlog |
