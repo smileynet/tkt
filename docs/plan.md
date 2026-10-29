@@ -148,7 +148,7 @@ release cycle.
 | 125 | Research additional import schemas | backlog |
 | 140 | Correct exit-code taxonomy leaks | backlog |
 | 142 | Repair legacy CREW_ENV edge cases | backlog |
-| 143 | Reconcile quiet and JSON output | backlog |
+| 143 | Reconcile quiet and JSON output | open |
 | 144 | Keep query a full-corpus operation under context | backlog |
 | 145 | Honor DO_NOT_TRACK in update checking | backlog |
 | 147 | Investigate telemetry consent resets | backlog |

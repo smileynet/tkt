@@ -1,7 +1,7 @@
 ---
 id: "143"
 title: "Fix -q + -o json emits bare non-JSON output inconsistently"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
