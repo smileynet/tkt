@@ -100,3 +100,67 @@ criteria will never be met:
 
 grey-matter ticket 33 (check ACs on a superseded ticket) was migrated here and closed in
 grey-matter.
+
+## Proposed decision (2026-10-29, pending owner approval)
+
+**Add a terminal `cancelled` status, reached only through `tkt cancel`. Reject hard delete,
+an archive directory and doing nothing.** If approved, record this as ADR 0004 and open
+one implementation ticket.
+
+### Command and record
+
+`tkt cancel <id> --reason duplicate|superseded|obsolete|wontfix --note "<why>" [--by <id>]`
+
+- Allowed from `backlog`, `open` or `in_progress`; never from `done`.
+- `--by` is required for `duplicate` and `superseded` and must name an existing ticket
+  that is not itself cancelled.
+- Writes a `## Cancellation` section (reason, by, note, date). It writes no Resolution
+  and checks no acceptance criteria, so a cancelled ticket can never pass as done.
+- One commit (`chore(tickets): cancel NN`) through the same push-gated transaction as
+  `close`. Not birth-window-limited, because nothing is destroyed.
+- `tkt reopen <id>` returns it to `open` and keeps the Cancellation section as history.
+
+### Dependents (answers the open questions)
+
+- The frontier rule stays as it is: a blocker must be `done`. Cancelling never silently
+  unblocks anything.
+- `cancel` refuses while a non-terminal ticket lists it in `blocked_by`, unless the
+  caller picks one: `--repoint` rewrites those edges to the `--by` ticket, or
+  `--drop-edges` removes them. Each rewritten ticket is named in the output and the commit.
+- `validate` reports an error for any `blocked_by` that points at a cancelled ticket, which
+  catches hand edits.
+
+### IDs, views and checks
+
+- The file stays and the ID is retired permanently: no reuse, no dangling references.
+- `ready` and `blocked` exclude cancelled tickets. `query` includes them with
+  `status: cancelled`, and `--status cancelled` filters them.
+- `validate` requires a Cancellation section on every cancelled ticket, as `done` requires a
+  Resolution (the #154 analogue), and checks that `--by` resolves.
+- `audit` exempts cancelled tickets from the closure-quality rules and adds one rule: a
+  cancellation needs a reason and a note.
+- `sync-plan` shows cancelled rows with their reason; `capabilities` declares the command
+  and the status (with #138).
+- `close.allow_force` is untouched; existing force-closed "superseded" tickets are not
+  rewritten.
+
+### Why not the others
+
+- **Hard delete:** reuses IDs and orphans `blocked_by` and external references. It also
+  removes the ticket from every view, and git history is no substitute for the corpus.
+- **Archive directory:** adds a second location that every scan must know to skip, and
+  still needs a rule for dependents.
+- **Do nothing:** six tickets (#208, #87, #115, #161, #94, #69) are stuck today with no
+  honest exit, and backlog grows by sediment.
+
+### Consumers to update in the same release
+
+- tkt: `tkt-core` and the `init` snippets document `cancel`.
+- grey-matter: the delivery-dashboard snapshot, the checker's status list and a
+  collapsed "Cancelled" group in the Plan tab; `tkt-conventions.md` for superseded work.
+  Without this, the dashboard checker would reject a snapshot containing the new status.
+
+### First use
+
+Cancel #208 and #87 (duplicates, `--by` #138 and #176), #115 and #161 (obsolete), #94
+(wontfix), and decide #69, #140 and #142.
