@@ -1,7 +1,7 @@
 ---
 id: "222"
 title: "Adopt grey-matter repo layout: relocate .memory/ to GLOSSARY.md, docs/adr/, docs/agents/"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Relocation leaves 0 new broken links and cargo build, clippy and tests match the pre-change baseline"
@@ -35,5 +35,13 @@ a `CLAUDE.md` pointer, verify against a `cargo build`/clippy/test + link-check b
 
 ## Acceptance criteria
 
-- [ ] Relocation leaves 0 new broken links; cargo build, clippy and tests match the baseline
-- [ ] No tracked `.memory/` remains and AGENTS.md points at the new homes
+- [x] Relocation leaves 0 new broken links; cargo build, clippy and tests match the baseline
+- [x] No tracked `.memory/` remains and AGENTS.md points at the new homes
+
+## Resolution (2026-10-29)
+
+Relocated seven knowledge files to GLOSSARY.md, docs/adr, and docs/agents; rewrote references and added the shared Claude instruction pointer.
+
+### Verification
+1. ✓ Relocation leaves 0 new broken links and cargo build, clippy and tests match the pre-change baseline — "Before and after cargo build and mise exec node@22 -- mise run check passed; 37 Node fixtures and all Rust suites passed. Before and after relocation check-links reported zero broken relative links."
+2. ✓ No tracked .memory/ remains and AGENTS.md points at the new homes — "git ls-files .memory returns no paths; AGENTS.md points to GLOSSARY.md, docs/adr and docs/agents; CLAUDE.md points to AGENTS.md. Guidance deployed and dashboard checker passed."
