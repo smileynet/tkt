@@ -61,7 +61,7 @@ release of already-merged behavior.
 | ID | Work | Status |
 |---:|---|---|
 | 127 | Improve agent discovery and init guidance | backlog |
-| 138 | Complete the machine-readable capabilities manifest | backlog |
+| 138 | Complete the machine-readable capabilities manifest | open |
 | 208 | capabilities -o json incomplete (consolidated into #138) | backlog |
 | 161 | Support aggregate reporter provenance in steering | backlog |
 | 168 | Consider advisory nudges for tag-less/backlog work | backlog |

@@ -1,7 +1,7 @@
 ---
 id: "138"
 title: "Update capabilities manifest with all commands"
-status: backlog
+status: open
 blocked_by: []
 priority: high
 validation_criteria:
