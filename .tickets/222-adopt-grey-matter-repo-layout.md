@@ -1,7 +1,7 @@
 ---
 id: "222"
 title: "Adopt grey-matter repo layout: relocate .memory/ to GLOSSARY.md, docs/adr/, docs/agents/"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Relocation leaves 0 new broken links and cargo build, clippy and tests match the pre-change baseline"
