@@ -47,3 +47,10 @@ finished new-ticket body flow rather than an interim interface.
 - [ ] `edit`'s lack of `--tags` documented as an intentional constraint
 - [ ] All surfaces synced per the guidance-surfaces checklist; `deploy-skills.sh` run
 - [ ] Version bump if init snippets changed (baked into binary)
+
+## Added scope (2026-10-29, grey-matter ticket 101)
+
+From the agent-harness-research workflow guidance (recommendations 2 and 12): the close
+guidance should ask evidence to say what was checked, what outcome each check produced
+(pass, failure, skip, infrastructure error) and what remains unknown, rather than only
+"tests pass". Fold this into the evidence↔validation_criteria rule.
