@@ -15,6 +15,8 @@ See `docs/agents/specs/workspace-layout.md` for the full source tree.
 **Dashboard:** update `docs/status.html` after completed work worth surfacing; edit only
 its `gm-config` and `gm-entries` JSON blocks, then run the delivery-dashboard checker.
 
+For dispatch and reference-inventory traps, read `docs/agents/session-operations.md`.
+
 ## Commands
 
 ```bash

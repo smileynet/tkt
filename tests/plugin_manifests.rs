@@ -7,6 +7,26 @@
 
 use std::path::Path;
 
+#[test]
+fn claude_project_layout_is_catalog_compatible() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    assert!(
+        !root.join("CLAUDE.md").exists(),
+        "root CLAUDE.md triggers strict plugin validation warnings"
+    );
+    assert_eq!(
+        std::fs::read_to_string(root.join(".claude/CLAUDE.md"))
+            .unwrap()
+            .trim(),
+        "@../AGENTS.md"
+    );
+    let png = std::fs::read(root.join(".claude-plugin/icon.png")).unwrap();
+    assert!(png.len() >= 24 && &png[..8] == b"\x89PNG\r\n\x1a\n");
+    let width = u32::from_be_bytes(png[16..20].try_into().unwrap());
+    let height = u32::from_be_bytes(png[20..24].try_into().unwrap());
+    assert!(width == height && (512..=2048).contains(&width));
+}
+
 fn manifest_version(rel: &str) -> String {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(rel);
     let text =

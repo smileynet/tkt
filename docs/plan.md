@@ -157,3 +157,9 @@ release cycle.
 | 157 | Add optional hook installation | backlog |
 | 158 | Add per-agent ticket-write nudges | backlog |
 | 159 | Document CI enforcement usage | backlog |
+
+## Unplanned tickets
+
+| ID | Work | Status |
+|---:|---|---|
+| 225 | Make upstream deployment validation enforce strict plugin and catalog checks | open |

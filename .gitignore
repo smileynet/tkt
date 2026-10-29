@@ -9,7 +9,8 @@
 
 # Project conventions
 .scratch/
-.references/
+.references/*
+!.references/README.md
 
 # Generated project-local Kiro skill/steering deployment (source: crew-research)
 /.kiro/
