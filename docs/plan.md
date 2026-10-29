@@ -47,7 +47,7 @@ release gate is limited to the completed blocker table above and #146.
 | 173 | Add advisory frontier Definition-of-Ready validation | backlog |
 | 175 | Flag tickets with no source reference | backlog |
 | 176 | Improve new-ticket body template and add body input | open |
-| 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | backlog |
+| 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | open |
 | 186 | Reconcile or retire the historical parity harness | backlog |
 | 190 | Parse known config keys into strict typed policies | backlog |
 | 206 | Grandfather pre-protocol corpus from audit missing-resolution (ADR 0003) | ✅ done |

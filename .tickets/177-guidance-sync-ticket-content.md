@@ -1,7 +1,7 @@
 ---
 id: "177"
 title: "guidance: state evidence↔validation_criteria rule, edit-has-no-tags, fill-body-at-new, link-the-source"
-status: backlog
+status: open
 blocked_by: ["176"]
 priority: high
 validation_criteria:
