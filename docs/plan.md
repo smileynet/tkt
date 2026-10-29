@@ -129,7 +129,7 @@ automatic plan synchronization. This ordering follows the current session decisi
 
 | ID | Work | Status |
 |---:|---|---|
-| 221 | Make shipped knowledge-path guidance convention-neutral | open |
+| 221 | Make shipped knowledge-path guidance convention-neutral | ✅ done |
 | 222 | Adopt the current grey-matter repository layout | open |
 | 223 | Keep plan status current during ticket mutations | open |
 
