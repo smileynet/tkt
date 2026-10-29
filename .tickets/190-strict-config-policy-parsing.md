@@ -1,7 +1,7 @@
 ---
 id: "190"
 title: "Parse known config keys into strict typed policies"
-status: backlog
+status: open
 blocked_by: []
 priority: high
 validation_criteria:

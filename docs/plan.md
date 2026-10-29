@@ -49,7 +49,7 @@ release gate is limited to the completed blocker table above and #146.
 | 176 | Improve new-ticket body template and add body input | open |
 | 177 | Finish ticket-content guidance after #176; evidence guidance is covered by #179 | open |
 | 186 | Reconcile or retire the historical parity harness | backlog |
-| 190 | Parse known config keys into strict typed policies | backlog |
+| 190 | Parse known config keys into strict typed policies | open |
 | 206 | Grandfather pre-protocol corpus from audit missing-resolution (ADR 0003) | ✅ done |
 | 191 | Centralize mutation effects and dry-run policy after #136 | backlog |
 
