@@ -150,7 +150,7 @@ release cycle.
 | 142 | Repair legacy CREW_ENV edge cases | backlog |
 | 143 | Reconcile quiet and JSON output | open |
 | 144 | Keep query a full-corpus operation under context | open |
-| 145 | Honor DO_NOT_TRACK in update checking | backlog |
+| 145 | Honor DO_NOT_TRACK in update checking | open |
 | 147 | Investigate telemetry consent resets | backlog |
 | 148 | Support a primary-agent role pattern | backlog |
 | 151 | Route corpus-ejection diagnostics through normal output policy | open |

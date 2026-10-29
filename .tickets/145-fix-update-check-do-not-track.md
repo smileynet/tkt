@@ -1,7 +1,7 @@
 ---
 id: "145"
 title: "Fix update_check ignores DO_NOT_TRACK"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
