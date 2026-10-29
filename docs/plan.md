@@ -111,7 +111,7 @@ them out of the active frontier until the v0.4.0 release is complete.
 
 | ID | Work | Status |
 |---:|---|---|
-| 182 | Decide a delete/cancel lifecycle mechanism | backlog |
+| 182 | Decide a delete/cancel lifecycle mechanism | ✅ done |
 | 184 | Implement opt-in narrative sync-plan support | backlog |
 
 ADR 0002 makes plan-as-projection the strategic primary direction; narrative support

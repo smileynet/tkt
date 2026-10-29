@@ -1,7 +1,7 @@
 ---
 id: "182"
 title: "Decide whether tkt needs a delete/cancel operation — and what it should do"
-status: backlog
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -76,9 +76,9 @@ tradeoffs above, then spawn a scoped implementation ticket. Parked in `backlog` 
 
 ## Acceptance criteria
 
-- [ ] A decision is recorded (ADR or this ticket's resolution): `cancelled` status, `delete` command, or neither — with rationale grounded in IDs-as-contracts and files-are-the-database
-- [ ] If a mechanism is chosen, its semantics are specified (command/status, git+push behavior, effect on `blocked_by` refs and frontier readiness, `validate` handling) before an implementation ticket opens
-- [ ] Whatever is chosen must not become a backdoor around the close gates (evidence-first workflow)
+- [x] A decision is recorded (ADR or this ticket's resolution): `cancelled` status, `delete` command, or neither — with rationale grounded in IDs-as-contracts and files-are-the-database
+- [x] If a mechanism is chosen, its semantics are specified (command/status, git+push behavior, effect on `blocked_by` refs and frontier readiness, `validate` handling) before an implementation ticket opens
+- [x] Whatever is chosen must not become a backdoor around the close gates (evidence-first workflow)
 
 ## Notes
 
@@ -164,3 +164,11 @@ one implementation ticket.
 
 Cancel #208 and #87 (duplicates, `--by` #138 and #176), #115 and #161 (obsolete), #94
 (wontfix), and decide #69, #140 and #142.
+
+## Resolution (2026-10-29)
+
+Decided by the user on 2026-10-29: add a terminal cancelled status reached only through tkt cancel, with tkt reopen; recorded in ADR 0004 (docs/adr/0004-cancelled-status.md, 736e083). Implementation is ticket #227.
+
+### Verification
+1. ✓ A decision is recorded (ADR or ticket resolution): delete command, cancelled status, or neither — with rationale grounded in the IDs-as-contracts and files-are-the-database constraints — "ADR 0004 records the decision (cancelled status; hard delete, archive directory, do nothing and close --force rejected) with rationale from IDs-as-contracts and files-are-the-database"
+2. ✓ If a mechanism is chosen, it is specified (semantics, git/push behavior, effect on blocked_by refs and frontier) before any implementation ticket is opened — "ADR 0004 Decision items 1-6 specify command, git/push behavior (push-gated, same transaction as close), dependents (--repoint/--drop-edges, frontier unchanged), validate and audit handling, before #227 is worked; it writes no Resolution and checks no criteria, so it is not a close backdoor"
