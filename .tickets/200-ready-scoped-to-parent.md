@@ -1,7 +1,7 @@
 ---
 id: "200"
 title: "tkt ready --parent <id>: frontier scoped to one epic/map"
-status: backlog
+status: open
 blocked_by: ["196", "197"]
 priority: medium
 validation_criteria:

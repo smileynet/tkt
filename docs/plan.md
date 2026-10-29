@@ -96,7 +96,7 @@ agent identity contract from `224`), their dependents, and the docs pass last.
 | 197 | parent rollup + frontier semantics (after 192, 196) | open |
 | 198 | label-namespace validation: single-select + closed-set (after 193) | open |
 | 199 | docs, capabilities, CHANGELOG for parent/assignee/labels (after 194, 196-198) | open |
-| 200 | parent-scoped ready frontier (after 196, 197) | backlog |
+| 200 | parent-scoped ready frontier (after 196, 197) | open |
 
 ## Release scope decision record
 
