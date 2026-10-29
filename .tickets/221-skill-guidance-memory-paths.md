@@ -25,6 +25,16 @@ tags: ["agent-integration"]
    adopted repos keep ADRs in `docs/adr/` and specs in `docs/agents/specs/`.
 4. This is shipped guidance: every tkt-only adopter reads it, so a change is user-facing.
 
+## Verification (2026-10-28)
+
+1. Confirmed: the shipped reference contained the exact `.memory/adr/` example.
+2. Confirmed: its durable-reference rule named `.memory/specs/` twice.
+3. Re-scoped: installed init-project guidance names GLOSSARY.md and docs/adr/;
+   this repository still legitimately uses its existing .memory layout pending #222.
+   Standalone guidance should follow each adopter's established directories.
+4. Confirmed: the affected file is tracked under skills/tkt-core/references and
+   shipped through the plugin's skills directory.
+
 ## What to build
 
 Suggestion only: make the examples convention-neutral ("the project's ADR directory, e.g.
