@@ -30,7 +30,7 @@
     "tools/release-development.mjs": "da576b0f363533cb84896c8e67e3aab61bcc3ff7d9c2259538e92c3020b04847",
     "tools/release-ci-artifacts.mjs": "7d5d84d2a9766f2daed58d7dff2fac6509c7599b546a49d875f1d0f47fd5f7ca",
     "tools/check-skill-syntax.mjs": "35c3f52e0ccd9b6fb628b4dba03b5ff15d08314a8ce77a686b352ac857b67c8d",
-    "tools/probe-claude-validation.mjs": "eb91b5cce1610f6c8c4da1c40c7e0c8a8b3222cf093f408583114bbc7f5fafcb",
+    "tools/probe-claude-validation.mjs": "f30a7c2b75d94b677cee0b0df60c4a4c071a8ff88fcd1957669a73300635e0f8",
     "tools/LICENSE-grey-matter.txt": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
   }
 }

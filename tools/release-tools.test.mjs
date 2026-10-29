@@ -1,3 +1,4 @@
+import "./deploy-validation.test.mjs";
 import { test } from "node:test";
 import "./claude-hooks.test.mjs";
 import "./migrate-legacy-skills.test.mjs";

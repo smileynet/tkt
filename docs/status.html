@@ -115,6 +115,14 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-10-29-strict-deployment",
+    "date": "2026-10-29",
+    "kind": "shipped",
+    "title": "Catch plugin warnings before deployment",
+    "summary": "Deployment checks now reject plugin warnings, with an option to enforce catalog requirements too.",
+    "details": "Ticket #225 adds strict native manifest/content validation and check --profile directory for catalog warnings. Shared fixtures cover root CLAUDE.md, missing icons, and clean plugin/catalog checks; the release validation probe uses the same strict settings. Canonical engine updated in grey-matter and vendored here."
+  },
+  {
     "id": "2026-10-29-session-wrap",
     "date": "2026-10-29",
     "kind": "shipped",
@@ -145,7 +153,12 @@ details.row .body{padding:0 0 14px}
     "title": "Keep your plan current when ticket status changes",
     "summary": "Existing plan rows now follow claims, closures, and status edits automatically. Plan repair can also collect missing tickets into an unplanned section.",
     "details": "Ticket #223. Existing docs/plan.md rows land in the ticket mutation commit. Dirty plans reject status mutations; missing plans are left absent. sync-plan --fix adds missing rows; alternate plans remain explicit.",
-    "links": [{"label": "Implementation details", "href": "../.tickets/223-close-updates-plan-row.md"}]
+    "links": [
+      {
+        "label": "Implementation details",
+        "href": "../.tickets/223-close-updates-plan-row.md"
+      }
+    ]
   },
   {
     "id": "2026-10-28-knowledge-layout",
@@ -154,7 +167,12 @@ details.row .body{padding:0 0 14px}
     "title": "Find project knowledge in visible, standard locations",
     "summary": "The glossary, decisions, specifications, and agent notes now live alongside the project's regular documentation, with references updated to follow them.",
     "details": "Ticket #222 relocates the legacy knowledge directory to GLOSSARY.md, docs/adr/, and docs/agents/. CLAUDE.md points to the shared AGENTS.md instructions.",
-    "links": [{"label": "Project glossary", "href": "../GLOSSARY.md"}]
+    "links": [
+      {
+        "label": "Project glossary",
+        "href": "../GLOSSARY.md"
+      }
+    ]
   },
   {
     "id": "2026-10-28-neutral-knowledge-paths",
@@ -163,7 +181,12 @@ details.row .body{padding:0 0 14px}
     "title": "Keep ticket references aligned with your project's layout",
     "summary": "Ticket guidance now follows each project's established decision and specification directories, with durable examples for new projects.",
     "details": "Ticket #221: verified the shipped legacy path examples and replaced them with project-relative conventions. Repository relocation remains separate in #222.",
-    "links": [{"label": "Completed work", "href": "../.tickets/221-skill-guidance-memory-paths.md"}]
+    "links": [
+      {
+        "label": "Completed work",
+        "href": "../.tickets/221-skill-guidance-memory-paths.md"
+      }
+    ]
   },
   {
     "id": "2026-10-28-agent-eligibility-delivered",

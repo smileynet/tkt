@@ -78,7 +78,10 @@ there and copy it here. Pack-specific forbidden skill references live in
 
 The harness table chooses roots so each harness sees a skill once, including installed
 plugins. Only manifest-owned copies are pruned. Use `--dry-run`, `list`, `audit`, and
-`check` to inspect deployment; `--allow-dual` is an explicit duplicate override.
+`check` to inspect deployment. `check` rejects native manifest/content warnings;
+`check --profile directory` also rejects catalog blockers and warnings. Native checks
+are skipped with a message when Claude is absent. Run `check` before installation;
+the install command checks skill lint and ownership. `--allow-dual` is an explicit duplicate override.
 Codex must use this checkout as its local marketplace. A plugin refresh failure stops
 deployment before existing skill copies are removed. Start a new chat after refresh.
 

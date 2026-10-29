@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Validate manifests and exact skill components, including a seeded scanner-coverage check.
-// Usage: node scripts/probe-claude-validation.mjs [--pack DIR] [--binary CLAUDE_BINARY] [--snapshot]
+// Usage: node scripts/probe-claude-validation.mjs [--pack DIR] [--binary CLAUDE_BINARY] [--snapshot] [--profile directory]
 // Requires Claude >=2.1.289. No model, install, authentication or network request is needed.
 import { mkdtempSync, mkdirSync, readdirSync, readFileSync, writeFileSync, cpSync, rmSync, lstatSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 
 let pack = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 let binary = "claude", archived = false;
+let profile = [];
 const home = mkdtempSync(join(tmpdir(), "claude-validation-"));
 try {
   const args = process.argv.slice(2);
@@ -18,6 +19,7 @@ try {
     if (args[i] === "--pack" && args[i + 1]) pack = resolve(args[++i]);
     else if (args[i] === "--binary" && args[i + 1]) binary = args[++i];
     else if (args[i] === "--snapshot") archived = true;
+    else if (args[i] === "--profile" && args[i + 1] === "directory") { profile = ["--profile", args[++i]]; }
     else throw new Error(`unknown or incomplete argument: ${args[i]}`);
   }
   const env = { PATH: process.env.PATH, HOME: home, USERPROFILE: home, CLAUDE_CONFIG_DIR: join(home, "config"), DISABLE_UPDATES: "1", CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1" };
@@ -73,7 +75,7 @@ try {
   }
   const runs = [];
   for (const target of [join(snapshot, ".claude-plugin", "plugin.json"), join(snapshot, ".claude-plugin", "marketplace.json")]) {
-    const r = run(["plugin", "validate", target, "--json"]);
+    const r = run(["plugin", "validate", target, "--strict", ...(target.endsWith("plugin.json") ? profile : []), "--json"]);
     runs.push({ ...r, result: JSON.parse(r.stdout), stdout: undefined });
   }
   const clean = run(["plugin", "validate", flat, "--strict", "--json"]);

@@ -12,7 +12,7 @@
 //   node deploy.mjs [install] [--dry-run] [--force] [--link] [--allow-dual] [--no-agy]
 //                   [--project] [--root DIR]... [--pack DIR] [--portfolio FILE]
 //   node deploy.mjs list | uninstall [--dry-run] [--root DIR]...
-//   node deploy.mjs check            # manifests consistent with disk and tags (exit 1 on drift)
+//   node deploy.mjs check [--profile directory] # strict manifests/content; optional catalog checks
 //   node deploy.mjs audit [--strict] [--json] [--portfolio FILE] # unowned dirs, shared names, skills a harness sees twice
 //   node deploy.mjs agy [build|install] [--out DIR]
 //
@@ -528,9 +528,9 @@ function doCheck(pack, args) {
     if (e?.source?.path !== "./" || e?.source?.source !== "local") problems.push("Codex marketplace must point at the repository root");
     if (e?.policy?.installation !== "AVAILABLE" || e?.policy?.authentication !== "ON_INSTALL") problems.push("Codex marketplace installation/authentication policy missing");
   }
-  // claude plugin validate, when claude is on PATH (not --strict: a repo-root CLAUDE.md warns).
+  // Native warnings fail checks; catalog warnings also fail when explicitly requested.
   for (const t of [pack.manifestPath, claudeMarket && join(pack.dir, ".claude-plugin", "marketplace.json")].filter(Boolean)) {
-    const r = spawnSync("claude", ["plugin", "validate", t], { cwd: pack.dir, encoding: "utf8" });
+    const r = spawnSync("claude", ["plugin", "validate", t, "--strict", ...(args.profile && t === pack.manifestPath ? ["--profile", args.profile] : [])], { cwd: pack.dir, encoding: "utf8" });
     if (r.error?.code === "ENOENT") { console.log("(claude not on PATH: skipped `claude plugin validate`)"); break; }
     if (r.status !== 0) problems.push(`claude plugin validate ${relative(pack.dir, t)} failed:\n${r.stdout}${r.stderr}`);
   }
@@ -719,7 +719,7 @@ function inspectPortfolio(pack, args) {
 // --- Main --------------------------------------------------------------------------------
 function parseArgs(argv) {
   const args = { cmd: "install", sub: null, dryRun: false, force: false, link: false, allowDual: false,
-    noAgy: false, strict: false, json: false, portfolio: null, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
+    noAgy: false, strict: false, json: false, profile: null, portfolio: null, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -731,6 +731,10 @@ function parseArgs(argv) {
     else if (a === "--allow-dual") args.allowDual = true;
     else if (a === "--no-agy") args.noAgy = true;
     else if (a === "--strict") args.strict = true;
+    else if (a === "--profile") {
+      if (rest[++i] !== "directory") { console.error("--profile requires directory"); process.exit(2); }
+      args.profile = "directory";
+    }
     else if (a === "--json") args.json = true;
     else if (a === "--portfolio") args.portfolio = resolve(rest[++i]);
     else if (a === "--project") args.roots.push(resolve(process.cwd(), ".agents", "skills"));
@@ -740,6 +744,7 @@ function parseArgs(argv) {
     else if (a === "--version") { console.log(DEPLOY_VERSION); process.exit(0); }
     else { console.error(`unknown argument: ${a}`); process.exit(2); }
   }
+  if (args.profile && args.cmd !== "check") { console.error("--profile is only supported by check"); process.exit(2); }
   return args;
 }
 
