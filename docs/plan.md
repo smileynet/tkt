@@ -43,7 +43,7 @@ release gate is limited to the completed blocker table above and #146.
 | 156 | Disposition remaining delta-review findings | ✅ done |
 | 163 | Backfill missing IDs from filename prefixes | open |
 | 164 | Support canonical slug IDs in validation | open |
-| 165 | Write project-scoped configuration safely | backlog |
+| 165 | Write project-scoped configuration safely | open |
 | 173 | Add advisory frontier Definition-of-Ready validation | backlog |
 | 175 | Flag tickets with no source reference | backlog |
 | 176 | Improve new-ticket body template and add body input | open |

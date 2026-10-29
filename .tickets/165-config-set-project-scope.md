@@ -1,7 +1,7 @@
 ---
 id: "165"
 title: "config --set: support project scope (.tickets/config.toml), not just user"
-status: backlog
+status: open
 blocked_by: []
 priority: high
 validation_criteria:
