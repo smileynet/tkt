@@ -1,7 +1,7 @@
 ---
 id: "151"
 title: "load_corpus ejection is stderr-only, bypasses JSON envelope and TKT_ASCII/sym_warn"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
