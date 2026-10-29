@@ -1,7 +1,7 @@
 ---
 id: "225"
 title: "Make upstream deployment validation enforce strict plugin and catalog checks"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Deployment fixtures reject a root CLAUDE.md and missing catalog icon"

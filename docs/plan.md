@@ -162,4 +162,4 @@ release cycle.
 
 | ID | Work | Status |
 |---:|---|---|
-| 225 | Make upstream deployment validation enforce strict plugin and catalog checks | open |
+| 225 | Make upstream deployment validation enforce strict plugin and catalog checks | in_progress |
