@@ -58,8 +58,8 @@ is configured, and package caching is explicitly disabled. These sources were re
 
 All open tickets ship or receive explicit user deferral before a release. Record the
 approved version/scope, exact commit, notes, assets/hashes, platform gaps and tested
-compatibility. Tickets 67/69 in grey-matter retain candidate/install tests; 70–71
-own final audit/staging. Include the [v0.4 skill-link migration](../README.md#upgrading-skills-from-v040)
+compatibility. grey-matter's [release skill](https://github.com/smileynet/grey-matter/blob/main/skills/meta/release/SKILL.md)
+orchestrates candidate, install, audit and staging gates for both products. Include the [v0.4 skill-link migration](../README.md#upgrading-skills-from-v040)
 in previous-release upgrade probes; those releases had no plugin packages. No preparation command publishes a crate, GitHub release,
 tag or stable ref. The candidate index needs review before separate publication.
 
