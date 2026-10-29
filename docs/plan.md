@@ -122,6 +122,17 @@ the two efforts independently schedulable.
 |---:|---|---|
 | 187 | Generate a derived sync-plan projection from the ticket corpus | backlog |
 
+## Current maintenance frontier
+
+Work in order: correct shipped guidance, migrate repository knowledge, then address
+automatic plan synchronization. This ordering follows the current session decision.
+
+| ID | Work | Status |
+|---:|---|---|
+| 221 | Make shipped knowledge-path guidance convention-neutral | open |
+| 222 | Adopt the current grey-matter repository layout | open |
+| 223 | Keep plan status current during ticket mutations | open |
+
 ## Intentionally deferred backlog
 
 These tickets remain visible for planning but are not commitments for the current
