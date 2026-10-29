@@ -140,7 +140,7 @@ release cycle.
 
 | ID | Work | Status |
 |---:|---|---|
-| 66 | Move cargo-dist workspace metadata | backlog |
+| 66 | Move cargo-dist workspace metadata | open |
 | 69 | Explore agent/harness integrations | backlog |
 | 94 | Validate the VC flag | backlog |
 | 99 | Configure update-check interval | backlog |
