@@ -15,8 +15,22 @@ tags: ["guidance"]
 
 ## What to build
 
-TBD
+Owner's rule (2026-10-29, also grey-matter ticket 97): when closing a ticket, clean up
+its scratch and build artifacts. Promote what is needed durably into tracked files and
+cite those; keep an uncommitted item only while something still needs it, with a clear
+lifecycle scope (which tickets, release or shared purpose, and when it ends); keep a
+reasonably sized history of attempts rather than everything or nothing; delete the rest,
+including build output and work directories outside the repo.
+
+tkt ships its workflow skills standalone, so `skills/tkt-work/SKILL.md` (close step,
+around "Close with evidence") states the rule in its own words instead of pointing at
+grey-matter. `tkt-reconcile` checks for kept items whose scope has ended, and the `init`
+snippets mention it in one line. Keep it guidance; no new command or ledger.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] tkt-work's close step covers promote, delete and keep-with-scope, including build artifacts outside `.scratch`
+- [ ] The Resolution records what was promoted, deleted or kept, with the reason for anything kept
+- [ ] tkt-reconcile flags kept items whose lifecycle scope has ended
+- [ ] init snippets carry a one-line version consistent with the skill
+- [ ] Repository checks (`mise run check`) pass
