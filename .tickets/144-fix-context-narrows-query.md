@@ -1,7 +1,7 @@
 ---
 id: "144"
 title: "Context silently narrows query (full corpus claim violated)"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
