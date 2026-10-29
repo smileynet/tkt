@@ -39,7 +39,7 @@ release gate is limited to the completed blocker table above and #146.
 
 | ID | Work | Status |
 |---:|---|---|
-| 153 | Prevent stale installed-binary validation | backlog |
+| 153 | Prevent stale installed-binary validation | open |
 | 156 | Disposition remaining delta-review findings | ✅ done |
 | 163 | Backfill missing IDs from filename prefixes | backlog |
 | 164 | Support canonical slug IDs in validation | backlog |

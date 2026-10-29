@@ -1,7 +1,7 @@
 ---
 id: "153"
 title: "Guard against stale-binary validation (prefer integration tests, add freshness check)"
-status: backlog
+status: open
 blocked_by: []
 priority: high
 validation_criteria:
