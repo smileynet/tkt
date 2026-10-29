@@ -468,9 +468,15 @@ function agyDeploy(pack, args) {
     execFileSync("agy", ["plugin", "validate", out, "--strict"], { stdio: "inherit" });
     execFileSync("agy", ["plugin", "install", out], { stdio: "inherit" });
   } else {
-    const dest = join(HOME, ".gemini", "config", "plugins", pack.name);
+    const dest = join(HOME, ".gemini", "config", "plugins", pack.name), marker = join(dest, manifestName(pack));
+    const owned = !lstatSync(dest, { throwIfNoEntry: false })?.isSymbolicLink() && readJson(marker)?.agyPlugin === pack.name;
+    if (exists(dest) && !owned && !args.force) {
+      console.log(`  refused ${tilde(dest)} (exists, not installed by ${pack.name}; --force to override)`);
+      return;
+    }
     rmSync(dest, { recursive: true, force: true });
     cpSync(out, dest, { recursive: true });
+    writeFileSync(marker, JSON.stringify({ agyPlugin: pack.name, version: pack.version }, null, 2) + "\n");
     console.log(`  copied to ${tilde(dest)} (agy not on PATH)`);
   }
 }

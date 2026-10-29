@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `node tools/deploy.mjs` selects roots so installed Claude/Codex plugins count as the skill copy and refreshes local plugins. Audits identify unowned skill directories and duplicate loading across configured packs. The bash wrapper remains an alternative entry point; no extra deploy step is needed.
 
 ### Fixed
+- Without the `agy` CLI, `node tools/deploy.mjs` no longer replaces an Antigravity plugin folder it didn't install: a same-named folder or link is refused (`--force` overrides), and its own copy is marked so later runs can update it. A copy left by an earlier run has no mark yet, so update it once with `--force`.
 - Workflow skills use supported tag-context queries and preserve the previous scope during temporary filtering.
 - Upgrades from v0.4.0 can preview and remove old skill symlinks before installing the four workflow skills, while preserving unrelated files and source checkouts.
 - Local Claude plugin audits use the active checkout rather than stale cache folders. Failed or foreign source checks preserve existing skill copies during deployment.
