@@ -1,7 +1,7 @@
 ---
 id: "176"
 title: "new: clearer body template + --body flag to fill content at creation"
-status: backlog
+status: open
 blocked_by: ["174"]
 priority: medium
 validation_criteria:
