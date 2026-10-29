@@ -93,7 +93,7 @@ agent identity contract from `224`), their dependents, and the docs pass last.
 | 194 | assignee field + claim-by-assignment + frontier honors it | open |
 | 195 | parent validation: dangling + cycle checks (after 192) | open |
 | 196 | parent CLI + query/capabilities surface (after 192) | open |
-| 197 | parent rollup + frontier semantics (after 192, 196) | backlog |
+| 197 | parent rollup + frontier semantics (after 192, 196) | open |
 | 198 | label-namespace validation: single-select + closed-set (after 193) | backlog |
 | 199 | docs, capabilities, CHANGELOG for parent/assignee/labels (after 194, 196-198) | backlog |
 | 200 | parent-scoped ready frontier (after 196, 197) | backlog |

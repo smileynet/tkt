@@ -1,7 +1,7 @@
 ---
 id: "197"
 title: "parent rollup + frontier semantics"
-status: backlog
+status: open
 blocked_by: ["192", "196"]
 priority: high
 validation_criteria:
