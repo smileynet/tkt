@@ -156,7 +156,7 @@ release cycle.
 | 151 | Route corpus-ejection diagnostics through normal output policy | open |
 | 157 | Add optional hook installation | backlog |
 | 158 | Add per-agent ticket-write nudges | backlog |
-| 159 | Document CI enforcement usage | backlog |
+| 159 | Document CI enforcement usage | open |
 
 ## Unplanned tickets
 

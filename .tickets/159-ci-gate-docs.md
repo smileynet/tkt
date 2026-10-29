@@ -1,7 +1,7 @@
 ---
 id: "159"
 title: "Document CI recipe: tkt validate --strict / lint --check as the real enforcement gate"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
