@@ -1,7 +1,7 @@
 ---
 id: "223"
 title: "close/claim leave docs/plan.md behind, so sync-plan --check fails after every close"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Each observed point marked confirmed / rejected / re-scoped with evidence"
@@ -61,8 +61,19 @@ Suggestion only, to be decided:
 
 ## Acceptance criteria
 
-- [ ] Each observed point marked confirmed / rejected / re-scoped
-- [ ] close keeps the plan row current in its own commit (or --check stops failing on derivable drift)
-- [ ] claim / status edits likewise; missing-row behaviour decided and consistent with --fix
-- [ ] No plan file means no change in behaviour
-- [ ] Documented in --help, AGENTS.md and tkt-core
+- [x] Each observed point marked confirmed / rejected / re-scoped
+- [x] close keeps the plan row current in its own commit (or --check stops failing on derivable drift)
+- [x] claim / status edits likewise; missing-row behaviour decided and consistent with --fix
+- [x] No plan file means no change in behaviour
+- [x] Documented in --help, AGENTS.md and tkt-core
+
+## Resolution (2026-10-29)
+
+Synchronize existing clean default plan rows in claim, close and status edit commits; repair missing rows with sync-plan --fix. Updated help, guidance, changelog and dashboard; deployed skills. Strict Claude plugin validation remains blocked by the root CLAUDE.md warning introduced by the prior layout ticket; plugin discovery and deployment succeed.
+
+### Verification
+1. ✓ Each observed point marked confirmed / rejected / re-scoped with evidence — "All three source observations confirmed and disposition recorded in the ticket; new integration tests reproduce lifecycle and missing-row behavior."
+2. ✓ After tkt close <id> in a repo whose docs/plan.md has a row for <id>, tkt sync-plan --check exits 0 with no further command (integration test) — "test_plan_status_mutations passed, verifying closure and docs/plan.md in the same commit and sync-plan --check exit 0."
+3. ✓ After tkt claim <id> (and tkt edit --status), sync-plan --check reports no plan-status-drift for <id> (integration test) — "test_plan_status_mutations and test_plan_missing_rows_fix passed for claim, status edit and missing-row repair."
+4. ✓ A repo with no docs/plan.md is unaffected: close/claim write no plan file and their commits are unchanged (integration test) — "test_plan_dirty_rejected_and_absent_unchanged passed: claim/close create no plan and their commits contain no plan; dirty plan rejection preserves ticket state."
+5. ✓ The behaviour, and any opt-out, is documented in --help, AGENTS.md and the tkt-core skill — "sync-plan --help, AGENTS.md, README, init snippets, tkt-core and tkt-work document default-plan synchronization, missing rows and alternate paths. Full mise gate passed: 37 Node tests, 193 unit tests, 99 integration tests and other suites; dashboard checker passed."
