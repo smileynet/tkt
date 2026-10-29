@@ -364,6 +364,80 @@ fn test_validate_no_false_stub() {
 }
 
 #[test]
+fn test_plan_dirty_rejected_and_absent_unchanged() {
+    let (_tmp, clone) = setup_repo();
+    assert_eq!(
+        run_tkt(&clone, &["new", "planned", "--title", "Planned"]).0,
+        0
+    );
+    assert_eq!(run_tkt(&clone, &["claim", "02"]).0, 0);
+    assert!(!clone.join("docs/plan.md").exists());
+    assert!(!git(&clone, &["show", "--pretty=", "--name-only", "HEAD"]).contains("docs/plan.md"));
+    assert_eq!(
+        run_tkt(
+            &clone,
+            &["close", "02", "--resolution", "Verified", "--check-all"]
+        )
+        .0,
+        0
+    );
+    assert!(!clone.join("docs/plan.md").exists());
+    assert!(!git(&clone, &["show", "--pretty=", "--name-only", "HEAD"]).contains("docs/plan.md"));
+    assert_eq!(run_tkt(&clone, &["new", "dirty", "--title", "Dirty"]).0, 0);
+    std::fs::create_dir_all(clone.join("docs")).unwrap();
+    std::fs::write(clone.join("docs/plan.md"), "| 03 | Dirty | open |\n").unwrap();
+    let before = git(&clone, &["rev-parse", "HEAD"]);
+    let (code, out) = run_tkt(&clone, &["claim", "03"]);
+    assert_eq!(code, 1, "{out}");
+    assert!(out.contains("uncommitted changes"), "{out}");
+    assert_eq!(before, git(&clone, &["rev-parse", "HEAD"]));
+    assert!(std::fs::read_to_string(clone.join(".tickets/03-dirty.md"))
+        .unwrap()
+        .contains("status: open"));
+}
+
+#[test]
+fn test_plan_status_mutations() {
+    let (_tmp, clone) = setup_repo();
+    let (code, out) = run_tkt(&clone, &["new", "planned", "--title", "Planned"]);
+    assert_eq!(code, 0, "{out}");
+    std::fs::create_dir_all(clone.join("docs")).unwrap();
+    std::fs::write(
+        clone.join("docs/plan.md"),
+        "| 01 | Seed | ✅ done |\n| 02 | Planned | open |\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "docs/plan.md"]);
+    git(&clone, &["commit", "-qm", "plan"]);
+    for args in [
+        vec!["claim", "02"],
+        vec!["edit", "02", "--status", "open"],
+        vec!["close", "02", "--resolution", "Verified", "--check-all"],
+    ] {
+        let (code, out) = run_tkt(&clone, &args);
+        assert_eq!(code, 0, "{out}");
+        let files = git(&clone, &["show", "--pretty=", "--name-only", "HEAD"]);
+        assert!(files.contains("docs/plan.md"), "{files}");
+        let (code, out) = run_tkt(&clone, &["sync-plan", "--check"]);
+        assert_eq!(code, 0, "{out}");
+    }
+}
+
+#[test]
+fn test_plan_missing_rows_fix() {
+    let (_tmp, clone) = setup_repo();
+    assert_eq!(
+        run_tkt(&clone, &["new", "unplanned", "--title", "Unplanned"]).0,
+        0
+    );
+    std::fs::create_dir_all(clone.join("docs")).unwrap();
+    std::fs::write(clone.join("docs/plan.md"), "| 01 | Seed | ✅ done |\n").unwrap();
+    assert_eq!(run_tkt(&clone, &["sync-plan", "--check"]).0, 1);
+    assert_eq!(run_tkt(&clone, &["sync-plan", "--fix"]).0, 0);
+    assert_eq!(run_tkt(&clone, &["sync-plan", "--check"]).0, 0);
+}
+
+#[test]
 fn test_sync_plan_detects_drift() {
     let (_tmp, clone) = setup_repo();
 

@@ -224,7 +224,7 @@ enum Commands {
         #[arg(long)]
         file: Option<String>,
     },
-    /// Drift-check ticket status vs a plan table
+    /// Drift-check a plan table; --fix also appends missing tickets. Status mutations sync existing docs/plan.md rows automatically (requires a clean plan).
     SyncPlan {
         #[arg(long, group = "mode")]
         check: bool,

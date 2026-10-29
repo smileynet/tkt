@@ -245,10 +245,15 @@ pub fn run(
         file.ac_stats()
     };
 
+    let plan_changed = super::sync_plan::update_status(&ctx.repo, &t.id, Status::Done)?;
     file.write()?;
 
     let rel_path = ctx.rel_path(&file.path);
-    ctx.publish(&[&rel_path], &format!("chore(tickets): close {}", id))?;
+    let mut paths = vec![rel_path.as_str()];
+    if plan_changed {
+        paths.push("docs/plan.md");
+    }
+    ctx.publish(&paths, &format!("chore(tickets): close {}", id))?;
 
     if !is_quiet() {
         let verb = if note.is_some() {

@@ -18,6 +18,8 @@ const MARKER_END: &str = "<!-- tkt:end -->";
 
 const SNIPPET_AGENTS: &str = r#"## Tickets
 
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
+
 This project uses [tkt](https://github.com/smileynet/tkt) for work tracking. Tickets live in `.tickets/`.
 
 ```
@@ -55,6 +57,8 @@ Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity`
 
 const SNIPPET_CLAUDE: &str = r#"## Tickets
 
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
+
 This project uses tkt for work tracking. Run `tkt ready` to see what's available.
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "..." (--evidence: 1 per criterion), validate --brief
@@ -82,6 +86,8 @@ alwaysApply: true
 # tkt Workflow
 
 This project uses tkt for work tracking (.tickets/ directory).
+
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
 
 ## Status lifecycle
 open (frontier-eligible, the default) → in_progress → done; backlog = parked, invisible to ready
@@ -113,6 +119,8 @@ Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity`
 "#;
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
+
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
 
 When .tickets/ exists, work the frontier.
 
@@ -150,6 +158,8 @@ trigger: always_on
 # tkt Workflow
 
 This project uses tkt for work tracking. Tickets in .tickets/.
+
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
 
 Status: open (frontier, the default) → in_progress → done; backlog = parked, hidden from ready
 New work defaults to open. Use --status backlog only for deliberately deferred work.

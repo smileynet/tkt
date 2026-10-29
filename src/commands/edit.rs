@@ -173,10 +173,19 @@ pub fn run(
         return Ok(0);
     }
 
+    let plan_changed = if changed.contains(&"status") {
+        super::sync_plan::update_status(&ctx.repo, id, Status::parse(file.get("status").unwrap())?)?
+    } else {
+        false
+    };
     file.write()?;
     let rel_path = ctx.rel_path(&file.path);
+    let mut paths = vec![rel_path.as_str()];
+    if plan_changed {
+        paths.push("docs/plan.md");
+    }
     ctx.publish(
-        &[&rel_path],
+        &paths,
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
     )?;
     if !is_quiet() {

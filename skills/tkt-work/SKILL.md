@@ -60,6 +60,9 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 
 ## Marking Done
 
+Status mutations synchronize existing rows in a clean `docs/plan.md` in the same
+commit. Missing rows need `tkt sync-plan --fix`; alternate plans need explicit sync.
+
 **Never set `status: done` by editing the ticket file.** Always run `tkt close <id>`. Hand-flipping the status skips the close gates (acceptance criteria, resolution, evidence) and the atomic push protocol — the frontmatter says done but nothing was verified. `tkt validate` flags a done ticket with no Resolution section (warning; error under `--strict`).
 
 When a ticket's acceptance criteria are all met:

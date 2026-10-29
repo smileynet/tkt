@@ -37,6 +37,16 @@ stale, and the derivable drift #169 meant to make cosmetic still blocks any repo
 
 ## What to build
 
+### Verified disposition and chosen behavior (2026-10-28)
+
+All three observations confirmed by current sync_plan.rs and mutation paths.
+Existing rows now synchronize with claim, close, and status edit in the same commit.
+Missing rows remain warnings and --fix adds them under Unplanned tickets; new and
+claim do not guess narrative placement. Only docs/plan.md is automatic; there is no
+configured plan path today. Explicit sync-plan handles alternate paths. A dirty plan
+rejects the status mutation before ticket writes, preventing unrelated edits being
+committed. No opt-out config is added; absent plans preserve existing behavior.
+
 Suggestion only, to be decided:
 
 - When `docs/plan.md` (or the configured plan path) has a row for the ticket, `close`, `claim`

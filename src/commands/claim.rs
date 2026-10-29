@@ -53,10 +53,15 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
 
     let mut file = t.file.clone();
     file.set_status(Status::InProgress);
+    let plan_changed = super::sync_plan::update_status(&ctx.repo, &t.id, Status::InProgress)?;
     file.write()?;
 
     let rel_path = ctx.rel_path(&file.path);
-    ctx.publish(&[&rel_path], &format!("chore(tickets): claim {}", id))?;
+    let mut paths = vec![rel_path.as_str()];
+    if plan_changed {
+        paths.push("docs/plan.md");
+    }
+    ctx.publish(&paths, &format!("chore(tickets): claim {}", id))?;
 
     if !is_quiet() {
         print_success(

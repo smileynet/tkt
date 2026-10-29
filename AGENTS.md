@@ -226,6 +226,11 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 
 ## Contract
 
+Claim, close, and status-changing edit synchronize existing `docs/plan.md` rows in
+the same commit. Commit or stash plan edits first. Missing rows remain warnings
+until `sync-plan --fix` appends them under Unplanned tickets. No plan means no new
+file; alternate plans use explicit sync-plan.
+
 - Files are the database: `.tickets/{NN}-{slug}.md` with YAML frontmatter
 - Tool never manages specification prose (body is user-owned; close appends a Resolution section)
 - Push-to-claim: pushed commit = claimed id (race detection on push rejection)

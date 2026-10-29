@@ -40,7 +40,7 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 | `tkt audit --brief` | Short summary |
 | `tkt sync-plan [PLAN]` | Report ticket-vs-plan drift (advisory, exit 0; default: docs/plan.md) |
 | `tkt sync-plan --check [PLAN]` | CI gate: exit 1 on drift |
-| `tkt sync-plan --fix [--dry-run] [PLAN]` | Update derivable columns in the plan (`--dry-run` previews) |
+| `tkt sync-plan --fix [--dry-run] [PLAN]` | Update status cells and append missing tickets under Unplanned tickets (`--dry-run` previews) |
 | `tkt lint` | Normalize frontmatter style (quoting, field order, blocked_by id padding + slug refs) |
 | `tkt lint --check` | CI mode: exit 1 if anything would change |
 | `tkt lint 03 07` | Lint specific tickets only |

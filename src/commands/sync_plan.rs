@@ -14,6 +14,37 @@ use crate::git;
 static RE_PLAN_ROW: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap());
 
+pub(crate) fn update_status(repo: &std::path::Path, id: &str, status: Status) -> Result<bool> {
+    let path = repo.join("docs/plan.md");
+    if !path.is_file() {
+        return Ok(false);
+    }
+    if !git::git(repo, &["status", "--porcelain", "--", "docs/plan.md"])?.is_empty() {
+        domain_bail!(Conflict, "docs/plan.md has uncommitted changes; commit or stash them before changing ticket status");
+    }
+    let text = std::fs::read_to_string(&path)?;
+    let updated = RE_PLAN_ROW.replace_all(&text, |caps: &regex::Captures| {
+        if caps[1].trim() != id {
+            return caps[0].to_string();
+        }
+        let cell = caps.get(2).unwrap();
+        let row = caps.get(0).unwrap();
+        let start = cell.start() - row.start();
+        let end = cell.end() - row.start();
+        let value = if status == Status::Done {
+            "✅ done"
+        } else {
+            status.as_str()
+        };
+        format!("{} {} {}", &caps[0][..start], value, &caps[0][end..])
+    });
+    if updated == text {
+        return Ok(false);
+    }
+    core::atomic_write(&path, &updated)?;
+    Ok(true)
+}
+
 pub fn run(
     check: bool,
     fix: bool,
@@ -96,6 +127,21 @@ pub fn run(
         .collect();
     for t in &corpus {
         if t.status != Status::Done && !plan_ids.contains(&*t.id) {
+            if fix && !dry_run {
+                if !plan_text.contains("## Unplanned tickets\n") {
+                    plan_text.push_str(
+                        "\n## Unplanned tickets\n\n| ID | Work | Status |\n|---:|---|---|\n",
+                    );
+                }
+                plan_text.push_str(&format!(
+                    "| {} | {} | {} |\n",
+                    t.id,
+                    t.title.replace('|', "&#124;").replace(['\n', '\r'], " "),
+                    t.status.as_str()
+                ));
+                fixed_count += 1;
+                continue;
+            }
             findings.push(Finding {
                 file: t.path.file_name().unwrap().to_string_lossy().to_string(),
                 rule: "missing-plan-row".into(),

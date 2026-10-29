@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Claiming, closing, and editing ticket status keep existing default plan rows current in the same commit. Plan repair also adds missing tickets.
+
 - **Breaking:** compiling tkt now requires Rust 1.85.0 or newer. Update Rust with
   `rustup update stable`, or use a pre-built binary.
 

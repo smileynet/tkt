@@ -39,6 +39,11 @@ combine them with the new IDs, and pass the complete set.
 
 ## Agent eligibility
 
+Claim, close, and status-changing edit synchronize existing `docs/plan.md` rows in
+the same commit. Commit or stash plan edits first. Missing rows remain warnings
+until `sync-plan --fix` appends them under Unplanned tickets. Without a plan file,
+mutations create none. Alternate plans require explicit `sync-plan [PLAN]`.
+
 Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; the flag wins and identity is never stored in config. `ready` and `claim` apply ticket agent eligibility. Missing identity sees unrestricted work only; `ready` reports hidden restricted work on stderr. Use `claim <id> --force` only as an explicit scheduling override.
 
 Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.

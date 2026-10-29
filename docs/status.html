@@ -115,6 +115,15 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-10-28-plan-status-sync",
+    "date": "2026-10-28",
+    "kind": "shipped",
+    "title": "Keep your plan current when ticket status changes",
+    "summary": "Existing plan rows now follow claims, closures, and status edits automatically. Plan repair can also collect missing tickets into an unplanned section.",
+    "details": "Ticket #223. Existing docs/plan.md rows land in the ticket mutation commit. Dirty plans reject status mutations; missing plans are left absent. sync-plan --fix adds missing rows; alternate plans remain explicit.",
+    "links": [{"label": "Implementation details", "href": "../.tickets/223-close-updates-plan-row.md"}]
+  },
+  {
     "id": "2026-10-28-knowledge-layout",
     "date": "2026-10-28",
     "kind": "shipped",

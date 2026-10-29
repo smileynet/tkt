@@ -214,6 +214,11 @@ tkt sync-plan --check    # CI gate: exit 1 on drift (plan default: docs/plan.md)
 
 ### Query
 
+Claim, close, and status edits update existing `docs/plan.md` rows in their own
+commit. Commit or stash plan changes first. Missing rows remain warnings until
+`tkt sync-plan --fix` appends them under Unplanned tickets. Without a plan, ticket
+mutations create none. Use explicit sync-plan for alternate plan paths.
+
 ```bash
 tkt query                        # all tickets as JSON Lines
 tkt query --status open          # filter by status
