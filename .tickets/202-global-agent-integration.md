@@ -51,7 +51,7 @@ claims, and the existing `skills/tkt` package.
 
 - Read `src/commands/init.rs` for current project-local targets and markers.
 - Read `tools/deploy-skills.sh` for current local symlink behavior.
-- Read `.memory/agent-guidance-surfaces.md`; a CLI behavior change still requires all
+- Read `docs/agents/agent-guidance-surfaces.md`; a CLI behavior change still requires all
   listed guidance surfaces to remain synchronized.
 - Verify each harness path against its current official documentation before adding it
   to the registry. A claimed but unverified target is worse than an explicit skip.

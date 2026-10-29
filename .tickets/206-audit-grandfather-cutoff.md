@@ -16,7 +16,7 @@ tags: ["config"]
 ## What to build
 
 Implement the audit-debt baseline decided in ADR 0003
-(`.memory/adr/0003-audit-debt-grandfather-cutoff.md`). `tkt audit --strict` currently
+(`docs/adr/0003-audit-debt-grandfather-cutoff.md`). `tkt audit --strict` currently
 reports 27 `missing-resolution` findings on this repo's own tickets 02–29 and 35 —
 done tickets closed before the Resolution-section convention existed, whose evidence
 cannot be honestly reconstructed. The policy is to grandfather that pre-protocol

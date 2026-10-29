@@ -28,7 +28,7 @@ mutation begins.
 ## Context
 
 - **Location (#128 F4):** `src/commands/renumber.rs:10-41`, `src/renumber.rs:92-150, 218-249` (confirm drift).
-- **Contract:** `.memory/CONTEXT.md` birth window — "cited ids are contracts."
+- **Contract:** `GLOSSARY.md` birth window — "cited ids are contracts."
 - **Architecture decision (2026-10-10):** use a concrete, materialized `RenumberPlan`, not a
   best-effort streaming rewrite. The plan owns target paths, rewritten content, citation
   violations, and the affected-file set before apply starts. A failed preflight leaves the

@@ -52,7 +52,7 @@ hard-block work (false positives create friction; see the project's own enforcem
   GitHub Issue Forms; GitLab) — this ticket is self-contained; no external file needed to implement it.
 - Companions in the crew-research repo (context only, not required to build this): ticket 148
   (the judgment-layer half) and ticket 149 (PLAN.md slim). Their shared design write-up lives at
-  crew-research `.memory/specs/ticket-plan-handoff-workstream.md` § Part 1 if that repo is available.
+  crew-research `docs/agents/specs/ticket-plan-handoff-workstream.md` § Part 1 if that repo is available.
 
 ## Acceptance criteria
 

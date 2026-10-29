@@ -40,5 +40,5 @@ Blocked by #174 (the detector must exist so "still detectable" AC is testable).
 - [ ] `tkt new --body @file` and `--body -` fill the body at creation
 - [ ] An unfilled body is still flagged by the `stub-body` finding (#174)
 - [ ] `batch` uses the same template
-- [ ] Guidance surfaces updated per .memory/agent-guidance-surfaces.md
+- [ ] Guidance surfaces updated per docs/agents/agent-guidance-surfaces.md
 - [ ] `mise run check` passes

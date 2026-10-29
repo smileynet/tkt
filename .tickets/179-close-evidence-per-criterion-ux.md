@@ -123,7 +123,7 @@ mechanics are relevant):
 
 Per the AGENTS.md constraint, changing agent-facing `--evidence` guidance means updating **all**
 guidance surfaces together (init snippets, steering, AGENTS.md, README) — see
-`.memory/agent-guidance-surfaces.md`.
+`docs/agents/agent-guidance-surfaces.md`.
 
 ### 4. Cross-reference #178 (AC-3)
 

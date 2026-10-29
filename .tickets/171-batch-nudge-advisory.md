@@ -33,7 +33,7 @@ A good nudge: (1) stderr only (never stdout — protects pipelines/JSON); (2) na
 2. On the 3rd, emit a stderr advisory naming the equivalent `tkt batch ...` command. Advisory only — never change exit code, never touch stdout, never auto-run.
 3. Add a `hints[]` array to the `-o json` envelope with `code`, `suggested_command`, `disable` keys (contract change — bump capabilities, update guidance surfaces).
 4. Opt-out ladder: `TKT_ADVICE=0` env kill-switch (for CI/subprocess), `-q` suppression.
-5. Add a `batch` JTBD row to SKILL.md and a `batch` row to `.memory/agent-guidance-surfaces.md` coverage matrix (currently missing).
+5. Add a `batch` JTBD row to SKILL.md and a `batch` row to `docs/agents/agent-guidance-surfaces.md` coverage matrix (currently missing).
 
 ## Acceptance criteria
 

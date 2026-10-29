@@ -96,7 +96,7 @@ Read `src/core/ticket.rs`, `src/config.rs`, `src/commands/ready.rs`,
 `src/commands/claim.rs`, and `.tickets/194-assignee-field-and-claim.md` first. Ticket #189
 made `requires` the canonical capability eligibility model; extend frontier evaluation
 with a separate agent axis rather than weakening its all-of semantics. Update every
-agent-facing surface listed in `.memory/agent-guidance-surfaces.md` when the CLI or
+agent-facing surface listed in `docs/agents/agent-guidance-surfaces.md` when the CLI or
 frontmatter contract changes.
 
 Source-backed data-model review on 2026-10-28 found:

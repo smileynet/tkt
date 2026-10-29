@@ -27,7 +27,7 @@ gated on that decision.
 
 ## Decision to make (criterion 1 — the ADR)
 
-Write `.memory/adr/0002-plan-narrative-support.md` (project ADR format: Status /
+Write `docs/adr/0002-plan-narrative-support.md` (project ADR format: Status /
 Date / Source, then Context / Decision / Consequences / Alternatives rejected)
 answering: **should `sync-plan` support a narrative/root PLAN.md, and if so, by
 which mechanism?** The research below frames three positions; pick one deliberately.
@@ -150,13 +150,13 @@ covered by criterion 3.
 
 ## Acceptance criteria
 
-- [x] ADR `.memory/adr/0002-*.md` records the decision on narrative/root PLAN.md
+- [x] ADR `docs/adr/0002-*.md` records the decision on narrative/root PLAN.md
       support (position A/B/C + rationale from prior art), per criterion 1
 - [x] If implemented: `sync-plan --check` passes against a prose/phased PLAN.md with
       sigil-anchored IDs, OR a clear error names the expected format/location
       (criterion 2)
 - [x] Default plan path + any new format/flag documented in `--help` and `AGENTS.md`
-      (criterion 3); all guidance surfaces in `.memory/agent-guidance-surfaces.md`
+      (criterion 3); all guidance surfaces in `docs/agents/agent-guidance-surfaces.md`
       updated, including the frontier-work.md `PLAN.md`-vs-`docs/plan.md` contradiction
 - [x] `docs/plan.md` table path still works (regression: `tests/integration.rs:312-430`)
 - [x] Done predicate returns a `PlanState` sum type (`Done | NotDone | Unknown`),
@@ -178,6 +178,6 @@ covered by criterion 3.
 Decision ticket: wrote ADR 0002 (A primary + C opt-in, B rejected) grounded in prior-art + parsing research. Narrative-parsing build (PlanFormat/PlanState/TicketId) and defect 1 (ASCII done-glyph) deferred to a follow-up implementation ticket. Landed in-scope: defect 2 (plan write → core::atomic_write) and defect 3 (frontier-work.md plan-path contradiction). Gates: cargo fmt/clippy/test all pass (79 tests), tkt validate pass.
 
 ### Verification
-1. ✓ A design decision is recorded (ADR or doc) on whether/how sync-plan supports a narrative or root-level PLAN.md in addition to the docs/plan.md table format — "ADR .memory/adr/0002-plan-narrative-support.md records the decision: position A (plan-as-projection) primary + C (narrative, sigil-anchored IDs) opt-in, B rejected; with prior-art rationale and data-modeling (PlanState/TicketId) commitments"
+1. ✓ A design decision is recorded (ADR or doc) on whether/how sync-plan supports a narrative or root-level PLAN.md in addition to the docs/plan.md table format — "ADR docs/adr/0002-plan-narrative-support.md records the decision: position A (plan-as-projection) primary + C (narrative, sigil-anchored IDs) opt-in, B rejected; with prior-art rationale and data-modeling (PlanState/TicketId) commitments"
 2. ✓ If implemented: sync-plan --check passes against a PLAN.md that references tickets in prose/phased lists (not a one-row-per-ticket table), OR the limitation is documented with a clear error pointing the user to the expected format/location — "Narrative parsing implementation deferred to a follow-up ticket per ADR 0002 (criterion is conditional 'if implemented'); the decision + parse strategy (AST + anchored-ID regex) and the limitation are documented in the ADR and #183 body"
 3. ✓ Default plan path and any new format/flag are documented in --help and AGENTS.md — "steering/frontier-work.md reconciled (heading 'The plan is authoritative' + names docs/plan.md and table format, cites ADR 0002), resolving the PLAN.md-vs-docs/plan.md contradiction; default path docs/plan.md already documented in AGENTS.md/README/commands.md. Folded-in defect 2 fixed: plan write now core::atomic_write (fmt/clippy/test all green, 79 tests pass)"

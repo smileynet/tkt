@@ -42,7 +42,7 @@ Dispatch subagents to research each system's data model, then produce `migrate.t
 
 ### Deliverables
 
-- `.memory/specs/import-schemas/` directory with one doc per system
+- `docs/agents/specs/import-schemas/` directory with one doc per system
 - `skills/tkt/references/` templates for agent-assisted import
 - Recommendations for which systems warrant built-in CLI adapters vs skill-assisted import
 
@@ -57,4 +57,4 @@ Dispatch subagents to research each system's data model, then produce `migrate.t
 - [ ] At least 3 systems researched with full schema analysis
 - [ ] migrate.toml templates produced and validated against sample data
 - [ ] Recommendations documented: which warrant built-in adapters vs skill-only
-- [ ] Research findings stored in .memory/specs/import-schemas/
+- [ ] Research findings stored in docs/agents/specs/import-schemas/

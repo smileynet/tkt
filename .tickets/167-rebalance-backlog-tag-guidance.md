@@ -6,7 +6,7 @@ blocked_by: []
 priority: medium
 validation_criteria:
   - "frontier-work.md 'Between Tickets' no longer hard-codes --status backlog for discovered work; status follows readiness (open default, backlog = deferred-out-of-cycle exception) with a positive+negative example pair"
-  - "every primary ticket-creation example across all 6 guidance surfaces (per .memory/agent-guidance-surfaces.md) includes --tags in the flag list or a tag-at-creation prompt"
+  - "every primary ticket-creation example across all 6 guidance surfaces (per docs/agents/agent-guidance-surfaces.md) includes --tags in the flag list or a tag-at-creation prompt"
   - "a standalone 'when to backlog vs open' decision rule exists in frontier-work steering (top-placed, not buried mid-doc), phrased as normal imperative prose (no CRITICAL/MUST all-caps)"
   - "all 6 agent-guidance surfaces updated consistently (grep confirms no surface leads with backlog in --status enums or omits tagging in the creation workflow); deploy-skills.sh run; init snippets version-bumped if changed"
 ---
@@ -68,7 +68,7 @@ doc (not buried), in plain imperative prose.
 
 ## Context
 
-- **Authoritative surface list (`.memory/agent-guidance-surfaces.md`) — 6 surfaces, must
+- **Authoritative surface list (`docs/agents/agent-guidance-surfaces.md`) — 6 surfaces, must
   move together:**
   1. `src/commands/init.rs` — init snippets baked into the binary (AGENTS/CLAUDE/COPILOT/
      CURSOR/KIRO/WINDSURF). If changed, **bump version**.
@@ -150,6 +150,6 @@ Rebalanced ticketing guidance across 7 surfaces (frontier-work.md, tkt SKILL.md,
 
 ### Verification
 1. ✓ frontier-work.md 'Between Tickets' no longer hard-codes --status backlog for discovered work; status follows readiness (open default, backlog = deferred-out-of-cycle exception) with a positive+negative example pair — "frontier-work.md 'Creating Tickets' now opens with a standalone 'Status follows readiness - default to open' rule plus a positive+negative example pair (grep confirmed lines 62-70); 'Between Tickets' rewritten to default revealed work to open (no --status backlog hard-code; grep of the old pattern returns only #167's own body)"
-2. ✓ every primary ticket-creation example across all 6 guidance surfaces (per .memory/agent-guidance-surfaces.md) includes --tags in the flag list or a tag-at-creation prompt — "grep --tags across surfaces returns 7 files: init.rs (3 snippet variants + Tag-new-tickets lines), frontier-work.md (primary command + Tag-at-creation para), AGENTS.md, commands.md canonical example, ticket-format.md Tag-at-creation principle, tkt SKILL.md creation-quality; plan-ticket-sync Step 4 MUST-have + example added"
+2. ✓ every primary ticket-creation example across all 6 guidance surfaces (per docs/agents/agent-guidance-surfaces.md) includes --tags in the flag list or a tag-at-creation prompt — "grep --tags across surfaces returns 7 files: init.rs (3 snippet variants + Tag-new-tickets lines), frontier-work.md (primary command + Tag-at-creation para), AGENTS.md, commands.md canonical example, ticket-format.md Tag-at-creation principle, tkt SKILL.md creation-quality; plan-ticket-sync Step 4 MUST-have + example added"
 3. ✓ a standalone 'when to backlog vs open' decision rule exists in frontier-work steering (top-placed, not buried mid-doc), phrased as normal imperative prose (no CRITICAL/MUST all-caps) — "a 'when NOT to backlog' counterweight added to tkt SKILL.md Backlog workflow and frontier-work.md 'Status follows readiness'; commands.md --status enums (create+edit) reordered to lead with open; ticket-format.md 'Enters when' now 'Deliberately deferred out of the current cycle'"
 4. ✓ all 6 agent-guidance surfaces updated consistently (grep confirms no surface leads with backlog in --status enums or omits tagging in the creation workflow); deploy-skills.sh run; init snippets version-bumped if changed — "cargo fmt clean; cargo clippy --all-targets 0 warnings; cargo test 142+62=204 passed 0 failed; bash tools/deploy-skills.sh deployed 4 targets (codex/claude/kiro skills + frontier-work steering); Cargo.toml bumped 0.3.0 to 0.3.1; tkt --version = 0.3.1 (ba1700c); grep confirms no guidance surface leads with backlog in status enums or teaches discovered-work to backlog"

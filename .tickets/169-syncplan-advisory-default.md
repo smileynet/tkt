@@ -36,7 +36,7 @@ Binary drift detection rots into ignored noise; actionable tools grade drift int
 2. Repurpose the dead `--check` flag as the CI gate: `--check` reports drift AND fails on it (exit 1). Keep `--strict` as the escalation knob (warnings→errors).
 3. Reserve error/exit=1 for non-derivable conflicts (e.g. a plan row citing an id no ticket has), not cosmetic ✅ mismatches.
 4. Add `--fix --dry-run` parity with `validate` — preview without writing `docs/plan.md`.
-5. Fix the doc path contradiction: code uses `docs/plan.md`; README + frontier-work steering say `PLAN.md`. Reconcile (docs are wrong) across guidance surfaces per `.memory/agent-guidance-surfaces.md`.
+5. Fix the doc path contradiction: code uses `docs/plan.md`; README + frontier-work steering say `PLAN.md`. Reconcile (docs are wrong) across guidance surfaces per `docs/agents/agent-guidance-surfaces.md`.
 6. Document sync-plan's advisory status + `--check`/`--strict` behavior (currently undocumented on every surface).
 
 ## Acceptance criteria

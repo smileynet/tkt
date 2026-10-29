@@ -63,7 +63,7 @@ Spike is effectively answered (see conclusions above). Remaining deliverable: re
 
 ## Context
 
-- **Relevant files:** `src/commands/init.rs` (write-nudge install), `src/git.rs` (add `--git-common-dir` helper), `src/config.rs` (new `[hooks]` section), `src/telemetry.rs` (reuse local-file sink pattern for opt-in logging), `.memory/agent-guidance-surfaces.md`
+- **Relevant files:** `src/commands/init.rs` (write-nudge install), `src/git.rs` (add `--git-common-dir` helper), `src/config.rs` (new `[hooks]` section), `src/telemetry.rs` (reuse local-file sink pattern for opt-in logging), `docs/agents/agent-guidance-surfaces.md`
 - **Depends conceptually on #154** — hooks are the prevention layer; #154 is the detection layer (shipped). Do #154 first (done); this decides the prevention shape.
 - **Constraint:** files are the database and hand-editing is explicitly supported — warn-default preserves legit body edits; hard block is opt-in only.
 

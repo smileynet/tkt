@@ -29,7 +29,7 @@ skills/                — cross-harness skills (deployed as copy to ~/.{kiro,co
   tkt-work/            — execution loop: claim, verify premises, do work, close with evidence
   tkt-reconcile/       — session-end: make tickets current, re-sequence the plan
 plugin.json          — Antigravity (agy) / Agent Plugins manifest (packaged with skills/ by tools/deploy-skills.sh)
-.memory/CONTEXT.md   — project glossary
+GLOSSARY.md   — project glossary
 .tickets/            — tkt's own tickets (dogfooding)
 .references/         — cloned reference repos (gitignored): clispec, axocli, octo-cli
 TELEMETRY.md         — transparency document for telemetry collection

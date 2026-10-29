@@ -2,7 +2,7 @@
 //!
 //! The snippets below are baked into the binary and deployed to users' projects.
 //! When updating them, also update the other agent guidance surfaces:
-//! see `.memory/agent-guidance-surfaces.md` for the full sync checklist.
+//! see `docs/agents/agent-guidance-surfaces.md` for the full sync checklist.
 
 use anyhow::Result;
 

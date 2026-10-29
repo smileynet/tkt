@@ -16,7 +16,7 @@ validation_criteria:
 
 - Reporter: ox-alpha (architecture review session, 2026-08-23)
 - Review target: working tree at v0.3.0-era HEAD; all gates green at review time (fmt clean, clippy 0 warnings, 169/169 tests)
-- Review scope: src/** + tests/integration.rs vs contracts in AGENTS.md, README.md, .memory/CONTEXT.md, `tkt capabilities` manifest
+- Review scope: src/** + tests/integration.rs vs contracts in AGENTS.md, README.md, GLOSSARY.md, `tkt capabilities` manifest
 - Method: two parallel deep reviews (CLI surface; core/frontmatter domain) plus manual verification of git/transaction layer. Findings below marked *(verified)* were reproduced against source by the reviewer; the rest are reviewer hypotheses.
 
 These are reviewer hypotheses, not established defects. Confirm each finding
@@ -24,7 +24,7 @@ against current code before changing it. Line numbers may have drifted.
 
 ## Context for a fresh agent
 
-- Contracts to check findings against: AGENTS.md (CLI surface), .memory/CONTEXT.md
+- Contracts to check findings against: AGENTS.md (CLI surface), GLOSSARY.md
   (frontmatter contract, birth window, ErrorKind taxonomy), capabilities manifest
   (`src/commands/capabilities.rs`).
 - Parser under scrutiny: the custom line-based frontmatter parser in
@@ -32,7 +32,7 @@ against current code before changing it. Line numbers may have drifted.
 - Hand-edited files MUST be tolerated: "Edit them by hand anytime" is a README promise,
   so malformed-but-reasonable files must degrade gracefully, never corrupt or vanish silently.
 - What NOT to touch: do not change the frontmatter contract or CLI flags without updating
-  guidance surfaces (.memory/agent-guidance-surfaces.md checklist).
+  guidance surfaces (docs/agents/agent-guidance-surfaces.md checklist).
 
 ## P0 — data-loss / silent-wrong-answer risks
 

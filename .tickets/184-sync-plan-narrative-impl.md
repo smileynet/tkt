@@ -8,7 +8,7 @@ validation_criteria:
   - "sync-plan --check passes against a prose/phased PLAN.md with sigil-anchored IDs (- [ ] #NN ...), via AST + anchored-ID extraction; table docs/plan.md path still works (tests/integration.rs:312-430 green)"
   - "Done predicate returns a PlanState sum type (Done|NotDone|Unknown); TKT_ASCII=1 plan reads done correctly and an unparseable cell surfaces as Unknown not silent not-done (defect 1, with regression test)"
   - "Dep-budget sub-decision recorded (CommonMark crate vs hand-rolled heading+list-item scanner), lean scanner benchmarked first per ADR 0002"
-  - "New format/flag + default path documented in --help and all guidance surfaces per .memory/agent-guidance-surfaces.md"
+  - "New format/flag + default path documented in --help and all guidance surfaces per docs/agents/agent-guidance-surfaces.md"
 ---
 
 # Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002
@@ -16,7 +16,7 @@ validation_criteria:
 ## What to build
 
 The narrative-parsing implementation deferred from #183. ADR 0002 is the governing
-decision — read it first (`.memory/adr/0002-plan-narrative-support.md`). This ticket
+decision — read it first (`docs/adr/0002-plan-narrative-support.md`). This ticket
 builds **position C** (narrative plan with sigil-anchored IDs) as the opt-in format
 alongside the existing `docs/plan.md` table, and carries the structural fix for
 defect 1 (the `✅`-glyph / `TKT_ASCII=1` latent bug) via the `PlanState` sum type.
@@ -70,12 +70,12 @@ format-agnostic once fed typed pairs. Introduce:
 - [ ] `sync-plan --check` passes against a prose/phased PLAN.md with sigil-anchored IDs
 - [ ] Defect 1 fixed: `TKT_ASCII=1` plan reads done correctly; unparseable cell → `Unknown`; regression test added
 - [ ] Dep-budget sub-decision recorded (lean scanner benchmarked first)
-- [ ] `--help` + all guidance surfaces updated per `.memory/agent-guidance-surfaces.md`
+- [ ] `--help` + all guidance surfaces updated per `docs/agents/agent-guidance-surfaces.md`
 - [ ] `--fix` behavior for narrative decided (scoped-down or disabled) and documented
 
 ## References
 
-- Governing decision: `.memory/adr/0002-plan-narrative-support.md`
+- Governing decision: `docs/adr/0002-plan-narrative-support.md`
 - Research: `.scratch/research/prior-art.md`, `.scratch/research/best-practices.md`
 - Internal review: `.scratch/internal/syncplan-code.md`, `.scratch/internal/docs-config.md`
 - Code: `src/commands/sync_plan.rs`; `core::atomic_write` (already used by the fixer since #183)

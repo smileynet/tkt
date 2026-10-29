@@ -35,7 +35,7 @@ all_findings.extend(crate::audit::check_resolution_quality(&corpus));
 `run_fix` operates only on frontmatter and never touches body/resolution — it CANNOT fabricate a resolution (verified). Add a Tier-3 advisory in `run_fix`'s per-file loop: `status==done && no "## Resolution"` → `Advisory { message: "done ticket has no resolution", suggestion: "record how it was resolved: tkt close <id> --force --resolution \"...\"" }`. Slots into the existing "Needs manual review" output, exit 1. Message uses "no resolution recorded" framing — NEVER "not verified" (the tracker checks presence, not truth).
 
 **Fix 2 — Guidance across the full surface checklist:**
-Rule: "Never set `status: done` by editing the file — always `tkt close <id>`. Hand-flipping skips AC/resolution/evidence gates and the push protocol." Per `.memory/agent-guidance-surfaces.md`, update ALL surfaces:
+Rule: "Never set `status: done` by editing the file — always `tkt close <id>`. Hand-flipping skips AC/resolution/evidence gates and the push protocol." Per `docs/agents/agent-guidance-surfaces.md`, update ALL surfaces:
 1. `src/commands/init.rs` — 6 agent snippets (forces a VERSION BUMP)
 2. `skills/tkt/SKILL.md` — after "Closure is a verification event, not a status flip"
 3. `skills/tkt/references/commands.md` — add caveat to Edit-flags `--status` row (resolves the documented loophole: it currently lists `done` as valid with no warning)

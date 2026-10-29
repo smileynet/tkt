@@ -21,7 +21,7 @@ plainly (the direct cause of the "criterion N does not exist" confusion).
 
 ## What to build
 
-Propagate across all guidance surfaces per `.memory/agent-guidance-surfaces.md`
+Propagate across all guidance surfaces per `docs/agents/agent-guidance-surfaces.md`
 (init.rs snippets, SKILL.md, commands.md, ticket-format.md, ticket-standards.md,
 frontier-work.md, AGENTS.md, README):
 

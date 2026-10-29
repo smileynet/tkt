@@ -1,6 +1,6 @@
 ---
 id: "221"
-title: "Shipped tkt-core guidance prescribes .memory/adr and .memory/specs, contradicting grey-matter's no-.memory convention"
+title: "Shipped tkt-core guidance prescribes docs/adr and docs/agents/specs, contradicting grey-matter's no-.memory convention"
 status: done
 blocked_by: []
 validation_criteria:
@@ -9,7 +9,7 @@ validation_criteria:
 tags: ["agent-integration"]
 ---
 
-# Shipped tkt-core guidance prescribes .memory/adr and .memory/specs, contradicting grey-matter's no-.memory convention
+# Shipped tkt-core guidance prescribes docs/adr and docs/agents/specs, contradicting grey-matter's no-.memory convention
 
 > **Filed by grey-matter adoption review (2026-10-26). Confirmation status: unconfirmed.**
 > Reproduce each point and mark it confirmed / rejected / re-scoped before changing anything.
@@ -19,16 +19,16 @@ tags: ["agent-integration"]
 ## Observed (c242a04)
 
 1. `skills/tkt-core/references/ticket-standards.md:27` gives the ADR reference example
-   "Decision in .memory/adr/NNNN-title.md".
-2. Line 42 lists `.memory/specs/` first among durable citation paths.
+   "Decision in docs/adr/NNNN-title.md".
+2. Line 42 lists `docs/agents/specs/` first among durable citation paths.
 3. grey-matter (tkt's declared skill format since 2c724a5) says never create `.memory/`;
    adopted repos keep ADRs in `docs/adr/` and specs in `docs/agents/specs/`.
 4. This is shipped guidance: every tkt-only adopter reads it, so a change is user-facing.
 
 ## Verification (2026-10-28)
 
-1. Confirmed: the shipped reference contained the exact `.memory/adr/` example.
-2. Confirmed: its durable-reference rule named `.memory/specs/` twice.
+1. Confirmed: the shipped reference contained the exact `docs/adr/` example.
+2. Confirmed: its durable-reference rule named `docs/agents/specs/` twice.
 3. Re-scoped: installed init-project guidance names GLOSSARY.md and docs/adr/;
    this repository still legitimately uses its existing .memory layout pending #222.
    Standalone guidance should follow each adopter's established directories.

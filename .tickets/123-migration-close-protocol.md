@@ -30,7 +30,7 @@ When work is moved to another repo (e.g., godot-helper #175 migrated to lacrosse
 
 - **Evidence of the problem:** godot-helper #175 — all 5 ACs marked done with "Ticket created with identical scope in correct repo" as evidence. The work wasn't done; it was moved.
 - **Relevant files:** `skills/tkt/SKILL.md`, `skills/tkt/references/audit-quality.md`, `src/commands/init.rs` (snippets)
-- **Guidance surface sync:** see `.memory/agent-guidance-surfaces.md`
+- **Guidance surface sync:** see `docs/agents/agent-guidance-surfaces.md`
 
 ## Acceptance criteria
 
