@@ -55,7 +55,12 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
    made impossible, "new dependency" that was already present, "the API returns
    Err" that actually panics, a version target that was never released.)
 6. Do the work described in "What to build"
-7. Verify all acceptance criteria pass
+7. Verify all acceptance criteria pass. For UI work, inspect the actual rendered
+   experience at its supported viewport sizes before closure, including laptop and
+   phone views when supported. If the project requires independent review, bind its
+   acceptance to the final source and capture identities the reviewer inspected.
+   A rendering-input change requires affected checks, new captures and renewed
+   acceptance; only explicitly declared closure-metadata projections may vary.
 8. Mark done + update plan (see below)
 
 ## Marking Done
@@ -68,6 +73,9 @@ commit. Missing rows need `tkt sync-plan --fix`; alternate plans need explicit s
 When a ticket's acceptance criteria are all met:
 
 1. Verify each AC independently — run the check, confirm pass. Don't check boxes you haven't verified.
+   Where review is required, verify its recorded source/capture identities still
+   match the implementation being closed. Record the accepted identity and review
+   result in the evidence; a prior pass covers its prior source, not later edits.
 2. Close with evidence: `tkt close <id> --check-all --evidence "..." --resolution "what was done"`. All projects enforce:
    - Acceptance criteria must be checked (`require_checked_acs`)
    - Validation criteria must exist (`require_validation_criteria`)
