@@ -13,8 +13,12 @@ tags: ["guidance"]
 
 ## What to build
 
-TBD
+Intent: user-approved recommendations from Learning Library ticket 13 retrospective (31 October 2026). Its static reader had passing artifact checks, permitted HTTP preview observations, blocked tool file-navigation and a separate human direct-file report. None establishes learning effectiveness.
+
+Read skills/tkt-work/SKILL.md, docs/agents/agent-guidance-surfaces.md and existing evidence-gate guidance. Clarify closure evidence as check command plus observed result and classification; distinguish artifact correctness, tool-observed behavior, human-reported functionality and user outcomes. Unavailable checks stay unavailable. Keep this portable: no dependency on grey-matter dashboard or other non-tkt skills. Project-specific dashboard post-close refresh remains a project responsibility.
 
 ## Acceptance criteria
 
-- [ ] TBD
+- [ ] tkt-work explains command/result evidence and explicit failure, skip and infrastructure limitation classifications.
+- [ ] Examples keep human-reported functionality separate from observed execution and user outcomes.
+- [ ] Applicable guidance fixtures/checks pass; no non-tkt skill dependency is introduced.
