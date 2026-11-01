@@ -43,3 +43,7 @@ TBD
 ## Acceptance criteria
 
 - [ ] TBD
+
+## Field report — 2026-11-01
+
+Agents can't use an editor. Proposed non-interactive form: `tkt note <id> --append "text"` (or `--file`) adds a dated `## Note — YYYY-MM-DD` section and commits it. In one philippines-trip session, ticket bodies were hand-edited about 15 times for decisions and status notes.

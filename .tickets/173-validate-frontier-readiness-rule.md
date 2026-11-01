@@ -62,3 +62,7 @@ hard-block work (false positives create friction; see the project's own enforcem
 - [ ] warn-by-default, error under `--strict`; emitted in the JSON finding schema with a named rule
 - [ ] non-frontier tickets (backlog, blocked, done) are NOT flagged by this rule
 - [ ] tests cover: ready ticket passes; each missing-field case is flagged; --strict promotes to error
+
+## Field report — 2026-11-01
+
+Related finding: `validate` doesn't flag an open ticket that can never start because a prerequisite is in backlog (philippines-trip #44 waited on backlog #38 and #43). Proposed advisory: "stuck" — open ticket with a transitive backlog prerequisite.

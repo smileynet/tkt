@@ -47,3 +47,7 @@ Blocked by #174 (the detector must exist so "still detectable" AC is testable).
 
 `tkt new --template` (#87) is merged into this ticket: a clearer default body and named
 templates are one feature. #87 waits on #182 to close.
+
+## Field report — 2026-11-01
+
+Confirmed in philippines-trip: every `tkt new` left a "TBD" body that then needed a hand edit. A `--body`/`--body-file` flag would remove that step.
