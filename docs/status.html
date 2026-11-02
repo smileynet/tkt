@@ -115,6 +115,38 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-11-02-deployer-repair",
+    "date": "2026-11-02",
+    "kind": "shipped",
+    "fidelity": "live",
+    "title": "Stale deployments point to a guarded repair",
+    "summary": "Deployment drift now names a repair command that checks ownership and checkout state before replacing the shared engine.",
+    "visual": {
+      "type": "steps",
+      "items": [
+        {
+          "label": "Notice the stale copy",
+          "state": "done"
+        },
+        {
+          "label": "Verify ownership and checkout state",
+          "state": "done"
+        },
+        {
+          "label": "Apply the guarded repair",
+          "state": "done"
+        }
+      ]
+    },
+    "details": "Canonical grey-matter repair ran successfully against this registered checkout and its read-only check then passed. Applicable Node tooling fixtures: 38 passed, one Windows platform skip. This is a vendored-tool refresh, not a CLI release. The existing dashboard migration remains ticket228; its missing gm-tickets block is a baseline strict-check warning, not introduced here. Only delivery data changed; actual rendered review is not claimed.",
+    "links": [
+      {
+        "label": "Canonical repair work and evidence",
+        "href": "https://github.com/smileynet/grey-matter/blob/main/.tickets/120-sync-vendored-tool-drift.md"
+      }
+    ]
+  },
+  {
     "id": "2026-10-29-wrap-guardrail",
     "date": "2026-10-29",
     "kind": "shipped",

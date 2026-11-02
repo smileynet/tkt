@@ -730,7 +730,12 @@ function inspectPortfolio(pack, args) {
     for (const skill of item.skills) names.set(skill.name, [...(names.get(skill.name) ?? []), { pack: item.name, inventoryOnly: entry.inventoryOnly ?? false }]);
     if (entry.engine) {
       const engine = join(dir, entry.engine);
-      if (!isFile(engine) || !readFileSync(engine).equals(readFileSync(fileURLToPath(import.meta.url)))) findings.push(`portfolio ${entry.name}: vendored deployer drift at ${engine}`);
+      if (!isFile(engine) || !readFileSync(engine).equals(readFileSync(fileURLToPath(import.meta.url)))) {
+        const repair = entry.engine.replace(/\\/g, "/") === "tools/deploy.mjs"
+          ? `; repair with: node scripts/sync-release-tools.mjs --target "${dir}" --deployer --write`
+          : "";
+        findings.push(`portfolio ${entry.name}: vendored deployer drift at ${engine}${repair}`);
+      }
     }
   }
   for (const [name, owners] of names) if (owners.length > 1) {
