@@ -772,9 +772,21 @@ function parseArgs(argv) {
   return args;
 }
 
+function warnHookSetup(pack) {
+  if (pack.name !== "grey-matter" || !isFile(join(pack.dir, ".githooks/pre-push"))) return;
+  const git = (...args) => spawnSync("git", ["-C", pack.dir, ...args], { encoding: "utf8", windowsHide: true });
+  const root = git("rev-parse", "--show-toplevel");
+  if (root.status !== 0 || real(root.stdout.trim()) !== real(pack.dir)) return;
+  const hooks = git("config", "--path", "--get", "core.hooksPath");
+  if (hooks.status !== 0 && hooks.status !== 1) return;
+  if (hooks.status === 0 && real(resolve(pack.dir, hooks.stdout.trim())) === real(join(pack.dir, ".githooks"))) return;
+  console.warn("warning: grey-matter's tracked pre-push hook is not selected; opt in with: git config core.hooksPath .githooks");
+}
+
 if (process.argv[1] && real(fileURLToPath(import.meta.url)) === real(process.argv[1])) {
   const args = parseArgs(process.argv);
   const pack = loadPack(args.pack);
+  if (!args.roots.length && ["install", "list"].includes(args.cmd)) warnHookSetup(pack);
   if (args.cmd === "list") doList(pack, args);
   else if (args.cmd === "uninstall") doUninstall(pack, args);
   else if (args.cmd === "check") doCheck(pack, args);
