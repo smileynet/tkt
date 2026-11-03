@@ -1,7 +1,7 @@
 ---
 id: "197"
 title: "Show computed parent progress with explicit closure"
-status: in_progress
+status: done
 blocked_by: ["192", "196"]
 priority: high
 validation_criteria:
@@ -26,9 +26,9 @@ Parent progress remains computed and separate from stored lifecycle status. A pa
 
 ## Acceptance criteria
 
-- [ ] Child progress is reported without changing the stored parent status or bypassing close policy
-- [ ] Parent containers are excluded from the frontier and child views report done/total plus distinct cancelled counts
-- [ ] Integration tests cover mixed child states, explicit parent closure and unchanged priority/ID ordering
+- [x] Child progress is reported without changing the stored parent status or bypassing close policy
+- [x] Parent containers are excluded from the frontier and child views report done/total plus distinct cancelled counts
+- [x] Integration tests cover mixed child states, explicit parent closure and unchanged priority/ID ordering
 
 ## Triage — 2026-11-02
 
@@ -42,3 +42,12 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 Resolved by the owner's 2026-11-03 chat submission: **Show computed progress; close parents explicitly**.
 See [the decision record](../docs/decision-record-2026-11-03.md). Implementation remains open; the owner-policy gate is cleared.
+
+## Resolution (2026-11-03)
+
+Added direct-child progress with distinct cancellation counts and container frontier exclusion. Explicit parent close policy preserved. Independent critic accepted final code/test hashes; evidence promoted to docs/evidence/parent-progress-197.md. Disposable helper/logs released to trash; shared target cache retained for ongoing CLI tickets.
+
+### Verification
+1. ✓ Child progress is reported without changing the stored parent status or bypassing close policy — "Integration parent_cli: mixed child states and no implicit status changes; docs/evidence/parent-progress-197.md"
+2. ✓ Parent containers are excluded from the frontier and child views report done/total plus distinct cancelled counts — "Full-corpus children view and central frontier exclusion verified by integration tests; independent critic accepted"
+3. ✓ Integration tests cover mixed child states, explicit parent closure and unchanged priority/ID ordering — "Final mise run check passed fmt, clippy and all Rust suites; priority plus ID tie-break and explicit close tested"

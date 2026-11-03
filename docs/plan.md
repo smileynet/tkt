@@ -92,7 +92,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 | 194 | assignee field + claim-by-assignment + frontier honors it | ✅ done |
 | 195 | parent validation: dangling + cycle checks | ✅ done |
 | 196 | parent CLI + query/capabilities surface | ✅ done |
-| 197 | Show computed parent progress with explicit closure | in_progress |
+| 197 | Show computed parent progress with explicit closure | ✅ done |
 | 198 | label-namespace validation: single-select + closed-set | ✅ done |
 | 199 | docs, capabilities, CHANGELOG for parent/assignee/labels | open |
 | 200 | tkt ready --parent <id>: frontier scoped to one epic/map | open |
