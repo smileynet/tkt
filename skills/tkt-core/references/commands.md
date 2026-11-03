@@ -204,6 +204,12 @@ plan/query/capabilities retain the distinct status.
 
 ## Enforcement config (.tickets/config.toml)
 
+Consumers may optionally run `tkt validate --strict --brief` and `tkt lint --check`
+in CI, after a pinned installation and checkout. Add `tkt sync-plan --check --strict
+--brief` only when maintaining a plan. These commands report mechanical failures;
+host settings/permissions determine whether their results are required or bypassed.
+They install no workflow/hook and do not prove evidence truth or implementation intent.
+
 Ticket commits skip commit hooks by default using an invocation-local empty hook
 directory; `[commit] hooks = "run"` opts back in. Only ticket/plan pathspecs enter
 those commits; unrelated staged files stay staged. Push hooks still run. Global

@@ -261,6 +261,10 @@ tkt sync-plan            # report ticket-vs-plan drift (advisory, exit 0)
 tkt sync-plan --check    # CI gate: exit 1 on drift (plan default: docs/plan.md)
 ```
 
+Consumers can opt into [ticket-policy checks in their own CI](docs/agents/enforcement-model.md).
+The recipe is optional; enforcement depends on host settings and permissions.
+It installs no workflow or hook and does not replace project-specific tests.
+
 ### Query
 
 Claim, close, and status edits update existing `docs/plan.md` rows in their own

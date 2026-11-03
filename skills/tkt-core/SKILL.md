@@ -261,6 +261,12 @@ inherit active context tags or change that context.
 - [wide-refactors.md](references/wide-refactors.md) — expand-contract sequencing
 - [migration-assist.md](references/migration-assist.md) — converting foreign ticket schemas
 
+## Optional consumer enforcement
+
+Optional consumer CI can run strict validation and check-only lint after a pinned
+installation. Host settings and permissions determine whether results are required;
+see [enforcement configuration](references/commands.md#enforcement-config-ticketsconfigtoml).
+
 ## Parent progress
 
 Parents with any direct children are containers, excluded from ready. Use `tkt children ID` for full-corpus direct-child progress (done/total includes cancelled in total, with cancelled separate); `-o json` emits one object and `-q` lists child IDs. Progress never changes stored status: close parents explicitly with normal AC/evidence gates.

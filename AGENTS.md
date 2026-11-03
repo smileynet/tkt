@@ -50,6 +50,10 @@ GitHub Actions runs this same gate automatically for every push and pull request
 That automated check complements, but does not replace, the required local check before
 each commit.
 
+When documenting consumer CI, hooks or enforcement limits, read
+[the enforcement model](docs/agents/enforcement-model.md). Consumer checks are
+opt-in; they do not authorize hosted runs or publication in this repository.
+
 ### Session workflow (commit + push + deploy cadence)
 
 - **Always commit after completing a task** — each logical unit of work ends in a commit
