@@ -1,7 +1,7 @@
 ---
 id: "186"
 title: "Reconcile or retire the historical Python parity harness"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Useful contract cases are preserved in maintained Rust tests where needed and actual current coverage is named"
   - "References and verification docs no longer imply that the dormant Python comparison is a passing gate"
 tags: ["quality", "tests", "kind:bug", "stream:quality", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Reconcile or retire the historical Python parity harness
