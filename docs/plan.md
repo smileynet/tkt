@@ -132,7 +132,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 173 | validate: frontier-scoped readiness rule (Definition of Ready gate) | open |
 | 175 | validate: advisory no-source-reference finding (union of spec/#NN/parent/link) | open |
 | 184 | Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002 | backlog |
-| 186 | Reconcile or retire the historical Python parity harness | backlog |
+| 186 | Reconcile or retire the historical Python parity harness | open |
 | 187 | Generate a derived sync-plan projection from the ticket corpus | backlog |
 | 191 | Centralize command mutation effects and dry-run policy | backlog |
 | 202 | Design versioned embedded skills for binary-only installs | backlog |
