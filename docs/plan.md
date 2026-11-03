@@ -27,7 +27,7 @@ Project configuration, ownership, creation bodies/templates, hooks/deferred push
 
 | ID | Work | Status |
 |---:|---|---|
-| 242 | Audit completed templates by actual section content | in_progress |
+| 242 | Audit completed templates by actual section content | ✅ done |
 | 138 | Update capabilities manifest with all commands | ✅ done |
 | 127 | Improve agent discoverability: help nudge to capabilities, init recommends agent setup | ✅ done |
 | 153 | Guard against stale-binary validation (prefer integration tests, add freshness check) | ✅ done |

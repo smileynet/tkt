@@ -1,7 +1,7 @@
 ---
 id: "242"
 title: "Audit completed templates by actual section content"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -22,10 +22,10 @@ Make the done-ticket template rule inspect actual template section content rathe
 
 ## Acceptance criteria
 
-- [ ] A public audit regression reproduces quoted-example false warnings before the fix and removes them after it.
-- [ ] Real unfinished intent or acceptance sections remain flagged, including the current default prompts; migration/supersession exclusions and status scope remain intact.
-- [ ] Open-ticket stub detection remains consistent, with tests for quoted/fenced examples and actual sections.
-- [ ] Independent critic accepts final source; full local gate passes and final deep audit findings are classified honestly.
+- [x] A public audit regression reproduces quoted-example false warnings before the fix and removes them after it.
+- [x] Real unfinished intent or acceptance sections remain flagged, including the current default prompts; migration/supersession exclusions and status scope remain intact.
+- [x] Open-ticket stub detection remains consistent, with tests for quoted/fenced examples and actual sections.
+- [x] Independent critic accepts final source; full local gate passes and final deep audit findings are classified honestly.
 
 ## Current evidence
 
@@ -36,3 +36,11 @@ may keep its existing sole-placeholder policy; share Markdown-aware section
 parsing without silently broadening readiness policy.
 
 Final deep audit after six CLI closures reports 15 findings: 14 warnings and one high-priority-open info. The 176 template warning is a confirmed false positive: its actual acceptance criteria are checked and its body includes a quoted example of an old unchecked placeholder. Five historical missing-evidence warnings remain unknown, not waived. See docs/evidence/frontier-maintenance-2026-11-03.md for the preceding verified queue.
+
+## Resolution (2026-11-03)
+
+Completed-template audit reads actual sections and ignores quoted examples, using a shared bounded section parser and explicit lifecycle policies. Public boundary regressions, independent review, full gate and installed corpus checks passed. Historical prose and missing proof remain intact; evidence promoted and temporary delivery artifacts expire after snapshot publication.
+
+### Verification
+1. ✓ Quoted examples are ignored while actual unfinished templates and historical evidence warnings remain visible — "Public CLI regression red before, green after; shared section reader covers quoted/fenced, real empty/current/legacy, checked/mixed and repeated sections while preserving lifecycle policies. Installed audit removes four false positives and retains historical evidence warnings. See docs/evidence/audit-template-242.md."
+2. ✓ Independent critic and full local gate pass; final corpus findings have evidence-backed dispositions — "Independent critic accepted frozen source; full gate passed385Rust/42Node with one existing Windows skip, fmt and Clippy clean. Installed source5f4d3f4 strict corpus and plan checks passed; advisory audit retains11 classified findings. Durable source receipt promoted, shared cache retained for maintenance and delivery helpers expire at final dashboard update."
