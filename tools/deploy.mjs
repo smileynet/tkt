@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.7.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.8.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -9,18 +9,19 @@
 // dependency-free and finds its pack as the parent of its own directory (or --pack DIR).
 //
 // Usage:
-//   node deploy.mjs [install] [--dry-run] [--force] [--link] [--allow-dual] [--no-agy]
+//   node deploy.mjs [install] [--dry-run] [--force] [--link] [--allow-dual] [--no-agy] [--no-kirocrew]
 //                   [--project] [--root DIR]... [--pack DIR] [--portfolio FILE]
 //   node deploy.mjs list | uninstall [--dry-run] [--root DIR]...
 //   node deploy.mjs check [--profile directory] # strict manifests/content; optional catalog checks
 //   node deploy.mjs audit [--strict] [--json] [--portfolio FILE] # unowned dirs, shared names, skills a harness sees twice
 //   node deploy.mjs agy [build|install] [--out DIR]
+//   node deploy.mjs kirocrew [build|install] [--out DIR]
 //
 // Install with no --root picks roots from the harness table: of the harnesses present here
 // (their home dir exists), each one sees each skill exactly once, counting a plugin of this
 // pack as its copy, and roots a harness is only *claimed* to read never count as its copy.
 // Copies this pack left in roots it no longer needs are removed (manifest-tracked only). It
-// also packages the agy plugin when ~/.gemini exists. With --root, it installs exactly
+// also packages the agy plugin when ~/.gemini exists, and the Kiro Crew app when ~/.kiro/crew does. With --root, it installs exactly
 // there, except a root read by a harness that has this pack's plugin (--allow-dual overrides).
 //
 // Safety: only manifest-tracked dirs are ever removed or overwritten; a foreign dir with the
@@ -36,7 +37,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.7.0";
+const DEPLOY_VERSION = "1.8.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -376,6 +377,7 @@ function doInstall(pack, args) {
     const chosenReal = chosen.map(real);
     for (const root of known) if (!chosenReal.includes(real(root))) release(pack, root, "not needed: each harness that reads it has its copy elsewhere", args.dryRun);
     if (!args.noAgy && isDir(join(HOME, ".gemini"))) agyDeploy(pack, { ...args, cmd: "install" });
+    if (!args.noKirocrew && isDir(KIROCREW_HOME())) kirocrewDeploy(pack, { ...args, out: null, cmd: "install" });
   }
   console.log(`\n${args.dryRun ? "(dry-run) would install" : "installed"} ${pack.skills.length} skills.`);
 }
@@ -497,6 +499,54 @@ function agyDeploy(pack, args) {
     writeFileSync(marker, JSON.stringify({ agyPlugin: pack.name, version: pack.version }, null, 2) + "\n");
     console.log(`  copied to ${tilde(dest)} (agy not on PATH)`);
   }
+}
+
+// Kiro Crew: an app directory (app.json + skills/) that the gateway registers on enable.
+// Same closed resource set and link rewriting as agy. Kiro Crew agents see a skill only through
+// the skill:// entries the app registers, not by scanning ~/.kiro/skills, so this is their copy.
+export function kirocrewAppManifest(pack) {
+  const m = pack.manifest;
+  const author = typeof m.author === "string" ? m.author : m.author?.name;
+  return {
+    name: m.name, version: m.version, displayName: m.displayName ?? m.name, description: m.description,
+    ...(author ? { author } : {}), ...(m.license ? { license: m.license } : {}),
+    tags: m.keywords ?? [], defaultEnabled: false,
+    skills: pack.skills.map((s) => `skills/${s.name}`),
+  };
+}
+
+const KIROCREW_HOME = () => process.env.KIROCREW_HOME || join(HOME, ".kiro", "crew");
+
+function kirocrewDeploy(pack, args) {
+  const out = args.out ?? join(pack.dir, "dist", "kirocrew-app");
+  const errors = lint(pack);
+  if (errors.length) { console.error("kirocrew build aborted, lint failed:"); for (const e of errors) console.error("  - " + e); process.exit(1); }
+  console.log(`\nkirocrew app: ${tilde(out)}  (${pack.skills.length} skills, v${pack.version})`);
+  const resources = agyResources(pack);
+  const project = (file) => projectResource(pack, file, join(out, "skills"), out);
+  if (args.dryRun) return;
+  rmSync(out, { recursive: true, force: true });
+  mkdirSync(join(out, "skills"), { recursive: true });
+  for (const target of copyResources(resources, project)) mkdirSync(target, { recursive: true });
+  writeFileSync(join(out, "app.json"), JSON.stringify(kirocrewAppManifest(pack), null, 2) + "\n");
+  if (args.cmd !== "install") return;
+  const kc = (...a) => spawnSync("kirocrew", ["app", ...a], { encoding: "utf8", windowsHide: true });
+  const probe = kc("list");
+  if (probe.error?.code === "ENOENT") { console.log("  kirocrew not on PATH; built only. Install: kirocrew app install " + out); return; }
+  const installed = kc("info", pack.name).status === 0;
+  // The gateway installs only for its verified local owner, so a sandboxed agent is refused.
+  // That is not a deploy failure: the build is done, and the owner finishes it by hand.
+  const manual = `${installed ? `kirocrew app uninstall ${pack.name} && ` : ""}kirocrew app install ${out} && kirocrew app enable ${pack.name}`;
+  const steps = [...(installed ? [["uninstall", pack.name]] : []), ["install", out], ["enable", pack.name]];
+  for (const step of steps) {
+    const r = kc(...step);
+    if (r.status === 0) continue;
+    const why = `${r.stdout}${r.stderr}`.split(/\r?\n/).filter((l) => /refused|error|failed|❌/i.test(l)).join(" ").trim();
+    console.log(`  warning: kirocrew app ${step[0]} did not finish${why ? ` (${why})` : ""}`);
+    console.log(`  run it yourself from a terminal on this machine:\n    ${manual}`);
+    return;
+  }
+  console.log(`  ${installed ? "reinstalled" : "installed"} and enabled app ${pack.name} (app data kept)`);
 }
 
 // Manifests agree with disk, with each other, and with the latest release tag.
@@ -748,17 +798,18 @@ function inspectPortfolio(pack, args) {
 // --- Main --------------------------------------------------------------------------------
 function parseArgs(argv) {
   const args = { cmd: "install", sub: null, dryRun: false, force: false, link: false, allowDual: false,
-    noAgy: false, strict: false, json: false, profile: null, portfolio: null, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
+    noAgy: false, noKirocrew: false, strict: false, json: false, profile: null, portfolio: null, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
-    if (["install", "list", "uninstall", "check", "audit", "agy"].includes(a) && args.cmd === "install" && !args.sub) args.cmd = a;
-    else if (args.cmd === "agy" && (a === "build" || a === "install")) args.sub = a;
+    if (["install", "list", "uninstall", "check", "audit", "agy", "kirocrew"].includes(a) && args.cmd === "install" && !args.sub) args.cmd = a;
+    else if ((args.cmd === "agy" || args.cmd === "kirocrew") && (a === "build" || a === "install")) args.sub = a;
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--force") args.force = true;
     else if (a === "--link") args.link = true;
     else if (a === "--allow-dual") args.allowDual = true;
     else if (a === "--no-agy") args.noAgy = true;
+    else if (a === "--no-kirocrew") args.noKirocrew = true;
     else if (a === "--strict") args.strict = true;
     else if (a === "--profile") {
       if (rest[++i] !== "directory") { console.error("--profile requires directory"); process.exit(2); }
@@ -797,6 +848,7 @@ if (process.argv[1] && real(fileURLToPath(import.meta.url)) === real(process.arg
   else if (args.cmd === "check") doCheck(pack, args);
   else if (args.cmd === "audit") doAudit(pack, args);
   else if (args.cmd === "agy") agyDeploy(pack, { ...args, cmd: args.sub ?? "build" });
+  else if (args.cmd === "kirocrew") kirocrewDeploy(pack, { ...args, cmd: args.sub ?? "build" });
   else if (args.portfolio) {
     const portfolio = inspectPortfolio(pack, args);
     if (portfolio.findings.length) {
