@@ -1,7 +1,7 @@
 ---
 id: "202"
 title: "Design versioned embedded skills for binary-only installs"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Dry-run, unmanaged conflicts, upgrade/rollback and duplicate handling are specified with testable fixtures"
   - "The design distinguishes shipped repository deployment from the remaining binary-only scope and links current source evidence"
 tags: ["guidance", "agent-integration", "integrations", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Design versioned embedded skills for binary-only installs
