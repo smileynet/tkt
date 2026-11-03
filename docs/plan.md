@@ -93,7 +93,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 
 | ID | Work | Status |
 |---:|---|---|
-| 66 | Migrate [workspace.metadata.dist] to dist-workspace.toml | open |
+| 66 | Migrate [workspace.metadata.dist] to dist-workspace.toml | in_progress |
 | 159 | Document CI recipe: tkt validate --strict / lint --check as the real enforcement gate | open |
 
 ## Intentionally deferred backlog
