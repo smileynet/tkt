@@ -1,7 +1,7 @@
 ---
 id: "89"
 title: "Lifecycle hooks: on-new, on-claim, on-close scripts"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
