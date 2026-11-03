@@ -28,7 +28,7 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
 ];
 
 /// User-only keys (debug settings, not applicable at project level).
-const USER_ONLY_KEYS: &[(&str, &str)] = &[("debug", "false"), ("debug.format", "human")];
+const USER_ONLY_KEYS: &[(&str, &str)] = &[("debug", "false"), ("debug.format", "log")];
 
 // ============================================================
 // Project-level configuration (.tickets/config.toml)
@@ -632,7 +632,7 @@ mod tests {
     #[test]
     fn test_default_for_known_keys() {
         assert_eq!(default_for("debug"), "false");
-        assert_eq!(default_for("debug.format"), "human");
+        assert_eq!(default_for("debug.format"), "log");
         assert_eq!(default_for("close.allow_force"), "true");
         assert_eq!(default_for("unknown"), "");
     }

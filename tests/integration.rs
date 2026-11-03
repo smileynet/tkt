@@ -1934,14 +1934,19 @@ fn test_config_env_overrides_config_file() {
 }
 
 #[test]
-fn test_config_debug_enables_debug_output() {
+fn test_config_debug_with_explicit_human_format_enables_stderr_output() {
     let (_tmp, clone) = setup_repo();
     let config_dir = _tmp.path().join("config-home");
 
     // Enable debug via config
     run_tkt_with_config(&clone, &["config", "--set", "debug=true"], &config_dir);
+    run_tkt_with_config(
+        &clone,
+        &["config", "--set", "debug.format=human"],
+        &config_dir,
+    );
 
-    // Run ready — should produce debug output on stderr
+    // The explicit human format selects stderr instead of the default log.
     let output = Command::new(tkt_bin())
         .args(["ready"])
         .current_dir(&clone)
