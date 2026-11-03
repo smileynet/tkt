@@ -12,9 +12,12 @@ pub fn run(
     show: bool,
 ) -> Result<i32> {
     if let Some(pair) = set {
-        let (key, value) = pair
-            .split_once('=')
-            .ok_or_else(|| anyhow::anyhow!("expected key=value format, got {:?}", pair))?;
+        let (key, value) = pair.split_once('=').ok_or_else(|| {
+            crate::DomainError::new(
+                crate::ErrorKind::Validation,
+                format!("expected key=value format, got {:?}", pair),
+            )
+        })?;
         let key = key.trim();
         let value = value.trim();
         if is_dry_run() {
