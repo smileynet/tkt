@@ -135,7 +135,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 186 | Reconcile or retire the historical Python parity harness | open |
 | 187 | Generate a derived sync-plan projection from the ticket corpus | open |
 | 191 | Centralize command mutation effects and dry-run policy | open |
-| 202 | Design versioned embedded skills for binary-only installs | in_progress |
+| 202 | Design versioned embedded skills for binary-only installs | ✅ done |
 
 ## Recorded cancellations under ADR 0004
 

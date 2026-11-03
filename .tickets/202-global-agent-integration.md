@@ -1,7 +1,7 @@
 ---
 id: "202"
 title: "Design versioned embedded skills for binary-only installs"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -49,9 +49,9 @@ Design versioned skill/instruction assets embedded in the binary and a binary-on
 
 ## Acceptance criteria
 
-- [ ] A concrete embedded-asset version and binary-only interface contract identifies supported harnesses and instruction/skill ownership
-- [ ] Dry-run, unmanaged conflicts, upgrade/rollback and duplicate handling are specified with testable fixtures
-- [ ] The design distinguishes shipped repository deployment from the remaining binary-only scope and links current source evidence
+- [x] A concrete embedded-asset version and binary-only interface contract identifies supported harnesses and instruction/skill ownership
+- [x] Dry-run, unmanaged conflicts, upgrade/rollback and duplicate handling are specified with testable fixtures
+- [x] The design distinguishes shipped repository deployment from the remaining binary-only scope and links current source evidence
 
 ## Out of scope
 
@@ -93,3 +93,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-03)
+
+Designed versioned binary-only workflow assets; runtime commands remain unimplemented. Independent critic accepted final design and concurrency contract.
+
+### Verification
+1. ✓ A concrete embedded-asset version and binary-only interface contract identifies supported harnesses and instruction/skill ownership — "docs/embedded-skills-design.md defines format/version/content identity, supported targets and separate instruction ownership; critic accepted final SHA4E67CD32FC1FC5BD980AADB3A06016A5A4A91126E2602857F6A30CE07CB1E500."
+2. ✓ Dry-run, unmanaged conflicts, upgrade/rollback and duplicate handling are specified with testable fixtures — "18 explicit scenario requirements in docs/evidence/embedded-skills-202.json cover dry-run, conflicts, duplicates, upgrade/rollback, locking and recovery; observed:false marks unimplemented runtime."
+3. ✓ The design distinguishes shipped repository deployment from the remaining binary-only scope and links current source evidence — "Cargo include/deploy source gap verified; 15 actual asset byte sizes/SHA256 and local Markdown reference closure passed. Official Kiro/OpenCode discovery docs checked. No runtime or package installation claimed."
