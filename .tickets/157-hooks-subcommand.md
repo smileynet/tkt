@@ -53,3 +53,8 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 Resolved by the owner's 2026-11-03 chat submission: **Keep hooks optional and advisory**.
 See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.
+
+
+## Reactivation — 2026-11-03
+
+The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.

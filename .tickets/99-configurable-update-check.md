@@ -41,3 +41,8 @@ Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `config`.
 Deferred enhancement. src/update_check.rs still hardcodes CHECK_INTERVAL_SECS=86400; define duration validation and env precedence without changing default behavior.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+
+## Reactivation — 2026-11-03
+
+The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.

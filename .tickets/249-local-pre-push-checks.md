@@ -24,3 +24,8 @@ opt-in pre-push hook (for example `.githooks/pre-push`, enabled with
 
 - [ ] With the hook enabled, `git push` runs the gate and refuses the push on failure.
 - [ ] `docs/agents/enforcement-model.md` and contributor docs describe enabling the hook.
+
+
+## Reactivation — 2026-11-03
+
+The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.

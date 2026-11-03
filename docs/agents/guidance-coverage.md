@@ -76,4 +76,4 @@ the migration source was frozen. Unit rule-05 explicitly replaces its now-obsole
 automatic-CI paragraph with the required local gate and manual hosted-run policy.
 The JSON records exact before/after text and owner commit; the checker verifies
 that this ancestor deleted the workflow. This is an authorized policy amendment,
-not an unrecorded extraction loss. Ticket 249 remains deliberately deferred.
+not an unrecorded extraction loss. Ticket 249 is active; hook installation remains opt-in.

@@ -31,7 +31,7 @@ laptop/phone acceptance remains unverified under the existing browser restrictio
 LAN hosting is active under completed #244; see [the hosting guide](dashboard-lan.md)
 for its address, served-file scope and supervised-process lifecycle.
 
-The earlier maintenance batch closed 32 tickets and cancelled six obsolete items. This execution batch completed #197, #234, #199, #200, #159, #248 and the approved guidance stages #245–#247, each after independent critic acceptance. The frontier is empty. Three dashboard tickets retain unavailable rendered acceptance, and 23 backlog tickets remain deliberately deferred, including the owner-added optional pre-push proposal #249. The CLI and workflow pack are deployed; optional Kiro Crew activation is unavailable without its CLI. The wider inventory audit still reports unrelated unowned/legacy Kiro roots, which were preserved.
+The earlier maintenance batch closed 32 tickets and cancelled six obsolete items. This execution batch completed #197, #234, #199, #200, #159, #248 and the approved guidance stages #245–#247, each after independent critic acceptance. The parked-work review reactivated 20 tickets; three remain parked for explicit deferral or missing evidence. Three dashboard tickets retain unavailable rendered acceptance. See the current execution queue below. The CLI and workflow pack are deployed; optional Kiro Crew activation is unavailable without its CLI. The wider inventory audit still reports unrelated unowned/legacy Kiro roots, which were preserved.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -101,16 +101,16 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 
 ## Tooling and verification decisions
 
-#66 is complete with the pinned dist configuration migration verified. #159 documents optional consumer CI guidance with explicit limits and the standing local verification policy preserved. The owner removed automatic CI; #249 parks a possible opt-in local pre-push hook. No new hosted workflow is authorized by this plan.
+#66 is complete with the pinned dist configuration migration verified. #159 documents optional consumer CI guidance with explicit limits and the standing local verification policy preserved. The owner removed automatic CI; #249 tracks an optional local pre-push convenience, with no hosted-CI equivalence. No new hosted workflow is authorized by this plan.
 
 | ID | Work | Status |
 |---:|---|---|
 | 66 | Migrate [workspace.metadata.dist] to dist-workspace.toml | ✅ done |
 | 159 | Document optional consumer CI with accurate enforcement limits | ✅ done |
 
-## Intentionally deferred backlog
+## Reactivated work and remaining deferrals
 
-These are deliberately deferred, not release commitments. Triage notes distinguish specified enhancements from requests awaiting design, reproduction or a pinned external reference. #158 now records its real #157 config dependency. #173 must reuse #175 source-reference logic; #184 is optional narrative support and #187 is the independent primary projection direction under ADR 0002. #202 is limited to remaining binary-only skill delivery.
+The owner requested execution of actionable parked work. See [the per-ticket review](parked-review-2026-11-03.md). Execution queue: #202, #99, #186, #125, #175, then independent ready work. #173 depends on the shared #175 predicate; #86 depends on the #125 adapter contract. These are actual implementation prerequisites, not scheduling edges. #191 starts with an effect audit before any refactor. #147 and #158 need specific evidence; #184 remains explicitly deferred.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -139,7 +139,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 
 ## Recorded cancellations under ADR 0004
 
-The lifecycle is implemented and six dispositions are recorded: #87 superseded by #176; #208 duplicates #138; #115/#161 are obsolete; #94 and #142 are wontfix. Cancellation checked no acceptance boxes and claimed no completed implementation. #142's isolated capability probe did not reproduce the report; its historical unspecified edge cases remain unknown. #140 is fixed and complete. #69 stays deferred with an approved focused follow-up scope.
+The lifecycle is implemented and six dispositions are recorded: #87 superseded by #176; #208 duplicates #138; #115/#161 are obsolete; #94 and #142 are wontfix. Cancellation checked no acceptance boxes and claimed no completed implementation. #142's isolated capability probe did not reproduce the report; its historical unspecified edge cases remain unknown. #140 is fixed and complete. #69 is active for a focused follow-up scope report.
 
 | ID | Work | Status |
 |---:|---|---|

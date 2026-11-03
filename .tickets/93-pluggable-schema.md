@@ -168,3 +168,8 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## What to build
 
 Design a narrow optional extension schema within the supported frontmatter subset. Define supported representations and explicit versioned migration rules, preserve unknown raw fields and existing tickets, and keep the built-in contract compatible. A general YAML/parser expansion is outside this approved direction.
+
+
+## Reactivation — 2026-11-03
+
+The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.

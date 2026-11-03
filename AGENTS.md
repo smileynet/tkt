@@ -49,7 +49,7 @@ Use `--check` (not bare `cargo fmt`) — bare `cargo fmt` mutates in place and e
 The local `mise run check` gate remains required. The former automatic push/PR
 CI workflow was removed by the owner; remaining hosted workflows are manual-only
 and require an explicit request. No pre-push hook is installed by default; the
-optional hook proposal remains deliberately deferred in ticket 249.
+optional hook proposal is tracked in ticket 249; installation remains opt-in.
 
 When documenting consumer CI, hooks or enforcement limits, read
 [the enforcement model](docs/agents/enforcement-model.md). Consumer checks are
