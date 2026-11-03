@@ -120,7 +120,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 86 | tkt import --github: pull open issues into .tickets/ | open |
 | 88 | tkt done --week: show-resolved report for standups | open |
 | 89 | Lifecycle hooks: on-new, on-claim, on-close scripts | open |
-| 90 | tkt open <id>: find URLs in ticket body and open in browser | backlog |
+| 90 | tkt open <id>: find URLs in ticket body and open in browser | open |
 | 93 | Pluggable schema definitions with meta field + ai_context support | backlog |
 | 99 | Make update check interval configurable | backlog |
 | 125 | Design the first external-system import adapter contract | backlog |

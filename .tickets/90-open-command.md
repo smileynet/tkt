@@ -1,7 +1,7 @@
 ---
 id: "90"
 title: "tkt open <id>: find URLs in ticket body and open in browser"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
