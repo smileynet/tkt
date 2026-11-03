@@ -1,12 +1,13 @@
 ---
 id: "143"
 title: "Fix -q + -o json emits bare non-JSON output inconsistently"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
   - "all mutations produce a structured JSON success object under -o json -q"
 tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:quality"]
+assignee: "codex"
 ---
 
 # Fix -q + -o json emits bare non-JSON output inconsistently
