@@ -28,7 +28,7 @@ Discovery manifest #138 is complete; #127 finishes the help/init path, then #153
 | ID | Work | Status |
 |---:|---|---|
 | 138 | Update capabilities manifest with all commands | ✅ done |
-| 127 | Improve agent discoverability: help nudge to capabilities, init recommends agent setup | in_progress |
+| 127 | Improve agent discoverability: help nudge to capabilities, init recommends agent setup | ✅ done |
 | 153 | Guard against stale-binary validation (prefer integration tests, add freshness check) | open |
 
 ## Post-v0.4.0 configuration and correctness
