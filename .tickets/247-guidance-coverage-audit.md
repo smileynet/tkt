@@ -1,13 +1,14 @@
 ---
 id: "247"
 title: "Verify and deploy the staged guidance restructuring"
-status: open
+status: in_progress
 blocked_by: ["246"]
 spec: "docs/agents/agents-restructuring-proposal.md"
 validation_criteria:
   - "Every current rule has verified coverage and source links; no policy is silently weakened"
   - "Independent critic and applicable guidance/deployment checks pass with evidence"
 tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:guidance"]
+assignee: "codex"
 ---
 # Verify and deploy staged guidance restructuring
 
