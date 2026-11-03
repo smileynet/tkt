@@ -8,7 +8,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const types = { '.html': 'text/html', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp' };
 const allowed = (root, file) => {
   const path = relative(root, file);
-  return !isAbsolute(path) && path !== '..' && !path.startsWith('../') && !path.startsWith('..\\') && !path.split(/[\\/]/).some(part => ['.git', '.scratch', '.references'].includes(part));
+  return !isAbsolute(path) && path !== '..' && !path.startsWith('../') && !path.startsWith('..\\') && !path.split(/[\\/]/).some(part => ['.git', '.scratch', '.references'].includes(part.toLowerCase()));
 };
 
 function linkedFiles(html, root) {

@@ -10,10 +10,12 @@ test('serve current dashboard and explicit links without exposing repository fil
   const root = await mkdtemp(join(tmpdir(), 'dashboard-lan-'));
   await mkdir(join(root, 'docs/evidence'), { recursive: true });
   await mkdir(join(root, '.git'));
-  const html = '<h1>Decisions</h1><script type="application/json" id="gm-entries">[{"links":[{"href":"evidence/result.md"},{"href":"../.git/config"},{"href":"../../outside.md"}]}]</script>';
+  const html = '<h1>Decisions</h1><script type="application/json" id="gm-entries">[{"links":[{"href":"evidence/result.md"},{"href":"../.git/config"},{"href":"../.GIT/config"},{"href":"../../outside.md"}]}]</script>';
   await writeFile(join(root, 'docs/status.html'), html);
   await writeFile(join(root, 'docs/evidence/result.md'), 'Evidence');
   await writeFile(join(root, '.git/config'), 'Private');
+  await mkdir(join(root, '.GIT'), { recursive: true });
+  await writeFile(join(root, '.GIT/config'), 'Private');
   await writeFile(join(root, 'private.txt'), 'Private');
   const server = createDashboardServer(root);
   t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); await rm(root, { recursive: true }); });
@@ -25,7 +27,7 @@ test('serve current dashboard and explicit links without exposing repository fil
   const linked = await fetch(base + '/docs/evidence/result.md');
   assert.equal(linked.status, 200); assert.equal(await linked.text(), 'Evidence');
   assert.match(linked.headers.get('content-type'), /text\/plain/);
-  for (const path of ['/private.txt', '/.git/config', '/docs/', '/outside.md', '/docs/%2e%2e/.git/config', '/docs/evidence/result.md%2f..%2f..%2fprivate.txt']) assert.equal((await fetch(base + path)).status, 404, path);
+  for (const path of ['/private.txt', '/.git/config', '/.GIT/config', '/docs/', '/outside.md', '/docs/%2e%2e/.git/config', '/docs/evidence/result.md%2f..%2f..%2fprivate.txt']) assert.equal((await fetch(base + path)).status, 404, path);
   assert.equal((await fetch(base + '/docs/status.html', { method: 'POST' })).status, 405);
   const head = await fetch(base + '/docs/status.html', { method: 'HEAD' });
   assert.equal(head.status, 200); assert.equal(await head.text(), '');

@@ -20,6 +20,9 @@ Git/scratch/reference metadata and writes. Source is read per request with
   zero failures. Covers redirect, matching content, linked evidence, missing
   paths, encoded traversal, method restriction, HEAD, fresh content after edits,
   and linked symlinks to Git metadata or outside the checkout. No tests were skipped.
+- PASS: `node --test tools/serve-dashboard.test.mjs tools/dashboard-decisions.test.mjs`
+  — nine tests, zero failures/skips on the final code, including case-insensitive
+  metadata-path rejection. The supervised server was restarted with that code.
 - PASS: proxy-disabled .NET HTTP request to the LAN address returned 200 and
   `text/html; charset=utf-8`; its SHA256 matched `docs/status.html`.
 - PASS: live requests for `/.git/config`, `/Cargo.toml` and
