@@ -1,7 +1,7 @@
 ---
 id: "157"
 title: "tkt hooks subcommand + pre-commit installer (warn-default, config block/log)"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Mutation hook bypass and standing verification policy remain intact; no implicit global or blocking hook is installed"
   - "Portable invocation, failure recovery and project-scoped configuration are documented and verified"
 tags: ["contract", "integrations", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # tkt hooks subcommand + pre-commit installer (warn-default, config block/log)
