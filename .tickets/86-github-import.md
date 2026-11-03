@@ -2,7 +2,7 @@
 id: "86"
 title: "tkt import --github: pull open issues into .tickets/"
 status: open
-blocked_by: []
+blocked_by: ["125"]
 priority: low
 validation_criteria:
   - "`tkt import --github` imports open issues from current repo"
