@@ -1,7 +1,7 @@
 ---
 id: "168"
 title: "Measure demand for missing-tag and backlog advisories"
-status: backlog
+status: open
 blocked_by: ["167"]
 priority: low
 validation_criteria:
