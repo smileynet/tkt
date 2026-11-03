@@ -1,7 +1,7 @@
 ---
 id: "252"
 title: "Remove unsupported migration-map guidance"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Supported tk migration, source preservation and recovery are separated from proposed adapters, with accurate assignee/eligibility semantics"
   - "Standalone guidance syntax, deployment fixtures and independent critic review pass"
 tags: ["stream:guidance", "kind:bug", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 # Keep migration guidance within the shipped interface
 
