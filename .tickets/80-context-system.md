@@ -44,16 +44,6 @@ Implementation options:
 - [x] Works alongside existing `CREW_ENV` filtering (additive)
 - [x] Integration test for context read/write scoping
 
-# Context system: auto-scope reads and writes by tag
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
-- [ ] TBD
-
 ## Resolution (2026-08-22)
 
 Implemented full context system: tags field on tickets, .tickets/.context storage, TKT_CONTEXT env override, filtering on ready/query/blocked, auto-tagging on new/batch. 9 unit tests + e2e verified.

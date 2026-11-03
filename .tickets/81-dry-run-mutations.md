@@ -53,15 +53,6 @@ Key behaviors:
 - [x] Exit code 0 when the operation would succeed
 - [x] JSON output available via --json flag
 
-# Add --dry-run to mutation commands (new, claim, close, edit)
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
-
 ## Resolution (2026-08-13)
 
 Implemented as global --dry-run flag. All 5 mutation commands check it before writing.

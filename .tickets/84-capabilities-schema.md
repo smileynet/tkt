@@ -54,16 +54,6 @@ Also add `tkt capabilities --schema` as an alias that emphasizes the schema outp
 - [x] `tkt capabilities --schema` works as explicit flag
 - [x] Existing capabilities output remains backward-compatible (additive)
 
-# Enrich capabilities with JSON Schema input definitions
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
-- [ ] TBD
-
 ## Resolution (2026-08-18)
 
 All 11 commands have inputSchema. Effects declared. Backward compatible.

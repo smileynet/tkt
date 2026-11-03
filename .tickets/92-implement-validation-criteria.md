@@ -65,15 +65,6 @@ Per the design in 91:
 - [x] All existing tests still pass (backward compatible)
 - [x] Our .tickets/config.toml requires both
 
-# Implement validation_criteria field + evidence-gated close
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
-
 ## Resolution (2026-08-12)
 
 Full implementation shipped: parsing, --validation flag, --evidence on close, config gates, audit rule, 3 integration tests, 52 total passing.

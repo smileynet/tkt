@@ -35,15 +35,6 @@ Deliverable: recommendations for tkt's crates.io presence (description wording, 
 - [x] Specific recommendations for tkt's Cargo.toml and crates.io page
 - [x] Any recommended changes applied before v0.2.0
 
-# Research top crates.io projects for description page style and best practices
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
-
 ## Resolution (2026-08-12)
 
 Researched 6 top crates. Applied: homepage, documentation link, replaced 'cli' keyword with 'todo'.

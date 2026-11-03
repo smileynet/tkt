@@ -132,11 +132,3 @@ Low-evidence closures: 2/12
 - [x] Backward compatible: tickets without VC close normally
 - [x] Our .tickets/config.toml set to require both
 
-# Agent close confirmation: formalize validation_criteria field + y/n gate
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
