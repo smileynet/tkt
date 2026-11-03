@@ -15,6 +15,7 @@ pub mod edit;
 pub mod init;
 pub mod lint;
 pub mod migrate;
+pub mod move_ac;
 pub mod new;
 pub mod query;
 pub mod ready;

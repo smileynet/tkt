@@ -52,6 +52,7 @@ Deep audit ignores quoted template examples but flags real unfinished sections; 
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Transfer unchecked body work with tkt move-ac SOURCE --ac N --to DEST (1-based full body AC ordinal). [>] and linked receiving back-references mean moved, not done. Retry the same transfer after interruption; validation/evidence fields stay unchanged and still require truthful close proof.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
 Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
@@ -97,6 +98,7 @@ Deep audit ignores quoted template examples but flags real unfinished sections; 
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Transfer unchecked body work with tkt move-ac SOURCE --ac N --to DEST (1-based full body AC ordinal). [>] and linked receiving back-references mean moved, not done. Retry the same transfer after interruption; validation/evidence fields stay unchanged and still require truthful close proof.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
 Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
@@ -137,6 +139,7 @@ Deep audit ignores quoted template examples but flags real unfinished sections; 
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Transfer unchecked body work with tkt move-ac SOURCE --ac N --to DEST (1-based full body AC ordinal). [>] and linked receiving back-references mean moved, not done. Retry the same transfer after interruption; validation/evidence fields stay unchanged and still require truthful close proof.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
 Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
@@ -187,6 +190,7 @@ Deep audit ignores quoted template examples but flags real unfinished sections; 
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Transfer unchecked body work with tkt move-ac SOURCE --ac N --to DEST (1-based full body AC ordinal). [>] and linked receiving back-references mean moved, not done. Retry the same transfer after interruption; validation/evidence fields stay unchanged and still require truthful close proof.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
 Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
@@ -238,6 +242,7 @@ Deep audit ignores quoted template examples but flags real unfinished sections; 
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Transfer unchecked body work with tkt move-ac SOURCE --ac N --to DEST (1-based full body AC ordinal). [>] and linked receiving back-references mean moved, not done. Retry the same transfer after interruption; validation/evidence fields stay unchanged and still require truthful close proof.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
 Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.

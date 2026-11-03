@@ -20,6 +20,18 @@ pub fn run(
 ) -> Result<i32> {
     let ctx = MutationContext::open()?;
     let t = ctx.find_ticket(id)?;
+    let transfer_errors: Vec<_> = core::ac_transfer::transfer_errors(&ctx.corpus)
+        .into_iter()
+        .filter(|(source, _)| source == id)
+        .map(|(_, message)| message)
+        .collect();
+    if !transfer_errors.is_empty() {
+        domain_bail!(
+            GateFailed,
+            "invalid acceptance-criterion transfer: {}",
+            transfer_errors.join("; ")
+        );
+    }
 
     if force && !ctx.config.close_allow_force {
         return Err(crate::DomainError::with_hint(

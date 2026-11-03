@@ -19,8 +19,8 @@ The dashboard groups every unfinished ticket into one of six `stream:` workstrea
 `gate:decision` names an unresolved contract or policy choice; `gate:evidence` names
 a required observation. The ticket body explains each gate under Planning gate.
 Neither changes status or invents a dependency. Backlog remains deferred even when
-prerequisites are met. The graph shows gates on dependency-blocked tickets too,
-The owner settled all 17 published decisions on 2026-11-03; see [the decision record](decision-record-2026-11-03.md). #199 and #200 still require the actual #197 implementation.
+prerequisites are met. The graph shows gates on dependency-blocked tickets too.
+The owner settled all 17 published decisions on 2026-11-03; see [the decision record](decision-record-2026-11-03.md). The completed #197 implementation unblocks #199 and #200.
 
 ## Current maintenance frontier
 
@@ -30,7 +30,7 @@ laptop/phone acceptance remains unverified under the existing browser restrictio
 LAN hosting is active under completed #244; see [the hosting guide](dashboard-lan.md)
 for its address, served-file scope and supervised-process lifecycle.
 
-The earlier maintenance batch closed 32 tickets and explicitly cancelled six obsolete items. All 17 owner decisions are now confirmed. Implementation remains open for #197 (computed progress with explicit closure), #234 (linked moved criteria), and #159 (optional consumer CI guidance). Guidance approval is staged as #245 → #246 → #247, following the completed proposal #226. The three dashboard tickets retain unverified rendered acceptance; 22 backlog items remain deliberately deferred. No implementation is claimed by recording these decisions.
+The earlier maintenance batch closed 32 tickets and explicitly cancelled six obsolete items. All 17 owner decisions are confirmed. Parent progress with explicit closure (#197) is complete after independent critic acceptance and the full local gate. Linked moved criteria (#234) is in progress; #199/#200, #245 and #159 remain actionable. Guidance implementation is staged as #245 → #246 → #247, following the completed proposal #226. The three dashboard tickets retain unverified rendered acceptance; 22 backlog items remain deliberately deferred. Recording a decision alone does not claim implementation.
 
 | ID | Work | Status |
 |---:|---|---|

@@ -29,6 +29,7 @@ pub fn run() -> Result<i32> {
             "config" => ("idempotent", "Read-only except --set and --unset write user configuration, or project configuration with --project", "text"),
             "telemetry" => ("idempotent", "Read-only except --enable/--disable change consent and --clear deletes local events", "text"),
             "ready" | "blocked" => ("read_only", "Read-only report; ready supports JSON Lines with historical blocked_by and unfinished/missing pending_blockers, and hides tickets assigned to another agent", "text"),
+            "move-ac" => ("idempotent", "Move one unchecked body criterion with linked markers; destination-first atomic writes permit retry after interruption. Commit both files and optionally push; dry-run previews. Validation criteria and evidence are not transferred", "text"),
             "children" => ("read_only", "All direct children regardless of tag context; done/total includes cancelled children in total and reports cancelled separately. Stored parent status is unchanged; -o json emits one object", "text"),
             "help" => ("read_only", "Print help for an optional command path, such as help new", "text"),
             "audit" => ("read_only", "JSON findings by default; --brief uses text", "json"),

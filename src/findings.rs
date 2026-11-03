@@ -97,6 +97,7 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     all_findings.extend(check_parent_cycles(&corpus));
     all_findings.extend(check_dangling_body_references(&corpus));
     all_findings.extend(check_unchecked_acs(&corpus));
+    all_findings.extend(check_ac_transfers(&corpus));
     all_findings.extend(check_stub_body(&corpus));
     let cfg = crate::config::ProjectConfig::load(dir);
     if let Err(error) = cfg.validate() {
@@ -134,6 +135,18 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
 }
 
 // --- Rules ---
+
+pub fn check_ac_transfers(corpus: &[Ticket]) -> Vec<Finding> {
+    core::ac_transfer::transfer_errors(corpus)
+        .into_iter()
+        .map(|(id, message)| Finding {
+            file: filename(corpus.iter().find(|ticket| ticket.id == id).unwrap()),
+            rule: "invalid-ac-transfer".into(),
+            message,
+            severity: "error".into(),
+        })
+        .collect()
+}
 
 /// Check that all ticket statuses are valid.
 /// Note: with the new Ticket type, invalid statuses are rejected at parse time.

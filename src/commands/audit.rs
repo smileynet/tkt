@@ -25,6 +25,7 @@ pub fn run(strict: bool, brief: bool, deep: bool) -> Result<i32> {
         resolution_baseline_id,
     ));
     all_findings.extend(audit::check_ac_completeness(&corpus));
+    all_findings.extend(findings::check_ac_transfers(&corpus));
     all_findings.extend(audit::check_stale_wip(&corpus, unix_now(), |path| {
         git_last_commit_ts(&repo, &dir, path)
     }));

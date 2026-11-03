@@ -258,3 +258,34 @@ references and parent-chain cycles independently of blocked-by edges.
 ## Parent progress
 
 Parents with any direct children are containers, excluded from ready. Use `tkt children ID` for full-corpus direct-child progress (done/total includes cancelled in total, with cancelled separate); `-o json` emits one object and `-q` lists child IDs. Progress never changes stored status: close parents explicitly with normal AC/evidence gates.
+
+## Transferring acceptance criteria
+
+Move an unchecked body criterion with `tkt move-ac SOURCE --ac N --to DEST` (N counts all top-level single-line body ACs, including checked/moved). The source uses `[>]` plus a destination marker; the receiver gets an unchecked copy with a source back-reference. This records transfer, not completion. Validation criteria and evidence remain independent and unchanged; supply truthful proof for every retained validation criterion at close. Retry the same transfer after interruption; inspect conflicts instead of editing link identities.
+
+The receiving ticket must exist and be nonterminal. Checked criteria and already
+received criteria cannot be moved. Only one criterion is transferred per call.
+
+Source: `- [>] Requirement <!-- tkt-moved:02 -->`
+
+Receiver: `- [ ] Requirement <!-- tkt-from:01:1 -->`
+
+Keep marker IDs, the source criterion ordinal and matching text stable. Validation
+and audit report malformed, missing, changed or duplicate links as errors; close
+rejects broken links even with force. Checking all ACs leaves moved markers intact.
+A receiving criterion stays unchecked until its work is independently completed.
+Do not move a receiving criterion again; this initial contract supports one hop.
+
+Each file is replaced atomically on the same filesystem. The destination is
+written first, so interruption can expose a receiving copy while the source is
+still unchecked. Validation reports that intermediate state; rerunning the same
+command repairs it without duplicating the receiver. If both writes landed but
+commit did not, retry commits the pair. This is recoverable multi-file publication,
+not a simultaneous two-file filesystem rename. A successful repeated transfer is
+a no-op. A push failure retains the commit; follow its instruction to push.
+Normal mutation hook and push policy apply, and dry-run writes nothing.
+
+Body ACs and frontmatter validation criteria have independent counts. The command
+does not relocate validation criteria, renumber evidence, invent proof, or waive
+any retained close gate. Record transfer provenance as provenance; it is not
+implementation evidence. Review validation scope explicitly when work moves.
