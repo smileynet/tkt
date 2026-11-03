@@ -1,7 +1,7 @@
 ---
 id: "250"
 title: "Prevent debug logging from writing during dry-run"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -10,6 +10,7 @@ validation_criteria:
   - "Fresh public regression, project verification gate and independent critic review pass"
 tags: ["stream:quality", "kind:bug", "triage:ready-for-agent"]
 parent: "191"
+assignee: "codex"
 ---
 # Dry-run diagnostics must not persist state
 
