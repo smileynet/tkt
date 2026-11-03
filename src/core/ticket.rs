@@ -762,7 +762,25 @@ pub fn load_corpus(dir: &Path) -> Result<Vec<Ticket>> {
         match Ticket::parse(&entry.path()) {
             Ok(ticket) => tickets.push(ticket),
             Err(e) => {
-                eprintln!("⚠ skipping {}: {}", entry.file_name().to_string_lossy(), e);
+                if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
+                    eprintln!(
+                        "{}",
+                        serde_json::json!({
+                            "warning": {
+                                "kind": "unparseable_ticket",
+                                "path": entry.path().display().to_string(),
+                                "message": e.to_string()
+                            }
+                        })
+                    );
+                } else {
+                    eprintln!(
+                        "{} skipping {}: {}",
+                        crate::color::sym_warn(),
+                        entry.file_name().to_string_lossy(),
+                        e
+                    );
+                }
             }
         }
     }
