@@ -1,7 +1,7 @@
 ---
 id: "87"
 title: "tkt new --template: predefined ticket body structures"
-status: backlog
+status: cancelled
 blocked_by: ["227"]
 priority: low
 validation_criteria:
@@ -54,3 +54,10 @@ Disposition: `kind:enhancement`, `triage:wontfix`; stream `cli`.
 Approved supersession by #176; await #227 cancellation with --by 176. Do not implement twice or check unfulfilled ACs.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Cancellation
+
+- Reason: superseded
+- By: 176
+- Note: Approved merged retirement; named body templates shipped with ticket176.
+- Date: 2026-11-03

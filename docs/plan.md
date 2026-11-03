@@ -132,7 +132,7 @@ Approved dispositions remain parked until #227 exists: #87 superseded by #176; #
 
 | ID | Work | Status |
 |---:|---|---|
-| 87 | tkt new --template: predefined ticket body structures | backlog |
+| 87 | tkt new --template: predefined ticket body structures | cancelled (superseded) |
 | 94 | Test VC flag | backlog |
 | 115 | Review recall telemetry and debug functionality for useful patterns | backlog |
 | 161 | frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex | backlog |
