@@ -436,6 +436,13 @@ warning is a JSON object on its own stderr line (`warning.kind`, `path`, `messag
 separate from result stdout. Human warnings honor ASCII mode. Empty results with
 skip warnings differ from an empty corpus; exit 0 does not establish corpus health.
 
+## Local dashboard
+
+Share the delivery dashboard on an explicit LAN interface with
+`node tools/serve-dashboard.mjs --host 192.168.0.187 --port 8765`.
+See [LAN hosting](docs/dashboard-lan.md) for the address, served-file scope and
+process lifecycle. The default interface is loopback when `--host` is omitted.
+
 ## Contributing
 
 Found a bug? [File a report](https://github.com/smileynet/tkt/issues/new?template=bug_report.md).

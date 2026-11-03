@@ -186,3 +186,4 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | ID | Work | Status |
 |---:|---|---|
 | 243 | Collect dashboard decisions with recommendations and chat export | in_progress |
+| 244 | Serve the delivery dashboard on the local network | in_progress |
