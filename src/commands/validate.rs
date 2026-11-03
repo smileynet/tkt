@@ -7,10 +7,11 @@ use crate::commands::common::{
 };
 use crate::findings::{self, collect_corpus_findings, Finding};
 
-/// Stable identity of a finding for before/after regression comparison.
+/// Stable identity of an error/warning for before/after repair comparison.
 fn finding_ids(findings: &[Finding]) -> std::collections::HashSet<(String, String)> {
     findings
         .iter()
+        .filter(|finding| matches!(finding.severity.as_str(), "error" | "warning"))
         .map(|f| (f.file.clone(), f.rule.clone()))
         .collect()
 }
@@ -79,7 +80,8 @@ pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
 
     // After fixing, run normal validate to show remaining state
     if !dry_run && !result.repairs.is_empty() {
-        // Regression gate: a fix must never introduce a NEW finding. Compare
+        // A repair must not introduce a new error or warning; newly visible
+        // informational readiness advice is not a repair regression. Compare
         // identities (file+rule), not counts, so a swap can't slip through.
         let after = finding_ids(&collect_corpus_findings(&dir)?);
         let new: Vec<&(String, String)> = after.difference(&before).collect();
@@ -164,6 +166,17 @@ mod tests {
             message: String::new(),
             severity: "error".into(),
         }
+    }
+
+    #[test]
+    fn informational_findings_do_not_gate_repairs_but_promotion_does() {
+        let mut advice = f("02.md", "frontier-readiness");
+        advice.severity = "info".into();
+        let before = finding_ids(&[advice.clone()]);
+        assert!(before.is_empty());
+        advice.severity = "error".into();
+        let after = finding_ids(&[advice]);
+        assert_eq!(after.difference(&before).count(), 1);
     }
 
     #[test]

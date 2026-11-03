@@ -182,6 +182,19 @@ impl ProjectConfig {
         cfg
     }
 
+    pub fn ready_capabilities(&self) -> Vec<String> {
+        let legacy_env = std::env::var("CREW_ENV")
+            .ok()
+            .filter(|v| !v.is_empty())
+            .or_else(|| self.ready_default_env.map(|v| v.as_str().to_string()))
+            .unwrap_or_default();
+        let mut capabilities = self.machine_capabilities.clone();
+        if !legacy_env.is_empty() && !capabilities.contains(&legacy_env) {
+            capabilities.push(legacy_env);
+        }
+        capabilities
+    }
+
     /// List all project settings with their resolved sources.
     pub fn list(&self) -> Vec<ConfigEntry> {
         let mut entries = Vec::new();

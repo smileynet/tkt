@@ -3861,3 +3861,98 @@ fn validate_source_ref_union_and_explicit_gate() {
         assert!(!out.contains("no-source-reference"), "{status}: {out}");
     }
 }
+#[test]
+fn frontier_readiness_is_bounded_advisory_and_preserves_queue() {
+    let (_tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[machine]\ncapabilities = \"cpu\"\n",
+    )
+    .unwrap();
+    for (id, status, extra, body) in [
+        (
+            "02",
+            "open",
+            "priority: high\n",
+            "Work needs explicit slots.",
+        ),
+        (
+            "03",
+            "open",
+            "parent: \"06\"\nvalidation_criteria:\n  - \"Verify the behavior\"\n",
+            "## Acceptance criteria\n\n- [ ] Works as specified.",
+        ),
+        ("04", "open", "blocked_by: [\"05\"]\n", "Blocked work."),
+        ("05", "backlog", "", "Parked work."),
+        ("06", "open", "", "Container work."),
+        ("07", "open", "requires: [gpu]\n", "Wrong machine."),
+        ("08", "in_progress", "", "Already started."),
+    ] {
+        let deps = if extra.starts_with("blocked_by:") {
+            ""
+        } else {
+            "blocked_by: []\n"
+        };
+        std::fs::write(clone.join(format!(".tickets/{id}-case.md")), format!("---\nid: \"{id}\"\ntitle: \"Case {id}\"\nstatus: {status}\n{deps}{extra}---\n\n{body}\n")).unwrap();
+    }
+    let ready = || {
+        let (code, out) = run_tkt(&clone, &["ready", "--json"]);
+        assert_eq!(code, 0, "{out}");
+        out
+    };
+    let before = ready();
+    let ids: Vec<String> = before
+        .lines()
+        .map(|line| {
+            serde_json::from_str::<serde_json::Value>(line).unwrap()["id"]
+                .as_str()
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    assert_eq!(ids, ["02", "03"]);
+    for args in [
+        vec!["validate", "--strict"],
+        vec!["-q", "validate", "--strict"],
+    ] {
+        let (code, out) = run_tkt(&clone, &args);
+        assert_eq!(code, 0, "{out}");
+        let result: serde_json::Value = serde_json::from_str(&out).unwrap();
+        let rows: Vec<_> = result["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|f| f["rule"] == "frontier-readiness")
+            .collect();
+        assert_eq!(rows.len(), 1, "{out}");
+        assert_eq!(rows[0]["file"], "02-case.md");
+        assert_eq!(rows[0]["severity"], "info");
+        for slot in [
+            "source reference",
+            "acceptance criterion",
+            "validation criterion",
+        ] {
+            assert!(rows[0]["message"].as_str().unwrap().contains(slot), "{out}");
+        }
+    }
+    assert_eq!(ready(), before);
+    let path = clone.join(".tickets/02-case.md");
+    let source = std::fs::read_to_string(&path).unwrap();
+    std::fs::write(
+        &path,
+        format!("{source}\n## Acceptance criteria\n\n```md\n- [ ] Quoted example\n```\n"),
+    )
+    .unwrap();
+    let (_, out) = run_tkt(&clone, &["validate"]);
+    let result: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let finding = result["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|f| f["rule"] == "frontier-readiness")
+        .unwrap();
+    assert!(finding["message"]
+        .as_str()
+        .unwrap()
+        .contains("acceptance criterion"));
+}

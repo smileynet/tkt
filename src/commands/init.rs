@@ -49,6 +49,7 @@ Parent containers are excluded from ready. Use tkt ready --parent ID for ready d
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Update checks default to 24h; user config update_check.interval accepts positive hours/days or never. TKT_UPDATE_CHECK=0 and DO_NOT_TRACK=1 still disable checks.
 Missing source references on active tickets are advisory, including under --strict; validate.require_source_reference=true explicitly requires them.
+Project structural frontier slot checks are info-only: source, acceptance and validation criteria; they do not change the ready queue.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
@@ -98,6 +99,7 @@ Parent containers are excluded from ready. Use tkt ready --parent ID for ready d
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Update checks default to 24h; user config update_check.interval accepts positive hours/days or never. TKT_UPDATE_CHECK=0 and DO_NOT_TRACK=1 still disable checks.
 Missing source references on active tickets are advisory, including under --strict; validate.require_source_reference=true explicitly requires them.
+Project structural frontier slot checks are info-only: source, acceptance and validation criteria; they do not change the ready queue.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
@@ -142,6 +144,7 @@ Parent containers are excluded from ready. Use tkt ready --parent ID for ready d
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Update checks default to 24h; user config update_check.interval accepts positive hours/days or never. TKT_UPDATE_CHECK=0 and DO_NOT_TRACK=1 still disable checks.
 Missing source references on active tickets are advisory, including under --strict; validate.require_source_reference=true explicitly requires them.
+Project structural frontier slot checks are info-only: source, acceptance and validation criteria; they do not change the ready queue.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
@@ -196,6 +199,7 @@ Parent containers are excluded from ready. Use tkt ready --parent ID for ready d
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Update checks default to 24h; user config update_check.interval accepts positive hours/days or never. TKT_UPDATE_CHECK=0 and DO_NOT_TRACK=1 still disable checks.
 Missing source references on active tickets are advisory, including under --strict; validate.require_source_reference=true explicitly requires them.
+Project structural frontier slot checks are info-only: source, acceptance and validation criteria; they do not change the ready queue.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
@@ -251,6 +255,7 @@ Parent containers are excluded from ready. Use tkt ready --parent ID for ready d
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Update checks default to 24h; user config update_check.interval accepts positive hours/days or never. TKT_UPDATE_CHECK=0 and DO_NOT_TRACK=1 still disable checks.
 Missing source references on active tickets are advisory, including under --strict; validate.require_source_reference=true explicitly requires them.
+Project structural frontier slot checks are info-only: source, acceptance and validation criteria; they do not change the ready queue.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.

@@ -114,6 +114,7 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
         &corpus,
         cfg.validate_require_source_reference,
     ));
+    all_findings.extend(check_frontier_readiness(&corpus, &cfg.ready_capabilities()));
     let cutoff = cfg.validate_missing_resolution_before_id;
     let legacy_ids: HashSet<String> = cutoff
         .map(|cutoff| {
@@ -154,6 +155,39 @@ pub fn check_source_references(corpus: &[Ticket], required: bool) -> Vec<Finding
             message: "add a spec, prerequisite, parent, local ticket citation, documentation path or HTTP(S) source link".into(),
             severity: if required { "error" } else { "info" }.into(),
         }).collect()
+}
+
+pub fn check_frontier_readiness(corpus: &[Ticket], capabilities: &[String]) -> Vec<Finding> {
+    core::frontier_with_capabilities(corpus, capabilities)
+        .into_iter()
+        .filter_map(|ticket| {
+            let mut missing = Vec::new();
+            if !has_source_reference(ticket) {
+                missing.push("source reference");
+            }
+            if !core::ac_transfer::criteria(&ticket.file)
+                .iter()
+                .any(|criterion| criterion.state != ">" && !criterion.text.trim().is_empty())
+            {
+                missing.push("acceptance criterion");
+            }
+            if ticket.validation_criteria.is_empty() {
+                missing.push("validation criterion");
+            }
+            if missing.is_empty() {
+                return None;
+            }
+            Some(Finding {
+                file: filename(ticket),
+                rule: "frontier-readiness".into(),
+                message: format!(
+                    "before starting, add: {} (slot checks only; adequacy still needs review)",
+                    missing.join(", ")
+                ),
+                severity: "info".into(),
+            })
+        })
+        .collect()
 }
 
 pub fn check_ac_transfers(corpus: &[Ticket]) -> Vec<Finding> {

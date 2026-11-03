@@ -14,18 +14,7 @@ pub fn run(json: bool, agent: Option<&AgentId>, parent: Option<&str>) -> Result<
             super::common::domain_bail!(NotFound, "no parent ticket with id {}", id);
         }
     }
-    let legacy_env = std::env::var("CREW_ENV")
-        .ok()
-        .filter(|value| !value.is_empty())
-        .or_else(|| {
-            pcfg.ready_default_env
-                .map(|value| value.as_str().to_string())
-        })
-        .unwrap_or_default();
-    let mut capabilities = pcfg.machine_capabilities.clone();
-    if !legacy_env.is_empty() && !capabilities.contains(&legacy_env) {
-        capabilities.push(legacy_env);
-    }
+    let capabilities = pcfg.ready_capabilities();
     let front = core::frontier_with_capabilities(&corpus, &capabilities);
 
     // Apply context filter (unless bypass is active)
