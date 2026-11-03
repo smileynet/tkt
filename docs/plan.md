@@ -123,7 +123,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 90 | tkt open <id>: find URLs in ticket body and open in browser | open |
 | 93 | Pluggable schema definitions with meta field + ai_context support | open |
 | 99 | Make update check interval configurable | ✅ done |
-| 125 | Design the first external-system import adapter contract | open |
+| 125 | Design the first external-system import adapter contract | in_progress |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | open |
 | 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | open |

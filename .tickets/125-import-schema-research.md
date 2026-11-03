@@ -1,7 +1,7 @@
 ---
 id: "125"
 title: "Design the first external-system import adapter contract"
-status: open
+status: in_progress
 blocked_by: ["77"]
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Fixtures cover identity, state/relations, unsupported values and unknown-field preservation without pretending the nonexistent map interface exists"
   - "The first-adapter scope and remaining systems are separated with a concrete implementation/verification plan"
 tags: ["integrations", "kind:enhancement", "stream:quality", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Design the first external-system import adapter contract
