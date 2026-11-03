@@ -30,7 +30,7 @@ laptop/phone acceptance remains unverified under the existing browser restrictio
 LAN hosting is active under completed #244; see [the hosting guide](dashboard-lan.md)
 for its address, served-file scope and supervised-process lifecycle.
 
-The earlier maintenance batch closed 32 tickets and cancelled six obsolete items. The current batch has completed #197, #234, #199, #200 and #159 with independent critic review. The independently discovered plan-comparison repair #248 is also complete; narrative parsing remains deferred. Approved guidance implementation follows #245 -> #246 -> #247. The three dashboard tickets retain unavailable rendered acceptance; all 22 backlog items remain deliberately deferred.
+The earlier maintenance batch closed 32 tickets and cancelled six obsolete items. The current batch has completed #197, #234, #199, #200 and #159 with independent critic review. The independently discovered plan-comparison repair #248 is also complete; narrative parsing remains deferred. Guidance reference preparation (#245) is complete; conditional extraction (#246) and final audit/deployment (#247) remain in sequence. The three dashboard tickets retain unavailable rendered acceptance; all 22 backlog items remain deliberately deferred.
 
 | ID | Work | Status |
 |---:|---|---|
