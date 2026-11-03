@@ -1,6 +1,6 @@
 ---
 id: "157"
-title: "tkt hooks subcommand + pre-commit installer (warn-default, config block/log)"
+title: "Optional advisory project pre-commit hooks"
 status: in_progress
 blocked_by: []
 priority: medium
@@ -13,6 +13,10 @@ assignee: "codex"
 ---
 
 # tkt hooks subcommand + pre-commit installer (warn-default, config block/log)
+
+## Current contract — 2026-11-03
+
+Implement explicit hooks install/check/remove/run for an optional advisory pre-commit shim; no block/log policy or global installer. Exact-byte ownership, custom hooksPath refusal, linked-worktree common directory, no-overwrite publication, dry-run and crash/retry semantics are specified in [the operator guide](../docs/optional-hooks.md). This supersedes historical nonexistent Hooks/config references and blocking options below. The actual checkout keeps hooks disabled.
 
 ## Owner decision — 2026-11-03
 
