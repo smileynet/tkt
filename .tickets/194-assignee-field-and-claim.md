@@ -1,7 +1,7 @@
 ---
 id: "194"
 title: "assignee field + claim-by-assignment + frontier honors it"
-status: in_progress
+status: done
 blocked_by: ["224"]
 priority: high
 validation_criteria:
@@ -31,9 +31,9 @@ Additive and optional: a solo serial workflow can ignore it.
 
 ## Acceptance criteria
 
-- [ ] Ticket struct has `assignee: Option<AgentId>`, parsed/serialized like `spec`
-- [ ] `tkt claim` sets `assignee` alongside `in_progress`; refuses an already-assigned ticket without `--force`
-- [ ] `tkt ready` excludes tickets assigned to another identity; `query`/`ready` surface `assignee`
+- [x] Ticket struct has `assignee: Option<AgentId>`, parsed/serialized like `spec`
+- [x] `tkt claim` sets `assignee` alongside `in_progress`; refuses an already-assigned ticket without `--force`
+- [x] `tkt ready` excludes tickets assigned to another identity; `query`/`ready` surface `assignee`
 
 ## Triage — 2026-11-02
 
@@ -42,3 +42,12 @@ Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
 AgentId/eligibility shipped in #224; assignee ownership has not. Reuse invocation identity, preserve eligibility as a separate policy, and add ownership fixtures.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Typed optional ownership recorded by claim, conflicting owners require force, and frontier/query expose ownership independently of eligibility. Anonymous force preserves prior owner. Critic accepted. Evidence promoted docs/evidence/project-owner-body-165-194-176.md; fixtures self-clean shared caches retained.
+
+### Verification
+1. ✓ Ticket struct has assignee: Option<AgentId>, parsed/serialized like spec — "AgentId assignee parse/serialize fixtures pass."
+2. ✓ tkt claim sets assignee alongside in_progress; refuses an already-assigned ticket without --force — "Claim identity/conflict/force fixtures pass; initial red attempt compile-blocked as documented."
+3. ✓ tkt ready excludes tickets assigned to another identity; query/ready surface assignee — "Ready filters same/other/anonymous ownership and query exposes assignee; full gate passed."
