@@ -1,0 +1,302 @@
+{
+  "format": "github-issues/v1",
+  "apiVersion": "2026-03-10",
+  "synthetic": true,
+  "runtimeImplemented": false,
+  "cases": [
+    {
+      "name": "open-with-unknown",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ],
+        "custom_field": {
+          "nested": [
+            "kept"
+          ]
+        }
+      },
+      "expect": {
+        "action": "create",
+        "identity": "github.com:issue:101",
+        "status": "open",
+        "blocked_by": [],
+        "parent": null,
+        "unknown": "preserve-complete-object"
+      }
+    },
+    {
+      "name": "same-number-other-repo",
+      "source": {
+        "id": 202,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/two/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ]
+      },
+      "expect": {
+        "action": "create-distinct",
+        "identity": "github.com:issue:202"
+      }
+    },
+    {
+      "name": "same-identity-replay",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ]
+      },
+      "existingIdentity": "github.com:issue:101",
+      "expect": {
+        "action": "skip-existing",
+        "overwrite": false
+      }
+    },
+    {
+      "name": "closed",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "closed",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ]
+      },
+      "expect": {
+        "action": "skip-closed",
+        "done": false
+      }
+    },
+    {
+      "name": "pull-request",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ],
+        "pull_request": {
+          "url": "https://api.github.com/repos/example/one/pulls/7"
+        }
+      },
+      "expect": {
+        "action": "skip-pull-request"
+      }
+    },
+    {
+      "name": "unknown-state",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "future-state",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ]
+      },
+      "expect": {
+        "action": "error-no-writes"
+      }
+    },
+    {
+      "name": "missing-identity",
+      "source": {
+        "id": null,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ]
+      },
+      "expect": {
+        "action": "error-no-writes"
+      }
+    },
+    {
+      "name": "unsupported-relations",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ],
+        "parent": {
+          "id": 303
+        },
+        "assignees": [
+          {
+            "login": "external-user"
+          }
+        ]
+      },
+      "expect": {
+        "action": "create",
+        "parent": null,
+        "assignee": null,
+        "preserve": "parent-and-assignees"
+      }
+    },
+    {
+      "name": "unmanaged-snapshot",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ]
+      },
+      "existingSnapshot": "foreign",
+      "expect": {
+        "action": "conflict-no-writes"
+      }
+    },
+    {
+      "name": "duplicate-local-identity",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": "Work\n- [ ] external task\nSee #8",
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ]
+      },
+      "existingLocalIds": [
+        "01",
+        "02"
+      ],
+      "expect": {
+        "action": "conflict-no-writes"
+      }
+    },
+    {
+      "name": "null-body",
+      "source": {
+        "id": 101,
+        "number": 7,
+        "state": "open",
+        "title": "Quoted \"request\"",
+        "body": null,
+        "html_url": "https://github.com/example/one/issues/7",
+        "labels": [
+          {
+            "name": "bug"
+          }
+        ],
+        "custom_field": {
+          "nested": [
+            "kept"
+          ]
+        }
+      },
+      "expect": {
+        "action": "create",
+        "renderedSource": "",
+        "snapshotBody": null
+      }
+    },
+    {
+      "name": "mid-pagination-change",
+      "sources": [
+        {
+          "id": 101,
+          "number": 7,
+          "state": "open",
+          "title": "Quoted \"request\"",
+          "body": "Work\n- [ ] external task\nSee #8",
+          "html_url": "https://github.com/example/one/issues/7",
+          "labels": [
+            {
+              "name": "bug"
+            }
+          ],
+          "custom_field": {
+            "nested": [
+              "kept"
+            ]
+          }
+        },
+        {
+          "id": 101,
+          "number": 7,
+          "state": "closed",
+          "title": "Quoted \"request\"",
+          "body": "Work\n- [ ] external task\nSee #8",
+          "html_url": "https://github.com/example/one/issues/7",
+          "labels": [
+            {
+              "name": "bug"
+            }
+          ],
+          "custom_field": {
+            "nested": [
+              "kept"
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "action": "error-no-writes",
+        "reason": "same identity changed during extraction"
+      }
+    }
+  ]
+}

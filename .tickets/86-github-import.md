@@ -13,7 +13,7 @@ tags: ["integrations", "kind:enhancement", "triage:ready-for-agent", "stream:wor
 
 ## Current executable contract — 2026-11-03
 
-One-way GitHub import is blocked by ticket 125. Use stable repository-qualified issue identity (canonical repository plus issue number/URL), explicit status/label/body mapping and repeat-import idempotence. The historical source: github#NN idea alone is insufficient across repositories. Preserve unsupported raw source data without claiming it is supported typed frontmatter; do not write to GitHub. Implement only after the mapping contract is verified.
+One-way GitHub import is blocked by ticket 125. Follow docs/github-adapter-contract.md: canonical identity is host plus numeric issue ID, with repository numeric ID/name, number and URL as checked provenance. Extract bounded state=all pages but create open issues only; closed/PR counts describe received objects. Preserve labels in raw snapshots without automatic tags/priority/ownership mapping; fence source Markdown, preserve null body as JSON null and render an empty source section. Use create-only replay deduplication and journaled atomic ticket/snapshot ownership. The historical source: github#NN idea alone is insufficient across repositories. Preserve unsupported raw source data without claiming it is supported typed frontmatter; do not write to GitHub. Implement only after the mapping contract is verified.
 
 This contract supersedes conflicting historical proposals below.
 
