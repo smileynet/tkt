@@ -24,7 +24,11 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-The unblocked maintenance queue is complete: 32 tickets closed with independent review and evidence, plus six obsolete items explicitly cancelled. The final audit-rule repair #242 is complete; historical prose and missing evidence remain intact. The mechanical frontier still lists #197, #234 and #159, each gated on a recorded decision. #199/#200 depend on that parent-rollup decision. The two dashboard tickets await unavailable rendered checks, and 22 backlog items remain deliberately deferred. The guidance proposal #226 remains unapplied pending approval. No artificial dependencies or deferrals were added to empty the frontier.
+The newly requested Decisions tab is implemented under #243, with recommended
+radio choices, notes and a chat export. Its model/DOM checks pass; rendered
+laptop/phone acceptance remains unverified under the existing browser restriction.
+
+The unblocked maintenance queue is complete: 32 tickets closed with independent review and evidence, plus six obsolete items explicitly cancelled. The final audit-rule repair #242 is complete; historical prose and missing evidence remain intact. The mechanical frontier still lists #197, #234 and #159, each gated on a recorded decision. #199/#200 depend on that parent-rollup decision. The three dashboard tickets await unavailable rendered checks, and 22 backlog items remain deliberately deferred. The guidance proposal #226 remains unapplied pending approval. No artificial dependencies or deferrals were added to empty the frontier.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -176,3 +180,9 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 223 | Keep plan status current during ticket mutations | ✅ done |
 | 224 | Agent eligibility policy and invocation-scoped identity | ✅ done |
 | 225 | Make upstream deployment validation enforce strict plugin and catalog checks | ✅ done |
+
+## Unplanned tickets
+
+| ID | Work | Status |
+|---:|---|---|
+| 243 | Collect dashboard decisions with recommendations and chat export | in_progress |

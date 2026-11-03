@@ -29,3 +29,20 @@ Extend the canonical delivery-dashboard renderer and checker, then adopt it with
 ## Planning gate
 
 Local browser use remains disabled. Model/DOM-simulation checks can be performed; rendered acceptance remains unverified and no dashboard feedback/review request is made to the owner.
+
+## Implementation evidence — 2026-11-03
+
+The Decisions tab contains 17 curated choices: all 16 recorded decision gates
+plus proposal approval for 226. Recommendations are selected by default; notes,
+alternative choices and one complete chat export are wired. Clipboard failure
+leaves selectable text. Source is aligned to published canonical `a812670`.
+
+Seven actual-renderer DOM-simulation tests and 42 canonical contract tests pass;
+the dashboard checker reports zero errors/warnings. All 52 earlier entries and
+the prior config are preserved, with a refreshed 243-ticket snapshot.
+See [durable evidence](../docs/evidence/dashboard-decisions-243.md).
+
+A fresh computer-use inventory confirms `Local browser use is disabled in Work
+settings`. No browser or native-browser fallback was attempted. Rendered
+laptop/phone checks and native clipboard behavior remain unverified; keep this
+ticket in progress without asking the owner to perform dashboard review.
