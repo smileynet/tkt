@@ -2,7 +2,7 @@
 id: "173"
 title: "validate: frontier-scoped readiness rule (Definition of Ready gate)"
 status: open
-blocked_by: []
+blocked_by: ["175"]
 validation_criteria:
   - "Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate"
   - "Source-reference logic is reused rather than duplicated and its scope is distinct from broader readiness"
