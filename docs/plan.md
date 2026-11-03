@@ -110,7 +110,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 
 ## Reactivated work and remaining deferrals
 
-The owner requested execution of actionable parked work. See [the per-ticket review](parked-review-2026-11-03.md). Completed after critic acceptance: #202 design, #99 update cadence and #186 parity retirement. Current execution queue: #125 adapter design, #175 shared source-reference checks, then independent ready work. #173 depends on the shared #175 predicate; #86 depends on the #125 adapter contract. These are actual implementation prerequisites, not scheduling edges. #191 starts with an effect audit before any refactor. #147 and #158 need specific evidence; #184 remains explicitly deferred.
+The owner requested execution of actionable parked work. See [the per-ticket review](parked-review-2026-11-03.md). Completed after critic acceptance: #202 design, #99 update cadence, #186 parity retirement and #125 adapter design. Current execution queue: #175 shared source-reference checks, #173 frontier readiness, then independent ready work (including the now-unblocked #86 importer). #173 depends on the shared #175 predicate; #86 depends on the #125 adapter contract. These are actual implementation prerequisites, not scheduling edges. #191 starts with an effect audit before any refactor. #147 and #158 need specific evidence; #184 remains explicitly deferred.
 
 | ID | Work | Status |
 |---:|---|---|
