@@ -62,7 +62,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 | 228 | Migrate status dashboard to the current Plan-tab contract | in_progress |
 | 229 | tkt-work close step cleans up the ticket's scratch and build artifacts | ✅ done |
 | 230 | Separate artifact, functionality and user-outcome evidence in ticket closure guidance | ✅ done |
-| 231 | tkt query outputs every frontmatter field, including tags | in_progress |
+| 231 | tkt query outputs every frontmatter field, including tags | ✅ done |
 | 232 | Frontier output distinguishes unfinished blockers from finished ones | in_progress |
 | 233 | tkt edit can set and clear tags | ✅ done |
 | 234 | Acceptance criteria can be marked moved to another ticket | open |
