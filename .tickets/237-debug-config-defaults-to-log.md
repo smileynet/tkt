@@ -1,7 +1,7 @@
 ---
 id: "237"
 title: "debug = true in config prints to stderr instead of the log file"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "With debug = true and no debug.format, output goes to the log file and stderr stays clean"
