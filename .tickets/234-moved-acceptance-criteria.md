@@ -1,7 +1,7 @@
 ---
 id: "234"
 title: "Acceptance criteria can be marked moved to another ticket"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "The receiving criterion has a source back-reference and source/destination evidence mapping is explicit"
   - "Retries are idempotent and interrupted multi-file transfers have tested recovery without losing or duplicating criteria"
 tags: ["cli", "kind:enhancement", "stream:workflow", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Acceptance criteria can be marked moved to another ticket
