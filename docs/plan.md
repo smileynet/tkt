@@ -45,7 +45,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 163 | lint: backfill missing id from filename prefix | ✅ done |
 | 164 | validate: recognize slug ids as canonical (stop false id-filename-mismatch) | ✅ done |
 | 165 | config --set: support project scope (.tickets/config.toml), not just user | open |
-| 190 | Parse known config keys into strict typed policies | open |
+| 190 | Parse known config keys into strict typed policies | in_progress |
 | 236 | tkt config shows the wrong user-config path on macOS | ✅ done |
 | 237 | debug = true in config prints to stderr instead of the log file | ✅ done |
 | 238 | Renumbering leaves stale ID references in ticket bodies | open |
