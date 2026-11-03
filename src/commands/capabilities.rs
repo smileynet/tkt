@@ -5,9 +5,17 @@ use clap::{Arg, ArgAction, Command, CommandFactory};
 use serde_json::{json, Map, Value};
 
 pub fn run() -> Result<i32> {
-    let version = env!("CARGO_PKG_VERSION");
+    // Keep command construction and the larger JSON frame off each other's
+    // Windows debug stack; capability enumeration rebuilds the Clap tree.
     let mut cli = crate::cli::Cli::command();
     cli.build();
+    let manifest = feature_manifest(&cli);
+    println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+    Ok(0)
+}
+
+fn feature_manifest(cli: &Command) -> Value {
+    let version = env!("CARGO_PKG_VERSION");
     let mut commands = Map::new();
     for command in cli
         .get_subcommands()
@@ -23,7 +31,7 @@ pub fn run() -> Result<i32> {
             "lint" => ("idempotent", "Normalize files by default; --check reports without writing", "text"),
             "migrate" => ("idempotent", "Preview or detect by default; --confirm applies a reviewed migration", "text"),
             "context" => ("idempotent", "No arguments shows context; tags or --clear change local context", "text"),
-            "sync-plan" => ("idempotent", "Report drift by default; --check gates it; --fix updates the plan", "json"),
+            "sync-plan" => ("idempotent", "Report drift by default; --check gates it; --fix updates status rows; --generate renders all tickets to stdout or atomically replaces an explicit owned file region, preserving narrative; dry-run writes nothing", "json"),
             "validate" => ("idempotent", "Read-only unless --fix repairs ticket files; --brief uses text", "json"),
             "rebase" => ("idempotent", "Fetch, renumber collisions and commit locally; --dry-run reads cached remote state without writing", "text"),
             "hooks" => ("idempotent", "Explicit install/remove of exact owned advisory pre-commit shim; check/run read-only. No core.hooksPath edits, commit or push; dry-run writes nothing. Shared by repository worktrees; foreign/custom hooks preserved", "text"),
@@ -49,9 +57,9 @@ pub fn run() -> Result<i32> {
             }),
         );
     }
-    let json = serde_json::json!({
+    serde_json::json!({
         "version": version,
-        "global_flags": input_schema(&cli)["properties"],
+        "global_flags": input_schema(cli)["properties"],
         "commands": commands,
         "workflows": {
             "single_agent": "ready \u{2192} close <id> --check-all --resolution '...'",
@@ -91,9 +99,7 @@ pub fn run() -> Result<i32> {
             "error_envelope": "last line of stderr when -o json",
             "success_hints": "success envelope may carry an advisory hints[] array (code, message, suggested_command, disable); advisory only, never changes exit_code; suppress with TKT_ADVICE=0"
         }
-    });
-    println!("{}", serde_json::to_string_pretty(&json).unwrap());
-    Ok(0)
+    })
 }
 
 fn input_schema(command: &Command) -> Value {

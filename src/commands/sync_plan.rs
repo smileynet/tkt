@@ -13,8 +13,19 @@ use crate::core::{self, Status, Ticket};
 use crate::findings::{self, Finding};
 use crate::git;
 
-static RE_PLAN_ROW: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap());
+static RE_PLAN_ROW: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?m)^\|\s*([A-Za-z0-9][A-Za-z0-9_-]*)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap()
+});
+
+fn plan_rows(text: &str) -> impl Iterator<Item = regex::Captures<'_>> {
+    RE_PLAN_ROW
+        .captures_iter(text)
+        .filter(|caps| !is_header(caps))
+}
+
+fn is_header(caps: &regex::Captures<'_>) -> bool {
+    caps[1].trim().eq_ignore_ascii_case("id") && caps[2].trim().eq_ignore_ascii_case("status")
+}
 
 fn parse_plan_status(cell: &str) -> Option<Status> {
     let cell = cell.trim();
@@ -27,7 +38,7 @@ fn parse_plan_status(cell: &str) -> Option<Status> {
     }
 }
 
-fn plan_status_value(ticket: &Ticket) -> String {
+pub(super) fn plan_status_value(ticket: &Ticket) -> String {
     match ticket.status {
         Status::Done => "✅ done".to_string(),
         Status::Cancelled => format!(
@@ -64,7 +75,7 @@ fn update_status_cell(repo: &std::path::Path, id: &str, value: &str) -> Result<b
     }
     let text = std::fs::read_to_string(&path)?;
     let updated = RE_PLAN_ROW.replace_all(&text, |caps: &regex::Captures| {
-        if caps[1].trim() != id {
+        if is_header(caps) || caps[1].trim() != id {
             return caps[0].to_string();
         }
         let cell = caps.get(2).unwrap();
@@ -106,7 +117,7 @@ pub fn run(
     let mut findings: Vec<Finding> = Vec::new();
     let mut fixed_count = 0;
 
-    for caps in RE_PLAN_ROW.captures_iter(&plan_text.clone()) {
+    for caps in plan_rows(&plan_text.clone()) {
         let tid = caps[1].trim();
         let status_cell = &caps[2];
         let plan_status = parse_plan_status(status_cell);
@@ -177,8 +188,7 @@ pub fn run(
         }
     }
 
-    let plan_ids: std::collections::HashSet<String> = RE_PLAN_ROW
-        .captures_iter(&plan_text)
+    let plan_ids: std::collections::HashSet<String> = plan_rows(&plan_text)
         .map(|c| c[1].trim().to_string())
         .collect();
     for t in &corpus {

@@ -459,7 +459,7 @@ pub fn body_has_source_reference(body: &str) -> bool {
             .any(|(_, line)| LINKS.is_match(line))
 }
 
-fn prose_lines(body: &str) -> Vec<(usize, &str)> {
+pub(crate) fn prose_lines(body: &str) -> Vec<(usize, &str)> {
     let mut lines = Vec::new();
     let mut fence: Option<(char, usize)> = None;
     for (line_index, line) in body.lines().enumerate() {

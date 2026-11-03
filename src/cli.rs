@@ -287,6 +287,9 @@ enum Commands {
     },
     /// Drift-check a plan table; --fix also appends missing tickets. Status mutations sync existing docs/plan.md rows automatically (requires a clean plan).
     SyncPlan {
+        /// Render all tickets; stdout by default, or replace an owned region in the explicit file
+        #[arg(long, group = "mode", conflicts_with_all = ["strict", "brief"])]
+        generate: bool,
         #[arg(long, group = "mode")]
         check: bool,
         #[arg(long, group = "mode")]
@@ -637,12 +640,19 @@ pub fn run() -> i32 {
                 file,
             } => crate::commands::renumber::run(&old_id, &new_id, file.as_deref()),
             Commands::SyncPlan {
+                generate,
                 check,
                 fix,
                 strict,
                 brief,
                 plan,
-            } => crate::commands::sync_plan::run(check, fix, strict, brief, plan.as_deref()),
+            } => {
+                if generate {
+                    crate::commands::plan_projection::run(plan.as_deref())
+                } else {
+                    crate::commands::sync_plan::run(check, fix, strict, brief, plan.as_deref())
+                }
+            }
             Commands::Validate {
                 strict,
                 brief,
@@ -1027,12 +1037,16 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
         }
         Commands::SyncPlan {
+            generate,
             check,
             fix,
             strict,
             brief,
             ..
         } => {
+            if *generate {
+                flags.push("generate");
+            }
             if *brief {
                 flags.push("brief");
             }

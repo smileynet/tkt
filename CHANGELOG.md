@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Generate a deterministic whole-project plan table, preview it without writes, and refresh an owned region while preserving human narrative.
 - Explicitly install, inspect and remove a project advisory pre-commit hook while preserving existing hooks and keeping commits nonblocking.
 - See missing source, acceptance and validation slots on the project frontier without changing readiness or making strict validation block on those advisories.
 - Active tickets receive an advisory when they lack a source reference; projects can explicitly require provenance without changing the ready queue.

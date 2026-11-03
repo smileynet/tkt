@@ -151,3 +151,18 @@ fn capabilities_describes_supported_values_aliases_and_mutating_modes() {
     assert_eq!(manifest["global_flags"]["output"]["short"], "-o");
     assert_eq!(manifest["global_flags"]["quiet"]["flag"], "--quiet");
 }
+#[test]
+fn capabilities_repeated_construction_stays_within_native_process_stack() {
+    for index in 0..32 {
+        let args = if index % 2 == 0 {
+            vec!["capabilities"]
+        } else {
+            vec!["capabilities", "-o", "json"]
+        };
+        let manifest: serde_json::Value = serde_json::from_str(&cli(&args)).unwrap();
+        assert!(
+            manifest["commands"]["sync-plan"]["inputSchema"]["properties"]["generate"].is_object()
+        );
+        assert!(manifest["commands"]["hooks"].is_object());
+    }
+}

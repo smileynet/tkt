@@ -27,3 +27,5 @@ pub mod telemetry;
 pub mod validate;
 
 pub mod hooks;
+
+pub mod plan_projection;

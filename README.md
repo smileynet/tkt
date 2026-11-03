@@ -499,3 +499,7 @@ Frontier readiness: `validate` emits info-only `frontier-readiness` for missing 
 Optional Git advice: `tkt hooks install|check|remove|run` manages only the exact owned project pre-commit shim, shared by repository worktrees. Install/remove are explicit, respect global dry-run and preserve foreign/modified hooks or any configured core.hooksPath. The shim always permits committing, even when validation or tkt fails; it is not the verification gate. No hook is installed by init/deploy, no Git config or commit/push changes, and normal tkt mutation hook bypass remains unchanged.
 
 See [optional hook installation and recovery](docs/optional-hooks.md).
+
+Derived plans: `tkt sync-plan --generate [FILE]` renders the full corpus in priority/ID order (all statuses, no tag/agent narrowing). No file means Markdown stdout; -o json wraps projection/count. An explicit new/empty file or one owned unfenced tkt:projection:begin/end block is atomically written; human text outside stays exact. Global dry-run writes nothing. Unmarked nonempty files, bad markers, output links/database paths and incomplete/duplicate IDs are rejected; parent directories must exist. Generation conflicts with check/fix/strict/brief. Existing 3-column drift/fix semantics remain, with numeric and canonical slug IDs; no narrative parsing or commit/push.
+
+See [derived plan ownership and preview](docs/plan-projection.md).
