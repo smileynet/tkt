@@ -127,7 +127,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | open |
 | 157 | Optional advisory project pre-commit hooks | ✅ done |
-| 158 | tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex) | backlog |
+| 158 | tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex) | open |
 | 168 | Measure demand for missing-tag and backlog advisories | open |
 | 173 | validate: frontier-scoped readiness rule (Definition of Ready gate) | ✅ done |
 | 175 | validate: advisory no-source-reference finding (union of spec/#NN/parent/link) | ✅ done |
