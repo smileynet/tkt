@@ -27,7 +27,7 @@ in Work settings.” No alternate browser or server route was attempted.
 Laptop and phone rendering, all three tab interactions, visible dependency paths,
 responsive clipping and scope-switching behavior remain unverified. No captures
 exist and no accepted review receipt was fabricated. Ticket 228 stays in progress;
-the dashboard carries an open visual-review ask. A human functionality report can
+unavailable checks are recorded under Details without requesting dashboard feedback. A human functionality report can
 be recorded separately but is not a tool-observed rendering check.
 
 This deliverable is a local dashboard source update, not a release publication.
@@ -50,5 +50,5 @@ These checks do not satisfy the pending rendered phone/laptop acceptance criteri
 
 Reviewed source identities (static checks; no rendered acceptance):
 
-- docs/status.html SHA-256: `e8ce3b5b29da383c3a24c606ee6c5860bb061163b0a29e7ecb3f6d6b91d4cade`
+- docs/status.html SHA-256: `e28dedf9c1b3b42322b2e8e7609bfc9bf02f63985ede0c652258bcbc3b0d05a9`
 - Canonical template SHA-256: `cbef711bad6441e7ef3f83d0c64b4194b38cacf7ea2cae6e04708c850f7be5b1`

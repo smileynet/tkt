@@ -56,5 +56,5 @@ chain 193→198→199 passed static checks. See
 The local browser tool returned “Local browser use is disabled in Work settings.”
 Phone/laptop tabs, interactions and clipping remain unverified. No alternate route
 was attempted and no accepted receipt was created. Keep this ticket in progress
-until the final visual AC is observed; the dashboard carries an open review ask.
+until the final visual AC is observed. Record this limitation in Details; do not ask the user to review the dashboard. The user provides feedback when needed.
 No scratch/capture artifacts were made.

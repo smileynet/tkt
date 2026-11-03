@@ -187,8 +187,8 @@ h3.group{font-size:13px;margin:16px 0 8px;color:var(--muted);letter-spacing:.07e
     "id": "2026-11-02-dashboard-plan",
     "date": "2026-11-02",
     "kind": "progress",
-    "title": "The full work plan is ready for visual review",
-    "summary": "The dashboard now includes every ticket, its dependencies and work-stream filters. Visual review at laptop and phone widths is still pending.",
+    "title": "See all remaining work in one place",
+    "summary": "Explore every ticket, its dependencies and work-stream filters alongside the delivery history.",
     "visual": {
       "type": "steps",
       "items": [
@@ -201,24 +201,11 @@ h3.group{font-size:13px;margin:16px 0 8px;color:var(--muted);letter-spacing:.07e
           "state": "done"
         },
         {
-          "label": "Review both screen sizes",
+          "label": "Keep the work plan current",
           "state": "now"
         }
       ]
     },
-    "asks": [
-      {
-        "question": "Can you review the dashboard at laptop and phone widths?",
-        "recommendation": "Review both sizes",
-        "impact": "Local browser use is disabled here, so rendered layout and interaction checks remain pending.",
-        "options": [
-          "Review both sizes",
-          "Defer visual review"
-        ],
-        "id": "dashboard-228-visual-review",
-        "status": "open"
-      }
-    ],
     "try": {
       "label": "Read the execution queue",
       "href": "plan.md"
@@ -226,7 +213,7 @@ h3.group{font-size:13px;margin:16px 0 8px;color:var(--muted);letter-spacing:.07e
     "tickets": [
       "228"
     ],
-    "details": "Migrated to the installed canonical delivery-dashboard template and preserved all 16 existing entries and their local asset links. The generated snapshot includes the complete board, including deferred work. The Plan graph records actual dependencies; preferred sequencing remains in docs/plan.md. No rendered behavior is certified: cua.createBrowserTab reported local browser use disabled in Work settings; no alternate browser route was attempted. Ticket228 remains in progress pending its laptop/phone acceptance criteria.",
+    "details": "Migrated to the installed canonical delivery-dashboard template and preserved all 16 existing entries and their local asset links. The generated snapshot includes the complete board, including deferred work. The Plan graph records actual dependencies; preferred sequencing remains in docs/plan.md. No rendered behavior is certified: cua.createBrowserTab reported local browser use disabled in Work settings; no alternate browser route was attempted. Ticket228 remains in progress because laptop/phone rendering is unverified. This limitation is recorded here without requesting user review; the user provides feedback when needed.",
     "links": [
       {
         "label": "Execution queue",
