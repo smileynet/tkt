@@ -1,7 +1,7 @@
 ---
 id: "125"
 title: "Design the first external-system import adapter contract"
-status: in_progress
+status: done
 blocked_by: ["77"]
 priority: medium
 validation_criteria:
@@ -13,6 +13,10 @@ assignee: "codex"
 ---
 
 # Design the first external-system import adapter contract
+
+## Current source correction — 2026-11-03
+
+There is no migrate.toml/--map executor in the current CLI. The first external adapter design is github-issues/v1, grounded in the explicitly requested one-way GitHub import in ticket 86. See [the contract](../docs/github-adapter-contract.md). This supersedes the historical architecture assertion below; existing tk migration remains separate.
 
 ## Owner decision — 2026-11-03
 
@@ -36,9 +40,9 @@ Define one explicit, versioned external-system adapter/mapping contract before b
 
 ## Acceptance criteria
 
-- [ ] One identified source/version has an explicit adapter or mapping contract grounded in primary documentation and a real use case
-- [ ] Fixtures cover identity, state/relations, unsupported values and unknown-field preservation without pretending the nonexistent map interface exists
-- [ ] The first-adapter scope and remaining systems are separated with a concrete implementation/verification plan
+- [x] One identified source/version has an explicit adapter or mapping contract grounded in primary documentation and a real use case
+- [x] Fixtures cover identity, state/relations, unsupported values and unknown-field preservation without pretending the nonexistent map interface exists
+- [x] The first-adapter scope and remaining systems are separated with a concrete implementation/verification plan
 
 ## Triage — 2026-11-02
 
@@ -57,3 +61,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-03)
+
+Designed github-issues/v1 adapter for explicit86usecase, no generic map/import runtime claimed; independent critic accepted final mapping and12syntheticcases.
+
+### Verification
+1. ✓ One identified source/version has an explicit adapter or mapping contract grounded in primary documentation and a real use case — "docs/github-adapter-contract.md pins REST2026-03-10,records explicit86usecase and primary docs/installedgh2.89/API help; current migrate help onlytk,no map executor."
+2. ✓ Fixtures cover identity, state/relations, unsupported values and unknown-field preservation without pretending the nonexistent map interface exists — "docs/evidence/github-adapter-125.json contains12syntheticcases for identity/replay,state/PR,unknown/nullbody,unsupportedrelations,provenanceconflicts and midpaginationchange; rawpreservation and runtimeabsence explicit. Critic accepted final sourceCAE8EE69…2A4867C1 and0FA32A9F…A11C550B."
+3. ✓ The first-adapter scope and remaining systems are separated with a concrete implementation/verification plan — "86currentcontract aligned to design and staged implementation/fault/retry/previewverification plan; otherproviders/generalmap outsidefirstscope. Docs-only diffcheck,JSONparse,link/source/scopechecks passed; noRust rebuild required."
