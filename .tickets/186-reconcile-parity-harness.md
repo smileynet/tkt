@@ -1,7 +1,7 @@
 ---
 id: "186"
 title: "Reconcile or retire the historical Python parity harness"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -13,6 +13,10 @@ assignee: "codex"
 ---
 
 # Reconcile or retire the historical Python parity harness
+
+## Evidence correction — 2026-11-03
+
+The three documented fixture files were present at review time; the old claim that they were absent was incorrect. They remain preserved and are now consumed by the maintained Rust test test_historical_fixture_contract. The unsupported Python comparison runner is retired; no supported Python reference exists in this checkout and no historical comparison is claimed to pass. Current confidence comes from the Rust gate, not implementation parity. This observation supersedes conflicting historical context below.
 
 ## Owner decision — 2026-11-03
 
@@ -33,9 +37,9 @@ Retire the unsupported historical Python parity harness and obsolete runnable in
 
 ## Acceptance criteria
 
-- [ ] Unsupported parity runner/instructions are retired without inventing a supported Python reference
-- [ ] Useful contract cases are preserved in maintained Rust tests where needed and actual current coverage is named
-- [ ] References and verification docs no longer imply that the dormant Python comparison is a passing gate
+- [x] Unsupported parity runner/instructions are retired without inventing a supported Python reference
+- [x] Useful contract cases are preserved in maintained Rust tests where needed and actual current coverage is named
+- [x] References and verification docs no longer imply that the dormant Python comparison is a passing gate
 
 ## Re-triage (2026-10-29)
 
@@ -60,3 +64,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-03)
+
+Retired unsupported Python comparison runner, retained all three fixtures under maintained Rust regression, corrected historical fixture claim; critic accepted.
+
+### Verification
+1. ✓ Unsupported parity runner/instructions are retired without inventing a supported Python reference — "Unsupported runner removed to OS recycle bin; README and workspace layout explicitly describe maintained Rust coverage, no Python reference or parity confidence claimed."
+2. ✓ Useful contract cases are preserved in maintained Rust tests where needed and actual current coverage is named — "Three fixtures preserved via include_str and new public regression; full mise run check 402 Rust and42 Node tests passed with1 existing Windows skip. See docs/evidence/parity-retirement-186.md."
+3. ✓ References and verification docs no longer imply that the dormant Python comparison is a passing gate — "Tracked reference search and git diff check passed; historical ticket/triage notes identified as historical, active instructions no longer advertise executable comparison. Independent critic accepted final scope and correction."
