@@ -13,7 +13,11 @@ Read `GLOSSARY.md` for domain vocabulary and `docs/adr/` for recorded decisions.
 See `docs/agents/specs/workspace-layout.md` for the full source tree.
 
 **Dashboard:** update `docs/status.html` after completed work worth surfacing; edit only
-its `gm-config` and `gm-entries` JSON blocks, then run the delivery-dashboard checker.
+its `gm-config` and `gm-entries` JSON blocks by hand. The delivery-dashboard
+`snapshot-tickets.mjs` helper owns `gm-tickets`; refresh it without an active tag
+context after ticket changes, then run the delivery-dashboard checker. Keep the
+renderer aligned with the canonical template; renderer migrations require their
+own ticket and laptop/phone inspection.
 
 For dispatch and reference-inventory traps, read `docs/agents/session-operations.md`.
 
