@@ -1,7 +1,7 @@
 ---
 id: "240"
 title: "Show workstreams and decision/evidence gates in the ticket graph"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Task graph distinguishes open unblocked work, ticket dependencies, decision gates and evidence gaps without changing frontier ordering"
