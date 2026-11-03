@@ -171,7 +171,12 @@ pub fn check_id_filename(corpus: &[Ticket]) -> Vec<Finding> {
         .iter()
         .filter(|t| {
             let name = filename(t);
-            !name.starts_with(&format!("{}-", t.id))
+            let slug_id_matches_stem = t
+                .path
+                .file_stem()
+                .and_then(|stem| stem.to_str())
+                .is_some_and(|stem| stem == t.id);
+            !slug_id_matches_stem && !name.starts_with(&format!("{}-", t.id))
         })
         .map(|t| Finding {
             file: filename(t),
