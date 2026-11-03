@@ -3,7 +3,8 @@
 Ticket files remain the source of truth. This table records intended sequencing and
 explicit deferral; statuses are projections checked by `tkt sync-plan`.
 
-Reconciled 2026-11-02 against checkout `62c8226` and the deployed matching binary.
+Initially triaged 2026-11-02 at `62c8226`; reconciled again 2026-11-03 after
+the unblocked maintenance queue. See [current evidence](evidence/frontier-maintenance-2026-11-03.md).
 See [full-board triage](agents/ticket-triage-2026-11-02.md) for per-ticket evidence,
 readiness and unknowns. There is no active tag context. Dashboard work (#228 and #240) is in progress; rendered verification remains unavailable.
 
@@ -23,7 +24,7 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-Project configuration, ownership, creation bodies/templates, hooks/deferred push, cancellation, content guidance, updater privacy, body-reference diagnostics and query/output repairs are complete. Six obsolete items were cancelled without claiming completion. The final deep audit confirmed a separate actionable false positive: #242 corrects completed-template detection when specifications quote placeholder examples. It is the next unblocked implementation; historical prose and missing evidence remain intact. The guidance proposal #226 remains unapplied pending approval. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
+The unblocked maintenance queue is complete: 32 tickets closed with independent review and evidence, plus six obsolete items explicitly cancelled. The final audit-rule repair #242 is complete; historical prose and missing evidence remain intact. The mechanical frontier still lists #197, #234 and #159, each gated on a recorded decision. #199/#200 depend on that parent-rollup decision. The two dashboard tickets await unavailable rendered checks, and 22 backlog items remain deliberately deferred. The guidance proposal #226 remains unapplied pending approval. No artificial dependencies or deferrals were added to empty the frontier.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -88,9 +89,9 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 | 200 | tkt ready --parent <id>: frontier scoped to one epic/map | open |
 | 227 | Add a cancelled status and tkt cancel/reopen per ADR 0004 | ✅ done |
 
-## Lower-priority actionable tooling
+## Tooling and verification decisions
 
-#66 remains open rather than being silently demoted; use the pinned dist command and generator. #159 needs its CI prescription reconciled with the standing verification policy before implementation. No new hosted workflow is authorized by this plan.
+#66 is complete with the pinned dist configuration migration verified. #159 needs its CI prescription reconciled with the standing verification policy before implementation. No new hosted workflow is authorized by this plan.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -113,7 +114,6 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 93 | Pluggable schema definitions with meta field + ai_context support | backlog |
 | 99 | Make update check interval configurable | backlog |
 | 125 | Research and build import schemas for Jira, Linear, Beads, GitLab, and other ticket systems | backlog |
-| 142 | Fix CREW_ENV=either hides everything and ac edge cases | cancelled (wontfix) |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | backlog |
 | 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | backlog |
@@ -127,15 +127,16 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 191 | Centralize command mutation effects and dry-run policy | backlog |
 | 202 | Deploy tkt guidance and skill safely across supported harnesses | backlog |
 
-## Pending cancellation under ADR 0004
+## Recorded cancellations under ADR 0004
 
-Approved dispositions remain parked until #227 exists: #87 superseded by #176; #208 duplicate of #138; #115/#161 obsolete; #94 wontfix. Their new #227 dependency records the actual lifecycle gate. No acceptance box was checked and no ticket was falsely marked done. #69/#140/#142 are not blanket cancellations; #140 is now reproduced and actionable.
+The lifecycle is implemented and six dispositions are recorded: #87 superseded by #176; #208 duplicates #138; #115/#161 are obsolete; #94 and #142 are wontfix. Cancellation checked no acceptance boxes and claimed no completed implementation. #142's isolated capability probe did not reproduce the report; its historical unspecified edge cases remain unknown. #140 is fixed and complete. #69 stays deferred with its broader integration decision intact.
 
 | ID | Work | Status |
 |---:|---|---|
 | 87 | tkt new --template: predefined ticket body structures | cancelled (superseded) |
 | 94 | Test VC flag | cancelled (wontfix) |
 | 115 | Review recall telemetry and debug functionality for useful patterns | cancelled (obsolete) |
+| 142 | Fix CREW_ENV=either hides everything and ac edge cases | cancelled (wontfix) |
 | 161 | frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex | cancelled (obsolete) |
 | 208 | tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...) | cancelled (duplicate) |
 

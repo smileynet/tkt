@@ -80,3 +80,19 @@ Strict ticket validation separately passed with zero findings.
 The five template records are contextual historical debt already dispositioned in
 [the closure review](historical-closure-239.md), not newly claimed product fixes.
 The completed-template rule remains done-only and does not mark any work complete.
+
+## Installed verification and artifacts
+
+`cargo install --path . --locked` passed (1m 09s); the freshness guard then matched
+installed `5f4d3f4` to HEAD before live checks. Installed strict validation and plan
+checks passed with zero findings. Installed `audit --deep -o json` reproduced all
+11 classified findings, removed the four quoted-example warnings and retained
+all five missing-evidence warnings. The workflow pack deployment passed with four
+skills; the existing generic-logo note is informational. Browser checks were not used.
+
+The [four source identities](audit-template-242-source-identities.json), public
+regression and this report are promoted durable evidence. Disposable gate/receipt
+scratch files are recycled after promotion. Dashboard helpers remain only through
+the final delivery update, then expire. The mixed-owner maintainer cache and
+unknown-owner artifacts retain the scoped dispositions in
+[the queue report](frontier-maintenance-2026-11-03.md).

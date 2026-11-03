@@ -132,3 +132,34 @@ The evidence export initially introduced mixed line endings; the resulting
 whitespace failure was corrected with LF normalization and `git diff --check`
 passed. Source/test hashes and the 384-test result remain applicable to the
 six-ticket implementation; they do not cover the forthcoming 242 change.
+
+## Final execution frontier
+
+The separately captured audit-rule ticket 242 is now complete, bringing this
+queue to **32 completed tickets and six explicit cancellations**. Its
+[final evidence](audit-template-242.md) records independent acceptance, 385 Rust
+and 42 Node passes, one existing Windows skip, clean formatting/Clippy, and
+installed-source verification at `5f4d3f4`. Four quoted-example false positives
+were removed; ten historical warnings and one priority notice remain classified.
+The audit is advisory and is not claimed clean.
+
+Final board totals are 242 tickets: **207 done, six cancelled, two in progress,
+five open and 22 backlog**. The mechanical frontier is still 197, 234 and 159;
+their decision gates are unresolved. Tickets 199 and 200 depend on 197. UI 228
+and 240 retain unchecked rendered acceptance because browser use is disabled.
+The deferred backlog remains visible and deferred. No actionable implementation
+ticket is being hidden as blocked or moved to backlog.
+
+The latest measured shared build cache is 4,456,027,442 bytes; node_modules is
+3,934,146 bytes, and reproducible local Antigravity output is 339,353 bytes.
+These retain the maintainer/deployment scopes above. Owned obsolete logs,
+source-receipt scratch and publication helpers were recycled after promotion.
+Final dashboard helpers expire after this delivery's snapshot is published.
+The two bounded grey-matter model logs remain scoped only to pending UI acceptance;
+unrelated research artifacts and worktrees were not modified or published.
+
+The independent final metadata audit matched all 242 dashboard statuses and
+dependency arrays to raw ticket files, found every unfinished ticket in the plan
+with the correct status, and confirmed 52 delivery entries with zero asks. It
+found no additional actionable open work. The final dashboard checker passed
+with zero errors or warnings; rendered acceptance remains explicitly unavailable.
