@@ -1,7 +1,7 @@
 ---
 id: "249"
 title: "Add local pre-push checks to replace removed CI workflow"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
