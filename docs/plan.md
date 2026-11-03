@@ -23,7 +23,7 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-Discovery #138/#127, freshness guard #153 and missing-ID repair #163 are complete. Current parallel work is #241 (close-only done lifecycle) and #164 (slug-ID validation). Each implementation requires independent critic acceptance and the local gate before closure. Dashboard work remains in progress outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID.
+Discovery #138/#127, freshness guard #153, missing-ID repair #163, close-only completion #241, slug-ID validation #164 and malformed config input #140 are complete. Current parallel work is #195 (parent integrity) and #193 (label namespace configuration). Each implementation requires independent critic acceptance and the local gate before closure. Dashboard work remains in progress outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID.
 
 | ID | Work | Status |
 |---:|---|---|
