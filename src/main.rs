@@ -116,7 +116,10 @@ fn main() -> ExitCode {
     let code = cli::run();
     // JSON callers reserve the final stderr line for the structured error envelope.
     if !JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
-        update_check::check_for_update();
+        update_check::check_for_update(|| {
+            config::parse_update_interval(&config::Config::load().get("update_check.interval"))
+                .map_err(|error| error.to_string())
+        });
     }
     ExitCode::from(code as u8)
 }

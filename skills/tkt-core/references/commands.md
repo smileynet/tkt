@@ -303,3 +303,5 @@ Use `tkt ready --parent ID` for ready direct children of an existing parent, pre
 ## Plan lifecycle comparison
 
 Plan tables compare all five lifecycle labels exactly. Both `done` and canonical `✅ done` are recognized; cancellation rows retain their reason. Unknown status cells are findings rather than silently treated as open. Plain sync-plan remains advisory for derivable drift; --check or --strict fails, while --fix regenerates cells without managing narrative prose.
+
+Update-check cadence is user-only: `tkt config --set update_check.interval=1h` (also `24h`, `7d`, or `never`; positive whole hours/days). Default: `24h`. `TKT_UPDATE_CHECK_INTERVAL` overrides the setting; `TKT_UPDATE_CHECK=0`, `DO_NOT_TRACK=1`, CI, quiet and dry-run still suppress update-check requests/cache writes. Invalid intervals are rejected on config writes; a malformed stored/environment interval skips the advisory check with a warning.

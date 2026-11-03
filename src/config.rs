@@ -29,7 +29,11 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
 ];
 
 /// User-only keys (debug settings, not applicable at project level).
-const USER_ONLY_KEYS: &[(&str, &str)] = &[("debug", "false"), ("debug.format", "log")];
+const USER_ONLY_KEYS: &[(&str, &str)] = &[
+    ("debug", "false"),
+    ("debug.format", "log"),
+    ("update_check.interval", "24h"),
+];
 
 // ============================================================
 // Project-level configuration (.tickets/config.toml)
@@ -427,6 +431,25 @@ fn parse_bool(s: &str) -> Option<bool> {
     }
 }
 
+pub fn parse_update_interval(value: &str) -> Result<Option<u64>, crate::DomainError> {
+    let seconds = if value == "never" {
+        return Ok(None);
+    } else {
+        value
+            .strip_suffix('h')
+            .and_then(|n| n.parse::<u64>().ok())
+            .and_then(|n| n.checked_mul(3600))
+            .or_else(|| {
+                value
+                    .strip_suffix('d')
+                    .and_then(|n| n.parse::<u64>().ok())
+                    .and_then(|n| n.checked_mul(86400))
+            })
+    };
+    seconds.filter(|n| *n > 0).map(Some).ok_or_else(|| crate::DomainError::new(crate::ErrorKind::Validation,
+        format!("invalid update_check.interval={value:?}: expected positive whole hours/days (1h, 24h, 7d) or never")))
+}
+
 fn parse_optional_id(value: &str) -> Result<Option<u64>, String> {
     if value.is_empty() {
         return Ok(None);
@@ -599,6 +622,9 @@ impl Config {
 
     /// Set a key in the user config file. Creates the file if it doesn't exist.
     pub fn set(key: &str, value: &str) -> anyhow::Result<()> {
+        if key == "update_check.interval" {
+            parse_update_interval(value)?;
+        }
         let path = config_file_path().ok_or_else(|| {
             std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory")
         })?;

@@ -3654,3 +3654,77 @@ fn test_doctor_and_validate_agree_on_clean_corpus() {
     assert_eq!(vcode, 0, "clean corpus passes validate");
     assert_eq!(dcode, 0, "clean corpus passes doctor: {}", dout);
 }
+#[test]
+fn test_update_interval_user_config_contract() {
+    let (_tmp, clone) = setup_repo();
+    let home = _tmp.path().join("interval-home");
+    let (code, out) =
+        run_tkt_with_config(&clone, &["config", "--get", "update_check.interval"], &home);
+    assert_eq!(code, 0, "{out}");
+    assert_eq!(out.trim(), "24h");
+    for value in ["1h", "24h", "7d", "never"] {
+        let pair = format!("update_check.interval={value}");
+        let (code, out) = run_tkt_with_config(&clone, &["config", "--set", &pair], &home);
+        assert_eq!(code, 0, "{out}");
+        let (code, out) =
+            run_tkt_with_config(&clone, &["config", "--get", "update_check.interval"], &home);
+        assert_eq!(code, 0, "{out}");
+        assert_eq!(out.trim(), value);
+    }
+    let path = home.join("tkt/config.toml");
+    let before = std::fs::read(&path).unwrap();
+    for value in [
+        "0h",
+        "-1h",
+        "1.5h",
+        "1m",
+        "overflow",
+        "18446744073709551615d",
+    ] {
+        let pair = format!("update_check.interval={value}");
+        for prefix in [
+            vec!["config", "--set"],
+            vec!["--dry-run", "config", "--set"],
+        ] {
+            let mut args = prefix;
+            args.push(&pair);
+            let (code, out) = run_tkt_with_config(&clone, &args, &home);
+            assert_eq!(code, 1, "{out}");
+            assert_eq!(std::fs::read(&path).unwrap(), before);
+        }
+    }
+    let (code, out) = run_tkt_with_config(
+        &clone,
+        &["config", "--project", "--set", "update_check.interval=7d"],
+        &home,
+    );
+    assert_eq!(code, 1, "{out}");
+    assert!(out.contains("user-only"), "{out}");
+    let (code, out) = run_tkt_with_config(
+        &clone,
+        &["--dry-run", "config", "--set", "update_check.interval=1h"],
+        &home,
+    );
+    assert_eq!(code, 0, "{out}");
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    let output = Command::new(tkt_bin())
+        .args(["config", "--get", "update_check.interval"])
+        .current_dir(&clone)
+        .env("DO_NOT_TRACK", "1")
+        .env_remove("TKT_NO_USER_CONFIG")
+        .env("XDG_CONFIG_HOME", &home)
+        .env("TKT_UPDATE_CHECK_INTERVAL", "1h")
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "1h");
+    let (code, out) = run_tkt_with_config(
+        &clone,
+        &["config", "--unset", "update_check.interval"],
+        &home,
+    );
+    assert_eq!(code, 0, "{out}");
+    let (_, out) =
+        run_tkt_with_config(&clone, &["config", "--get", "update_check.interval"], &home);
+    assert_eq!(out.trim(), "24h");
+}

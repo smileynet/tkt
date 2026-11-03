@@ -282,3 +282,5 @@ Use `tkt ready --parent ID` for ready direct children of an existing parent, pre
 ## Plan lifecycle comparison
 
 Plan tables compare all five lifecycle labels exactly. Both `done` and canonical `✅ done` are recognized; cancellation rows retain their reason. Unknown status cells are findings rather than silently treated as open. Plain sync-plan remains advisory for derivable drift; --check or --strict fails, while --fix regenerates cells without managing narrative prose.
+
+Update-check cadence is a user preference: `tkt config --set update_check.interval=7d` (default `24h`; positive hours/days or `never`). It does not change ticket readiness or verification. Existing quiet/dry-run, CI, `DO_NOT_TRACK=1` and `TKT_UPDATE_CHECK=0` suppression remains effective.

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Configure update-check cadence in user settings with positive hours/days or disable it with `never`, while preserving environment and privacy overrides.
 - Scope the ready queue to direct children of one parent while retaining normal readiness, ownership and ordering rules.
 - Move unchecked acceptance criteria to another ticket with explicit transfer markers and linked provenance, without marking the work completed; interrupted transfers can be retried without duplicating criteria.
 - Query exposes every stored frontmatter field and separates unfinished blockers from historical dependencies; ready JSON includes the same pending-blocker field.

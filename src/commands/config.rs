@@ -31,6 +31,16 @@ pub fn run(
         })?;
         let key = key.trim();
         let value = value.trim();
+        if key == "update_check.interval" {
+            if project {
+                return Err(crate::DomainError::new(
+                    crate::ErrorKind::Validation,
+                    "update_check.interval is user-only".to_string(),
+                )
+                .into());
+            }
+            crate::config::parse_update_interval(value)?;
+        }
         if is_dry_run() {
             if is_quiet_json() {
                 print_quiet_json_success(&format!("would set {}", key));

@@ -1,18 +1,17 @@
 //! Self-update check: notify when a newer version is available on crates.io.
-//! Runs at most once per 24 hours, cached in the user config directory.
+//! Default cadence is 24 hours, configurable in user settings.
 //! Never blocks longer than 3 seconds, prints to stderr, doesn't affect exit code.
 
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const CHECK_INTERVAL_SECS: u64 = 86400; // 24 hours
 const TIMEOUT_SECS: u64 = 3;
 const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Run the update check (call at program start, after command execution).
 /// Prints a notice to stderr if a newer version is available.
 /// Never panics, never affects exit code.
-pub fn check_for_update() {
+pub fn check_for_update(interval: impl FnOnce() -> Result<Option<u64>, String>) {
     // Disabled by quiet mode
     if crate::QUIET.load(std::sync::atomic::Ordering::Relaxed) {
         return;
@@ -33,6 +32,14 @@ pub fn check_for_update() {
         return;
     }
 
+    let interval = match interval() {
+        Ok(Some(seconds)) => seconds,
+        Ok(None) => return,
+        Err(error) => {
+            eprintln!("warning: {error}; update check skipped");
+            return;
+        }
+    };
     let cache_path = match cache_file() {
         Some(p) => p,
         None => return,
@@ -40,7 +47,7 @@ pub fn check_for_update() {
 
     // Check if we already checked recently
     if let Some(cached) = read_cache(&cache_path) {
-        if cached.timestamp + CHECK_INTERVAL_SECS > unix_now() {
+        if cache_is_fresh(cached.timestamp, unix_now(), interval) {
             // Still fresh — show cached notice if applicable
             if let Some(ref latest) = cached.latest_version {
                 if is_newer(latest, CURRENT_VERSION) {
@@ -64,6 +71,10 @@ pub fn check_for_update() {
             write_cache(&cache_path, CURRENT_VERSION);
         }
     }
+}
+
+fn cache_is_fresh(timestamp: u64, now: u64, interval: u64) -> bool {
+    now.saturating_sub(timestamp) < interval
 }
 
 fn print_notice(latest: &str) {
@@ -150,6 +161,30 @@ fn unix_now() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn configured_cadence_and_untrusted_cache_timestamps() {
+        for (value, expected) in [
+            ("1h", Some(3600)),
+            ("24h", Some(86400)),
+            ("7d", Some(604800)),
+            ("never", None),
+        ] {
+            assert_eq!(
+                crate::config::parse_update_interval(value).unwrap(),
+                expected
+            );
+        }
+        for value in ["", "0h", "-1h", "1.5h", "1m", "18446744073709551615d"] {
+            assert!(
+                crate::config::parse_update_interval(value).is_err(),
+                "{value}"
+            );
+        }
+        assert!(cache_is_fresh(100, 3699, 3600));
+        assert!(!cache_is_fresh(100, 3700, 3600));
+        assert!(cache_is_fresh(u64::MAX, 100, 3600));
+    }
 
     #[test]
     fn version_comparison() {

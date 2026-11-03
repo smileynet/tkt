@@ -40,7 +40,7 @@ fn do_not_track_prevents_update_request_and_cache_creation() {
     write(
         &harness_source,
         &format!(
-            "use std::sync::atomic::AtomicBool;\npub static QUIET: AtomicBool = AtomicBool::new(false);\npub static DRY_RUN: AtomicBool = AtomicBool::new(false);\n#[path = {:?}] mod update_check;\nfn main() {{ if std::env::var_os(\"TKT_TEST_CLEAR_DNT\").is_some() {{ std::env::remove_var(\"DO_NOT_TRACK\"); }} update_check::check_for_update(); }}\n",
+            "use std::sync::atomic::AtomicBool;\npub static QUIET: AtomicBool = AtomicBool::new(false);\npub static DRY_RUN: AtomicBool = AtomicBool::new(false);\n#[path = {:?}] mod update_check;\nfn main() {{ if std::env::var_os(\"TKT_TEST_CLEAR_DNT\").is_some() {{ std::env::remove_var(\"DO_NOT_TRACK\"); }} update_check::check_for_update(|| match std::env::var(\"TKT_TEST_INTERVAL\").as_deref() {{ Ok(\"never\") => Ok(None), Ok(\"invalid\") => Err(\"invalid test interval\".to_string()), Ok(value) => Ok(Some(value.parse().unwrap())), Err(_) => panic!(\"configuration callback invoked before suppression guard\"), }}); }}\n",
             Path::new(env!("CARGO_MANIFEST_DIR")).join("src/update_check.rs")
         ),
     );
@@ -126,5 +126,48 @@ fn do_not_track_prevents_update_request_and_cache_creation() {
             !private_config.exists(),
             "{case} guard created the cache directory"
         );
+    }
+    for (case, interval, age, request) in [
+        ("never", "never", None, false),
+        ("invalid", "invalid", None, false),
+        ("hour-expired", "3600", Some(7200), true),
+        ("day-fresh", "86400", Some(7200), false),
+        ("week-fresh", "604800", Some(172800), false),
+        ("no-cache", "86400", None, true),
+    ] {
+        let config = root.join(case);
+        let cache = config.join("tkt/update-check.txt");
+        if let Some(age) = age {
+            std::fs::create_dir_all(cache.parent().unwrap()).unwrap();
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            write(&cache, &format!("{}\n99.99.0\n", now - age));
+        }
+        let before = std::fs::read(&cache).ok();
+        let _ = std::fs::remove_file(&marker);
+        let output = Command::new(&harness)
+            .current_dir(root)
+            .env("PATH", root)
+            .env("DO_NOT_TRACK", "1")
+            .env("TKT_TEST_CLEAR_DNT", "1")
+            .env_remove("CI")
+            .env_remove("TKT_UPDATE_CHECK")
+            .env("TKT_TEST_CONFIG_DIR", &config)
+            .env("TKT_FAKE_CURL_MARKER", &marker)
+            .env("TKT_TEST_INTERVAL", interval)
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{case}: {output:?}");
+        assert_eq!(marker.exists(), request, "{case}: {output:?}");
+        if request {
+            assert!(cache.exists());
+        } else {
+            assert_eq!(std::fs::read(&cache).ok(), before, "{case}");
+        }
+        if age.is_none() && !request {
+            assert!(!config.exists(), "{case} created cache root");
+        }
     }
 }
