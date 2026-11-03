@@ -69,9 +69,9 @@ gate, hook policy, installed-binary validation distinction or release authority.
 Agent-initiated hosted runs require an explicit request under the current standing
 policy; optional consumer CI is not authorization to dispatch them.
 
-The tracked legacy `.github/workflows/ci.yml` currently declares push,
-pull_request and workflow_dispatch triggers. That observation is distinct from
-the standing agent authorization policy; this documentation does not relabel the
-configuration as manual-only or change its triggers. Agent pushes in this work
-use skip instructions, and no hosted workflow is dispatched. Publication remains
-separately authorized and is limited by the release contract.
+This repository has no push or pull_request CI workflow; the legacy
+`.github/workflows/ci.yml` was removed. The local `mise run check` gate is the
+change gate (local pre-push checks are tracked separately). The remaining hosted
+workflows are manual-only, and no hosted workflow is dispatched without an
+explicit request. Publication remains separately authorized and is limited by
+the release contract.
