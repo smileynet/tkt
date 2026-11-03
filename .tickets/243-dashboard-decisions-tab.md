@@ -21,9 +21,9 @@ Extend the canonical delivery-dashboard renderer and checker, then adopt it with
 
 ## Acceptance criteria
 
-- [ ] Decisions tab contains current decision gates with clear options, a default recommended radio choice, and optional free text for each.
-- [ ] Bottom copy button exports selected choices and notes; clipboard denial produces selectable fallback text.
-- [ ] Canonical template/example, schema checker and deterministic interaction/format tests pass; all prior entries and tickets survive migration.
+- [x] Decisions tab contains current decision gates with clear options, a default recommended radio choice, and optional free text for each.
+- [x] Bottom copy button exports selected choices and notes; clipboard denial produces selectable fallback text.
+- [x] Canonical template/example, schema checker and deterministic interaction/format tests pass; all prior entries and tickets survive migration.
 - [ ] Actual laptop/phone layout and interactions are inspected when a permitted browser is available.
 
 ## Planning gate
