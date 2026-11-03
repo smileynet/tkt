@@ -53,4 +53,4 @@ The owner requested review of all parked work and execution of actionable ticket
 Implemented configurable update cadence with preserved suppression guards; final full gate and independent critic accepted.
 
 ### Verification
-1. ✓ `update_check.interval` accepted as a user config key — "User-only key/default/env precedence, invalid/dry-run/project/unset cases verified by public integration test; final mise run check 401 Rust tests passed,42 Node passed,1 existing Windows skip. See docs/evidence/update-interval-99.md."
+1. ✓ `update_check.interval` accepted as a user config key — "Public config tests cover defaults, valid/invalid values, dry-run, project rejection, environment precedence and unset. The full gate passed 401 Rust tests and 42 Node fixtures, with one existing Windows skip. See docs/evidence/update-interval-99.md."
