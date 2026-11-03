@@ -16,8 +16,15 @@ for(const rule of inventory.rules){
  const text=lines.slice(rule.sourceStart-1,rule.sourceEnd).join('\n').trim();
  assert.equal(digest(text),rule.sha256,'Rule identity changed: '+rule.id);
  const home=fs.readFileSync(rule.home,'utf8').replace(/\r\n/g,'\n');
- const normalized=rule.normalization==='format-check'?text.replace('cargo fmt                      # format (must produce no diff)','cargo fmt --check              # format (must produce no diff)'):
+ let normalized=rule.normalization==='format-check'?text.replace('cargo fmt                      # format (must produce no diff)','cargo fmt --check              # format (must produce no diff)'):
  rule.normalization==='relative-links'?text.replace(/\]\((?!https?:|#)([^)]+)\)/g,(_,target)=>']('+path.posix.relative(path.posix.dirname(rule.home),target)+')'):text;
+ if(rule.amendment){
+  execFileSync('git',['merge-base','--is-ancestor',rule.amendment.commit,'HEAD']);
+  const deleted=execFileSync('git',['diff','--name-status',rule.amendment.commit+'^',rule.amendment.commit,'--','.github/workflows/ci.yml'],{encoding:'utf8'});
+  assert.equal(deleted.trim(),'D\t.github/workflows/ci.yml','Policy amendment must match owner workflow removal');
+  assert.ok(normalized.includes(rule.amendment.from),'Amendment no longer matches frozen text');
+  normalized=normalized.replace(rule.amendment.from,rule.amendment.to);
+ }
  assert.ok(home.includes(normalized)||(!final&&rule.home==='AGENTS.md'&&home.includes(text)),'Missing rule text: '+rule.id+' in '+rule.home);
  assert.ok(rule.trigger,'Missing read trigger: '+rule.id);
  if(rule.home!=='AGENTS.md'){

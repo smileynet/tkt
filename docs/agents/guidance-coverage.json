@@ -54,7 +54,13 @@
       "home": "AGENTS.md",
       "trigger": "Always loaded",
       "sha256": "259b81e3109bf05899c7079dcefe6a2ac7d38cedddb493b0835087f233ecd0b7",
-      "normalization": null
+      "normalization": null,
+      "amendment": {
+        "commit": "4b78bf443ca0189442f972e1ab861dc493f003a5",
+        "reason": "Owner removed the legacy automatic workflow; preserve the local gate and manual hosted-run authorization",
+        "from": "GitHub Actions runs this same gate automatically for every push and pull request.\nThat automated check complements, but does not replace, the required local check before\neach commit.",
+        "to": "The local `mise run check` gate remains required. The former automatic push/PR\nCI workflow was removed by the owner; remaining hosted workflows are manual-only\nand require an explicit request. No pre-push hook is installed by default; the\noptional hook proposal remains deliberately deferred in ticket 249."
+      }
     },
     {
       "id": "rule-06",

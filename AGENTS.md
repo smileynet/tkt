@@ -46,9 +46,10 @@ Node packages support release tooling, not the installed Rust CLI.
 
 Use `--check` (not bare `cargo fmt`) — bare `cargo fmt` mutates in place and exits 0 regardless, so it cannot gate a diff or reveal a broken formatter.
 
-GitHub Actions runs this same gate automatically for every push and pull request.
-That automated check complements, but does not replace, the required local check before
-each commit.
+The local `mise run check` gate remains required. The former automatic push/PR
+CI workflow was removed by the owner; remaining hosted workflows are manual-only
+and require an explicit request. No pre-push hook is installed by default; the
+optional hook proposal remains deliberately deferred in ticket 249.
 
 When documenting consumer CI, hooks or enforcement limits, read
 [the enforcement model](docs/agents/enforcement-model.md). Consumer checks are

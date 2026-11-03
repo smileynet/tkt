@@ -1,0 +1,231 @@
+{
+  "observedOn": "2026-11-03",
+  "sourceHead": "ce7d18ce33077295afa423afb42ac5c85d039fc1",
+  "sourceFiles": [
+    {
+      "file": "AGENTS.md",
+      "sha256": "00effde8762f12990c0911ff7b1de4a2ea9606458c688ae53782e959506609bf"
+    },
+    {
+      "file": "docs/agents/guidance-coverage.json",
+      "sha256": "67c0da95246fd624b8b17ddef864fd8ffb8a880a50d582c6fea4d329c134eaa1"
+    },
+    {
+      "file": "docs/agents/guidance-coverage.md",
+      "sha256": "347013d1d04d2cee4719c760d824c2db96e287d7112126ac9518f8789eb87d6d"
+    },
+    {
+      "file": "docs/agents/plugin-maintenance.md",
+      "sha256": "ffddeaabe200d8d55ebdfaae425b9502b7cf96502cab41447f250bec009e50ec"
+    },
+    {
+      "file": "tools/check-guidance-coverage.mjs",
+      "sha256": "c168032746470ce41639da7b722fd6d37def77f2afc1c7a25c72622f45748307"
+    },
+    {
+      "file": "tools/deploy.mjs",
+      "sha256": "1d2b7932b73773ba6ea50103aba81f9708778329740886f22b4a5c555eb3a19d"
+    }
+  ],
+  "claude": {
+    "id": "tkt@tkt",
+    "enabled": true,
+    "readFromFolder": "D:\\code\\tkt",
+    "folderVersion": "0.4.0"
+  },
+  "codex": {
+    "id": "tkt@tkt",
+    "enabled": true,
+    "source": {
+      "source": "local",
+      "path": "D:\\code\\tkt"
+    },
+    "cache": "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0"
+  },
+  "nativeRuntimeFiles": [
+    {
+      "file": "tools/release.mjs",
+      "sha256": "80cc78ebd88b1431a133edb4c7856b345657976a4865ce05b08d623022d75d9c"
+    },
+    {
+      "file": "tools/release-artifacts.mjs",
+      "sha256": "b719eae3637dff1d017db76eff28e9dd6ca8d9ed86b9a7bbe4394195ef588540"
+    },
+    {
+      "file": "tools/release-version.mjs",
+      "sha256": "c00161120615abb0e848161854493046b1f94a48d8355e9232ffcebc2e140c5f"
+    },
+    {
+      "file": "tools/release-git.mjs",
+      "sha256": "ee25375dc7b4bbb9e80d520ae069d667a4898124587072783f773e1d6b6c311c"
+    },
+    {
+      "file": "tools/release-product.mjs",
+      "sha256": "31a892b9a013b409c07c7842734d114d1794bf0e3f2ebf7e88decb3e1a04c9b9"
+    },
+    {
+      "file": "tools/release-native.mjs",
+      "sha256": "7f20a08ff225852a16e21d772425d4a5debeba51fa010ce9a6121c203b5725e4"
+    },
+    {
+      "file": "tools/check-skill-syntax.mjs",
+      "sha256": "35c3f52e0ccd9b6fb628b4dba03b5ff15d08314a8ce77a686b352ac857b67c8d"
+    },
+    {
+      "file": "tools/probe-claude-validation.mjs",
+      "sha256": "f30a7c2b75d94b677cee0b0df60c4a4c071a8ff88fcd1957669a73300635e0f8"
+    },
+    {
+      "file": "tools/deploy.mjs",
+      "sha256": "1d2b7932b73773ba6ea50103aba81f9708778329740886f22b4a5c555eb3a19d"
+    },
+    {
+      "file": "package.json",
+      "sha256": "8a34a12bf557f57f8de3a5c5d5815ed7c7af2c742464aa81eafa07937a8136f4"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256": "34f2d9f7e2c3cab3c92bf2545190c687c265986753059933ed6c83ea83ab042f"
+    },
+    {
+      "file": "tools/release-verify.mjs",
+      "sha256": "ac03dfa912811f53e6f736c372379e3c2056710af037bdb1945437389963d86f"
+    },
+    {
+      "file": "tools/release-publish.mjs",
+      "sha256": "1ece360b681e2556ca7f0eab90b81bdf1e76d950e3210099278019dd0d05df79"
+    },
+    {
+      "file": "tools/release-github.mjs",
+      "sha256": "2a16cae7e4b3bfe7843cd29e68c778574c6fe20392e393bdf49d78f4e77d03e0"
+    },
+    {
+      "file": "tools/release-staging.mjs",
+      "sha256": "07efe3abbcdff1ab8e59f769ca34f390378cd6376fa60e277d414550a41e7ea0"
+    },
+    {
+      "file": "tools/release-publication.mjs",
+      "sha256": "af9446ffc0aaea00e02078672d672736abd4e9b39cd084dc2c880482bd62db86"
+    },
+    {
+      "file": "tools/release-registry.mjs",
+      "sha256": "73d0e49fc1eb9a92969d2d1b3b5d6dc2233dfed5e42fdcd56987e6a07b2f6d75"
+    },
+    {
+      "file": "tools/release-development.mjs",
+      "sha256": "da576b0f363533cb84896c8e67e3aab61bcc3ff7d9c2259538e92c3020b04847"
+    },
+    {
+      "file": "tools/release-ci-artifacts.mjs",
+      "sha256": "7d5d84d2a9766f2daed58d7dff2fac6509c7599b546a49d875f1d0f47fd5f7ca"
+    },
+    {
+      "file": "tools/release-tkt-publication.mjs",
+      "sha256": "6f615e2004365fb0a065dac36ac9b36ecc8dbfc2f0189e38ea79583ed1a10f11"
+    },
+    {
+      "file": "tools/release-tkt-ci.mjs",
+      "sha256": "6407a6945055435c0429236fae6d7d6e504ad9a7ab1e767cf2ac142d3e8537a0"
+    },
+    {
+      "file": "tools/release-cargo-credentials.mjs",
+      "sha256": "38b0249b810b5523fc7933679f3d70b0f625390edd802b5b01e0ae99b5f6dbfc"
+    },
+    {
+      "file": "tools/release-cargo-upload.mjs",
+      "sha256": "dcded68ef82b73dc33edd77f6181fdb7cc4bd52011bc3e46238b32fe4d6ea794"
+    },
+    {
+      "file": "tools/release-cargo-transport.py",
+      "sha256": "cd0115a8579406838fca6652d65db5f9031f0c8b188245ebf59fd374d775b0f8"
+    }
+  ],
+  "skillRoots": [
+    {
+      "root": "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0\\skills",
+      "matchingRuntimeFiles": 15
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.kiro\\skills",
+      "matchingRuntimeFiles": 15
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.config\\opencode\\skills",
+      "matchingRuntimeFiles": 15
+    }
+  ],
+  "audit": {
+    "status": "fail",
+    "findings": [
+      "~\\.kiro\\skills: 1 unowned: cpu-perf-bench",
+      "~\\.codex\\skills: 4 unowned: codex-primary-runtime herdr-local-patches meshtastic-device video-guide",
+      "~\\.claude\\skills: 5 unowned: agentcraft-guide agentcraft-handoff app-setup notice-board synced",
+      "D:\\code\\tkt\\.kiro\\skills: 49 unowned: adopt-project adr-authoring agents-md-authoring architecture-deepening changelog-discipline cheatsheet code-review coding-plan-limits data-modeling deployment-safety diagrams dispatch-review docs-audit enforcement-hierarchy eval-criteria feedback-loop-debugging git-protocol grill-with-docs guidance-sync handoff image-handling init-project mcp-partitioning mise-helper multi-agent-validation plan-prereqs planning-cycles project-cleanup project-conventions project-winddown prose-check read-handoff readme-writing recall release-protocol research-methodology research-output review-new-work script-authoring skill-authoring spec-driven-development study-all-references study-reference subagent-reliability testing-guide update-proposal verification-protocol vertical-slice-planning writing-style",
+      "kiro sees 6 skill(s) twice: adopt-project (~\\.kiro\\skills + D:\\code\\tkt\\.kiro\\skills); code-review (~\\.kiro\\skills + D:\\code\\tkt\\.kiro\\skills); data-modeling (~\\.kiro\\skills + D:\\code\\tkt\\.kiro\\skills); grill-with-docs (~\\.kiro\\skills + D:\\code\\tkt\\.kiro\\skills); handoff (~\\.kiro\\skills + D:\\code\\tkt\\.kiro\\skills); init-project (~\\.kiro\\skills + D:\\code\\tkt\\.kiro\\skills)"
+    ],
+    "errors": []
+  },
+  "checks": {
+    "rustSourceUnchangedSince399TestGate": true,
+    "postIntegrationNode": {
+      "passed": 42,
+      "skipped": 1
+    },
+    "postIntegrationDeployTests": 6,
+    "dashboardServerTests": 10,
+    "coverage": "45 units / 355 frozen source positions; explicit owner CI amendment"
+  },
+  "kiroCrew": {
+    "builtApp": "dist/kirocrew-app",
+    "skills": [
+      "skills/tkt-core",
+      "skills/tkt-orient",
+      "skills/tkt-reconcile",
+      "skills/tkt-work"
+    ],
+    "activation": "unavailable: kirocrew CLI is not on PATH"
+  },
+  "retainedCaches": [
+    {
+      "path": "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0",
+      "files": 24360,
+      "logicalBytes": 4521130532
+    },
+    {
+      "path": "C:\\Users\\uosmi\\.claude\\plugins\\cache\\tkt\\tkt\\0.4.0",
+      "files": 20520,
+      "logicalBytes": 4506902767
+    },
+    {
+      "path": "target",
+      "files": 19226,
+      "logicalBytes": 4497706314
+    },
+    {
+      "path": "dist/agy-plugin",
+      "files": 43,
+      "logicalBytes": 352386
+    },
+    {
+      "path": "dist/kirocrew-app",
+      "files": 43,
+      "logicalBytes": 352456
+    },
+    {
+      "path": "node_modules",
+      "files": 589,
+      "logicalBytes": 3934146
+    }
+  ],
+  "foreignProjectKiro": {
+    "path": ".kiro/skills",
+    "files": 100,
+    "logicalBytes": 348048
+  },
+  "limits": [
+    "Global strict inventory audit fails for unrelated legacy/unowned directories; none deleted",
+    "Footprint helper reported incomplete inventory due overlapping .crush roots; byte totals here are direct logical file-length measurements, not allocated/reclaimable space",
+    "Native caches retained while their installed plugin is active; managed by each harness, including ignored files its installer snapshotted",
+    "Rendered dashboard laptop/phone acceptance remains unavailable under browser restriction"
+  ]
+}

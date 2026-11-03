@@ -15,7 +15,7 @@ tags: ["quality", "kind:enhancement", "triage:ready-for-agent", "stream:quality"
 ## What to build
 
 `.github/workflows/ci.yml` (push/pull_request CI, from #185) was removed in commit
-9b1588b; the local `mise run check` gate is now the only change gate. Add an
+4b78bf4; the local `mise run check` gate is now the only change gate. Add an
 opt-in pre-push hook (for example `.githooks/pre-push`, enabled with
 `git config core.hooksPath .githooks`), mirroring grey-matter's
 `scripts/gate.mjs pre-push` pattern. Parked: not needed yet.

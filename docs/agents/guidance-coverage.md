@@ -68,3 +68,12 @@ contract keeps exact compatibility details previously held in AGENTS.md.
 Run `node tools/check-guidance-coverage.mjs` during transition and append
 `--final` after extraction. The checker binds the frozen Git source, per-unit
 hashes, exhaustive line partition, reachable target text and final de-duplication.
+
+## Owner policy amendment after the frozen migration
+
+Owner commit [4b78bf4](https://github.com/smileynet/tkt/commit/4b78bf443ca0189442f972e1ab861dc493f003a5) removed the automatic CI workflow after
+the migration source was frozen. Unit rule-05 explicitly replaces its now-obsolete
+automatic-CI paragraph with the required local gate and manual hosted-run policy.
+The JSON records exact before/after text and owner commit; the checker verifies
+that this ancestor deleted the workflow. This is an authorized policy amendment,
+not an unrecorded extraction loss. Ticket 249 remains deliberately deferred.

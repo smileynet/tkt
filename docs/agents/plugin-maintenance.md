@@ -77,3 +77,14 @@ the CLI surface the skills describe:
   and `claude --plugin-dir . plugin details tkt` (lists the skills, no model call).
 
 All three gate checks must pass with zero warnings before presenting work as done.
+
+## Kiro Crew app delivery
+
+The current vendored deployer also builds and installs a Kiro Crew app when
+`~/.kiro/crew` exists. `node tools/deploy.mjs kirocrew build` stages the app;
+`node tools/deploy.mjs kirocrew install` installs/enables its four workflow skills.
+The app path is separate from the Kiro CLI skill scan. Read the deployer output:
+a verified-local-owner or third-party-trust refusal leaves delivery pending and
+prints the remaining owner commands; do not treat a warning as successful app
+activation. Generated release authority and the other harness ownership guards
+remain unchanged.
