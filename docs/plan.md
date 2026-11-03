@@ -78,7 +78,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 | ID | Work | Status |
 |---:|---|---|
 | 193 | [labels.*] config: parse single-select + closed-value namespaces | ✅ done |
-| 194 | assignee field + claim-by-assignment + frontier honors it | open |
+| 194 | assignee field + claim-by-assignment + frontier honors it | in_progress |
 | 195 | parent validation: dangling + cycle checks | ✅ done |
 | 196 | parent CLI + query/capabilities surface | ✅ done |
 | 197 | parent rollup + frontier semantics | open |
