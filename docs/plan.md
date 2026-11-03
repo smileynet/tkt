@@ -105,7 +105,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 | ID | Work | Status |
 |---:|---|---|
 | 66 | Migrate [workspace.metadata.dist] to dist-workspace.toml | ✅ done |
-| 159 | Document optional consumer CI with accurate enforcement limits | open |
+| 159 | Document optional consumer CI with accurate enforcement limits | in_progress |
 
 ## Intentionally deferred backlog
 

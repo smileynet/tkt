@@ -1,7 +1,7 @@
 ---
 id: "159"
 title: "Document optional consumer CI with accurate enforcement limits"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Guidance accurately explains bypass and configuration limits without calling CI universally unbypassable"
   - "Affected guidance surfaces agree and this repository verification/release authorization remains unchanged"
 tags: ["docs", "guidance", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Document optional consumer CI with accurate enforcement limits
