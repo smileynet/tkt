@@ -122,6 +122,15 @@ Skills and plugins exist; the remaining deliverable is a recorded integration de
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
 
+## Disposition after the unblocked-work pass — 2026-11-02
+
+Keep this deliberately deferred in backlog with its decision gate. Workflow plugins
+and the Claude SessionStart hook are delivered; the remaining broader exploration
+and maintenance tradeoffs are not evidenced as a completed spike. No new MCP or
+cross-harness integration commitment is made by this pass. Owner input can choose
+a bounded follow-up exploration or retirement; no implementation or research
+completion is claimed here.
+
 ## Planning gate
 
 Record which delivered integrations satisfy the exploration, and whether to close the remaining decision scope or retire it.

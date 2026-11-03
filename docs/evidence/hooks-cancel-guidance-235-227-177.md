@@ -45,6 +45,30 @@ documents' scratch citations; that shared branch also contains other unpublished
 work. Its push/deployment is held without modifying or publishing those paths.
 No waiver or fabricated pass is recorded.
 
+## Installed and live-board acceptance
+
+`cargo install --path . --locked` passed; the freshness wrapper reported JSON
+fresh with installed/head `01ec62a` before board actions. Native Claude strict
+manifest validation passed and details listed four skills plus SessionStart;
+this does not establish the separate catalog safety/policy review.
+
+Each approved retirement was previewed, then applied with `tkt cancel`: #208 as
+duplicate of #138, #87 as superseded by #176, #115/#161 obsolete and #94 wontfix.
+All had zero dependents. Source control comparison verified each original body
+is preserved byte-for-byte before the appended Cancellation section; each commit
+contains only its ticket and existing plan. No AC was checked or Resolution
+invented. #142 was also retired as wontfix after a fresh bounded fixture returned
+plain/either tickets 01/02 and correctly excluded GPU-required 03 under
+CREW_ENV=either. This declines an unproven current defect; the historical report
+and unspecified AC cases remain unverified, and it can be reopened with a concrete
+counterexample. #140 is already completed with evidence. #69 stays deliberately
+backlog with its explicit integration decision gate: broader research is not
+claimed complete and owner input remains needed to choose that scope.
+
+After the six retirements, strict validate and strict plan sync both passed with
+zero findings. The canonical renderer migration remains source/model evidence;
+the UI acceptance limitations above are unchanged.
+
 Durable outputs are tracked source/tests/guidance and this report. Fixtures clean
 their own temporary roots; promoted logs go to OS trash after use. The existing
 shared target cache and pinned dependencies remain scoped to the remaining queue;
