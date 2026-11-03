@@ -37,7 +37,7 @@ impl MutationContext {
             .into());
         }
 
-        let config = load_project_config(&tickets_dir);
+        let config = load_project_config(&tickets_dir)?;
         let has_remote = git::has_remote(&repo)?;
         if has_remote && config.push_enabled && git::current_branch(&repo)?.is_empty() {
             return Err(DomainError::with_hint(
@@ -183,13 +183,14 @@ impl MutationContext {
 }
 
 /// Load project config with unknown-key warnings.
-fn load_project_config(tickets_dir: &Path) -> ProjectConfig {
+fn load_project_config(tickets_dir: &Path) -> Result<ProjectConfig> {
     let cfg = ProjectConfig::load(tickets_dir);
+    cfg.validate_label_namespaces()?;
     for key in &cfg.unknown_keys {
         eprintln!(
             "warning: unknown config key {:?} in .tickets/config.toml",
             key
         );
     }
-    cfg
+    Ok(cfg)
 }

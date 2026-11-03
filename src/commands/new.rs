@@ -80,7 +80,7 @@ pub fn run(
     } else {
         core::AgentEligibility::Any
     };
-    let pcfg = project_config(&dir);
+    let pcfg = project_config(&dir)?;
 
     // Enforce validation_criteria at creation if configured
     if pcfg.close_require_validation_criteria && validation_criteria.is_empty() {

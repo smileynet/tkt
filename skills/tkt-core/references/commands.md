@@ -62,9 +62,9 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 |---------|-----|-------------|
 | `tkt renumber <old> <new>` | Move ticket to new ID | Only during birth window (before ID is cited elsewhere) |
 | `tkt rebase` | Resolve ID collisions with upstream | After `git pull` introduces conflicts |
-| `tkt config --list` | Show project configuration | Checking what gates are active |
+| `tkt config --list` | Show user configuration | Checking user defaults |
 | `tkt config --set key=value` | Set config value | Changing close requirements, push behavior |
-| `tkt config --show` | Show resolved values with sources | Debugging config cascade |
+| `tkt config --show` | Show resolved project values with sources | Debugging config cascade |
 | `tkt telemetry --status` | Check telemetry state | Privacy audit |
 | `tkt telemetry --enable` / `--disable` | Toggle telemetry consent | Opt in/out |
 | `tkt capabilities` | JSON feature manifest | Agent/automation discovery |
@@ -166,4 +166,11 @@ These settings control what `tkt close` requires:
 | `new.default_priority` | priority enum | Default priority for new tickets |
 | `machine.capabilities` | comma-separated string | Capabilities this workstation provides (matched against ticket `requires` field) |
 
-Manage with `tkt config --set close.require_resolution=true` or edit `.tickets/config.toml` directly.
+`tkt config --set` writes user configuration; edit `.tickets/config.toml` for
+shared project settings. Config output/help show the loader's actual user path.
+Project `[labels.<namespace>]` tables accept `single_select = true/false` and
+`values = ["value", "other"]`. Invalid/unknown namespace fields are errors;
+use a single-line JSON-style double-quoted array without a trailing comma, as the
+configuration reader supports a narrow syntax rather than full TOML. Tag enforcement
+is separate. Validation also flags dangling parents, self-parent
+references and parent-chain cycles independently of blocked-by edges.

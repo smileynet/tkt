@@ -16,7 +16,7 @@ pub fn run(strict: bool, brief: bool, deep: bool) -> Result<i32> {
     // ADR 0003 grandfather cutoff: done tickets below this ID are exempt from the
     // resolution-quality rules only. Empty = no exemption; a non-numeric value is a
     // config error (consistent with the #190 config-parsing direction).
-    let cfg = project_config(&dir);
+    let cfg = project_config(&dir)?;
     let resolution_baseline_id = parse_baseline_id(&cfg.audit_resolution_baseline_id)?;
 
     // Collect findings from all audit rules

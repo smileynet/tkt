@@ -59,7 +59,7 @@ pub fn run(
 
     if show {
         let dir = tickets_dir()?;
-        let pcfg = project_config(&dir);
+        let pcfg = project_config(&dir)?;
         let config_path = dir.join("config.toml");
         let has_file = config_path.is_file();
 
@@ -85,12 +85,15 @@ pub fn run(
     }
 
     let cfg = crate::config::Config::load();
-    println!("# User config (~/.config/tkt/config.toml)");
+    let path = crate::config::config_file_path()
+        .map(|path| path.display().to_string())
+        .unwrap_or_else(|| "unavailable".to_string());
+    println!("# User config ({})", path);
     for entry in cfg.list() {
         println!("{} = {:?} ({})", entry.key, entry.value, entry.source);
     }
     if let Ok(dir) = tickets_dir() {
-        let pcfg = project_config(&dir);
+        let pcfg = project_config(&dir)?;
         println!();
         println!("# Project config (.tickets/config.toml)");
         for entry in pcfg.list() {

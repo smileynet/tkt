@@ -91,9 +91,19 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     all_findings.extend(check_duplicate_ids(&corpus));
     all_findings.extend(check_dangling_deps(&corpus));
     all_findings.extend(check_cycles(&corpus));
+    all_findings.extend(check_dangling_parent(&corpus));
+    all_findings.extend(check_parent_cycles(&corpus));
     all_findings.extend(check_unchecked_acs(&corpus));
     all_findings.extend(check_stub_body(&corpus));
     let cfg = crate::config::ProjectConfig::load(dir);
+    if let Err(error) = cfg.validate_label_namespaces() {
+        all_findings.push(Finding {
+            file: "config.toml".to_string(),
+            rule: "label-config".to_string(),
+            message: error.to_string(),
+            severity: "error".to_string(),
+        });
+    }
     let cutoff = cfg
         .validate_missing_resolution_before_id
         .parse::<u64>()
@@ -221,6 +231,125 @@ pub fn check_dangling_deps(corpus: &[Ticket]) -> Vec<Finding> {
                     severity: "error".into(),
                 });
             }
+        }
+    }
+    findings
+}
+
+/// Check for dangling parent references.
+pub fn check_dangling_parent(corpus: &[Ticket]) -> Vec<Finding> {
+    let known: HashSet<&str> = corpus.iter().map(|t| t.id.as_str()).collect();
+    corpus
+        .iter()
+        .filter_map(|ticket| {
+            let parent = ticket.parent.as_deref()?;
+            if known.contains(parent) {
+                return None;
+            }
+            Some(Finding {
+                file: filename(ticket),
+                rule: "dangling-parent".into(),
+                message: format!("parent {:?} has no ticket", parent),
+                severity: "error".into(),
+            })
+        })
+        .collect()
+}
+
+/// Check for self-parent references and cycles in parent chains.
+pub fn check_parent_cycles(corpus: &[Ticket]) -> Vec<Finding> {
+    let known: HashSet<&str> = corpus.iter().map(|t| t.id.as_str()).collect();
+    let mut findings: Vec<Finding> = corpus
+        .iter()
+        .filter_map(|ticket| {
+            let parent = ticket.parent.as_deref()?;
+            core::validate::validate_parent_ref(&ticket.id, parent)
+                .err()
+                .map(|message| Finding {
+                    file: filename(ticket),
+                    rule: "self-parent".into(),
+                    message,
+                    severity: "error".into(),
+                })
+        })
+        .collect();
+
+    let parent_of: HashMap<&str, &str> = corpus
+        .iter()
+        .filter_map(|ticket| {
+            let parent = ticket.parent.as_deref()?;
+            (known.contains(parent) && ticket.id != parent).then_some((ticket.id.as_str(), parent))
+        })
+        .collect();
+    let mut state: HashMap<&str, u8> = corpus
+        .iter()
+        .map(|ticket| (ticket.id.as_str(), 0))
+        .collect();
+    let mut path: Vec<&str> = Vec::new();
+    let mut cycles: Vec<Vec<&str>> = Vec::new();
+
+    fn dfs<'a>(
+        node: &'a str,
+        parent_of: &HashMap<&'a str, &'a str>,
+        state: &mut HashMap<&'a str, u8>,
+        path: &mut Vec<&'a str>,
+        cycles: &mut Vec<Vec<&'a str>>,
+    ) {
+        state.insert(node, 1);
+        path.push(node);
+        if let Some(&parent) = parent_of.get(node) {
+            match state.get(parent) {
+                Some(1) => {
+                    if let Some(pos) = path.iter().position(|&value| value == parent) {
+                        let mut cycle = path[pos..].to_vec();
+                        cycle.push(parent);
+                        cycles.push(cycle);
+                    }
+                }
+                Some(0) => dfs(parent, parent_of, state, path, cycles),
+                _ => {}
+            }
+        }
+        path.pop();
+        state.insert(node, 2);
+    }
+
+    let mut nodes: Vec<&str> = parent_of.keys().copied().collect();
+    nodes.sort();
+    for node in nodes {
+        if state.get(node) == Some(&0) {
+            dfs(node, &parent_of, &mut state, &mut path, &mut cycles);
+        }
+    }
+
+    let id_to_file: HashMap<&str, String> = corpus
+        .iter()
+        .map(|ticket| (ticket.id.as_str(), filename(ticket)))
+        .collect();
+    let mut seen = HashSet::new();
+    for cycle in cycles {
+        let path_part = &cycle[..cycle.len() - 1];
+        let min_pos = path_part
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, id)| *id)
+            .map(|(index, _)| index)
+            .unwrap_or(0);
+        let mut normalized = path_part[min_pos..].to_vec();
+        normalized.extend_from_slice(&path_part[..min_pos]);
+        let key = normalized.join(" -> ");
+        if seen.insert(key.clone()) {
+            let first_id = normalized[0];
+            normalized.push(first_id);
+            findings.push(Finding {
+                file: id_to_file
+                    .get(first_id)
+                    .cloned()
+                    .unwrap_or_else(|| "unknown".into()),
+                rule: "parent-cycle".into(),
+                message: format!("parent cycle: {}", normalized.join(" -> ")),
+                severity: "error".into(),
+            });
         }
     }
     findings

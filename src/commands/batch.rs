@@ -95,7 +95,7 @@ pub fn run(
     };
 
     // Enforce validation_criteria at creation if configured
-    let pcfg = project_config(&dir);
+    let pcfg = project_config(&dir)?;
     if pcfg.close_require_validation_criteria && validation_criteria.is_empty() {
         return Err(crate::DomainError::with_hint(
             crate::ErrorKind::GateFailed,

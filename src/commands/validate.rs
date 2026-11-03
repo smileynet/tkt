@@ -15,7 +15,7 @@ fn finding_ids(findings: &[Finding]) -> std::collections::HashSet<(String, Strin
 
 pub fn run(strict: bool, brief: bool) -> Result<i32> {
     let dir = tickets_dir()?;
-    let pcfg = project_config(&dir);
+    let pcfg = project_config(&dir)?;
     let effective_strict = strict || pcfg.validate_strict;
 
     let all_findings = collect_corpus_findings(&dir)?;

@@ -7,7 +7,7 @@ use crate::core::{self, AgentId, Status, Ticket};
 
 pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
     let dir = tickets_dir()?;
-    let pcfg = project_config(&dir);
+    let pcfg = project_config(&dir)?;
     let corpus = core::load_corpus(&dir)?;
     let legacy_env = std::env::var("CREW_ENV")
         .ok()

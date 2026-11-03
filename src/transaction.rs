@@ -38,6 +38,7 @@ impl GitTransaction {
 
         // Respect project config push.enabled
         let pcfg = crate::config::ProjectConfig::load(dir);
+        pcfg.validate_label_namespaces()?;
         let remote = has_remote && pcfg.push_enabled;
         if remote && git::current_branch(&repo)?.is_empty() {
             bail!(

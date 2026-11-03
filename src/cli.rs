@@ -279,7 +279,8 @@ enum Commands {
         #[arg(long)]
         deep: bool,
     },
-    /// Manage user-level configuration (~/.config/tkt/config.toml)
+    /// Manage user configuration and inspect project configuration
+    #[command(after_long_help = config_path_help())]
     Config {
         /// Set a config value: tkt config --set key=value
         #[arg(long)]
@@ -318,6 +319,13 @@ enum Commands {
         #[arg(long)]
         clear: bool,
     },
+}
+
+fn config_path_help() -> String {
+    let path = crate::config::config_file_path()
+        .map(|path| path.display().to_string())
+        .unwrap_or_else(|| "unavailable".to_string());
+    format!("User configuration file: {path}\nRespects XDG_CONFIG_HOME; otherwise uses the operating system configuration directory.")
 }
 
 pub fn run() -> i32 {

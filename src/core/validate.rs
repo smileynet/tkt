@@ -78,6 +78,14 @@ pub fn validate_no_self_dep(own_id: &str, blocked_by: &[&str]) -> Result<(), Str
     Ok(())
 }
 
+/// Validate that a ticket does not name itself as its parent.
+pub fn validate_parent_ref(own_id: &str, parent_id: &str) -> Result<(), String> {
+    if own_id == parent_id {
+        return Err(format!("ticket cannot be its own parent (id {})", own_id));
+    }
+    Ok(())
+}
+
 /// Validate env value.
 pub fn validate_env(env: &str) -> Result<(), String> {
     const VALID: &[&str] = &["corp", "personal", "either"];

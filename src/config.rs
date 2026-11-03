@@ -57,6 +57,8 @@ pub struct ProjectConfig {
     /// `tbd-resolution` (ADR 0003). Empty = no exemption. Raw string so the audit
     /// command can surface a structured error on a malformed (non-numeric) value.
     pub audit_resolution_baseline_id: String,
+    pub label_namespaces: BTreeMap<String, LabelNamespace>,
+    pub label_namespace_errors: Vec<String>,
     /// Unknown keys found in the config file (for warning).
     pub unknown_keys: Vec<String>,
     /// Track which keys came from which source for --show.
@@ -79,6 +81,8 @@ impl Default for ProjectConfig {
             push_enabled: true,
             machine_capabilities: Vec::new(),
             audit_resolution_baseline_id: String::new(),
+            label_namespaces: BTreeMap::new(),
+            label_namespace_errors: Vec::new(),
             unknown_keys: Vec::new(),
             sources: BTreeMap::new(),
         }
@@ -99,6 +103,10 @@ impl ProjectConfig {
     fn load_inner(tickets_dir: &Path, skip_user: bool) -> Self {
         let project_path = tickets_dir.join("config.toml");
         let project_values = read_sectioned_config(&project_path);
+        let (label_namespaces, label_namespace_errors) = project_values
+            .as_ref()
+            .map(parse_label_namespaces)
+            .unwrap_or_default();
         let user_values = if skip_user {
             None
         } else {
@@ -126,6 +134,9 @@ impl ProjectConfig {
         // Layer 2: project config (overrides user)
         if let Some(ref proj_vals) = project_values {
             for (key, value) in proj_vals {
+                if key.starts_with("labels.") {
+                    continue;
+                }
                 if apply_value(&mut cfg, key, value) {
                     sources.insert(key.clone(), Source::ProjectConfig);
                 } else {
@@ -144,6 +155,8 @@ impl ProjectConfig {
         }
 
         cfg.unknown_keys = unknown;
+        cfg.label_namespaces = label_namespaces;
+        cfg.label_namespace_errors = label_namespace_errors;
         cfg.sources = sources;
         cfg
     }
@@ -196,8 +209,74 @@ impl ProjectConfig {
                 source,
             });
         }
+        for (name, namespace) in &self.label_namespaces {
+            entries.push(ConfigEntry {
+                key: format!("labels.{name}.single_select"),
+                value: namespace.single_select.to_string(),
+                source: Source::ProjectConfig,
+            });
+            entries.push(ConfigEntry {
+                key: format!("labels.{name}.values"),
+                value: namespace.values.join(","),
+                source: Source::ProjectConfig,
+            });
+        }
         entries
     }
+
+    pub fn validate_label_namespaces(&self) -> Result<(), crate::DomainError> {
+        if self.label_namespace_errors.is_empty() {
+            return Ok(());
+        }
+        Err(crate::DomainError::new(
+            crate::ErrorKind::Validation,
+            format!(
+                "invalid .tickets/config.toml label namespace configuration: {}",
+                self.label_namespace_errors.join("; ")
+            ),
+        ))
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LabelNamespace {
+    pub single_select: bool,
+    pub values: Vec<String>,
+}
+
+fn parse_label_namespaces(
+    values: &BTreeMap<String, String>,
+) -> (BTreeMap<String, LabelNamespace>, Vec<String>) {
+    let mut namespaces: BTreeMap<String, LabelNamespace> = BTreeMap::new();
+    let mut errors = Vec::new();
+    for (key, value) in values.iter().filter(|(key, _)| key.starts_with("labels.")) {
+        let Some((namespace, field)) = key[7..].split_once('.') else {
+            errors.push(format!(
+                "{key}={value:?}: expected [labels.<namespace>] field"
+            ));
+            continue;
+        };
+        if namespace.is_empty() || field.contains('.') {
+            errors.push(format!("{key}={value:?}: malformed namespace field"));
+            continue;
+        }
+        let namespace = namespaces.entry(namespace.to_string()).or_default();
+        match field {
+            "single_select" => match value.as_str() {
+                "true" => namespace.single_select = true,
+                "false" => namespace.single_select = false,
+                _ => errors.push(format!("{key}={value:?}: expected true or false")),
+            },
+            "values" => match serde_json::from_str::<Vec<String>>(value) {
+                Ok(parsed) => namespace.values = parsed,
+                Err(_) => errors.push(format!(
+                    "{key}={value:?}: expected a list of quoted strings"
+                )),
+            },
+            _ => errors.push(format!("{key}={value:?}: unknown label namespace field")),
+        }
+    }
+    (namespaces, errors)
 }
 
 /// Apply a key-value pair to the config struct. Returns true if the key was recognized.

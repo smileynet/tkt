@@ -179,6 +179,11 @@ tkt close 05 --check-all \
 | `tkt doctor` | Setup verification — current project or multi-project scan |
 | `tkt lint --check` | Preview style and missing numeric-ID repairs without writing; bare `tkt lint` applies them |
 
+Validation checks parent targets/cycles separately from prerequisites. Project
+label namespaces declare `single_select` and a single-line double-quoted `values`
+array; malformed declarations fail configuration loading. See the command
+reference for the narrow configuration syntax; tag enforcement is separate.
+
 Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` to auto-repair (validate and sync-plan). Full options in [commands.md](references/commands.md).
 
 ---

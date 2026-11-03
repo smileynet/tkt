@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Project configuration can declare label namespaces with a single-select policy and a closed value list; invalid declarations report configuration errors.
 - Help and initialization guide agents to complete command schemas, project instructions and separately installed workflow skills.
 - Tickets can allow or exclude named agents independently of tags and machine capabilities. Identify invocations with `--agent` or `TKT_AGENT`; discovery and claims share the policy, with `claim --force` as an explicit override.
 - Codex and Antigravity plugin packaging supplies the four ticket workflows: `tkt-core`, `tkt-orient`, `tkt-work` and `tkt-reconcile`. Install the tkt CLI separately.
@@ -24,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `node tools/deploy.mjs` selects roots so installed Claude/Codex plugins count as the skill copy and refreshes local plugins. Audits identify unowned skill directories and duplicate loading across configured packs. The bash wrapper remains an alternative entry point; no extra deploy step is needed.
 
 ### Fixed
+- Parent validation catches missing targets, self-parent references and cycles independently of prerequisite links.
+- Config output and help show the actual user configuration path for the active environment.
 - Generic creation and status-edit commands reject `done`, keeping completion behind the close gates.
 - Validation recognizes imported identifiers matching the complete filename stem while retaining mismatch detection.
 - Malformed configuration assignments report a validation failure instead of an operational crash.

@@ -214,6 +214,7 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
   - `[new]` default_priority
   - `[push]` enabled (set false for local-only repos)
   - `[machine]` capabilities (comma-separated canonical eligibility set for `requires` matching)
+  - `[labels.<namespace>]` single_select boolean and values string list. The narrow config reader requires a single-line JSON-style double-quoted array without a trailing comma; malformed/unknown label fields are Validation errors. Tag enforcement is separate work.
 
 ### Environment variables
 

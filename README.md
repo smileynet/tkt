@@ -296,7 +296,19 @@ default_priority = "medium" # default priority for new tasks
 
 [machine]
 capabilities = "gpu,linux"   # capabilities this workstation provides (filters tkt ready)
+
+[labels.triage]
+single_select = true
+values = ["needs-info", "ready-for-agent"]
 ```
+
+Label namespace declarations are parsed as project configuration; malformed or
+unknown namespace fields are configuration errors. Tag enforcement is separate
+work. The existing narrow configuration syntax requires a single-line,
+double-quoted JSON-style string array for `values` (no trailing comma); it is not
+a full TOML parser. `tkt validate` also checks parent references for missing targets and cycles.
+`tkt config` and `tkt config --help` show the actual user configuration path,
+respecting `XDG_CONFIG_HOME` and the operating system's configuration directory.
 
 `requires` is the canonical eligibility field. Existing `env: corp` or `env: personal`
 tickets remain compatible: tkt treats that value as one required capability. Do not combine
