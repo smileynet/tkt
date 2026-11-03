@@ -1,7 +1,7 @@
 ---
 id: "145"
 title: "Fix update_check ignores DO_NOT_TRACK"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -22,9 +22,9 @@ telemetry, and document it.
 
 ## Acceptance criteria
 
-- [ ] With `DO_NOT_TRACK=1`, no update-check request is made and the cache is not refreshed
-- [ ] A test covers `DO_NOT_TRACK=1` alongside `TKT_UPDATE_CHECK=0` and `CI`
-- [ ] README and telemetry docs list `DO_NOT_TRACK` as disabling the update check
+- [x] With `DO_NOT_TRACK=1`, no update-check request is made and the cache is not refreshed
+- [x] A test covers `DO_NOT_TRACK=1` alongside `TKT_UPDATE_CHECK=0` and `CI`
+- [x] README and telemetry docs list `DO_NOT_TRACK` as disabling the update check
 
 ## Triage — 2026-11-02
 
@@ -41,3 +41,10 @@ request/cache refresh with `DO_NOT_TRACK=1` before the fix. Fixed-source regress
 checks cover that guard and the independent CI/update-disable controls. See
 [privacy evidence](../docs/evidence/update-check-145.md), including the invalid
 initial transport attempt and its limitations. Final full-gate verification passed; see the evidence report.
+
+## Resolution (2026-11-03)
+
+Updater respects exact DO_NOT_TRACK=1 before cache access. Independent critic accepted, full gate and installed checks passed. Evidence promoted; shared cache retained for maintainer work and delivery helpers retained only until dashboard publication.
+
+### Verification
+1. ✓ update check respects DO_NOT_TRACK=1 — "Final 384-test Rust gate plus fake-transport DNT/CI/explicit opt-out controls passed; docs/evidence/update-check-145.md records final review and installed verification."
