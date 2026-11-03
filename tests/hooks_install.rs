@@ -93,7 +93,7 @@ fn explicit_advisory_install_preview_ownership_and_remove() {
             .unwrap()
             .file_name()
             .to_string_lossy()
-            .starts_with(".tkt-pre-commit-")));
+            .starts_with(".tkt-")));
 }
 
 #[test]

@@ -128,29 +128,7 @@ fn publish(path: &Path, old: Option<&str>, output: &str) -> Result<()> {
         }
         return core::atomic_write(path, output);
     }
-    let nonce = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)?
-        .as_nanos();
-    let staging = path.with_file_name(format!(
-        ".tkt-plan-projection-{}-{nonce}",
-        std::process::id()
-    ));
-    core::atomic_write(&staging, output)?;
-    let published = std::fs::hard_link(&staging, path);
-    let cleanup = std::fs::remove_file(&staging);
-    if let Err(error) = published {
-        if error.kind() == std::io::ErrorKind::AlreadyExists {
-            domain_bail!(
-                Conflict,
-                "projection destination appeared during generation; preserved it without overwrite"
-            );
-        }
-        return Err(error).context(
-            "cannot publish new projection without overwrite; filesystem must support hard links",
-        );
-    }
-    cleanup.context("projection published, but staging cleanup failed")?;
-    Ok(())
+    core::atomic_create(path, output, false)
 }
 
 fn render(corpus: &[Ticket]) -> String {

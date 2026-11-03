@@ -138,42 +138,28 @@ fn reject_link(path: &Path) -> Result<()> {
 
 fn install(hooks: &Path, path: &Path) -> Result<()> {
     std::fs::create_dir_all(hooks)?;
-    let nonce = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)?
-        .as_nanos();
-    let staging = hooks.join(format!(".tkt-pre-commit-{}-{nonce}", std::process::id()));
-    crate::core::atomic_write(&staging, SHIM)?;
-    let result = (|| -> Result<()> {
-        #[cfg(unix)]
+    match crate::core::atomic_create(path, SHIM, true) {
+        Ok(()) => Ok(()),
+        Err(error)
+            if error
+                .downcast_ref::<crate::DomainError>()
+                .is_some_and(|e| e.kind == crate::ErrorKind::Conflict) =>
         {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&staging, std::fs::Permissions::from_mode(0o755))?;
-        }
-        // A hard link publishes complete bytes without ever replacing a hook
-        // another installer/editor created after preflight.
-        match std::fs::hard_link(&staging, path) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-                reject_link(path)?;
-                if std::fs::read(path)? == SHIM.as_bytes() {
-                    Ok(())
-                } else {
-                    domain_bail!(
-                        Conflict,
-                        "{} appeared during installation; preserved it",
-                        path.display()
-                    );
-                }
+            reject_link(path)?;
+            let identical = std::fs::read(path)? == SHIM.as_bytes();
+            #[cfg(unix)]
+            let identical = {
+                use std::os::unix::fs::PermissionsExt;
+                identical && std::fs::metadata(path)?.permissions().mode() & 0o111 != 0
+            };
+            if identical {
+                Ok(())
+            } else {
+                Err(error)
             }
-            Err(error) => Err(error).context(
-                "cannot atomically publish advisory hook; filesystem must support hard links",
-            ),
         }
-    })();
-    let cleanup = std::fs::remove_file(&staging);
-    result?;
-    cleanup.context("hook installed, but staging cleanup failed")?;
-    Ok(())
+        Err(error) => Err(error),
+    }
 }
 
 fn remove_owned(path: &Path) -> Result<()> {

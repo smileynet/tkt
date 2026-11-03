@@ -182,6 +182,7 @@ pub struct MigrationPlan {
 /// One file's planned transformation.
 #[derive(Debug)]
 pub struct PlanEntry {
+    source_snapshot: String,
     pub source_path: PathBuf,
     pub target_path: PathBuf,
     pub old_slug: String,
@@ -261,6 +262,7 @@ pub fn plan_tk(dir: &Path) -> MigrationPlan {
         let target_path = dir.join(&target_filename);
 
         entries.push(PlanEntry {
+            source_snapshot: content,
             source_path: path.clone(),
             target_path,
             old_slug: slug,
@@ -280,41 +282,65 @@ pub fn plan_tk(dir: &Path) -> MigrationPlan {
     }
 }
 
-// --- Apply ---
+// --- Prepare and apply ---
 
-/// Result of applying a migration.
 pub struct ApplyResult {
     pub files_written: usize,
     pub files_renamed: usize,
-    pub orphaned_deps: Vec<(String, String)>, // (ticket slug, unresolved dep)
+    pub orphaned_deps: Vec<(String, String)>,
 }
 
-/// Apply a migration plan: rewrite files in place, rename to new IDs.
-pub fn apply(dir: &Path, plan: &MigrationPlan) -> std::io::Result<ApplyResult> {
-    let mut files_written = 0;
-    let mut files_renamed = 0;
+pub struct PreparedMigration {
+    backup_dir: PathBuf,
+    files: Vec<PreparedTicket>,
+    orphaned_deps: Vec<(String, String)>,
+}
+
+struct PreparedTicket {
+    source: PathBuf,
+    destination: PathBuf,
+    original: String,
+    converted: String,
+}
+
+pub fn prepare(dir: &Path, plan: &MigrationPlan) -> anyhow::Result<PreparedMigration> {
+    let root = dir.canonicalize()?;
+    let mut files = Vec::new();
     let mut orphaned_deps = Vec::new();
-
-    // Back up originals
-    let backup_dir = dir.parent().unwrap_or(dir).join(".tickets.bak");
-    std::fs::create_dir_all(&backup_dir)?;
     for entry in &plan.entries {
-        let backup_path = backup_dir.join(entry.source_path.file_name().unwrap_or_default());
-        std::fs::copy(&entry.source_path, &backup_path)?;
-    }
-
-    // Write converted files
-    for entry in &plan.entries {
-        let content = std::fs::read_to_string(&entry.source_path).unwrap_or_default();
+        if entry.source_path.parent().unwrap_or(dir).canonicalize()? != root
+            || entry.target_path.parent().unwrap_or(dir).canonicalize()? != root
+        {
+            return Err(crate::DomainError::new(
+                crate::ErrorKind::Validation,
+                "migration paths must remain in the selected ticket directory".into(),
+            )
+            .into());
+        }
+        let source = root.join(entry.source_path.file_name().unwrap_or_default());
+        let destination = root.join(entry.target_path.file_name().unwrap_or_default());
+        let content = regular_text(&source)?.ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("missing migration source {}", source.display()),
+            )
+        })?;
+        if content != entry.source_snapshot {
+            return Err(crate::DomainError::new(
+                crate::ErrorKind::Conflict,
+                format!(
+                    "migration source changed after planning: {}",
+                    source.display()
+                ),
+            )
+            .into());
+        }
         let parsed = parse_tk_file(&content);
-
-        // Check for orphaned deps
         for dep in &parsed.deps {
             if !plan.id_map.contains_key(dep.as_str()) {
                 orphaned_deps.push((entry.old_slug.clone(), dep.clone()));
             }
         }
-
         // Build new frontmatter
         let mut fm_lines = Vec::new();
         fm_lines.push(format!("id: \"{}\"", entry.new_id));
@@ -344,20 +370,156 @@ pub fn apply(dir: &Path, plan: &MigrationPlan) -> std::io::Result<ApplyResult> {
 
         let new_content = format!("---\n{}\n---\n\n{}\n", fm_lines.join("\n"), body.trim());
 
-        // Remove old file first (might be same path if slug matches)
-        if entry.source_path != entry.target_path {
-            std::fs::remove_file(&entry.source_path)?;
-            files_renamed += 1;
+        files.push(PreparedTicket {
+            source,
+            destination,
+            original: content,
+            converted: new_content,
+        });
+    }
+    let prepared = PreparedMigration {
+        backup_dir: dir.parent().unwrap_or(dir).join(".tickets.bak"),
+        files,
+        orphaned_deps,
+    };
+    prepared.verify_sources_and_destinations()?;
+    Ok(prepared)
+}
+
+fn regular_text(path: &Path) -> anyhow::Result<Option<String>> {
+    match std::fs::symlink_metadata(path) {
+        Ok(metadata) => {
+            let linked = metadata.file_type().is_symlink();
+            #[cfg(windows)]
+            let linked = {
+                use std::os::windows::fs::MetadataExt;
+                linked || metadata.file_attributes() & 0x400 != 0
+            };
+            if linked || !metadata.is_file() {
+                return Err(crate::DomainError::new(
+                    crate::ErrorKind::Conflict,
+                    format!(
+                        "migration needs a regular, unlinked file: {}",
+                        path.display()
+                    ),
+                )
+                .into());
+            }
+            Ok(Some(std::fs::read_to_string(path)?))
         }
-        std::fs::write(&entry.target_path, new_content)?;
-        files_written += 1;
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error.into()),
+    }
+}
+
+impl PreparedMigration {
+    pub fn orphaned_deps(&self) -> &[(String, String)] {
+        &self.orphaned_deps
     }
 
-    Ok(ApplyResult {
-        files_written,
-        files_renamed,
-        orphaned_deps,
-    })
+    fn verify_source(file: &PreparedTicket) -> anyhow::Result<()> {
+        if regular_text(&file.source)?.as_deref() != Some(file.original.as_str()) {
+            return Err(crate::DomainError::new(
+                crate::ErrorKind::Conflict,
+                format!(
+                    "migration source changed; preserved it and any published copy at {}",
+                    file.destination.display()
+                ),
+            )
+            .into());
+        }
+        Ok(())
+    }
+
+    fn verify_sources_and_destinations(&self) -> anyhow::Result<()> {
+        if let Ok(metadata) = std::fs::symlink_metadata(&self.backup_dir) {
+            let linked = metadata.file_type().is_symlink();
+            #[cfg(windows)]
+            let linked = {
+                use std::os::windows::fs::MetadataExt;
+                linked || metadata.file_attributes() & 0x400 != 0
+            };
+            if linked || !metadata.is_dir() {
+                return Err(crate::DomainError::new(
+                    crate::ErrorKind::Conflict,
+                    "migration backup root must be a regular directory".into(),
+                )
+                .into());
+            }
+        }
+        for file in &self.files {
+            Self::verify_source(file)?;
+            if file.source != file.destination
+                && std::fs::symlink_metadata(&file.destination).is_ok()
+            {
+                return Err(crate::DomainError::new(
+                    crate::ErrorKind::Conflict,
+                    format!(
+                        "migration destination exists; preserved it: {}",
+                        file.destination.display()
+                    ),
+                )
+                .into());
+            }
+            let backup = self
+                .backup_dir
+                .join(file.source.file_name().unwrap_or_default());
+            if regular_text(&backup)?.is_some_and(|text| text != file.original) {
+                return Err(crate::DomainError::new(
+                    crate::ErrorKind::Conflict,
+                    format!(
+                        "different backup already exists; preserved it: {}",
+                        backup.display()
+                    ),
+                )
+                .into());
+            }
+        }
+        Ok(())
+    }
+
+    pub fn apply(&self) -> anyhow::Result<ApplyResult> {
+        self.verify_sources_and_destinations()?;
+        std::fs::create_dir_all(&self.backup_dir)?;
+        for file in &self.files {
+            let backup = self
+                .backup_dir
+                .join(file.source.file_name().unwrap_or_default());
+            match regular_text(&backup)? {
+                Some(existing) if existing == file.original => {}
+                Some(_) => {
+                    return Err(crate::DomainError::new(
+                        crate::ErrorKind::Conflict,
+                        format!(
+                            "different backup already exists; preserved it: {}",
+                            backup.display()
+                        ),
+                    )
+                    .into())
+                }
+                None => crate::core::atomic_create(&backup, &file.original, false)?,
+            }
+        }
+        let mut files_written = 0;
+        let mut files_renamed = 0;
+        for file in &self.files {
+            Self::verify_source(file)?;
+            if file.source == file.destination {
+                crate::core::atomic_write(&file.destination, &file.converted)?;
+            } else {
+                crate::core::atomic_create(&file.destination, &file.converted, false)?;
+                Self::verify_source(file)?;
+                std::fs::remove_file(&file.source)?;
+                files_renamed += 1;
+            }
+            files_written += 1;
+        }
+        Ok(ApplyResult {
+            files_written,
+            files_renamed,
+            orphaned_deps: self.orphaned_deps.clone(),
+        })
+    }
 }
 
 // --- Parsing helpers ---
@@ -562,45 +724,143 @@ mod tests {
 
     #[test]
     fn apply_creates_correct_files() {
-        let dir = tempfile::tempdir().unwrap();
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join(".tickets");
+        std::fs::create_dir(&dir).unwrap();
         std::fs::write(
-            dir.path().join("auth-system.md"),
+            dir.as_path().join("auth-system.md"),
             "---\nstatus: closed\ndeps: []\n---\n\n# Auth System\n\nImplement auth.\n",
         )
         .unwrap();
         std::fs::write(
-            dir.path().join("deploy.md"),
+            dir.as_path().join("deploy.md"),
             "---\nstatus: open\ndeps: [auth-system]\n---\n\n# Deploy\n\nDeploy it.\n",
         )
         .unwrap();
 
-        let plan = plan_tk(dir.path());
-        let result = apply(dir.path(), &plan).unwrap();
+        let plan = plan_tk(dir.as_path());
+        let result = prepare(dir.as_path(), &plan).unwrap().apply().unwrap();
 
         assert_eq!(result.files_written, 2);
-        assert!(dir.path().join("01-auth-system.md").exists());
-        assert!(dir.path().join("02-deploy.md").exists());
-        assert!(!dir.path().join("auth-system.md").exists());
-        assert!(!dir.path().join("deploy.md").exists());
+        assert!(dir.as_path().join("01-auth-system.md").exists());
+        assert!(dir.as_path().join("02-deploy.md").exists());
+        assert!(!dir.as_path().join("auth-system.md").exists());
+        assert!(!dir.as_path().join("deploy.md").exists());
 
         // Check content
-        let auth_content = std::fs::read_to_string(dir.path().join("01-auth-system.md")).unwrap();
+        let auth_content =
+            std::fs::read_to_string(dir.as_path().join("01-auth-system.md")).unwrap();
         assert!(auth_content.contains("id: \"01\""));
         assert!(auth_content.contains("title: \"Auth System\""));
         assert!(auth_content.contains("status: done"));
         assert!(auth_content.contains("blocked_by: []"));
 
-        let deploy_content = std::fs::read_to_string(dir.path().join("02-deploy.md")).unwrap();
+        let deploy_content = std::fs::read_to_string(dir.as_path().join("02-deploy.md")).unwrap();
         assert!(deploy_content.contains("id: \"02\""));
         assert!(deploy_content.contains("blocked_by: [\"01\"]"));
 
         // Backup exists
         assert!(dir
-            .path()
+            .as_path()
             .parent()
             .unwrap()
             .join(".tickets.bak")
             .join("auth-system.md")
             .exists());
+    }
+    #[test]
+    fn migration_preserves_source_and_unmanaged_destination_on_collision() {
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join(".tickets");
+        std::fs::create_dir(&dir).unwrap();
+        let source = dir.join("auth.md");
+        let original = "---\nstatus: open\ndeps: []\n---\n\n# Auth\n\nOriginal specification.\n";
+        std::fs::write(&source, original).unwrap();
+        let plan = plan_tk(&dir);
+        let prepared = prepare(&dir, &plan).unwrap();
+        let destination = &plan.entries[0].target_path;
+        std::fs::write(destination, "foreign arrival").unwrap();
+        assert!(
+            prepared.apply().is_err(),
+            "must refuse a destination created after planning"
+        );
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), original);
+        assert_eq!(
+            std::fs::read_to_string(destination).unwrap(),
+            "foreign arrival"
+        );
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn failed_migration_publication_keeps_the_original_source() {
+        use std::os::windows::fs::OpenOptionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join(".tickets");
+        std::fs::create_dir(&dir).unwrap();
+        let source = dir.join("auth.md");
+        let original = "---\nstatus: open\ndeps: []\n---\n\n# Auth\n\nOriginal specification.\n";
+        std::fs::write(&source, original).unwrap();
+        let plan = plan_tk(&dir);
+        let prepared = prepare(&dir, &plan).unwrap();
+        let destination = &plan.entries[0].target_path;
+        std::fs::write(destination, "locked foreign arrival").unwrap();
+        let held = std::fs::OpenOptions::new()
+            .read(true)
+            .share_mode(1)
+            .open(destination)
+            .unwrap();
+        assert!(prepared.apply().is_err());
+        assert!(
+            source.exists(),
+            "failed migration removed the original before publishing output"
+        );
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), original);
+        assert_eq!(
+            std::fs::read_to_string(destination).unwrap(),
+            "locked foreign arrival"
+        );
+        drop(held);
+    }
+    #[test]
+    fn preparation_rejects_unreadable_text_without_creating_backups() {
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join(".tickets");
+        std::fs::create_dir(&dir).unwrap();
+        let source = dir.join("invalid.md");
+        std::fs::write(&source, [255, 254]).unwrap();
+        let plan = plan_tk(&dir);
+        assert!(prepare(&dir, &plan).is_err());
+        assert_eq!(std::fs::read(&source).unwrap(), [255, 254]);
+        assert!(!temp.path().join(".tickets.bak").exists());
+    }
+
+    #[test]
+    fn migration_preserves_conflicting_backup_and_changed_source() {
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join(".tickets");
+        std::fs::create_dir(&dir).unwrap();
+        let source = dir.join("auth.md");
+        let original = "---\nstatus: open\ndeps: []\n---\n\n# Auth\n\nOriginal.\n";
+        std::fs::write(&source, original).unwrap();
+        let prepared = prepare(&dir, &plan_tk(&dir)).unwrap();
+        std::fs::write(&source, "concurrent human edit").unwrap();
+        assert!(prepared.apply().is_err());
+        assert_eq!(
+            std::fs::read_to_string(&source).unwrap(),
+            "concurrent human edit"
+        );
+        assert!(!temp.path().join(".tickets.bak").exists());
+        std::fs::write(&source, original).unwrap();
+        let backup = temp.path().join(".tickets.bak/auth.md");
+        std::fs::create_dir_all(backup.parent().unwrap()).unwrap();
+        std::fs::write(&backup, "older preserved backup").unwrap();
+        assert!(prepared.apply().is_err());
+        assert_eq!(
+            std::fs::read_to_string(&backup).unwrap(),
+            "older preserved backup"
+        );
+        assert_eq!(std::fs::read_to_string(&source).unwrap(), original);
+        assert!(!dir.join("01-auth.md").exists());
     }
 }

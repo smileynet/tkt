@@ -1,0 +1,37 @@
+{
+  "kind": "reviewed-source-and-check-receipt",
+  "rustTests": 428,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "platform": "Windows",
+  "files": [
+    {
+      "path": "src/core/mod.rs",
+      "sha256": "29d856a7d95474472107cb288e60a954e3124e63c45fa0a3192175d07480dedf"
+    },
+    {
+      "path": "src/migrate.rs",
+      "sha256": "c550a76afd5135c537595a286db52f4612b029bd4d1c3cf379dab25f8ec84366"
+    },
+    {
+      "path": "src/commands/migrate.rs",
+      "sha256": "1732192184bedeac0b385353867cd285417e02dda19c4194e853fa730930ea6f"
+    },
+    {
+      "path": "src/commands/hooks.rs",
+      "sha256": "e4b48a10af9f1e252db4d042d2f714e6d2a0a93e70c32f925b818cdc5eb5d26b"
+    },
+    {
+      "path": "src/commands/plan_projection.rs",
+      "sha256": "578ed3653fe8a5f11b7ace3e0bb7c059faf8fa23bab480e2b7e3c028c82c29cb"
+    },
+    {
+      "path": "tests/migration_publication.rs",
+      "sha256": "a0c7d4995729f249ef31a7261646d326a67c63059abf5f19da09bee07c19c43a"
+    },
+    {
+      "path": "tests/hooks_install.rs",
+      "sha256": "859e9a6ec0f0bfb4c5e2d2f19100e019ae583d465422ddb0f5734e3aac1256e1"
+    }
+  ]
+}

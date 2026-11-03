@@ -69,38 +69,8 @@ fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
         return Ok(0);
     }
 
-    // Check for orphaned deps before applying
-    let mut orphaned = Vec::new();
-    for entry in &plan.entries {
-        let content = std::fs::read_to_string(&entry.source_path).unwrap_or_default();
-        let parsed_deps: Vec<String> = content
-            .lines()
-            .find(|l| l.trim().starts_with("deps:"))
-            .map(|l| {
-                l.trim()
-                    .strip_prefix("deps:")
-                    .unwrap_or("")
-                    .trim()
-                    .trim_start_matches('[')
-                    .trim_end_matches(']')
-                    .split(',')
-                    .map(|d| {
-                        d.trim()
-                            .trim_matches('"')
-                            .trim_matches('\'')
-                            .trim()
-                            .to_string()
-                    })
-                    .filter(|d| !d.is_empty())
-                    .collect()
-            })
-            .unwrap_or_default();
-        for dep in &parsed_deps {
-            if !plan.id_map.contains_key(dep.as_str()) {
-                orphaned.push((entry.old_slug.clone(), dep.clone()));
-            }
-        }
-    }
+    let prepared = migrate::prepare(dir, &plan)?;
+    let orphaned = prepared.orphaned_deps();
 
     // Print plan
     if !is_quiet() {
@@ -118,7 +88,7 @@ fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
 
         if !orphaned.is_empty() {
             println!("  ⚠ Unresolved deps (will be dropped):");
-            for (slug, dep) in &orphaned {
+            for (slug, dep) in orphaned {
                 println!("    {} references unknown dep: {}", slug, dep);
             }
             println!();
@@ -147,7 +117,7 @@ fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
     }
 
     // Apply
-    let result = migrate::apply(dir, &plan)?;
+    let result = prepared.apply()?;
 
     if is_quiet() {
         print_quiet_json_success(&format!(

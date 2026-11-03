@@ -31,3 +31,5 @@ plan and its result types; migrate families with existing error/output policies;
 run a cross-command no-write matrix. No generic trait/plugin framework, opaque
 callback-only wrapper or claim of transactional external-editor locking is approved
 by this audit. Remaining all-mutator acceptance criteria are still pending.
+
+Child 251 is complete after red/green failure controls, the full gate and critic review. Prepared migration and shared no-overwrite creation now cover migration, hooks and projection. The all-mutator executor, remaining local effects and full matrix remain pending. Guidance follow-up 252 owns the discovered unsupported map-file reference.

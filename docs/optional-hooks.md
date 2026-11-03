@@ -37,7 +37,7 @@ after preflight. This requires hard-link support (verified on this Windows NTFS
 workspace); unsupported filesystems return an operational error with existing
 hooks untouched. Concurrent install retries accept an identical completed shim
 or preserve a foreign arrival. A crash leaves either an absent or complete target;
-a uniquely named `.tkt-pre-commit-*` staging orphan may remain inert and should be
+a uniquely named `.tkt-create-*` staging orphan may remain inert and should be
 inspected before manual cleanup. No backup is needed because existing hook bytes
 are never replaced. Future shim-version upgrades must explicitly recognize prior
 owned versions; this first installer does not take ownership of unknown versions.

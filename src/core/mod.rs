@@ -14,6 +14,75 @@ use std::path::Path;
 
 use crate::{DomainError, ErrorKind};
 
+/// Publish complete text without replacing a destination that appears after
+/// preflight. Keep staging on the same filesystem for hard-link publication.
+pub fn atomic_create(path: &Path, contents: &str, executable: bool) -> anyhow::Result<()> {
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_nanos();
+    let staging = path.with_file_name(format!(".tkt-create-{}-{nonce}", std::process::id()));
+    atomic_write(&staging, contents)?;
+    let permissions: anyhow::Result<()> = {
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            if executable {
+                std::fs::set_permissions(&staging, std::fs::Permissions::from_mode(0o755)).map_err(
+                    |error| {
+                        anyhow::Error::new(DomainError::with_hint(
+                            ErrorKind::Io,
+                            format!(
+                                "cannot prepare executable file {}: {}",
+                                path.display(),
+                                error
+                            ),
+                            format!("inspect permissions at {}", staging.display()),
+                        ))
+                    },
+                )
+            } else {
+                Ok(())
+            }
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = executable;
+            Ok(())
+        }
+    };
+    let prepared = permissions.and_then(|()| match std::fs::hard_link(&staging, path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Err(DomainError::new(
+            ErrorKind::Conflict,
+            format!(
+                "{} already exists; preserved without overwrite",
+                path.display()
+            ),
+        )
+        .into()),
+        Err(error) => Err(DomainError::with_hint(
+            ErrorKind::Io,
+            format!("cannot write {}: {}", path.display(), error),
+            "new-file publication requires same-filesystem hard-link support".into(),
+        )
+        .into()),
+    });
+    let cleanup = std::fs::remove_file(&staging);
+    prepared?;
+    cleanup.map_err(|error| {
+        DomainError::with_hint(
+            ErrorKind::Io,
+            format!(
+                "{} was published, but staging cleanup failed: {}",
+                path.display(),
+                error
+            ),
+            format!("inspect the staging link at {}", staging.display()),
+        )
+    })?;
+    Ok(())
+}
+
 /// Atomically write `contents` to `path`.
 ///
 /// Writes to a sibling temp file in the same directory (same filesystem, so the
@@ -149,5 +218,20 @@ mod tests {
             "successful atomic writes clean up their temp file"
         );
         std::fs::remove_dir_all(dir).unwrap();
+    }
+    #[test]
+    #[cfg(windows)]
+    fn new_file_publication_errors_keep_the_io_domain_kind() {
+        use super::{atomic_create, DomainError, ErrorKind};
+        let dir = tempfile::tempdir().unwrap();
+        let error =
+            atomic_create(&dir.path().join("invalid?.md"), "complete text", false).unwrap_err();
+        let domain = error
+            .downcast_ref::<DomainError>()
+            .expect("publication failures must remain structured I/O errors");
+        assert_eq!(domain.kind, ErrorKind::Io);
+        assert!(domain.message.contains("invalid?.md"));
+        assert!(domain.hint.is_some());
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
     }
 }

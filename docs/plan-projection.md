@@ -54,7 +54,7 @@ lifecycle synchronization still updates only existing rows of `docs/plan.md`.
 New files are published from a complete sibling staging file using a hard link,
 so a file that appears after preview is never overwritten. This requires
 hard-link support; unsupported filesystems fail without replacing that file.
-An interrupted publish can leave an inert `.tkt-plan-projection-*` staging file
+An interrupted publish can leave an inert `.tkt-create-*` staging file
 for inspection. Existing destinations are re-read immediately before atomic
 replacement and a changed snapshot causes conflict. There remains a small
 check/replace window: generation is a single-writer operation, not transactional

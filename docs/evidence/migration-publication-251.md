@@ -1,0 +1,9 @@
+# Migration publication repair
+
+Two focused regressions failed against the previous implementation: an arriving destination was overwritten, and a Windows-locked destination caused failure after the original source was removed. Both now pass. Migration prepares readable source snapshots and complete converted text before effects, validates preview/apply preconditions, creates or reuses exact backups without clobbering different bytes, and removes an original only after its own output is published.
+
+The shared core atomic_create primitive publishes complete staged files without overwrite and retains hook executable behavior and projection ownership semantics. Structured Conflict/Io errors preserve failure and recovery information. A Windows invalid-name test failed before Io classification was corrected and now verifies the error kind, path, hint and staging cleanup.
+
+PASS: final mise run check ran 428 Rust tests and 42 Node fixtures, with clean formatting and zero clippy warnings. SKIP: one existing Windows relative-link fixture. Migration tests cover collisions, failed publication, invalid UTF-8, changed sources, conflicting backups, preview/confirm and complete conversion. Existing hook/projection tests still pass. Independent critic review accepted the prepared plan, shared writer and final error mapping. An intermediate clippy immediate-closure failure was corrected without suppressing the lint, then the full gate was rerun.
+
+No real project tickets were migrated. The legacy unit fixture now uses nested private ticket/backup roots; a preexisting mixed system-temporary backup directory (two files, 127 bytes) was preserved. Source hashes are recorded in the companion JSON. Per-file safety is not batch atomicity or an external-editor lock: earlier outputs/backups can remain after later failure. Hard-link support is required. Operator guidance: docs/migration-publication.md. Parent 191 remains open for broader effect-plan routing.

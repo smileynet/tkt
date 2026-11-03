@@ -320,3 +320,5 @@ checks for a changed snapshot but still requires a single writer: coordinate
 external edits to the destination as well as the corpus.
 
 Dry-run diagnostics: file debug logging is suppressed for previews, including the local validate/rebase dry-run forms. Existing logs are neither created nor appended. Explicit human/JSON stderr debug output remains available; ordinary non-preview file logging is unchanged. This repairs the documented no-write preview behavior.
+
+Migration safety: tk preview and apply prepare readable source snapshots and reject destination or backup conflicts. New output/backups are published completely without overwriting arrivals; an original is removed only after its converted output succeeds. Backups remain .tickets.bak. This is per-file safety, not an atomic batch or external-editor lock; retain backups and inspect partial results on failure. Hard-link support is required for new-file publication.
