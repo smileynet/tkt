@@ -67,7 +67,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 | 176 | new: clearer body template + --body flag to fill content at creation | ✅ done |
 | 177 | guidance: state evidence↔validation_criteria rule, tag editing, fill-body-at-new, link-the-source | ✅ done |
 | 226 | Propose AGENTS.md restructuring while preserving guidance coverage | ✅ done |
-| 245 | Prepare approved guidance reference homes and current coverage map | in_progress |
+| 245 | Prepare approved guidance reference homes and current coverage map | ✅ done |
 | 246 | Apply approved conditional guidance pointers and update coverage matrix | open |
 | 247 | Verify and deploy the staged guidance restructuring | open |
 | 228 | Migrate status dashboard to the current Plan-tab contract | in_progress |
