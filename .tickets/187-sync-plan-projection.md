@@ -1,7 +1,7 @@
 ---
 id: "187"
 title: "Generate a derived sync-plan projection from the ticket corpus"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -35,11 +35,11 @@ This is intentionally separate from #184: projection is the primary derived-plan
 
 ## Acceptance criteria
 
-- [ ] A projection command/mode renders all relevant tickets in deterministic priority/ID order with derived status
-- [ ] The generated output is atomically written and global `--dry-run` previews without writing
-- [ ] The location and behavior of human-authored narrative are explicitly preserved or separated
-- [ ] Table-format `sync-plan` compatibility and #184's opt-in narrative design remain intact
-- [ ] Help, README, and agent guidance explain ticket files as the source of truth
+- [x] A projection command/mode renders all relevant tickets in deterministic priority/ID order with derived status
+- [x] The generated output is atomically written and global `--dry-run` previews without writing
+- [x] The location and behavior of human-authored narrative are explicitly preserved or separated
+- [x] Table-format `sync-plan` compatibility and #184's opt-in narrative design remain intact
+- [x] Help, README, and agent guidance explain ticket files as the source of truth
 
 ## Triage — 2026-11-02
 
@@ -53,3 +53,12 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-03)
+
+Implemented deterministic owned-region derived projection, safe publication and source/ownership guards; fixed triggered capabilities debug-stack regression; final full gate and critic accepted.
+
+### Verification
+1. ✓ A projection command renders every relevant ticket from the corpus with deterministic ordering and derived status — "Wholecorpus/allstatuses/slugs/order/context/JSON+tablecompatibility publictests pass; final mise run check419Rust/42Node passed,1existingWindows skip. docs/evidence/plan-projection-187.md."
+2. ✓ Generated output is written atomically and respects global dry-run — "Globaldryrun leavesoutputsabsent/unchanged; newfilehardlinkpublication refusesforeignarrival; existingoutputstalesnapshotrefused; Windowslockedfileatomicfailurepreservesbytes. RemainingexternalwriterTOCTOU/singlewriter+hardlinklimitsdocumented."
+3. ✓ The command preserves or clearly separates any non-derivable human narrative — "Unfenceduniquemarkerregiononly; exacthumanprefix/suffixandCRLFpreserved; unmarked/badmarkerfilesneveroverwritten, no implicitnarrativeparser. Independentcritic acceptedownershipfix andlocalizedcapabilitiesstackphasefix with32processregression."
