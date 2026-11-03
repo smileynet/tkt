@@ -1,7 +1,7 @@
 ---
 id: "200"
 title: "tkt ready --parent <id>: frontier scoped to one epic/map"
-status: in_progress
+status: done
 blocked_by: ["196", "197"]
 priority: medium
 validation_criteria:
@@ -40,9 +40,9 @@ Touches `src/commands/ready.rs` and the frontier helper in `src/core/ticket.rs`.
 
 ## Acceptance criteria
 
-- [ ] `tkt ready --parent <id>` lists only open, unblocked, unclaimed children of that parent, in priority-then-id order
-- [ ] Interim behavior (epic-tag filter vs parent-only) decided and documented
-- [ ] Driving use case (wayfinder per-map frontier) noted here
+- [x] `tkt ready --parent <id>` lists only open, unblocked, unclaimed children of that parent, in priority-then-id order
+- [x] Interim behavior (epic-tag filter vs parent-only) decided and documented
+- [x] Driving use case (wayfinder per-map frontier) noted here
 
 ## Triage — 2026-11-02
 
@@ -55,3 +55,12 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Implementation decision
 
 Native-parent-only: parent fields and container behavior have shipped, so no interim epic-tag alias is needed. Existing context can still scope `epic:slug` tags. The wayfinder per-map session use case above drives this direct-child filter; it reuses the global frontier predicate and ordering.
+
+## Resolution (2026-11-03)
+
+Added native-parent-only ready filter with scoped WIP and optional parent JSON, preserving existing readiness/order/context rules. Critic accepted final sources; proof promoted to docs/evidence/parent-scoped-frontier-200.md. Disposable helpers/logs trashed; shared target retained for deployment.
+
+### Verification
+1. ✓ tkt ready --parent <id> lists only open, unblocked, unclaimed children of that parent (the per-map frontier), in the same priority-then-id order as global ready — "Parent scoped integration fixture preserves all readiness and ordering rules; final mise run check passed 397 Rust tests; docs/evidence/parent-scoped-frontier-200.md"
+2. ✓ Works with the interim epic convention too (filter by epic:<slug> tag) OR documented as parent-only; decision recorded — "Native-parent-only decision recorded in ticket and all applicable guidance; independent critic accepted final hashes"
+3. ✓ Driving use case (wayfinder: a session resolves the ready frontier of one map) noted in the ticket — "Existing wayfinder per-map use case retained and linked to direct-child filter; scoped WIP and empty/missing targets verified"
