@@ -126,7 +126,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 125 | Design the first external-system import adapter contract | open |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | open |
-| 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | backlog |
+| 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | open |
 | 158 | tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex) | backlog |
 | 168 | Measure demand for missing-tag and backlog advisories | backlog |
 | 173 | validate: frontier-scoped readiness rule (Definition of Ready gate) | backlog |

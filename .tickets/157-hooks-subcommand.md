@@ -1,7 +1,7 @@
 ---
 id: "157"
 title: "tkt hooks subcommand + pre-commit installer (warn-default, config block/log)"
-status: backlog
+status: open
 blocked_by: []
 priority: medium
 validation_criteria:
