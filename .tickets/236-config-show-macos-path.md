@@ -1,7 +1,7 @@
 ---
 id: "236"
 title: "tkt config shows the wrong user-config path on macOS"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "tkt config and its help print the path the config loader actually reads on each OS"
