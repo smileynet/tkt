@@ -47,6 +47,11 @@ pub(crate) struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Explicit optional advisory pre-commit hook (shared repository worktrees)
+    Hooks {
+        #[arg(value_enum)]
+        action: crate::commands::hooks::Action,
+    },
     /// Frontier: open tickets with all deps done, env-filtered, priority-aware
     Ready {
         #[arg(long)]
@@ -664,6 +669,7 @@ pub fn run() -> i32 {
             Commands::Blocked => crate::commands::blocked::run(),
             Commands::Children { id } => crate::commands::children::run(&id),
             Commands::MoveAc { id, ac, to } => crate::commands::move_ac::run(&id, ac, &to),
+            Commands::Hooks { action } => crate::commands::hooks::run(action),
             Commands::Capabilities => crate::commands::capabilities::run(),
             Commands::Rebase { dry_run } => crate::commands::rebase::run(
                 dry_run || crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed),
@@ -779,6 +785,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Blocked => "blocked",
         Commands::Children { .. } => "children",
         Commands::MoveAc { .. } => "move-ac",
+        Commands::Hooks { .. } => "hooks",
         Commands::Capabilities => "capabilities",
         Commands::Rebase { .. } => "rebase",
         Commands::Audit { .. } => "audit",
@@ -1052,6 +1059,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         | Commands::Blocked
         | Commands::Children { .. }
         | Commands::MoveAc { .. }
+        | Commands::Hooks { .. }
         | Commands::Capabilities
         | Commands::Context { .. }
         | Commands::Migrate { .. }

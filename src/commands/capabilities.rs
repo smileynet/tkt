@@ -26,6 +26,7 @@ pub fn run() -> Result<i32> {
             "sync-plan" => ("idempotent", "Report drift by default; --check gates it; --fix updates the plan", "json"),
             "validate" => ("idempotent", "Read-only unless --fix repairs ticket files; --brief uses text", "json"),
             "rebase" => ("idempotent", "Fetch, renumber collisions and commit locally; --dry-run reads cached remote state without writing", "text"),
+            "hooks" => ("idempotent", "Explicit install/remove of exact owned advisory pre-commit shim; check/run read-only. No core.hooksPath edits, commit or push; dry-run writes nothing. Shared by repository worktrees; foreign/custom hooks preserved", "text"),
             "config" => ("idempotent", "Read-only except --set and --unset write user configuration, or project configuration with --project", "text"),
             "telemetry" => ("idempotent", "Read-only except --enable/--disable change consent and --clear deletes local events", "text"),
             "ready" | "blocked" => ("read_only", "Read-only report; ready supports JSON Lines with historical blocked_by and unfinished/missing pending_blockers, and hides tickets assigned to another agent; ready --parent ID selects direct children of an existing parent and scopes human WIP; ready rows include optional parent", "text"),

@@ -110,7 +110,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 
 ## Reactivated work and remaining deferrals
 
-The owner requested execution of actionable parked work. See [the per-ticket review](parked-review-2026-11-03.md). Completed after critic acceptance: #202 design, #99 update cadence, #186 parity retirement and #125 adapter design. The shared #175 source check and #173 bounded readiness check are complete after critic acceptance. Current frontier starts with #157 optional project hooks, #187 derived projection and #191 mutation-effect audit; #86 importer is unblocked. #173 depends on the shared #175 predicate; #86 depends on the #125 adapter contract. These are actual implementation prerequisites, not scheduling edges. #191 starts with an effect audit before any refactor. #147 and #158 need specific evidence; #184 remains explicitly deferred.
+The owner requested execution of actionable parked work. See [the per-ticket review](parked-review-2026-11-03.md). Completed after critic acceptance: #202 design, #99 update cadence, #186 parity retirement and #125 adapter design. The shared #175 source check and #173 bounded readiness check are complete after critic acceptance. The optional #157 project hook installer is complete and remains disabled here. Current frontier starts with #187 derived projection and #191 mutation-effect audit; #86 importer is unblocked. #173 depends on the shared #175 predicate; #86 depends on the #125 adapter contract. These are actual implementation prerequisites, not scheduling edges. #191 starts with an effect audit before any refactor. #147 and #158 need specific evidence; #184 remains explicitly deferred.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -126,7 +126,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 125 | Design the first external-system import adapter contract | ✅ done |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | open |
-| 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | ✅ done |
+| 157 | Optional advisory project pre-commit hooks | ✅ done |
 | 158 | tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex) | backlog |
 | 168 | Measure demand for missing-tag and backlog advisories | open |
 | 173 | validate: frontier-scoped readiness rule (Definition of Ready gate) | ✅ done |

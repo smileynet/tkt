@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Explicitly install, inspect and remove a project advisory pre-commit hook while preserving existing hooks and keeping commits nonblocking.
 - See missing source, acceptance and validation slots on the project frontier without changing readiness or making strict validation block on those advisories.
 - Active tickets receive an advisory when they lack a source reference; projects can explicitly require provenance without changing the ready queue.
 - Configure update-check cadence in user settings with positive hours/days or disable it with `never`, while preserving environment and privacy overrides.

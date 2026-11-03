@@ -25,3 +25,5 @@ pub mod reopen;
 pub mod sync_plan;
 pub mod telemetry;
 pub mod validate;
+
+pub mod hooks;
