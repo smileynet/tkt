@@ -113,9 +113,9 @@ pub fn validate_priority(priority: &str) -> Result<(), String> {
 /// Validate a status value.
 pub fn validate_status(status: &str) -> Result<(), String> {
     match status {
-        "open" | "in_progress" | "done" | "backlog" => Ok(()),
+        "open" | "in_progress" | "done" | "backlog" | "cancelled" => Ok(()),
         _ => Err(format!(
-            "status must be open/in_progress/done/backlog (got {:?})",
+            "status must be open/in_progress/done/backlog/cancelled (got {:?})",
             status
         )),
     }

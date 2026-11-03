@@ -49,12 +49,22 @@ pub fn run(
         }
     }
     if let Some(s) = status {
-        if s == "done" {
+        if s == "done" || s == "cancelled" {
+            let (message, hint) = if s == "done" {
+                (
+                    "status done can only be set by close",
+                    "create tickets as open or backlog, then use tkt close <id> so closure gates run",
+                )
+            } else {
+                (
+                    "status cancelled can only be set by cancel",
+                    "create tickets as open or backlog, then use tkt cancel <id>",
+                )
+            };
             return Err(crate::DomainError::with_hint(
                 crate::ErrorKind::Validation,
-                "status done can only be set by close".to_string(),
-                "create tickets as open or backlog, then use tkt close <id> so closure gates run"
-                    .to_string(),
+                message.to_string(),
+                hint.to_string(),
             )
             .into());
         }
@@ -177,6 +187,7 @@ pub fn run(
             let tids: Vec<String> = (0..parsed.len())
                 .map(|i| format!("{:0>width$}", base + i as u64, width = width))
                 .collect();
+            let file_paths: Vec<&str> = files.iter().map(String::as_str).collect();
             git::commit(
                 &txn.repo,
                 &format!(
@@ -188,6 +199,7 @@ pub fn run(
                         .collect::<Vec<_>>()
                         .join(", ")
                 ),
+                &file_paths,
             )?;
             Ok((base, width))
         };
@@ -206,23 +218,27 @@ pub fn run(
 
     let (mut base, mut width) = allocate_and_commit(&names, &parsed)?;
 
-    match txn.try_push()? {
-        PublishResult::Done(_) => {}
+    let outcome = match txn.try_push()? {
+        PublishResult::Done(outcome) => outcome,
         PublishResult::NeedsRetry => {
             let names = txn.scan_names()?;
             let result = allocate_and_commit(&names, &parsed)?;
             base = result.0;
             width = result.1;
-            txn.push_retry()?;
+            txn.push_retry()?
         }
-    }
+    };
 
     for (i, (slug, _)) in parsed.iter().enumerate() {
         let tid = format!("{:0>width$}", base + i as u64, width = width);
         if is_quiet() {
             println!("{}", tid);
         } else {
-            print_success("created", &tid, slug, "pushed");
+            let detail = match &outcome {
+                crate::transaction::PublishOutcome::LocalOnly => "local only",
+                _ => "pushed",
+            };
+            print_success("created", &tid, slug, detail);
         }
     }
     Ok(0)

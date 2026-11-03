@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 
 use anyhow::{bail, Context, Result};
@@ -156,9 +157,70 @@ pub fn add(repo: &Path, files: &[&str]) -> Result<()> {
 }
 
 /// Commit with a message.
-pub fn commit(repo: &Path, message: &str) -> Result<()> {
-    git(repo, &["commit", "-qm", message])?;
+pub fn commit(repo: &Path, message: &str, paths: &[&str]) -> Result<()> {
+    let config = crate::config::ProjectConfig::load(&repo.join(".tickets"));
+    config.validate()?;
+    let mut args = vec!["commit", "-qm", message, "--only", "--"];
+    args.extend_from_slice(paths);
+    if config.commit_hooks == crate::config::CommitHookPolicy::Run {
+        git(repo, &args)?;
+        return Ok(());
+    }
+
+    let hooks_path = EmptyHooksDir::create()?;
+    let hook_config = format!("core.hooksPath={}", hooks_path.0.display());
+    let mut command = Command::new("git");
+    command
+        .args(["-C", &repo.to_string_lossy(), "-c", &hook_config])
+        .args(&args);
+    let output = command.output().context("failed to execute git commit")?;
+    if !output.status.success() {
+        bail!(
+            "git commit failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+    }
     Ok(())
+}
+
+struct EmptyHooksDir(PathBuf);
+
+impl EmptyHooksDir {
+    fn create() -> Result<Self> {
+        let root = std::env::temp_dir();
+        for _ in 0..8 {
+            let nonce = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos();
+            let path = root.join(format!("tkt-hooks-{}-{nonce}", std::process::id()));
+            match std::fs::create_dir(&path) {
+                Ok(()) => return Ok(Self(path)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(error) => return Err(error.into()),
+            }
+        }
+        bail!("could not create an isolated empty hooks directory")
+    }
+}
+
+impl Drop for EmptyHooksDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir(&self.0);
+    }
+}
+
+pub fn local_commit_push_error(repo: &Path, details: &str) -> anyhow::Error {
+    let commit =
+        git(repo, &["rev-parse", "--short", "HEAD"]).unwrap_or_else(|_| "HEAD".to_string());
+    crate::DomainError::with_hint(
+        crate::ErrorKind::Io,
+        format!("commit {commit} was created locally but was not pushed: {details}"),
+        format!(
+            "resolve the hook or remote error, then run `git push`; commit {commit} remains in your local history"
+        ),
+    )
+    .into()
 }
 
 /// Result of a push attempt.

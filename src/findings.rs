@@ -90,6 +90,8 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     all_findings.extend(check_id_filename(&corpus));
     all_findings.extend(check_duplicate_ids(&corpus));
     all_findings.extend(check_dangling_deps(&corpus));
+    all_findings.extend(check_cancelled_tickets(&corpus));
+    all_findings.extend(check_blocked_by_cancelled(&corpus));
     all_findings.extend(check_cycles(&corpus));
     all_findings.extend(check_dangling_parent(&corpus));
     all_findings.extend(check_parent_cycles(&corpus));
@@ -233,6 +235,72 @@ pub fn check_dangling_deps(corpus: &[Ticket]) -> Vec<Finding> {
         }
     }
     findings
+}
+
+pub fn check_cancelled_tickets(corpus: &[Ticket]) -> Vec<Finding> {
+    let by_id: HashMap<&str, &Ticket> = corpus
+        .iter()
+        .map(|ticket| (ticket.id.as_str(), ticket))
+        .collect();
+    let mut findings = Vec::new();
+    for ticket in corpus
+        .iter()
+        .filter(|ticket| ticket.status == Status::Cancelled)
+    {
+        let Some(record) = core::cancellation_record(&ticket.body) else {
+            findings.push(Finding {
+                file: filename(ticket),
+                rule: "missing-cancellation".into(),
+                message: "cancelled ticket has no Cancellation section".into(),
+                severity: "error".into(),
+            });
+            continue;
+        };
+        if matches!(record.reason.as_deref(), Some("duplicate" | "superseded"))
+            && record.by.is_none()
+        {
+            findings.push(Finding {
+                file: filename(ticket),
+                rule: "missing-cancellation-by".into(),
+                message: "duplicate or superseded cancellation requires a By ticket".into(),
+                severity: "error".into(),
+            });
+        }
+        if let Some(by) = record.by.as_deref() {
+            if !by_id.contains_key(by) {
+                findings.push(Finding {
+                    file: filename(ticket),
+                    rule: "invalid-cancellation-by".into(),
+                    message: format!("cancellation By ticket {} does not resolve", by),
+                    severity: "error".into(),
+                });
+            }
+        }
+    }
+    findings
+}
+
+pub fn check_blocked_by_cancelled(corpus: &[Ticket]) -> Vec<Finding> {
+    let cancelled: HashSet<&str> = corpus
+        .iter()
+        .filter(|ticket| ticket.status == Status::Cancelled)
+        .map(|ticket| ticket.id.as_str())
+        .collect();
+    corpus
+        .iter()
+        .flat_map(|ticket| {
+            ticket
+                .blocked_by
+                .iter()
+                .filter(|id| cancelled.contains(id.as_str()))
+                .map(|id| Finding {
+                    file: filename(ticket),
+                    rule: "blocked-by-cancelled".into(),
+                    message: format!("blocked_by references cancelled ticket {}", id),
+                    severity: "error".into(),
+                })
+        })
+        .collect()
 }
 
 /// Check namespaced tags against configured value sets and selection rules.

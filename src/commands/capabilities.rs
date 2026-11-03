@@ -16,6 +16,8 @@ pub fn run() -> Result<i32> {
         let (effects, behavior, format) = match command.get_name() {
             "new" | "batch" => ("non_idempotent", "Allocate tickets, commit and optionally push; dry-run previews without writing", "text"),
             "claim" | "close" | "edit" | "renumber" => ("idempotent", "Change tickets, commit and optionally push; dry-run previews without writing", "text"),
+            "cancel" => ("idempotent", "Record cancellation history, handle dependent edges, and commit; dry-run previews without writing", "text"),
+            "reopen" => ("idempotent", "Return a cancelled ticket to open while preserving cancellation history; dry-run previews without writing", "text"),
             "init" => ("idempotent", "Create project files or write snippets; without --write the snippet is printed; dry-run previews", "text"),
             "doctor" => ("idempotent", "Read-only unless --fix applies safe setup repairs", "text"),
             "lint" => ("idempotent", "Normalize files by default; --check reports without writing", "text"),

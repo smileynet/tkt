@@ -14,7 +14,34 @@ use crate::git;
 static RE_PLAN_ROW: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap());
 
+fn plan_status_value(ticket: &Ticket) -> String {
+    match ticket.status {
+        Status::Done => "✅ done".to_string(),
+        Status::Cancelled => format!(
+            "cancelled ({})",
+            core::cancellation_record(&ticket.body)
+                .and_then(|record| record.reason)
+                .as_deref()
+                .unwrap_or("reason missing")
+        ),
+        status => status.as_str().to_string(),
+    }
+}
+
 pub(crate) fn update_status(repo: &std::path::Path, id: &str, status: Status) -> Result<bool> {
+    let value = if status == Status::Done {
+        "✅ done".to_string()
+    } else {
+        status.as_str().to_string()
+    };
+    update_status_cell(repo, id, &value)
+}
+
+pub(crate) fn update_cancellation(repo: &std::path::Path, id: &str, reason: &str) -> Result<bool> {
+    update_status_cell(repo, id, &format!("cancelled ({reason})"))
+}
+
+fn update_status_cell(repo: &std::path::Path, id: &str, value: &str) -> Result<bool> {
     let path = repo.join("docs/plan.md");
     if !path.is_file() {
         return Ok(false);
@@ -31,11 +58,6 @@ pub(crate) fn update_status(repo: &std::path::Path, id: &str, status: Status) ->
         let row = caps.get(0).unwrap();
         let start = cell.start() - row.start();
         let end = cell.end() - row.start();
-        let value = if status == Status::Done {
-            "✅ done"
-        } else {
-            status.as_str()
-        };
         format!("{} {} {}", &caps[0][..start], value, &caps[0][end..])
     });
     if updated == text {
@@ -78,10 +100,26 @@ pub fn run(
 
         match corpus_map.get(tid) {
             Some(t) => {
-                let ticket_done = t.status == Status::Done;
-                if plan_done != ticket_done {
+                let cancellation_value = format!(
+                    "cancelled ({})",
+                    core::cancellation_record(&t.body)
+                        .and_then(|record| record.reason)
+                        .as_deref()
+                        .unwrap_or("reason missing")
+                );
+                let plan_cancelled = status_cell.trim().starts_with("cancelled");
+                let status_disagrees = match t.status {
+                    Status::Done => !plan_done,
+                    Status::Cancelled => status_cell.trim() != cancellation_value,
+                    _ => plan_done || plan_cancelled,
+                };
+                if status_disagrees {
                     if fix && !dry_run {
-                        let new_status = if ticket_done { " ✅ done " } else { " open " };
+                        let new_status = match t.status {
+                            Status::Done => " ✅ done ".to_string(),
+                            Status::Cancelled => format!(" {} ", cancellation_value),
+                            _ => format!(" {} ", t.status.as_str()),
+                        };
                         let row_re = Regex::new(&format!(
                             r"(?m)^(\|\s*{}\s*\|[^|]*\|)[^|]*(\|\s*)$",
                             regex::escape(tid)
@@ -100,8 +138,18 @@ pub fn run(
                             rule: "plan-status-drift".into(),
                             message: format!(
                                 "plan says {}, ticket is {} (run: tkt sync-plan --fix)",
-                                if plan_done { "done" } else { "not done" },
-                                t.status.as_str()
+                                if plan_done {
+                                    "done"
+                                } else if plan_cancelled {
+                                    "cancelled"
+                                } else {
+                                    "not done"
+                                },
+                                if t.status == Status::Cancelled {
+                                    cancellation_value.as_str()
+                                } else {
+                                    t.status.as_str()
+                                }
                             ),
                             severity: "warning".into(),
                         });
@@ -137,7 +185,7 @@ pub fn run(
                     "| {} | {} | {} |\n",
                     t.id,
                     t.title.replace('|', "&#124;").replace(['\n', '\r'], " "),
-                    t.status.as_str()
+                    plan_status_value(t)
                 ));
                 fixed_count += 1;
                 continue;
@@ -145,7 +193,7 @@ pub fn run(
             findings.push(Finding {
                 file: t.path.file_name().unwrap().to_string_lossy().to_string(),
                 rule: "missing-plan-row".into(),
-                message: format!("{} ticket has no plan row", t.status.as_str()),
+                message: format!("{} ticket has no plan row", plan_status_value(t)),
                 severity: "warning".into(),
             });
         }

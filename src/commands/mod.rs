@@ -1,6 +1,7 @@
 pub mod audit;
 pub mod batch;
 pub mod blocked;
+pub mod cancel;
 pub mod capabilities;
 pub mod claim;
 pub mod close;
@@ -18,6 +19,7 @@ pub mod query;
 pub mod ready;
 pub mod rebase;
 pub mod renumber;
+pub mod reopen;
 pub mod sync_plan;
 pub mod telemetry;
 pub mod validate;

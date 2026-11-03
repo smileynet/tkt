@@ -45,7 +45,7 @@ For every open/in_progress ticket, check for real drift:
 - **Missing blocked_by** — work can't actually start without another ticket, but no edge declared
 - **Vague ACs** — criteria use "properly", "correctly", "as expected" instead of testable conditions
 - **Dead context** — file paths that moved, ADRs that were superseded, specs that changed
-- **Superseded work** — the plan changed and this ticket no longer reflects what's needed (→ close or rewrite)
+- **Superseded work** — the plan changed and this ticket no longer reflects what's needed (→ cancel with reason/note/replacement or rewrite)
 - **Scope creep** — ticket grew during discussion but wasn't split
 - **Missing/wrong tag** — in a multi-stream project, the ticket has no work-stream tag or the wrong one (see step 5)
 - **Expired retained artifacts** — inspect kept scratch, build outputs and work
@@ -55,7 +55,12 @@ For every open/in_progress ticket, check for real drift:
   items with their reason and end condition. Report unknown-owner
   artifacts with size; do not delete them.
 
-For each issue: fix in place (edit frontmatter/body), or if the ticket is no longer relevant, close it with a note or move to `status: backlog`.
+For each issue, fix in place or retire irrelevant work with `tkt cancel ID --reason
+REASON --note "why"`. Duplicate/superseded need `--by ID`; active dependents need
+explicit `--repoint` / `--drop-edges`. Terminal stale edges are dropped and named,
+preserving closure prose. Cancelled is not done and never satisfies prerequisites.
+Use `tkt reopen ID` if the retirement decision changes. Reserve backlog for work
+still wanted but deliberately deferred.
 
 ### 3. Identify untracked work
 
@@ -86,7 +91,12 @@ Every new ticket MUST have:
 tkt new <slug> --title "..." [--tags STREAM] [--blocked-by NN,NN] [--priority P]
 ```
 
-Then fill the body with the full template (What to build, Context, ACs, Out of scope). A ticket that fails the quality bar wastes the implementer's context window.
+Supply the complete body at creation with new `--body @file`, stdin `--body -`, or
+literal text; new/batch `--template NAME` selects a verbatim body from
+`.tickets/templates/NAME.md`. Fill any default prompts and link the intent source
+through --spec or a durable body citation. Body AC checkboxes use --check-all/--ac;
+frontmatter validation_criteria maps 1:1 by index to --evidence, with independent
+counts. A ticket that fails the quality bar wastes the implementer's context window.
 
 ### 5. Set ordering axes + tag scoping
 

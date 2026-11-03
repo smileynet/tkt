@@ -58,12 +58,22 @@ pub fn run(
         }
     }
     if let Some(s) = status {
-        if s == "done" {
+        if s == "done" || s == "cancelled" {
+            let (message, hint) = if s == "done" {
+                (
+                    "status done can only be set by close",
+                    "create the ticket as open or backlog, then use tkt close <id> so closure gates run",
+                )
+            } else {
+                (
+                    "status cancelled can only be set by cancel",
+                    "create the ticket as open or backlog, then use tkt cancel <id>",
+                )
+            };
             return Err(crate::DomainError::with_hint(
                 crate::ErrorKind::Validation,
-                "status done can only be set by close".to_string(),
-                "create the ticket as open or backlog, then use tkt close <id> so closure gates run"
-                    .to_string(),
+                message.to_string(),
+                hint.to_string(),
             )
             .into());
         }
@@ -186,7 +196,11 @@ pub fn run(
 
     let rel_path = format!(".tickets/{}", filename);
     git::add(&txn.repo, &[&rel_path])?;
-    git::commit(&txn.repo, &format!("chore(tickets): new {} {}", tid, slug))?;
+    git::commit(
+        &txn.repo,
+        &format!("chore(tickets): new {} {}", tid, slug),
+        &[&rel_path],
+    )?;
 
     // Advisory batch nudge: record this `new` and, on a burst of shared-scope
     // creates, surface a suggestion to use `tkt batch`. Advisory only.
@@ -228,7 +242,11 @@ pub fn run(
             crate::core::atomic_write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;
-            git::commit(&txn.repo, &format!("chore(tickets): new {} {}", tid2, slug))?;
+            git::commit(
+                &txn.repo,
+                &format!("chore(tickets): new {} {}", tid2, slug),
+                &[&rel_path2],
+            )?;
 
             txn.push_retry()?;
             if is_quiet() {

@@ -37,6 +37,14 @@ pub fn run(
     if t.status == Status::Done {
         domain_bail!(AlreadyDone, "{} is already done", t.id);
     }
+    if t.status == Status::Cancelled {
+        return Err(crate::DomainError::with_hint(
+            crate::ErrorKind::Conflict,
+            format!("{} is cancelled and cannot be closed", t.id),
+            format!("use tkt reopen {} before closing it", t.id),
+        )
+        .into());
+    }
 
     // --- Evidence / validation_criteria pairing ---
     let criteria = &t.validation_criteria;
@@ -316,7 +324,7 @@ pub fn run(
 }
 
 /// Pure-Rust ISO 8601 date (YYYY-MM-DD) without external dependencies.
-fn chrono_date() -> String {
+pub(crate) fn chrono_date() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     let secs = SystemTime::now()

@@ -175,6 +175,9 @@ tkt batch "api:Build API" "docs:Write docs" "tests:Add tests" --blocked-by 01
 
 ### Claim and close
 
+Body acceptance checkboxes use `--check-all` / `--ac`; frontmatter validation
+criteria use one `--evidence` per index. Those counts are independent.
+
 Create a complete ticket body with `tkt new example --body @brief.md`, `--body -`
 for stdin, or literal text. New/batch accept `--template NAME` to read the whole
 body verbatim from `.tickets/templates/NAME.md`; no interpolation is applied.
@@ -195,6 +198,19 @@ tkt close 03 --check-all --evidence "unit tests pass" --evidence "deployed to st
 `claim` is optional for solo work — `close` works directly on open tasks. Use `claim` in shared repos so others see what's taken. When a ticket has N `validation_criteria`, pass one `--evidence` per criterion (positional in order, or `N=text` to target criterion N).
 
 ### Edit tasks
+
+Retire abandoned work with `tkt cancel ID --reason obsolete --note "why"`.
+Duplicate/superseded reasons require `--by ID`. Active dependents require explicit
+`--repoint` or `--drop-edges`; terminal dependents' obsolete edges are dropped and
+named without changing their body/evidence. Inspect `--dry-run` first. Cancelled
+is distinct from done and does not satisfy prerequisites; `tkt reopen ID` returns
+cancelled work to open with its history retained. Close refuses cancelled work.
+
+Ticket commits skip commit hooks by default; `[commit] hooks = "run"` opts in.
+Only affected ticket/plan paths are committed, preserving unrelated staged files.
+Push hooks still run. Use global `--no-push` for local filing without fetch/push,
+or `[push] enabled = false` persistently; run `tkt rebase` before later pushing
+when IDs collide. Push failures name the durable local commit and retry action.
 
 ```bash
 tkt edit 02 --title "New title"

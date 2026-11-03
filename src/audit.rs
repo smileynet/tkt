@@ -163,6 +163,35 @@ pub fn check_validation_evidence(corpus: &[Ticket]) -> Vec<Finding> {
     findings
 }
 
+/// Check that cancellation history includes one of the supported reasons and a note.
+pub fn check_cancellation_quality(corpus: &[Ticket]) -> Vec<Finding> {
+    corpus
+        .iter()
+        .filter(|ticket| ticket.status == Status::Cancelled)
+        .filter_map(|ticket| {
+            let record = core::cancellation_record(&ticket.body);
+            let reason_valid = record
+                .as_ref()
+                .and_then(|record| record.reason.as_deref())
+                .is_some_and(|reason| core::CANCELLATION_REASONS.contains(&reason));
+            let note_present = record
+                .as_ref()
+                .and_then(|record| record.note.as_deref())
+                .is_some_and(|note| !note.trim().is_empty());
+            if reason_valid && note_present {
+                None
+            } else {
+                Some(Finding {
+                    file: filename(ticket),
+                    rule: "cancellation-quality".into(),
+                    message: "cancellation must carry a supported reason and a note".into(),
+                    severity: "warning".into(),
+                })
+            }
+        })
+        .collect()
+}
+
 fn filename(t: &Ticket) -> String {
     t.path
         .file_name()

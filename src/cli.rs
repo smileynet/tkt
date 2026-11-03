@@ -29,6 +29,10 @@ pub(crate) struct Cli {
     #[arg(long, global = true)]
     dry_run: bool,
 
+    /// Commit ticket changes locally without fetching or pushing
+    #[arg(long, global = true)]
+    no_push: bool,
+
     /// Output format: json or text (default: text)
     #[arg(short = 'o', long = "output", global = true)]
     output_format: Option<String>,
@@ -206,6 +210,27 @@ enum Commands {
         #[arg(long, num_args = 1, action = clap::ArgAction::Append)]
         evidence: Vec<String>,
     },
+    /// Retire a ticket without recording it as completed
+    Cancel {
+        id: String,
+        /// Cancellation category
+        #[arg(long, value_parser = ["duplicate", "superseded", "obsolete", "wontfix"])]
+        reason: String,
+        /// Why this ticket is being retired
+        #[arg(long)]
+        note: String,
+        /// Replacement ticket for duplicate or superseded work
+        #[arg(long)]
+        by: Option<String>,
+        /// Rewrite dependent edges to the replacement named by --by
+        #[arg(long, conflicts_with = "drop_edges")]
+        repoint: bool,
+        /// Remove dependent blocked_by edges
+        #[arg(long)]
+        drop_edges: bool,
+    },
+    /// Return a cancelled ticket to the open frontier
+    Reopen { id: String },
     /// Surgical field corrections
     Edit {
         id: String,
@@ -279,7 +304,7 @@ enum Commands {
     },
     /// Dump all tickets as JSON Lines (one object per line)
     Query {
-        /// Filter by status (open, in_progress, done, backlog)
+        /// Filter by status (open, in_progress, done, backlog, cancelled)
         #[arg(long)]
         status: Option<String>,
         /// Filter by priority (urgent, high, medium, low)
@@ -398,6 +423,7 @@ pub fn run() -> i32 {
 
     // Store dry-run flag
     crate::DRY_RUN.store(cli.dry_run, std::sync::atomic::Ordering::Relaxed);
+    crate::NO_PUSH.store(cli.no_push, std::sync::atomic::Ordering::Relaxed);
 
     // Store JSON output flag
     let json_output = cli
@@ -524,6 +550,22 @@ pub fn run() -> i32 {
                     &evidence,
                 )
             }
+            Commands::Cancel {
+                id,
+                reason,
+                note,
+                by,
+                repoint,
+                drop_edges,
+            } => crate::commands::cancel::run(
+                &id,
+                &reason,
+                &note,
+                by.as_deref(),
+                repoint,
+                drop_edges,
+            ),
+            Commands::Reopen { id } => crate::commands::reopen::run(&id),
             Commands::Edit {
                 id,
                 title,
@@ -699,6 +741,8 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Batch { .. } => "batch",
         Commands::Claim { .. } => "claim",
         Commands::Close { .. } => "close",
+        Commands::Cancel { .. } => "cancel",
+        Commands::Reopen { .. } => "reopen",
         Commands::Context { .. } => "context",
         Commands::Edit { .. } => "edit",
         Commands::Renumber { .. } => "renumber",
@@ -829,6 +873,24 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
                 flags.push("resolution");
             }
         }
+        Commands::Cancel {
+            by,
+            drop_edges,
+            repoint,
+            ..
+        } => {
+            if by.is_some() {
+                flags.push("by");
+            }
+            if *drop_edges {
+                flags.push("drop-edges");
+            }
+            flags.push("note");
+            if *repoint {
+                flags.push("repoint");
+            }
+            flags.push("reason");
+        }
         Commands::Edit {
             title,
             tags,
@@ -956,6 +1018,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         | Commands::Context { .. }
         | Commands::Migrate { .. }
         | Commands::Renumber { .. }
+        | Commands::Reopen { .. }
         | Commands::Rebase { .. }
         | Commands::Config { .. }
         | Commands::Init { .. }

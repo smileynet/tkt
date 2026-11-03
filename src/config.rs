@@ -23,6 +23,7 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
     ("priority.warn_unknown", "true"),
     ("new.default_priority", ""),
     ("push.enabled", "true"),
+    ("commit.hooks", "skip"),
     ("machine.capabilities", ""),
     ("audit.resolution_baseline_id", ""),
 ];
@@ -49,6 +50,7 @@ pub struct ProjectConfig {
     pub priority_warn_unknown: bool,
     pub new_default_priority: Option<crate::core::Priority>,
     pub push_enabled: bool,
+    pub commit_hooks: CommitHookPolicy,
     /// Machine capabilities declared by this workstation (for requires matching).
     pub machine_capabilities: Vec<String>,
     /// Grandfather cutoff for audit resolution-quality rules: done tickets with a
@@ -77,6 +79,7 @@ impl Default for ProjectConfig {
             priority_warn_unknown: true,
             new_default_priority: None,
             push_enabled: true,
+            commit_hooks: CommitHookPolicy::Skip,
             machine_capabilities: Vec::new(),
             audit_resolution_baseline_id: None,
             label_namespaces: BTreeMap::new(),
@@ -217,6 +220,7 @@ impl ProjectConfig {
                     .unwrap_or_default(),
             ),
             ("push.enabled", self.push_enabled.to_string()),
+            ("commit.hooks", self.commit_hooks.as_str().to_string()),
             ("machine.capabilities", self.machine_capabilities.join(",")),
             (
                 "audit.resolution_baseline_id",
@@ -288,6 +292,21 @@ pub enum EvidencePolicy {
     Disabled,
     Warn,
     Required,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommitHookPolicy {
+    Skip,
+    Run,
+}
+
+impl CommitHookPolicy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Skip => "skip",
+            Self::Run => "run",
+        }
+    }
 }
 
 impl EvidencePolicy {
@@ -378,6 +397,13 @@ fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> Result<bool, 
             }
         }
         "push.enabled" => cfg.push_enabled = boolean()?,
+        "commit.hooks" => {
+            cfg.commit_hooks = match value {
+                "skip" => CommitHookPolicy::Skip,
+                "run" => CommitHookPolicy::Run,
+                _ => return Err("expected skip or run".to_string()),
+            }
+        }
         "machine.capabilities" => {
             cfg.machine_capabilities = value
                 .split(',')

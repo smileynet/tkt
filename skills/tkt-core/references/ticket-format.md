@@ -60,7 +60,7 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 |-------|------|-------|
 | `id` | quoted string | Numeric filename prefix (`"07"` → `07-slug.md`); imported exact-stem IDs are also accepted by validation, without promising every mutation scheme |
 | `title` | quoted string | Human-readable, appears in `tkt ready` output |
-| `status` | enum | `open \| backlog \| in_progress \| done` (default: `open`) |
+| `status` | enum | `open \| backlog \| in_progress \| done \| cancelled` (default: `open`); terminal states use close/cancel commands |
 | `blocked_by` | array of quoted strings | `["01", "03"]` — IDs that must be `done` first |
 
 ## Optional Fields
@@ -72,11 +72,16 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 | `spec` | string | Links to originating spec slug |
 | `assignee` | agent slug | Optional claim owner using the same grammar as `--agent`; eligibility remains separate |
 | `validation_criteria` | string array | Machine-checkable criteria for agent close gate |
-| `tags` | string array | Work-stream / categorization tags — the primary scoping mechanism for `tkt ready` and `tkt context`. Set via `--tags` at creation (recommended) or auto-applied from `tkt context`. |
+| `tags` | string array | Set at creation or edit: `--tags` replaces (empty clears), then `--add-tag` adds unique values, then `--remove-tag` removes last. Edit does not inherit context. |
 | `agents` | signed string array | Optional agent eligibility: `["codex", "claude"]` allows either; `["!antigravity"]` excludes. Omit for any agent. Empty, mixed-sign, duplicate, and invalid slug lists are errors; serialized names sort deterministically. |
 | `requires` | string array | Machine capabilities required (e.g., `gpu`, `linux`, `corp`). Ticket only appears in `tkt ready` if `machine.capabilities` config includes all listed values. Backward compat: if `env` is set and `requires` is empty, requires is synthesized from env. |
 
 ## Status Lifecycle
+
+Body acceptance checkboxes are selected by `--check-all` / `--ac`. Frontmatter
+`validation_criteria` receives one `--evidence` item per index. These counts are
+independent: three body checkboxes and two validation criteria need three checked
+boxes and two evidence items, not three evidence items.
 
 | Status | Meaning | Enters when |
 |--------|---------|-------------|

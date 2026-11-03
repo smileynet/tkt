@@ -68,7 +68,7 @@ pub fn run(dry_run: bool) -> Result<i32> {
         "chore(tickets): rebase — renumber {} ticket(s) to resolve ID collision",
         plan.entries.len()
     );
-    git::commit(&repo, &msg)?;
+    git::commit(&repo, &msg, &add_paths)?;
 
     // Step 7: report
     if !is_quiet() {

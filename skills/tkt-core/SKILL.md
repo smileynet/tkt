@@ -76,6 +76,14 @@ backlog → open → in_progress → done
 
 Only `tkt close` reaches `done`; new, batch and edit reject that status so closure gates run.
 
+Retire abandoned work with `tkt cancel ID --reason REASON --note "why"`, not close.
+Duplicate/superseded require `--by ID`; active dependents need explicit repoint/drop.
+`tkt reopen ID` reopens cancelled work, preserving its history. Cancelled is distinct
+from done and cannot satisfy prerequisites. See the command reference for edge handling.
+
+Body AC checkboxes use `--check-all` / `--ac`; frontmatter `validation_criteria`
+maps 1:1 by index to `--evidence`. Their counts are independent.
+
 Hierarchy uses optional `--parent ID` on new/batch/edit, separate from prerequisites;
 edit `--parent ''` clears it, and query `--parent ID` selects children. Invalid
 parent targets and introduced cycles are rejected.

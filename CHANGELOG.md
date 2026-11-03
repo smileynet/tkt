@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Retire tickets as cancelled with explicit reasons and replacement/dependency handling; reopen them without discarding history.
+- Ticket commits skip commit hooks by default, preserve unrelated staged work, and support invocation-local deferred pushing with actionable push-failure details.
 - Creation accepts full body text, files or stdin and named body templates; default prompts still trigger unfilled-ticket validation.
 - Claims record optional agent ownership and the frontier hides work assigned to other identities.
 - Configuration can write and unset shared project settings with native typed values and atomic replacement.

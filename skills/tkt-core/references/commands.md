@@ -159,11 +159,39 @@ There are no `--add-blocked-by` or `--remove-blocked-by` flags.
 | Flag | Effect |
 |------|--------|
 | `--dry-run` | Preview mutations without writing |
+| `--no-push` | Commit locally without fetching/pushing for this invocation |
 | `-q` / `--quiet` | Suppress confirmations, emit only essential data |
 | `-o json` | Structured JSON output (data to stdout, errors to stderr) |
 | `--color always\|never\|auto` | Control ANSI color (default: auto) |
 
+## Retiring work
+
+`tkt cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"`
+records cancelled, not done. Duplicate/superseded require `--by ID`, naming an
+existing non-cancelled replacement. Active dependents require `--repoint` (with
+--by) or `--drop-edges`; every rewritten ticket is named. Terminal dependents'
+obsolete prerequisite edges are dropped and named automatically, preserving
+their bodies and closure evidence. Use dry-run to inspect changes first.
+
+`tkt reopen ID` returns only cancelled work to open and preserves Cancellation
+history. New/batch/edit cannot set cancelled; close refuses it until reopened.
+Cancelled blockers do not satisfy prerequisites; validation flags such edges
+and cancelled files without a record. Audit checks cancellation reason/note;
+plan/query/capabilities retain the distinct status.
+
 ## Enforcement config (.tickets/config.toml)
+
+Ticket commits skip commit hooks by default using an invocation-local empty hook
+directory; `[commit] hooks = "run"` opts back in. Only ticket/plan pathspecs enter
+those commits; unrelated staged files stay staged. Push hooks still run. Global
+`--no-push` skips fetching/pushing for that invocation while retaining local
+commits; `[push] enabled = false` remains the persistent setting. After deferred
+work, run `tkt rebase` to resolve any upstream ID collision before pushing. A
+rejected push reports the local commit and a retry instruction.
+
+
+At close, body checkboxes use `--check-all` / `--ac`; evidence maps 1:1 by index to
+frontmatter `validation_criteria`. The counts are independent.
 
 Known effective policy values are parsed once into typed values. Invalid values
 fail with key/value/source context; booleans retain true/false/1/0/yes/no aliases.
@@ -185,6 +213,7 @@ These settings control what `tkt close` requires:
 | `close.require_validation_evidence` | `"true"` / `"warn"` / `"false"` | Must provide `--evidence` per criterion |
 | `close.allow_force` | `true` / `false` | Whether `--force` escape hatch is allowed |
 | `push.enabled` | `true` / `false` | Mutations push to remote (default: true) |
+| `commit.hooks` | `"skip"` / `"run"` | Skip commit hooks by default; push hooks remain active |
 | `validate.strict` | `true` / `false` | Warnings become errors |
 | `ready.default_env` | string | Default CREW_ENV filter for `tkt ready` |
 | `new.default_priority` | priority enum | Default priority for new tickets |

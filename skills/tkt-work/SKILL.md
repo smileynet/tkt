@@ -67,12 +67,26 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 
 ## Marking Done
 
+Abandoned work is not completion: use `tkt cancel ID --reason REASON --note "why"`.
+Duplicate/superseded require `--by`; active dependents require `--repoint` or
+`--drop-edges`. Cancellation records no Resolution and checks no criteria. Reopen
+cancelled work with `tkt reopen` before working/closing it. Terminal dependents'
+old cancelled-blocker edges are dropped and named; inspect dry-run before applying.
+
+Ticket commit hooks are skipped by default (`commit.hooks = "run"` opts in);
+pre-push hooks remain active. Use `--no-push` for a local commit without fetch/push,
+then resolve ID collisions with `tkt rebase` before the later push. Unrelated
+pre-staged paths remain staged, outside ticket commits.
+
 Status mutations synchronize existing rows in a clean `docs/plan.md` in the same
 commit. Missing rows need `tkt sync-plan --fix`; alternate plans need explicit sync.
 
 **Never set `status: done` by editing the ticket file.** Always run `tkt close <id>`. Generic new, batch and edit commands reject `done`. Hand-flipping the status skips the close gates (acceptance criteria, resolution, evidence) and the atomic push protocol — the frontmatter says done but nothing was verified. `tkt validate` flags a done ticket with no Resolution section (warning; error under `--strict`).
 
 When a ticket's acceptance criteria are all met:
+
+Body checkboxes use `--check-all` / `--ac`; `--evidence` maps 1:1 by index to
+frontmatter `validation_criteria`. These counts are independent.
 
 Treat corpus skip warnings as incomplete input, even when a command exits 0.
 Under `-o json`, warnings are stderr JSONL objects separate from result stdout.

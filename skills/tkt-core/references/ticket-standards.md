@@ -21,6 +21,11 @@ Quality gate for ticket content. Agents creating or reviewing tickets check thes
 
 ## Intent Source Links
 
+Fill the body at creation with new `--body TEXT`, `--body @file` or stdin `--body -`;
+new/batch `--template NAME` reads a complete body from `.tickets/templates/NAME.md`.
+Replace default prompts and link the source in that body (`--spec` or a ticket/ADR/
+user-request reference), so a fresh agent can verify the intent.
+
 Every ticket should trace back to WHY it exists. Include at least one:
 
 - **Spec reference**: `spec: "feature-slug"` in frontmatter, or "Per spec X, section Y" in body
@@ -85,6 +90,11 @@ Each must be:
 - **Evidence-mappable** — when closing, the `--evidence` string clearly satisfies it
 
 ### Evidence (at close time)
+
+Body AC checkboxes are controlled by `--check-all` / `--ac`; frontmatter
+`validation_criteria` maps 1:1 by index to `--evidence`. Counts are independent.
+Retag with edit replacement (`--tags`, empty clears), unique additions (`--add-tag`)
+then exact removals (`--remove-tag`); repeat flags as needed and preserve context.
 
 Evidence provided via `tkt close --evidence "..."` must:
 - **Cite output** — actual command output, test results, or file state

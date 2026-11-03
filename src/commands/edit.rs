@@ -136,18 +136,35 @@ pub fn run(
         changed.push("priority");
     }
     if let Some(status_val) = status {
-        if status_val == "done" {
+        if t.status == Status::Cancelled {
+            domain_bail!(
+                Conflict,
+                "{} is cancelled; use tkt reopen {} to return it to open",
+                t.id,
+                t.id
+            );
+        }
+        if status_val == "done" || status_val == "cancelled" {
+            let (message, hint) = if status_val == "done" {
+                (
+                    "status done can only be set by close",
+                    "use tkt close <id> so resolution, acceptance, and evidence gates run",
+                )
+            } else {
+                (
+                    "status cancelled can only be set by cancel",
+                    "use tkt cancel <id> to record a reason and handle dependent edges",
+                )
+            };
             return Err(crate::DomainError::with_hint(
                 crate::ErrorKind::Validation,
-                "status done can only be set by close".to_string(),
-                "use tkt close <id> so resolution, acceptance, and evidence gates run".to_string(),
+                message.to_string(),
+                hint.to_string(),
             )
             .into());
         }
         if status_val.is_empty() {
-            domain_bail!(
-                "status cannot be cleared — use a valid value (backlog/open/in_progress/done)"
-            );
+            domain_bail!("status cannot be cleared — use a valid value (backlog/open/in_progress)");
         }
         let parsed = Status::parse(status_val).map_err(|_| {
             crate::DomainError::new(

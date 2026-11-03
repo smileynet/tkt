@@ -149,6 +149,8 @@ tkt migrate [--from FORMAT] [--detect] [--confirm] # convert foreign ticket sche
 tkt new <slug> --title "..." [--body TEXT|@FILE|- | --template NAME] [--spec S] [--parent ID] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
 tkt batch <slug[:title]>... [--template NAME] [--spec S] [--parent ID] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
 tkt claim <id>                                    # status→in_progress, pushed
+tkt cancel <id> --reason R --note "why" [--by ID] [--repoint|--drop-edges]
+tkt reopen <id>                                   # cancelled→open, keeps history
 tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..." (repeatable: one per validation criterion, or N=text)]
 tkt edit <id> [--title T] [--parent ID] [--tags T] [--add-tag T] [--remove-tag T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
@@ -181,6 +183,7 @@ remains snippet-only and quiet writes omit recommendation chatter.
 | Flag | Effect |
 |------|--------|
 | `-q` / `--quiet` | Suppress confirmations, emit only essential data |
+| `--no-push` | Commit ticket work locally without fetching or pushing |
 | `-o json` / `--output=json` | Structured JSON output (success to stdout, errors to stderr) |
 | `--dry-run` | Preview mutations without writing |
 | `--color=always\|never\|auto` | Control ANSI color output (default: auto) |
@@ -190,6 +193,11 @@ remains snippet-only and quiet writes omit recommendation chatter.
 `urgent` > `high` > `medium` (default) > `low`. Frontier sorts by priority bucket then ID.
 
 ### Status values
+
+`cancelled` is terminal retirement, separate from done, reached only through
+`tkt cancel`; `tkt reopen` returns it to open. It does not satisfy prerequisites.
+Duplicate/superseded require a replacement; active dependents require explicit
+edge disposition. Terminal stale prerequisite edges are dropped and named.
 
 `backlog` (parked, excluded from frontier) → `open` → `in_progress` → `done`
 
@@ -209,6 +217,11 @@ Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; 
 Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.
 
 ### Configuration
+
+Ticket commits skip commit hooks by default (`commit.hooks = "run"` opts in);
+pre-push hooks remain active. Commits include only affected ticket/plan paths.
+`--no-push` is invocation-local; push.enabled=false remains persistent. Deferred
+ID collisions must be resolved with tkt rebase before a later push.
 
 Set/unset default to user scope; `--project` writes shared project configuration
 with typed values and atomic replacement, without a Git commit. Detached-HEAD
@@ -259,6 +272,10 @@ otherwise; valid rows and successful exit semantics are preserved.
 - **Facade re-exports**: only re-export types from `core/mod.rs` that callers name directly; types returned by methods but never named (e.g., `AcStats`) stay unexported from the facade to avoid unused-import warnings
 
 ## Contract
+
+Body AC checkboxes map to `--check-all` / `--ac`; frontmatter validation_criteria
+maps 1:1 by index to --evidence. The counts are independent. Fill body prompts at
+creation and link the intent source (--spec or a durable body reference).
 
 Claim, close, and status-changing edit synchronize existing `docs/plan.md` rows in
 the same commit. Commit or stash plan edits first. Missing rows remain warnings

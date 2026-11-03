@@ -39,7 +39,9 @@ impl GitTransaction {
         // Respect project config push.enabled
         let pcfg = crate::config::ProjectConfig::load(dir);
         pcfg.validate()?;
-        let remote = has_remote && pcfg.push_enabled;
+        let remote = has_remote
+            && pcfg.push_enabled
+            && !crate::NO_PUSH.load(std::sync::atomic::Ordering::Relaxed);
         if remote && git::current_branch(&repo)?.is_empty() {
             bail!(
                 "cannot mutate remote-backed tickets from detached HEAD; switch to a branch or set push.enabled = false for local-only work"
@@ -103,7 +105,7 @@ impl GitTransaction {
         match git::push(&self.repo, upstream)? {
             git::PushResult::Success => Ok(PublishResult::Done(PublishOutcome::Published)),
             git::PushResult::Failed(stderr) => {
-                bail!("push failed: {}", stderr);
+                Err(git::local_commit_push_error(&self.repo, &stderr))
             }
             git::PushResult::Rejected => {
                 // Undo and rebase for retry
@@ -123,7 +125,7 @@ impl GitTransaction {
         match git::push(&self.repo, upstream)? {
             git::PushResult::Success => Ok(PublishOutcome::Retried),
             git::PushResult::Failed(stderr) => {
-                bail!("push failed on retry: {}", stderr);
+                Err(git::local_commit_push_error(&self.repo, &stderr))
             }
             git::PushResult::Rejected => {
                 bail!("allocation failed after 2 attempts (push repeatedly rejected)");

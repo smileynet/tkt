@@ -13,6 +13,12 @@ Identify this invocation with `--agent <lowercase-slug>` or `TKT_AGENT` before u
 
 ## Process
 
+Ready also hides work owned by other agents (or any owned work when unidentified).
+Cancelled is retired history, not completion or remaining work; only done satisfies
+prerequisites. Query includes cancelled records, so keep that distinction when
+describing progress. Use cancel/reopen workflows rather than relabelling retirement
+as a successful close.
+
 ### 1. Read the reconciled state (internal — don't dump raw output)
 
 ```bash

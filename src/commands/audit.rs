@@ -30,6 +30,7 @@ pub fn run(strict: bool, brief: bool, deep: bool) -> Result<i32> {
     }));
     all_findings.extend(audit::check_frontier_health(&corpus));
     all_findings.extend(audit::check_validation_evidence(&corpus));
+    all_findings.extend(audit::check_cancellation_quality(&corpus));
 
     // Deep analysis: evidence count, template detection (purely mechanical checks only)
     // Judgment calls (evidence quality, resolution substance) are in the companion skill.

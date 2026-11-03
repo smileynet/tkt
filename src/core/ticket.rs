@@ -7,7 +7,8 @@ use regex::Regex;
 
 // --- Constants ---
 
-pub const STATUS_VALUES: &[&str] = &["open", "in_progress", "done", "backlog"];
+pub const STATUS_VALUES: &[&str] = &["open", "in_progress", "done", "backlog", "cancelled"];
+pub const CANCELLATION_REASONS: &[&str] = &["duplicate", "superseded", "obsolete", "wontfix"];
 pub const ENV_VALUES: &[&str] = &["corp", "personal", "either"];
 
 // --- Compiled regex patterns ---
@@ -28,6 +29,7 @@ pub enum Status {
     Open,
     InProgress,
     Done,
+    Cancelled,
 }
 
 impl Status {
@@ -37,8 +39,9 @@ impl Status {
             "open" => Ok(Status::Open),
             "in_progress" => Ok(Status::InProgress),
             "done" => Ok(Status::Done),
+            "cancelled" => Ok(Status::Cancelled),
             other => bail!(
-                "invalid status {:?} (expected backlog/open/in_progress/done)",
+                "invalid status {:?} (expected backlog/open/in_progress/done/cancelled)",
                 other
             ),
         }
@@ -50,8 +53,51 @@ impl Status {
             Status::Open => "open",
             Status::InProgress => "in_progress",
             Status::Done => "done",
+            Status::Cancelled => "cancelled",
         }
     }
+
+    pub fn is_terminal(self) -> bool {
+        matches!(self, Self::Done | Self::Cancelled)
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct CancellationRecord {
+    pub reason: Option<String>,
+    pub by: Option<String>,
+    pub note: Option<String>,
+    pub date: Option<String>,
+}
+
+pub fn cancellation_record(body: &str) -> Option<CancellationRecord> {
+    let mut current = None;
+    let mut in_section = false;
+    for line in body.lines() {
+        if line.starts_with("## ") {
+            in_section = line.trim() == "## Cancellation";
+            if in_section {
+                current = Some(CancellationRecord::default());
+            }
+            continue;
+        }
+        if !in_section {
+            continue;
+        }
+        let Some(record) = current.as_mut() else {
+            continue;
+        };
+        if let Some(value) = line.strip_prefix("- Reason: ") {
+            record.reason = Some(value.trim().to_string());
+        } else if let Some(value) = line.strip_prefix("- By: ") {
+            record.by = Some(value.trim().to_string());
+        } else if let Some(value) = line.strip_prefix("- Note: ") {
+            record.note = Some(value.trim().to_string());
+        } else if let Some(value) = line.strip_prefix("- Date: ") {
+            record.date = Some(value.trim().to_string());
+        }
+    }
+    current
 }
 
 impl std::fmt::Display for Status {
@@ -541,6 +587,18 @@ impl TicketFile {
             date,
             note,
             branch_note
+        );
+    }
+
+    pub fn append_cancellation(&mut self, date: &str, reason: &str, by: Option<&str>, note: &str) {
+        let by = by.map(|id| format!("- By: {id}\n")).unwrap_or_default();
+        self.body = format!(
+            "{}\n\n## Cancellation\n\n- Reason: {}\n{}- Note: {}\n- Date: {}\n",
+            self.body.trim_end(),
+            reason,
+            by,
+            note,
+            date
         );
     }
 

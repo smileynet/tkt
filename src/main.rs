@@ -100,6 +100,8 @@ pub(crate) static QUIET: std::sync::atomic::AtomicBool = std::sync::atomic::Atom
 /// Global dry-run flag — set once at startup, read by mutation commands.
 pub(crate) static DRY_RUN: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
+pub(crate) static NO_PUSH: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
 
 /// Global JSON output flag — set once at startup, changes error/success output format.
 pub(crate) static JSON_OUTPUT: std::sync::atomic::AtomicBool =

@@ -45,6 +45,9 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
+Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 ### Workflow
@@ -83,6 +86,9 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
+Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: what was shipped"
@@ -116,6 +122,9 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
+Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 ## Commands
@@ -159,6 +168,9 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
+Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 ## Commands
@@ -203,6 +215,9 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
+Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
+Ticket commits skip commit hooks by default (commit.hooks=run opts in); push hooks still run. --no-push defers fetch/push but keeps local commits; run tkt rebase to resolve ID collisions before a later push.
 Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "..." (--evidence: 1 per criterion), validate --brief

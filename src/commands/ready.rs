@@ -60,16 +60,21 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
         .filter(|t| t.status == Status::InProgress)
         .count();
     let done = corpus.iter().filter(|t| t.status == Status::Done).count();
+    let cancelled = corpus
+        .iter()
+        .filter(|t| t.status == Status::Cancelled)
+        .count();
     crate::telemetry::debug_event(
         dbg,
         "",
         "",
         &format!(
-            "corpus loaded: {} tickets ({} open, {} in_progress, {} done), frontier: {}",
+            "corpus loaded: {} tickets ({} open, {} in_progress, {} done, {} cancelled), frontier: {}",
             corpus.len(),
             open,
             wip_count,
             done,
+            cancelled,
             front.len()
         ),
     );

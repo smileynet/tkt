@@ -39,7 +39,9 @@ impl MutationContext {
 
         let config = load_project_config(&tickets_dir)?;
         let has_remote = git::has_remote(&repo)?;
-        if has_remote && config.push_enabled && git::current_branch(&repo)?.is_empty() {
+        let push_enabled =
+            config.push_enabled && !crate::NO_PUSH.load(std::sync::atomic::Ordering::Relaxed);
+        if has_remote && push_enabled && git::current_branch(&repo)?.is_empty() {
             return Err(DomainError::with_hint(
                 crate::ErrorKind::Conflict,
                 "cannot mutate remote-backed tickets from detached HEAD".to_string(),
@@ -47,7 +49,7 @@ impl MutationContext {
             )
             .into());
         }
-        let upstream = if has_remote && config.push_enabled {
+        let upstream = if has_remote && push_enabled {
             git::resolve_upstream(&repo)?
         } else {
             None
@@ -145,7 +147,7 @@ impl MutationContext {
         let dbg = crate::telemetry::debug_mode();
         git::add(&self.repo, paths)?;
         crate::telemetry::debug_event(dbg, "", "", &format!("git add {:?}", paths));
-        git::commit(&self.repo, message)?;
+        git::commit(&self.repo, message, paths)?;
         crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
 
         if let Some(upstream) = &self.upstream {
@@ -157,18 +159,17 @@ impl MutationContext {
             // Surface a structured, actionable error instead of a bare crash.
             if let Err(e) = git::push_with_retry(&self.repo, upstream) {
                 crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
-                return Err(DomainError::with_hint(
-                    crate::ErrorKind::Io,
-                    format!("committed locally, but the push failed: {e:#}"),
-                    "your change is saved in a local commit — nothing was lost. Run \
-                     `git push` once the remote is reachable to publish it."
-                        .to_string(),
-                )
-                .into());
+                return Err(git::local_commit_push_error(&self.repo, &format!("{e:#}")));
             }
             crate::telemetry::debug_event(dbg, "", "", "git push (success)");
         } else if self.has_remote {
-            crate::telemetry::debug_event(dbg, "", "", "push skipped (push.enabled = false)");
+            let reason = if crate::NO_PUSH.load(std::sync::atomic::Ordering::Relaxed) {
+                "--no-push"
+            } else {
+                "push.enabled = false"
+            };
+            crate::telemetry::debug_event(dbg, "", "", &format!("push skipped ({reason})"));
+            eprintln!("created local commit; not pushed ({reason}). Run `git push` when ready.");
         }
         Ok(())
     }
