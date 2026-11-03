@@ -254,3 +254,7 @@ configuration reader supports a narrow syntax rather than full TOML. Validation
 enforces declared values and single-select cardinality; undeclared namespaces
 remain free-form. Validation also flags dangling parents, self-parent
 references and parent-chain cycles independently of blocked-by edges.
+
+## Parent progress
+
+Parents with any direct children are containers, excluded from ready. Use `tkt children ID` for full-corpus direct-child progress (done/total includes cancelled in total, with cancelled separate); `-o json` emits one object and `-q` lists child IDs. Progress never changes stored status: close parents explicitly with normal AC/evidence gates.

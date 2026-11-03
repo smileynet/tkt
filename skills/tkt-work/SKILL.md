@@ -191,3 +191,7 @@ The plan is the single source of truth for work status. Tickets provide detail; 
 
 - Orient from the reconciled plan or propose the next pick (that's `tkt-orient`, at session start — it hands off here)
 - Reconcile tickets or re-sequence the plan (that's `tkt-reconcile`, at session end)
+
+## Parent progress
+
+Parents with any direct children are containers, excluded from ready. Use `tkt children ID` for full-corpus direct-child progress (done/total includes cancelled in total, with cancelled separate); `-o json` emits one object and `-q` lists child IDs. Progress never changes stored status: close parents explicitly with normal AC/evidence gates.

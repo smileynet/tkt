@@ -68,11 +68,11 @@ backlog → open → in_progress → done
 | Status | Meaning | Appears in `tkt ready`? |
 |--------|---------|------------------------|
 | `backlog` | Parked — not prioritized, not actionable yet | **No** |
-| `open` | Available for work — dependencies satisfied = frontier | **Yes** (if deps done) |
+| `open` | Available work or a parent container | **Yes** (if deps done and not a container) |
 | `in_progress` | Claimed, actively being worked | **No** |
 | `done` | Completed, verified | **No** |
 
-**Key rule:** `tkt ready` only shows `open` tickets whose `blocked_by` are all `done`. Backlogged tickets are invisible to the frontier — that's the point.
+**Key rule:** `tkt ready` only shows `open` tickets whose `blocked_by` are all `done`, excluding any ticket with direct children. Backlogged tickets are invisible to the frontier.
 
 Only `tkt close` reaches `done`; new, batch and edit reject that status so closure gates run.
 
@@ -260,3 +260,7 @@ inherit active context tags or change that context.
 - [ticket-standards.md](references/ticket-standards.md) — quality gate for ticket content
 - [wide-refactors.md](references/wide-refactors.md) — expand-contract sequencing
 - [migration-assist.md](references/migration-assist.md) — converting foreign ticket schemas
+
+## Parent progress
+
+Parents with any direct children are containers, excluded from ready. Use `tkt children ID` for full-corpus direct-child progress (done/total includes cancelled in total, with cancelled separate); `-o json` emits one object and `-q` lists child IDs. Progress never changes stored status: close parents explicitly with normal AC/evidence gates.

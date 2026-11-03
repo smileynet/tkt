@@ -319,6 +319,11 @@ enum Commands {
     },
     /// Show blocked tickets with their blockers
     Blocked,
+    /// Show all direct children and computed progress; parent status is unchanged
+    Children {
+        /// Parent ticket id (ignores tag context)
+        id: String,
+    },
     /// Machine-readable feature manifest for agent/automation discovery
     Capabilities,
     /// Resolve ID collisions with upstream (upstream always wins)
@@ -642,6 +647,7 @@ pub fn run() -> i32 {
                 all_context,
             ),
             Commands::Blocked => crate::commands::blocked::run(),
+            Commands::Children { id } => crate::commands::children::run(&id),
             Commands::Capabilities => crate::commands::capabilities::run(),
             Commands::Rebase { dry_run } => crate::commands::rebase::run(
                 dry_run || crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed),
@@ -755,6 +761,7 @@ fn command_name(cmd: &Commands) -> String {
         Commands::Validate { .. } => "validate",
         Commands::Query { .. } => "query",
         Commands::Blocked => "blocked",
+        Commands::Children { .. } => "children",
         Commands::Capabilities => "capabilities",
         Commands::Rebase { .. } => "rebase",
         Commands::Audit { .. } => "audit",
@@ -1023,6 +1030,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         // Commands with no notable optional flags
         Commands::Claim { .. }
         | Commands::Blocked
+        | Commands::Children { .. }
         | Commands::Capabilities
         | Commands::Context { .. }
         | Commands::Migrate { .. }

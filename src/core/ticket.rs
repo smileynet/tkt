@@ -899,10 +899,14 @@ pub fn frontier_with_capabilities<'a>(
         .map(|t| t.id.as_str())
         .collect();
 
+    let parents: std::collections::HashSet<&str> = corpus
+        .iter()
+        .filter_map(|ticket| ticket.parent.as_deref())
+        .collect();
     let mut pool: Vec<&Ticket> = corpus
         .iter()
         .filter(|t| {
-            if t.status != Status::Open {
+            if t.status != Status::Open || parents.contains(t.id.as_str()) {
                 return false;
             }
             if !t.blocked_by.iter().all(|dep| done.contains(dep.as_str())) {

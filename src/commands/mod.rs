@@ -3,6 +3,7 @@ pub mod batch;
 pub mod blocked;
 pub mod cancel;
 pub mod capabilities;
+pub mod children;
 pub mod claim;
 pub mod close;
 pub mod common;

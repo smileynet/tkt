@@ -29,6 +29,7 @@ pub fn run() -> Result<i32> {
             "config" => ("idempotent", "Read-only except --set and --unset write user configuration, or project configuration with --project", "text"),
             "telemetry" => ("idempotent", "Read-only except --enable/--disable change consent and --clear deletes local events", "text"),
             "ready" | "blocked" => ("read_only", "Read-only report; ready supports JSON Lines with historical blocked_by and unfinished/missing pending_blockers, and hides tickets assigned to another agent", "text"),
+            "children" => ("read_only", "All direct children regardless of tag context; done/total includes cancelled children in total and reports cancelled separately. Stored parent status is unchanged; -o json emits one object", "text"),
             "help" => ("read_only", "Print help for an optional command path, such as help new", "text"),
             "audit" => ("read_only", "JSON findings by default; --brief uses text", "json"),
             "query" => ("read_only", "JSON Lines; active tag context filters the corpus unless --all-context; actual narrowing is reported on stderr. Known fields: id, title, status, blocked_by, pending_blockers, env, priority, spec, parent, tags, validation_criteria, requires, agents, assignee. Optional env/priority/spec/parent are omitted when absent. Unknown stored fields are raw strings in frontmatter", "json_lines"),
