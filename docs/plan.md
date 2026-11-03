@@ -27,7 +27,7 @@ Next: complete discovery (#138 → #127), then guard install freshness (#153), w
 
 | ID | Work | Status |
 |---:|---|---|
-| 138 | Update capabilities manifest with all commands | open |
+| 138 | Update capabilities manifest with all commands | in_progress |
 | 127 | Improve agent discoverability: help nudge to capabilities, init recommends agent setup | open |
 | 153 | Guard against stale-binary validation (prefer integration tests, add freshness check) | open |
 
