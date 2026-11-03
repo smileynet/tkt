@@ -1,7 +1,7 @@
 ---
 id: "163"
 title: "lint: backfill missing id from filename prefix"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
