@@ -381,3 +381,92 @@ fn native_relations_walkthrough_combines_progress_ownership_and_label_policy() {
         }
     }
 }
+
+#[test]
+fn parent_scoped_ready_reuses_all_frontier_filters_and_scopes_wip() {
+    let (_temp, root) = repo();
+    for (id, status, parent, extra) in [
+        ("03", "open", "", ""),
+        ("04", "open", "03", ""),
+        ("05", "open", "01", "blocked_by: [\"04\"]\n"),
+        ("06", "done", "01", ""),
+        ("07", "in_progress", "01", ""),
+        ("08", "backlog", "01", ""),
+        ("09", "open", "01", "agents: [\"claude\"]\n"),
+        ("10", "open", "01", "assignee: \"other\"\n"),
+        ("11", "open", "01", "priority: high\ntags: [\"stream:a\"]\n"),
+        ("12", "open", "01", "priority: high\ntags: [\"stream:b\"]\n"),
+        ("13", "open", "01", "requires: [\"gpu\"]\n"),
+        ("14", "in_progress", "03", ""),
+    ] {
+        std::fs::write(
+            root.join(format!(".tickets/{id}-fixture.md")),
+            format!(
+                "---\nid: \"{id}\"\ntitle: \"Fixture {id}\"\nstatus: {status}\n{}{}{}---\n",
+                if extra.contains("blocked_by:") {
+                    ""
+                } else {
+                    "blocked_by: []\n"
+                },
+                if parent.is_empty() {
+                    String::new()
+                } else {
+                    format!("parent: \"{parent}\"\n")
+                },
+                extra
+            ),
+        )
+        .unwrap();
+    }
+    std::fs::write(
+        root.join(".tickets/config.toml"),
+        "[push]\nenabled = false\n[machine]\ncapabilities = \"cpu\"\n",
+    )
+    .unwrap();
+    git(&root, &["add", "."]);
+    git(&root, &["commit", "-qm", "scoped fixtures"]);
+    let output = cli(
+        &root,
+        &["--agent", "codex", "ready", "--parent", "01", "--json"],
+    );
+    assert!(output.status.success(), "{output:?}");
+    let rows: Vec<serde_json::Value> = String::from_utf8(output.stdout)
+        .unwrap()
+        .lines()
+        .map(|s| serde_json::from_str(s).unwrap())
+        .collect();
+    assert_eq!(
+        rows.iter()
+            .map(|r| r["id"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["11", "12", "02"]
+    );
+    assert!(rows.iter().all(|r| r["parent"] == "01"));
+    let text = cli(&root, &["--agent", "codex", "ready", "--parent", "01"]);
+    let text = String::from_utf8(text.stdout).unwrap();
+    assert!(text.contains("Fixture 07"));
+    assert!(!text.contains("Fixture 14"));
+    assert!(!text.contains("Fixture 04"));
+    let empty = cli(&root, &["ready", "--parent", "06", "--json"]);
+    assert!(empty.status.success());
+    assert!(empty.stdout.is_empty());
+    let missing = cli(&root, &["ready", "--parent", "99", "-o", "json"]);
+    assert_eq!(missing.status.code(), Some(1));
+    assert!(cli(&root, &["context", "stream:a"]).status.success());
+    let scoped = cli(
+        &root,
+        &["--agent", "codex", "ready", "--parent", "01", "--json"],
+    );
+    assert!(scoped.status.success());
+    let rows: Vec<serde_json::Value> = String::from_utf8(scoped.stdout)
+        .unwrap()
+        .lines()
+        .map(|s| serde_json::from_str(s).unwrap())
+        .collect();
+    assert_eq!(
+        rows.iter()
+            .map(|r| r["id"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["11", "02"]
+    );
+}

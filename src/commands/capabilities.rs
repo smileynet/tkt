@@ -28,7 +28,7 @@ pub fn run() -> Result<i32> {
             "rebase" => ("idempotent", "Fetch, renumber collisions and commit locally; --dry-run reads cached remote state without writing", "text"),
             "config" => ("idempotent", "Read-only except --set and --unset write user configuration, or project configuration with --project", "text"),
             "telemetry" => ("idempotent", "Read-only except --enable/--disable change consent and --clear deletes local events", "text"),
-            "ready" | "blocked" => ("read_only", "Read-only report; ready supports JSON Lines with historical blocked_by and unfinished/missing pending_blockers, and hides tickets assigned to another agent", "text"),
+            "ready" | "blocked" => ("read_only", "Read-only report; ready supports JSON Lines with historical blocked_by and unfinished/missing pending_blockers, and hides tickets assigned to another agent; ready --parent ID selects direct children of an existing parent and scopes human WIP; ready rows include optional parent", "text"),
             "move-ac" => ("idempotent", "Move one unchecked body criterion with linked markers; destination-first atomic writes permit retry after interruption. Commit both files and optionally push; dry-run previews. Validation criteria and evidence are not transferred", "text"),
             "children" => ("read_only", "All direct children regardless of tag context; done/total includes cancelled children in total and reports cancelled separately. Stored parent status is unchanged; -o json emits one object", "text"),
             "help" => ("read_only", "Print help for an optional command path, such as help new", "text"),
@@ -68,7 +68,7 @@ pub fn run() -> Result<i32> {
             }
         },
         "ticket_relations": {
-            "parent": "Optional existing ticket ID; new/batch/edit --parent, query --parent for direct children; any ticket with children is excluded from ready. children ID reports computed progress, never auto-closes",
+            "parent": "Optional existing ticket ID; new/batch/edit --parent, query --parent for direct children, ready --parent for their eligible frontier; any ticket with children is excluded from ready. children ID reports computed progress, never auto-closes",
             "assignee": "Optional invocation AgentId recorded by claim; ready hides other owners; --agent/TKT_AGENT identifies the caller, eligibility remains separate",
             "compatibility": "Optional additive fields/config; old tickets remain valid without parent, assignee or namespace declarations"
         },

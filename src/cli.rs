@@ -51,6 +51,9 @@ enum Commands {
     Ready {
         #[arg(long)]
         json: bool,
+        /// Scope to direct children of an existing parent (intersects tag context)
+        #[arg(long)]
+        parent: Option<String>,
     },
     /// Initialize .tickets/ and deploy agent integration files
     Init {
@@ -465,9 +468,11 @@ pub fn run() -> i32 {
                 crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
             })?;
         match cli.command {
-            Commands::Ready { json } => {
-                crate::commands::ready::run(json || json_output, current_agent.as_ref())
-            }
+            Commands::Ready { json, parent } => crate::commands::ready::run(
+                json || json_output,
+                current_agent.as_ref(),
+                parent.as_deref(),
+            ),
             Commands::Init {
                 write,
                 target,
@@ -1034,9 +1039,12 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
                 flags.push("strict");
             }
         }
-        Commands::Ready { json } => {
+        Commands::Ready { json, parent } => {
             if *json {
                 flags.push("json");
+            }
+            if parent.is_some() {
+                flags.push("parent");
             }
         }
         // Commands with no notable optional flags

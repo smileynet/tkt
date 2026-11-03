@@ -61,3 +61,8 @@ ticket, even though a normal tag edit can store them. Run `tkt validate --strict
 under `config.label_namespaces`, and each command's flags. The six instruction
 targets share these semantics; `tkt init --agent-only --target TARGET` writes its
 target file, while plain `tkt init --agent-only` prints the default snippet.
+
+For a session working one map, use `tkt ready --parent 01` instead of the global
+frontier. It selects direct ready children, preserves all normal eligibility and
+ordering rules, and intersects active tag context. This is native-parent-only;
+older epic-tag groups retain normal tag-context filtering without a new alias.

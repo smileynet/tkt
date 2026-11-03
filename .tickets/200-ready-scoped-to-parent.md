@@ -51,3 +51,7 @@ Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
 Keep #196/#197 dependencies. Parent-scoped frontier is absent; reuse readiness and priority/ID ordering. Decide parent-only versus interim tag alias without inventing computed sort overrides.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Implementation decision
+
+Native-parent-only: parent fields and container behavior have shipped, so no interim epic-tag alias is needed. Existing context can still scope `epic:slug` tags. The wayfinder per-map session use case above drives this direct-child filter; it reuses the global frontier predicate and ordering.

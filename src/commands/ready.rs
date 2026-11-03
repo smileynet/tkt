@@ -5,10 +5,15 @@ use anyhow::Result;
 use crate::commands::common::{is_quiet, project_config, tickets_dir};
 use crate::core::{self, AgentId, Status, Ticket};
 
-pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
+pub fn run(json: bool, agent: Option<&AgentId>, parent: Option<&str>) -> Result<i32> {
     let dir = tickets_dir()?;
     let pcfg = project_config(&dir)?;
     let corpus = core::load_corpus(&dir)?;
+    if let Some(id) = parent {
+        if !corpus.iter().any(|ticket| ticket.id == id) {
+            super::common::domain_bail!(NotFound, "no parent ticket with id {}", id);
+        }
+    }
     let legacy_env = std::env::var("CREW_ENV")
         .ok()
         .filter(|value| !value.is_empty())
@@ -25,7 +30,10 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
 
     // Apply context filter (unless bypass is active)
     let ctx = crate::context::load(&dir);
-    let scoped: Vec<&Ticket> = front.into_iter().filter(|t| ctx.matches(&t.tags)).collect();
+    let scoped: Vec<&Ticket> = front
+        .into_iter()
+        .filter(|t| ctx.matches(&t.tags) && parent.is_none_or(|id| t.parent.as_deref() == Some(id)))
+        .collect();
     let hidden_restricted = scoped
         .iter()
         .filter(|ticket| ticket.agent_eligibility.check(agent).is_err())
@@ -141,6 +149,12 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
             if let Some(ref spec) = t.spec {
                 fields.push(format!("\"spec\":\"{}\"", core::json_string_escape(spec)));
             }
+            if let Some(ref parent) = t.parent {
+                fields.push(format!(
+                    "\"parent\":\"{}\"",
+                    core::json_string_escape(parent)
+                ));
+            }
             let agents = t
                 .agent_eligibility
                 .signed_values()
@@ -191,7 +205,10 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
 
         let wip: Vec<&Ticket> = corpus
             .iter()
-            .filter(|t| t.status == Status::InProgress)
+            .filter(|t| {
+                t.status == Status::InProgress
+                    && parent.is_none_or(|id| t.parent.as_deref() == Some(id))
+            })
             .collect();
         if !wip.is_empty() {
             println!("\nIn progress ({}):", wip.len());
