@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "update check respects DO_NOT_TRACK=1"
-tags: ["cli", "kind:bug", "triage:needs-info", "stream:quality", "gate:evidence"]
+tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:quality"]
 assignee: "codex"
 ---
 
