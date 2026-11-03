@@ -1,7 +1,7 @@
 ---
 id: "153"
 title: "Guard against stale-binary validation (prefer integration tests, add freshness check)"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -32,10 +32,10 @@ Two-part fix:
 
 ## Acceptance criteria
 
-- [ ] AGENTS.md directs validation via cargo test integration tests (freshly-built target binary), not PATH-installed tkt
-- [ ] The old memory-dependent "reinstall before testing" constraint is superseded (not just appended to)
-- [ ] tools/check-binary-fresh.sh exits 1 when installed tkt hash != HEAD, 0 when matched, with JSON status output
-- [ ] Script follows the validation contract (JSON status, exit 0/1/2)
+- [x] AGENTS.md directs validation via cargo test integration tests (freshly-built target binary), not PATH-installed tkt
+- [x] The old memory-dependent "reinstall before testing" constraint is superseded (not just appended to)
+- [x] tools/check-binary-fresh.sh exits 1 when installed tkt hash != HEAD, 0 when matched, with JSON status output
+- [x] Script follows the validation contract (JSON status, exit 0/1/2)
 
 ## Out of scope
 
@@ -48,3 +48,11 @@ Disposition: `kind:bug`, `triage:ready-for-agent`; stream `tooling`.
 Confirmed this session: installed hash 92d4833 differed from HEAD 62c8226 and --agent failed until deployment. The freshness guard is absent; use integration binaries for product checks and compare hashes only when install/deploy itself is under test.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Superseded stale PATH-binary validation guidance with Cargo integration binaries and added a JSON freshness guard, reviewed independently. See docs/evidence/freshness-and-lint-153-163.md.
+
+### Verification
+1. ✓ AGENTS.md directs validation via cargo test integration tests (freshly-built target binary), not PATH-installed tkt — "AGENTS.md now directs cargo test integration validation and supersedes reinstall-before-testing."
+2. ✓ tools/check-binary-fresh.sh exits 1 when installed tkt hash != HEAD, 0 when matched, with JSON status output — "Final mise run check passed: freshness fixtures cover JSON fresh/stale/error and exits 0/1/2, including Windows wrapper paths."

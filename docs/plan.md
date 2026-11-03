@@ -29,7 +29,7 @@ Discovery #138 and #127 are complete. Next is #153, guarding install freshness, 
 |---:|---|---|
 | 138 | Update capabilities manifest with all commands | ✅ done |
 | 127 | Improve agent discoverability: help nudge to capabilities, init recommends agent setup | ✅ done |
-| 153 | Guard against stale-binary validation (prefer integration tests, add freshness check) | in_progress |
+| 153 | Guard against stale-binary validation (prefer integration tests, add freshness check) | ✅ done |
 
 ## Post-v0.4.0 configuration and correctness
 
