@@ -23,7 +23,7 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-Discovery manifest #138 is complete; #127 finishes the help/init path, then #153 guards install freshness, which recurred during this session. Dashboard work is in progress outside this implementation queue. This queue records sequencing, not artificial dependency edges; the mechanical frontier still sorts priority then ID.
+Discovery #138 and #127 are complete. Next is #153, guarding install freshness, which recurred during this session. Dashboard work is in progress outside this implementation queue. This queue records sequencing, not artificial dependency edges; the mechanical frontier still sorts priority then ID. The confirmed generic done-status bypass is tracked separately in #241.
 
 | ID | Work | Status |
 |---:|---|---|
