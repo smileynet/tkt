@@ -1,7 +1,7 @@
 ---
 id: "99"
 title: "Make update check interval configurable"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "`update_check.interval` accepted as a user config key"
@@ -29,11 +29,11 @@ Parse duration from the config, replace the hardcoded `CHECK_INTERVAL_SECS` cons
 
 ## Acceptance criteria
 
-- [ ] `update_check.interval` accepted as a user config key
-- [ ] Supports at minimum: `1h`, `24h`, `7d`, `never`
-- [ ] Default remains 24h when unconfigured
-- [ ] `TKT_UPDATE_CHECK=0` still overrides config (env > config > default)
-- [ ] Existing tests pass unchanged
+- [x] `update_check.interval` accepted as a user config key
+- [x] Supports at minimum: `1h`, `24h`, `7d`, `never`
+- [x] Default remains 24h when unconfigured
+- [x] `TKT_UPDATE_CHECK=0` still overrides config (env > config > default)
+- [x] Existing tests pass unchanged
 
 ## Triage — 2026-11-02
 
@@ -47,3 +47,10 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-03)
+
+Implemented configurable update cadence with preserved suppression guards; final full gate and independent critic accepted.
+
+### Verification
+1. ✓ `update_check.interval` accepted as a user config key — "User-only key/default/env precedence, invalid/dry-run/project/unset cases verified by public integration test; final mise run check 401 Rust tests passed,42 Node passed,1 existing Windows skip. See docs/evidence/update-interval-99.md."
