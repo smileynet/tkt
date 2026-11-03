@@ -11,6 +11,12 @@ tags: ["integrations", "kind:enhancement", "triage:ready-for-agent", "stream:wor
 
 # tkt import --github: pull open issues into .tickets/
 
+## Current executable contract — 2026-11-03
+
+One-way GitHub import is blocked by ticket 125. Use stable repository-qualified issue identity (canonical repository plus issue number/URL), explicit status/label/body mapping and repeat-import idempotence. The historical source: github#NN idea alone is insufficient across repositories. Preserve unsupported raw source data without claiming it is supported typed frontmatter; do not write to GitHub. Implement only after the mapping contract is verified.
+
+This contract supersedes conflicting historical proposals below.
+
 ## Context
 
 GitHub/GitLab bridges create switching-cost stickiness. git-bug and git-issue both offer bidirectional sync. A one-way import (GitHub → .tickets/) is the minimum viable bridge — lets teams try tkt without abandoning their existing issue tracker.

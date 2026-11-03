@@ -1,16 +1,16 @@
 ---
 id: "249"
-title: "Add local pre-push checks to replace removed CI workflow"
+title: "Add optional local pre-push verification"
 status: open
 blocked_by: []
 priority: low
 validation_criteria:
   - "An opt-in Git pre-push hook runs mise run check (or an equivalent toolchain-pinned gate) on the commits being pushed"
-  - "Contributor docs explain how to enable the hook and that it replaces the removed push/PR CI workflow"
+  - "Contributor docs explain opt-in installation and its local bypass/availability limits; no hosted-CI equivalence is claimed"
 tags: ["quality", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
 ---
 
-# Add local pre-push checks to replace removed CI workflow
+# Add optional local pre-push verification
 
 ## What to build
 

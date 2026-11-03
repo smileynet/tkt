@@ -13,6 +13,12 @@ tags: ["schema", "kind:enhancement", "stream:relations", "triage:ready-for-agent
 
 # Pluggable schema definitions with meta field + ai_context support
 
+## Current executable contract — 2026-11-03
+
+Design-only scope: a narrow optional extension schema with explicit supported scalar values, format version, unknown raw preservation and preview/round-trip fixtures. Nested meta objects, arbitrary YAML, dynamically generated CLI flags and query language expansion in the old proposal below are historical/non-approved. No runtime schema implementation is required or claimed by this design ticket.
+
+This contract supersedes conflicting historical proposals below.
+
 ## Owner decision — 2026-11-03
 
 Confirmed in chat: **Start with a narrow optional extension schema**. This supersedes conflicting

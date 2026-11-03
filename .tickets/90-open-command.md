@@ -11,6 +11,12 @@ tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 
 # tkt open: find URLs in ticket body and open in browser
 
+## Current executable contract — 2026-11-03
+
+Select the first HTTP(S) URL in body order; never launch other schemes. Provide a no-launch listing/preview path and obey global dry-run. Do not prompt interactively for multiple URLs in the first version. Verify exact portable launcher arguments with isolated substitutes, missing IDs and no-URL behavior. Actual OS browser launch remains outside available verification; no workaround of the browser restriction.
+
+This contract supersedes conflicting historical proposals below.
+
 ## Context
 
 dstask's `open` command finds URLs in task notes and opens them in the browser. Tickets often reference PRs, docs, or design links — `tkt open <id>` saves the manual copy-paste.

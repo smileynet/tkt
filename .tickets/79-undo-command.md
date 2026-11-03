@@ -11,6 +11,12 @@ tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 
 # tkt undo: revert last mutation
 
+## Current executable contract — 2026-11-03
+
+Implement only a Git revert of an exactly recognized tkt mutation at HEAD. Require a clean index and tracked worktree, validate affected ticket/plan paths and recognized mutation structure, and reject arbitrary commits even when author or message prefix resembles tkt. Never expose reset-based internal race recovery. Refuse undo-of-undo and ambiguous/repeated history in the first implementation; repeated undo is historical speculation, not approved scope. Cover conflicts, dry-run and push-disabled behavior.
+
+This contract supersedes conflicting historical proposals below.
+
 ## Context
 
 Every git-based competitor (dstask, git-bug) offers undo. It's a trivial `git revert HEAD` wrapper but removes fear of "what if I close the wrong ticket?" — especially valuable for agents that might make mistakes.
