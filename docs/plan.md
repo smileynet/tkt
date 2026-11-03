@@ -69,7 +69,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 235 | Ticket mutations skip heavy commit hooks and can defer the push | open |
 | 239 | Review historical closure warnings without fabricating evidence | open |
 | 240 | Show workstreams and decision/evidence gates in the ticket graph | in_progress |
-| 241 | Reject done status outside the close lifecycle | open |
+| 241 | Reject done status outside the close lifecycle | in_progress |
 
 ## Native relations and label namespaces
 

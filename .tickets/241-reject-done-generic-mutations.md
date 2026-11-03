@@ -1,7 +1,7 @@
 ---
 id: "241"
 title: "Reject done status outside the close lifecycle"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
