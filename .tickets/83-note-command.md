@@ -1,7 +1,7 @@
 ---
 id: "83"
 title: "Add a noninteractive ticket-note append operation"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
