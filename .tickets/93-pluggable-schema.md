@@ -5,11 +5,19 @@ status: backlog
 blocked_by: []
 priority: low
 validation_criteria:
-  - "`.tickets/schema.toml` parsed on startup when present"
-tags: ["schema", "kind:enhancement", "triage:needs-info", "stream:relations", "gate:decision"]
+  - "Supported extension values/representations and schema version boundaries are explicit and narrow"
+  - "Optional schema enforcement preserves unknown raw values and existing ticket compatibility"
+  - "Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support"
+tags: ["schema", "kind:enhancement", "stream:relations", "triage:ready-for-agent"]
 ---
 
 # Pluggable schema definitions with meta field + ai_context support
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Start with a narrow optional extension schema**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Context
 
@@ -140,15 +148,9 @@ Agents discover the schema at runtime — no hardcoded knowledge needed.
 
 ## Acceptance criteria
 
-- [ ] `.tickets/schema.toml` parsed on startup when present
-- [ ] Custom fields with type enum/string/list/bool validated by `tkt validate`
-- [ ] `ai_context` per field exported via `tkt capabilities`
-- [ ] `meta:` frontmatter field preserved and unvalidated
-- [ ] `tkt new/edit --field key=value` sets custom fields
-- [ ] `tkt query` can filter on custom fields
-- [ ] Built-in fields unchanged by schema.toml presence
-- [ ] Zero behavior change when schema.toml absent
-- [ ] Documentation: how to define a project schema
+- [ ] Supported extension values/representations and schema version boundaries are explicit and narrow
+- [ ] Optional schema enforcement preserves unknown raw values and existing ticket compatibility
+- [ ] Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support
 
 ## Triage — 2026-11-02
 
@@ -160,4 +162,9 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Choose the supported custom-field representation and schema migration policy within the narrow frontmatter parser.
+Resolved by the owner's 2026-11-03 chat submission: **Start with a narrow optional extension schema**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.
+
+## What to build
+
+Design a narrow optional extension schema within the supported frontmatter subset. Define supported representations and explicit versioned migration rules, preserve unknown raw fields and existing tickets, and keep the built-in contract compatible. A general YAML/parser expansion is outside this approved direction.

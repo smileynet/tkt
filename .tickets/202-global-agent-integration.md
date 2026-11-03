@@ -1,51 +1,27 @@
 ---
 id: "202"
-title: "Deploy tkt guidance and skill safely across supported harnesses"
+title: "Design versioned embedded skills for binary-only installs"
 status: backlog
 blocked_by: []
 priority: high
 validation_criteria:
-  - "a dry-run reports every supported harness target and performs no filesystem changes"
-  - "installation preserves unmanaged user content and records ownership before replacing a managed integration"
-  - "an OpenCode-only environment receives both the project instruction path and the global tkt skill"
-tags: ["guidance", "agent-integration", "integrations", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
+  - "A concrete embedded-asset version and binary-only interface contract identifies supported harnesses and instruction/skill ownership"
+  - "Dry-run, unmanaged conflicts, upgrade/rollback and duplicate handling are specified with testable fixtures"
+  - "The design distinguishes shipped repository deployment from the remaining binary-only scope and links current source evidence"
+tags: ["guidance", "agent-integration", "integrations", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
 ---
 
-# Deploy tkt guidance and skill safely across supported harnesses
+# Design versioned embedded skills for binary-only installs
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Design embedded versioned skill assets**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## What to build
 
-Provide a single safe installation path for the two complementary integration layers:
-
-1. project-local, marker-owned tkt instructions (`AGENTS.md` or the harness-native
-   equivalent); and
-2. a globally discoverable `tkt` skill for harnesses that support skills.
-
-`tkt init --all` already writes project instructions, while
-`tools/deploy-skills.sh` installs a maintainer-local skill only for Kiro, Claude, and
-Codex. That split leaves an OpenCode-only environment without a global skill despite
-OpenCode being advertised, skips harnesses whose root does not already exist, and
-unconditionally removes a same-named skill without recording ownership.
-
-Define a supported-harness registry with verified project-instruction and global-skill
-paths. The installer must offer `--tool`, `--all`, and `--dry-run`; create missing
-managed roots; and replace only tkt-owned paths (or an existing tkt symlink). Record
-managed ownership and source/version so an unmanaged same-named directory is reported
-as a conflict, never deleted. Keep per-project instructions idempotent and
-marker-owned; do not invent a global AGENTS.md convention where a harness does not
-have one.
-
-The independent Kiro review correctly identifies that a `cargo install` user cannot
-use repository-only skill assets. Package the canonical skill/instruction templates
-with the executable (for example via compile-time embedded assets) and provide a
-dedicated deployment command rather than overloading project-local `tkt init` with
-global behavior. Exact command spelling and harness paths remain design work and must
-be verified against each harness's current official documentation. Codex's user-level
-instruction discovery is a useful supported case; it is not permission to generalize
-that convention to other harnesses.
-
-Source: 2026-10-19 review of `tkt init`, `tools/deploy-skills.sh`, README agent
-claims, and the existing `skills/tkt` package.
+Design versioned skill/instruction assets embedded in the binary and a binary-only export/install interface. Specify owned replacement, unmanaged conflicts, supported harness roots, project instructions versus global skills, dry-run, upgrade/rollback and duplicate guards. Reconcile the current deploy engine before choosing final flags; no source checkout should be required by the designed binary-only path.
 
 ## Context
 
@@ -58,16 +34,9 @@ claims, and the existing `skills/tkt` package.
 
 ## Acceptance criteria
 
-- [ ] `--dry-run` reports the instruction and skill action for every verified target
-      and makes no filesystem changes
-- [ ] Installation creates missing managed roots and updates only tkt-owned paths;
-      an unmanaged target is left untouched with an actionable conflict message
-- [ ] A verified OpenCode-only fixture receives both its project instruction and its
-      global tkt skill without requiring a Claude installation
-- [ ] Temporary-home tests cover first install, idempotent update, unmanaged conflict,
-      and dry run; all guidance surfaces describe the same supported harness set
-- [ ] A binary installed without the repository can deploy the packaged tkt skill and
-      only the verified harness-specific instruction target for each selected tool
+- [ ] A concrete embedded-asset version and binary-only interface contract identifies supported harnesses and instruction/skill ownership
+- [ ] Dry-run, unmanaged conflicts, upgrade/rollback and duplicate handling are specified with testable fixtures
+- [ ] The design distinguishes shipped repository deployment from the remaining binary-only scope and links current source evidence
 
 ## Out of scope
 
@@ -102,4 +71,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Choose embedded skill assets and a binary-only deployment interface before implementation.
+Resolved by the owner's 2026-11-03 chat submission: **Design embedded versioned skill assets**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

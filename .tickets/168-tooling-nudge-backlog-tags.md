@@ -1,17 +1,23 @@
 ---
 id: "168"
-title: "Optional tooling nudge: advisory on tag-less/backlog tickets"
+title: "Measure demand for missing-tag and backlog advisories"
 status: backlog
 blocked_by: ["167"]
 priority: low
 validation_criteria:
-  - "tkt new prints a non-blocking advisory to stderr when a ticket is created with no tags (gated on !quiet)"
-  - "validate or doctor emits an advisory (not error) counting untagged live tickets, via a check_missing_tags finding in findings.rs"
-  - "decision recorded on whether to add a new.default_status config key (mirroring new.default_priority) or keep the hard-coded open default"
-tags: ["guidance", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
+  - "Representative observations state scope, frequency, sources and limits without fabricated or newly enabled telemetry"
+  - "The report distinguishes recurring demand from hypothetical benefit and recommends whether an advisory is justified"
+  - "No runtime nudge, hard gate or default-status behavior is added by the measurement task"
+tags: ["guidance", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
 ---
 
-# Optional tooling nudge: advisory on tag-less/backlog tickets
+# Measure demand for missing-tag and backlog advisories
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Measure demand before adding nudges**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Problem
 
@@ -24,17 +30,7 @@ rebalance) lands and we can measure whether guidance alone moved the numbers.
 
 ## What to build
 
-A minimal, non-blocking tooling nudge that reinforces the guidance without adding friction:
-
-- **Creation advisory** — when `tkt new` creates a ticket with no tags (and not `-q`), print
-  a one-line advisory to stderr suggesting `--tags`. Never blocks, never fails.
-- **Corpus advisory** — a `check_missing_tags` finding (advisory/warning, never error) that
-  reports the count/percentage of untagged live tickets, surfaced via `validate` and/or
-  `doctor`.
-- **Config decision** — decide whether to add a `new.default_status` config key (mirroring
-  the existing `new.default_priority` pattern at `src/config.rs` + `src/commands/new.rs`) so a
-  project can pin the creation default, or keep the hard-coded `open` fallback
-  (`src/core/ticket.rs:947`). Record the decision (ADR or ticket note).
+Measure representative missing-tag/backlog workflow cases before proposing runtime nudges. Use scoped primary observations and attributed field reports, preserving telemetry consent and privacy. Record whether a recurring problem exists and whether an opt-in advisory is justified. Do not add a runtime reminder, default-status setting or hard gate as part of this measurement decision.
 
 ## Context
 
@@ -58,12 +54,9 @@ A minimal, non-blocking tooling nudge that reinforces the guidance without addin
 
 ## Acceptance criteria
 
-- [ ] `tkt new` prints a non-blocking stderr advisory when a ticket is created with no tags,
-      suppressed under `-q`
-- [ ] `validate` or `doctor` emits an advisory (not error) counting untagged live tickets, via
-      a `check_missing_tags` finding in `findings.rs`
-- [ ] Decision recorded on `new.default_status` config key vs keeping the hard-coded `open` default
-- [ ] `cargo fmt && cargo clippy --all-targets && cargo test` all pass with zero warnings
+- [ ] Representative observations state scope, frequency, sources and limits without fabricated or newly enabled telemetry
+- [ ] The report distinguishes recurring demand from hypothetical benefit and recommends whether an advisory is justified
+- [ ] No runtime nudge, hard gate or default-status behavior is added by the measurement task
 
 ## Triage — 2026-11-02
 
@@ -75,4 +68,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Decide whether observed tag/backlog usage justifies a new advisory and a default-status setting.
+Resolved by the owner's 2026-11-03 chat submission: **Measure demand before adding nudges**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

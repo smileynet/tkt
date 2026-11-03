@@ -20,7 +20,7 @@ The dashboard groups every unfinished ticket into one of six `stream:` workstrea
 a required observation. The ticket body explains each gate under Planning gate.
 Neither changes status or invents a dependency. Backlog remains deferred even when
 prerequisites are met. The graph shows gates on dependency-blocked tickets too,
-including the #197 parent-status decision upstream of #199 and #200.
+The owner settled all 17 published decisions on 2026-11-03; see [the decision record](decision-record-2026-11-03.md). #199 and #200 still require the actual #197 implementation.
 
 ## Current maintenance frontier
 
@@ -30,7 +30,7 @@ laptop/phone acceptance remains unverified under the existing browser restrictio
 LAN hosting is active under completed #244; see [the hosting guide](dashboard-lan.md)
 for its address, served-file scope and supervised-process lifecycle.
 
-The unblocked maintenance queue is complete: 32 tickets closed with independent review and evidence, plus six obsolete items explicitly cancelled. The final audit-rule repair #242 is complete; historical prose and missing evidence remain intact. The mechanical frontier still lists #197, #234 and #159, each gated on a recorded decision. #199/#200 depend on that parent-rollup decision. The three dashboard tickets await unavailable rendered checks, and 22 backlog items remain deliberately deferred. The guidance proposal #226 remains unapplied pending approval. No artificial dependencies or deferrals were added to empty the frontier.
+The earlier maintenance batch closed 32 tickets and explicitly cancelled six obsolete items. All 17 owner decisions are now confirmed. Implementation remains open for #197 (computed progress with explicit closure), #234 (linked moved criteria), and #159 (optional consumer CI guidance). Guidance approval is staged as #245 → #246 → #247, following the completed proposal #226. The three dashboard tickets retain unverified rendered acceptance; 22 backlog items remain deliberately deferred. No implementation is claimed by recording these decisions.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -67,6 +67,9 @@ Rows record completed repairs alongside remaining investigations and implementat
 | 176 | new: clearer body template + --body flag to fill content at creation | ✅ done |
 | 177 | guidance: state evidence↔validation_criteria rule, tag editing, fill-body-at-new, link-the-source | ✅ done |
 | 226 | Propose AGENTS.md restructuring while preserving guidance coverage | ✅ done |
+| 245 | Prepare approved guidance reference homes and current coverage map | open |
+| 246 | Apply approved conditional guidance pointers and update coverage matrix | open |
+| 247 | Verify and deploy the staged guidance restructuring | open |
 | 228 | Migrate status dashboard to the current Plan-tab contract | in_progress |
 | 229 | tkt-work close step cleans up the ticket's scratch and build artifacts | ✅ done |
 | 230 | Separate artifact, functionality and user-outcome evidence in ticket closure guidance | ✅ done |
@@ -81,7 +84,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 
 ## Native relations and label namespaces
 
-Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 reuses completed #224. #197 requires a decision about computed progress versus close-gated stored status before implementation; automatic done is not approved here. #199 is the final combined documentation/example pass. ADR 0004 cancellation is implemented by #227; obsolete items below are explicitly cancelled.
+Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 reuses completed #224. #197 now implements the approved computed-progress contract with explicit close-gated stored status; automatic done is excluded. #199 is the final combined documentation/example pass. ADR 0004 cancellation is implemented by #227; obsolete items below are explicitly cancelled.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -89,7 +92,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 | 194 | assignee field + claim-by-assignment + frontier honors it | ✅ done |
 | 195 | parent validation: dangling + cycle checks | ✅ done |
 | 196 | parent CLI + query/capabilities surface | ✅ done |
-| 197 | parent rollup + frontier semantics | open |
+| 197 | Show computed parent progress with explicit closure | open |
 | 198 | label-namespace validation: single-select + closed-set | ✅ done |
 | 199 | docs, capabilities, CHANGELOG for parent/assignee/labels | open |
 | 200 | tkt ready --parent <id>: frontier scoped to one epic/map | open |
@@ -97,12 +100,12 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 
 ## Tooling and verification decisions
 
-#66 is complete with the pinned dist configuration migration verified. #159 needs its CI prescription reconciled with the standing verification policy before implementation. No new hosted workflow is authorized by this plan.
+#66 is complete with the pinned dist configuration migration verified. #159 has approval for optional consumer CI guidance with explicit limits and the standing local verification policy preserved. No new hosted workflow is authorized by this plan.
 
 | ID | Work | Status |
 |---:|---|---|
 | 66 | Migrate [workspace.metadata.dist] to dist-workspace.toml | ✅ done |
-| 159 | Document CI recipe: tkt validate --strict / lint --check as the real enforcement gate | open |
+| 159 | Document optional consumer CI with accurate enforcement limits | open |
 
 ## Intentionally deferred backlog
 
@@ -110,32 +113,32 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 
 | ID | Work | Status |
 |---:|---|---|
-| 69 | Explore agent/harness-specific integrations (hooks, MCP, skills) | backlog |
+| 69 | Define the focused remaining harness-integration scope | backlog |
 | 79 | tkt undo: revert last mutation | backlog |
-| 83 | tkt note <id>: open ticket body in $EDITOR | backlog |
+| 83 | Add a noninteractive ticket-note append operation | backlog |
 | 86 | tkt import --github: pull open issues into .tickets/ | backlog |
 | 88 | tkt done --week: show-resolved report for standups | backlog |
 | 89 | Lifecycle hooks: on-new, on-claim, on-close scripts | backlog |
 | 90 | tkt open <id>: find URLs in ticket body and open in browser | backlog |
 | 93 | Pluggable schema definitions with meta field + ai_context support | backlog |
 | 99 | Make update check interval configurable | backlog |
-| 125 | Research and build import schemas for Jira, Linear, Beads, GitLab, and other ticket systems | backlog |
+| 125 | Design the first external-system import adapter contract | backlog |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | backlog |
 | 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | backlog |
 | 158 | tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex) | backlog |
-| 168 | Optional tooling nudge: advisory on tag-less/backlog tickets | backlog |
+| 168 | Measure demand for missing-tag and backlog advisories | backlog |
 | 173 | validate: frontier-scoped readiness rule (Definition of Ready gate) | backlog |
 | 175 | validate: advisory no-source-reference finding (union of spec/#NN/parent/link) | backlog |
 | 184 | Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002 | backlog |
 | 186 | Reconcile or retire the historical Python parity harness | backlog |
 | 187 | Generate a derived sync-plan projection from the ticket corpus | backlog |
 | 191 | Centralize command mutation effects and dry-run policy | backlog |
-| 202 | Deploy tkt guidance and skill safely across supported harnesses | backlog |
+| 202 | Design versioned embedded skills for binary-only installs | backlog |
 
 ## Recorded cancellations under ADR 0004
 
-The lifecycle is implemented and six dispositions are recorded: #87 superseded by #176; #208 duplicates #138; #115/#161 are obsolete; #94 and #142 are wontfix. Cancellation checked no acceptance boxes and claimed no completed implementation. #142's isolated capability probe did not reproduce the report; its historical unspecified edge cases remain unknown. #140 is fixed and complete. #69 stays deferred with its broader integration decision intact.
+The lifecycle is implemented and six dispositions are recorded: #87 superseded by #176; #208 duplicates #138; #115/#161 are obsolete; #94 and #142 are wontfix. Cancellation checked no acceptance boxes and claimed no completed implementation. #142's isolated capability probe did not reproduce the report; its historical unspecified edge cases remain unknown. #140 is fixed and complete. #69 stays deferred with an approved focused follow-up scope.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -153,34 +156,34 @@ re-certified by this reconciliation; #239 records audit follow-up.
 
 | ID | Work | Status |
 |---:|---|---|
-| 133 | Preserve unquoted YAML scalar bytes | ✅ done |
-| 134 | Make renumber citation-safe and crash-consistent | ✅ done |
-| 135 | Put JSON error envelope last on stderr | ✅ done |
-| 136 | Apply global dry-run to every mutation | ✅ done |
-| 137 | Resolve the real upstream branch for race detection | ✅ done |
-| 139 | Repair evidence-gate severity and discarded-evidence behavior | ✅ done |
-| 141 | Count uppercase checked acceptance boxes | ✅ done |
-| 146 | Cut, tag, and document v0.4.0 | ✅ done |
-| 150 | Make doctor strict results agree with validate | ✅ done |
-| 152 | Fix indented-comment parser corruption | ✅ done |
-| 156 | Disposition remaining delta-review findings | ✅ done |
-| 160 | Decide and apply the legacy missing-resolution validation baseline | ✅ done |
-| 181 | Verify atomic writes across Windows and Linux | ✅ done |
-| 182 | Decide a delete/cancel lifecycle mechanism | ✅ done |
-| 185 | Restore automatic push/PR CI verification | ✅ done |
+| 133 | Fix yaml_scalar_unescape corrupting plain (unquoted) scalars | ✅ done |
+| 134 | Fix renumber: enforce birth-window citation scan before apply | ✅ done |
+| 135 | Fix JSON error envelope not last line of stderr | ✅ done |
+| 136 | Fix global --dry-run ignored by 7 mutating commands | ✅ done |
+| 137 | Fix origin/main hardcoded in race detection | ✅ done |
+| 139 | Fix evidence gates partially dead: unreachable warn branch + silent discard | ✅ done |
+| 141 | Fix uppercase X checkboxes invisible to AC stats | ✅ done |
+| 146 | Release v0.4.0: ship post-v0.3.0 workflow changes safely | ✅ done |
+| 150 | doctor must report all validate findings | ✅ done |
+| 152 | Review 2026-08-27: fmt gate red at HEAD, indented-comment corruption, #149 dispositions pending | ✅ done |
+| 156 | Delta review 2026-08-27: #154 legacy-baseline gap, cross-project evidence, #152 still pending | ✅ done |
+| 160 | Decide handling for 27 historical done tickets flagged missing-resolution | ✅ done |
+| 181 | Verify atomic_write on Windows + Linux (fs::rename overwrite, temp cleanup, worktrees) | ✅ done |
+| 182 | Decide whether tkt needs a delete/cancel operation — and what it should do | ✅ done |
+| 185 | Restore automated CI gate for pushes and pull requests | ✅ done |
 | 188 | Reject ambiguous duplicate frontmatter keys | ✅ done |
-| 189 | Unify env and requires into one eligibility model | ✅ done |
+| 189 | Unify env and requires into one ticket eligibility model | ✅ done |
 | 192 | parent field: schema, parse, serialize | ✅ done |
-| 201 | Remediate agent-facing help and release metadata drift | ✅ done |
-| 203 | decide v0.4.0 release scope before moving planned work to v0.5.0 | ✅ done |
-| 204 | Parse single-item block-style dependencies correctly | ✅ done |
+| 201 | Remediate small agent-facing help and release metadata drift | ✅ done |
+| 203 | Decide v0.4.0 release scope before moving planned work to v0.5.0 | ✅ done |
+| 204 | Parse single-item block-style blocked_by lists correctly | ✅ done |
 | 205 | Keep migration confirmation without writing during dry runs | ✅ done |
-| 206 | Grandfather pre-protocol corpus from audit missing-resolution (ADR 0003) | ✅ done |
-| 207 | Retire crew steering surface: fold frontier-work into a skill/AGENTS.md | ✅ done |
-| 221 | Make shipped knowledge-path guidance convention-neutral | ✅ done |
-| 222 | Adopt the current grey-matter repository layout | ✅ done |
-| 223 | Keep plan status current during ticket mutations | ✅ done |
-| 224 | Agent eligibility policy and invocation-scoped identity | ✅ done |
+| 206 | audit: grandfather pre-protocol corpus from missing-resolution (ADR 0003) | ✅ done |
+| 207 | Retire crew-research steering surface: fold frontier-work into a skill/AGENTS.md | ✅ done |
+| 221 | Shipped tkt-core guidance prescribes docs/adr and docs/agents/specs, contradicting grey-matter's no-.memory convention | ✅ done |
+| 222 | Adopt grey-matter repo layout: relocate .memory/ to GLOSSARY.md, docs/adr/, docs/agents/ | ✅ done |
+| 223 | close/claim leave docs/plan.md behind, so sync-plan --check fails after every close | ✅ done |
+| 224 | Let tickets declare which agents may pick them up | ✅ done |
 | 225 | Make upstream deployment validation enforce strict plugin and catalog checks | ✅ done |
 
 ## Unplanned tickets

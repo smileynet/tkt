@@ -5,13 +5,19 @@ status: backlog
 blocked_by: []
 priority: medium
 validation_criteria:
-  - "Parity documentation accurately states whether the harness is runnable from this repository"
-  - "If retained, fixtures and a supported reference implementation are available"
-  - "If retired, release confidence relies on maintained Rust integration coverage"
-tags: ["quality", "tests", "kind:bug", "triage:needs-info", "stream:quality", "gate:decision"]
+  - "Unsupported parity runner/instructions are retired without inventing a supported Python reference"
+  - "Useful contract cases are preserved in maintained Rust tests where needed and actual current coverage is named"
+  - "References and verification docs no longer imply that the dormant Python comparison is a passing gate"
+tags: ["quality", "tests", "kind:bug", "stream:quality", "triage:ready-for-agent"]
 ---
 
 # Reconcile or retire the historical Python parity harness
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Retire the unsupported harness**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Context
 
@@ -22,17 +28,13 @@ as current release confidence without a runnable reference.
 
 ## What to build
 
-Make an explicit maintenance decision. Either restore a supported, versioned reference
-implementation and fixtures so the harness runs in a clean checkout, or retire the
-historical script and document Rust unit/integration tests as the maintained contract.
-Do not keep documentation that implies a runnable test path when it requires removed
-local state.
+Retire the unsupported historical Python parity harness and obsolete runnable instructions. Preserve any useful contract cases in maintained Rust tests and name the actual unit/integration verification path. Do not claim that the absent Python reference or old parity run passed. This approves retirement work; the ticket is not complete until the source and documentation changes are verified.
 
 ## Acceptance criteria
 
-- [ ] Parity documentation accurately states whether the harness runs from a clean checkout
-- [ ] If retained, fixtures and a supported reference implementation are available
-- [ ] If retired, obsolete parity instructions are removed and maintained Rust coverage is named
+- [ ] Unsupported parity runner/instructions are retired without inventing a supported Python reference
+- [ ] Useful contract cases are preserved in maintained Rust tests where needed and actual current coverage is named
+- [ ] References and verification docs no longer imply that the dormant Python comparison is a passing gate
 
 ## Re-triage (2026-10-29)
 
@@ -50,4 +52,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Choose retirement of the parity harness or supply a supported, pinned Python reference.
+Resolved by the owner's 2026-11-03 chat submission: **Retire the unsupported harness**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

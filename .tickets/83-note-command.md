@@ -1,15 +1,23 @@
 ---
 id: "83"
-title: "tkt note <id>: open ticket body in $EDITOR"
+title: "Add a noninteractive ticket-note append operation"
 status: backlog
 blocked_by: []
 priority: low
 validation_criteria:
-  - "`tkt note <id>` opens the ticket file in $EDITOR"
-tags: ["cli", "kind:enhancement", "triage:needs-info", "stream:workflow", "gate:decision"]
+  - "Explicit note input is appended atomically to the correct ticket without launching an editor or changing lifecycle state"
+  - "Existing specification, resolution and evidence are preserved; only intended paths are committed and push policy is honored"
+  - "Missing IDs, dry-run and concurrent/retry behavior have public integration coverage"
+tags: ["cli", "kind:enhancement", "stream:workflow", "triage:ready-for-agent"]
 ---
 
-# tkt note: open ticket body in $EDITOR
+# Add a noninteractive ticket-note append operation
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Start with a noninteractive append operation**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Context
 
@@ -17,26 +25,13 @@ dstask has a `note` command that opens the task's markdown body in $EDITOR. Curr
 
 ## What to build
 
-```bash
-tkt note 03
-# → opens .tickets/03-deploy-pipeline.md in $EDITOR, cursor after frontmatter
-```
-
-Behavior:
-- Resolves ID to filename
-- Opens `$EDITOR` (falls back to `$VISUAL`, then `vi`)
-- Positions cursor after the `---` frontmatter delimiter if editor supports it
-- No git commit on save (body edits are user-owned, not tkt-managed)
-- Error if ticket not found
+Start with a noninteractive append operation that resolves the ticket ID, accepts explicit note content and appends attributable text atomically. Commit only the intended ticket paths and honor push settings, dry-run and concurrency behavior. Preserve specification/resolution/evidence content and lifecycle status. Interactive editor launching is separate, deferred scope.
 
 ## Acceptance criteria
 
-- [ ] `tkt note <id>` opens the ticket file in $EDITOR
-- [ ] Falls back through $EDITOR → $VISUAL → vi
-- [ ] Error message if ticket ID doesn't exist
-- [ ] Does not commit changes (body is user-owned)
-- [ ] Works with numeric ID (finds the matching file)
-
+- [ ] Explicit note input is appended atomically to the correct ticket without launching an editor or changing lifecycle state
+- [ ] Existing specification, resolution and evidence are preserved; only intended paths are committed and push policy is honored
+- [ ] Missing IDs, dry-run and concurrent/retry behavior have public integration coverage
 
 ## Field report — 2026-11-01
 
@@ -52,4 +47,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Choose the commit contract for interactive editing versus noninteractive append before designing the note interface.
+Resolved by the owner's 2026-11-03 chat submission: **Start with a noninteractive append operation**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

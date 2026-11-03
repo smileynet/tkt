@@ -48,9 +48,10 @@ function page(clipboard, overrides={}) {
   return {nodes,all,cfg,location,events,document,window,tablist};
 }
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
+const drafts=()=>({decisions:block('gm-config').decisions.map(d=>({...d,status:'open'}))});
 
 test('keyboard navigation includes the new tab and wraps through all four views',()=>{
-  const p=page(null);
+  const p=page(null,drafts());
   p.tablist.fire('keydown',{key:'ArrowRight',preventDefault(){}});p.events.hashchange();
   assert.equal(p.location.hash,'#plan');assert.equal(p.document.activeElement,p.nodes.get('tab-plan'));
   p.tablist.fire('keydown',{key:'ArrowRight',preventDefault(){}});p.events.hashchange();
@@ -60,7 +61,7 @@ test('keyboard navigation includes the new tab and wraps through all four views'
 });
 
 test('every recorded decision gate has curated choices and a recommended default',()=>{
-  const p=page(null);
+  const p=page(null,drafts());
   for(const ticket of block('gm-tickets').tickets.filter(t=>t.gate?.kind==='decision'))
     assert.ok(p.cfg.decisions.some(d=>d.tickets?.includes(ticket.id)),ticket.id);
   assert.ok(p.cfg.decisions.some(d=>d.tickets?.includes('226')));
@@ -76,7 +77,7 @@ test('every recorded decision gate has curated choices and a recommended default
 });
 
 test('overview links target decisions and answered outcomes remain available',()=>{
-  const cfg=block('gm-config'), first=cfg.decisions[0], p=page(null);
+  const cfg=block('gm-config'), first=cfg.decisions[0], p=page(null,drafts());
   assert.ok(p.nodes.get('needs').children.some(n=>n.children.some(a=>a.attrs.href==='#decision-'+first.id)));
   p.location.hash='#decision-'+first.id;p.events.hashchange();
   assert.equal(p.nodes.get('decisions').hidden,false);
@@ -89,7 +90,7 @@ test('overview links target decisions and answered outcomes remain available',()
 
 test('changing a choice and notes survives tab switches and copies the complete message',async()=>{
   let copied;
-  const p=page({writeText:async text=>{copied=text;}}), d=p.cfg.decisions[0];
+  const p=page({writeText:async text=>{copied=text;}},drafts()), d=p.cfg.decisions[0];
   p.nodes.get('decision-'+d.id+'-'+d.options[1].id).checked=true;
   p.nodes.get('decision-notes-'+d.id).value='  Keep this condition\nand this alternative.  ';
   p.location.hash='#plan';p.events.hashchange();p.location.hash='#decisions';p.events.hashchange();
@@ -108,10 +109,18 @@ test('changing a choice and notes survives tab switches and copies the complete 
 
 for(const [name,clipboard] of [['absent',null],['rejected',{writeText:async()=>{throw Error('denied');}}],['throws',{writeText:()=>{throw Error('denied');}}]])
   test('clipboard '+name+' leaves selectable answers',async()=>{
-    const p=page(clipboard);p.nodes.get('copy-decisions').fire('click');await settle();
+    const p=page(clipboard,drafts());p.nodes.get('copy-decisions').fire('click');await settle();
     const reply=p.nodes.get('decision-reply');
     assert.equal(reply.hidden,false);assert.equal(reply.selected,true);assert.equal(p.document.activeElement,reply);
     assert.match(p.nodes.get('decision-copy-status').textContent,/Clipboard unavailable/);
     assert.ok(reply.value.includes('Decisions for tkt'));
     assert.equal(p.nodes.get('copy-decisions').disabled,false);
   });
+
+test('submitted owner answers remain in history without another pending form',()=>{
+  const p=page(null);
+  assert.equal(p.cfg.decisions.length,17);
+  assert.ok(p.cfg.decisions.every(d=>d.status==='answered'&&d.options.some(o=>o.id===d.selectedOption&&o.label===d.answer)));
+  assert.equal(p.nodes.get('decision-export').hidden,true);
+  for(const d of p.cfg.decisions)assert.ok(p.all.some(n=>n.tagName==='DETAILS'&&n.textContent.includes(d.answer)));
+});

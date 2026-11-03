@@ -5,11 +5,19 @@ status: backlog
 blocked_by: []
 priority: low
 validation_criteria:
-  - "Post-hooks fire for new, claim, close, edit"
-tags: ["integrations", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
+  - "Hooks are opt-in and advisory; failure does not block publishing or alter ticket lifecycle truth"
+  - "Portable invocation, bounded execution and failure/retry behavior are explicit and tested"
+  - "No configuration preserves current behavior and existing verification policy"
+tags: ["integrations", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
 ---
 
 # Lifecycle hooks: on-new, on-claim, on-close scripts
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Start with advisory hooks**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Context
 
@@ -17,34 +25,13 @@ Taskwarrior's hook system creates a platform effect — time tracking, email not
 
 ## What to build
 
-Scripts in `.tickets/hooks/` run at lifecycle points:
-
-```
-.tickets/hooks/
-├── on-new.sh        # runs after tkt new (receives ID, slug, title)
-├── on-claim.sh      # runs after tkt claim (receives ID)
-├── on-close.sh      # runs after tkt close (receives ID, resolution)
-└── on-edit.sh       # runs after tkt edit (receives ID, changed fields)
-```
-
-Hook contract:
-- Executable files in `.tickets/hooks/`
-- Named `on-{event}.{ext}` (any extension, must be executable)
-- Receive ticket data as environment variables: `TKT_ID`, `TKT_SLUG`, `TKT_TITLE`, `TKT_STATUS`
-- Exit code 0 = success (tkt continues), non-zero = warning (tkt still continues, prints warning)
-- Hooks run AFTER the mutation succeeds (post-hooks only, no pre-hooks for v1)
-- Timeout: 10s max per hook
+Start with explicitly configured advisory lifecycle hooks. Publishing remains independent of hook success; define bounded portable invocation, timeout/failure reporting and retry behavior without changing ticket truth. Preserve the sequential runtime architecture and avoid an implicit global hook or mandatory verification gate. Default behavior remains unchanged without opt-in configuration.
 
 ## Acceptance criteria
 
-- [ ] Post-hooks fire for new, claim, close, edit
-- [ ] Scripts receive ticket data via environment variables
-- [ ] Non-zero exit prints a warning but doesn't fail the operation
-- [ ] Hooks directory is optional (no hooks = no overhead)
-- [ ] 10-second timeout per hook
-- [ ] Hook execution doesn't block push operations
-- [ ] Integration test with a simple hook script
-
+- [ ] Hooks are opt-in and advisory; failure does not block publishing or alter ticket lifecycle truth
+- [ ] Portable invocation, bounded execution and failure/retry behavior are explicit and tested
+- [ ] No configuration preserves current behavior and existing verification policy
 
 ## Triage — 2026-11-02
 
@@ -56,4 +43,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Resolve whether lifecycle hooks may delay publishing, and define their Windows invocation contract.
+Resolved by the owner's 2026-11-03 chat submission: **Start with advisory hooks**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

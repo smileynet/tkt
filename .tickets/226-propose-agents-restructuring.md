@@ -49,3 +49,9 @@ Reviewable proposal inventories every section/constraint/architecture/contract a
 
 ### Verification
 1. ✓ Proposal maps every moved section to an existing or new reference, preserves operational and safety rules, and updates the guidance-surface matrix coherently — "Independent critic reviewed exact coverage map and final corrected reference homes; documentation scope/accuracy check passed. Proposal presented for approval, actual AGENTS structure/matrix unchanged."
+
+## Owner approval — 2026-11-03
+
+The owner approved staged implementation in chat. The completed proposal and its
+original closure evidence remain unchanged; implementation is tracked separately
+as 245, 246 and 247. See [the decision record](../docs/decision-record-2026-11-03.md).

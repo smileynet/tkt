@@ -5,11 +5,19 @@ status: backlog
 blocked_by: []
 priority: low
 validation_criteria:
-  - "`tkt done` shows recently completed tickets (default: last 7 days)"
-tags: ["cli", "kind:enhancement", "triage:needs-info", "stream:workflow", "gate:decision"]
+  - "Resolved-work dates come from a verified done transition in Git history"
+  - "Missing/shallow/ambiguous history is explicitly unknown without a fabricated date or new completion field"
+  - "Window/timezone and cancelled-versus-done behavior are documented and tested"
+tags: ["cli", "kind:enhancement", "stream:workflow", "triage:ready-for-agent"]
 ---
 
 # tkt done --week: show-resolved report for standups
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Use Git closure history; mark unknown dates**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Context
 
@@ -17,31 +25,13 @@ dstask's show-resolved weekly view is useful for standups and retrospectives. "W
 
 ## What to build
 
-```bash
-tkt done
-# Done (last 7 days):
-#   2026-08-10  03  Deploy pipeline
-#   2026-08-09  01  Auth system
-#   2026-08-08  02  API endpoints
-
-tkt done --since 2026-08-01
-# Done (since 2026-08-01):
-#   ...
-
-tkt done --json
-# JSON Lines output
-```
-
-Data source: tickets with `status: done`, sorted by git commit date of the status change (or file mtime as fallback).
+Use verified Git closure history as the completion-time source. When history is absent, shallow, ambiguous or cannot establish identity after renumbering, report an unknown date rather than inventing a timestamp or silently using an unrelated date. Define the reporting window/timezone explicitly and distinguish cancellation from completed work.
 
 ## Acceptance criteria
 
-- [ ] `tkt done` shows recently completed tickets (default: last 7 days)
-- [ ] `--since DATE` filters by completion date
-- [ ] `--json` emits JSON Lines
-- [ ] Shows completion date alongside ticket ID and title
-- [ ] Sorted reverse-chronologically (most recent first)
-
+- [ ] Resolved-work dates come from a verified done transition in Git history
+- [ ] Missing/shallow/ambiguous history is explicitly unknown without a fabricated date or new completion field
+- [ ] Window/timezone and cancelled-versus-done behavior are documented and tested
 
 ## Triage — 2026-11-02
 
@@ -53,4 +43,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Choose the authoritative completion timestamp and the fallback when Git history is unavailable.
+Resolved by the owner's 2026-11-03 chat submission: **Use Git closure history; mark unknown dates**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

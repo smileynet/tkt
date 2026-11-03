@@ -5,49 +5,29 @@ status: backlog
 blocked_by: []
 priority: low
 validation_criteria:
-  - "tkt init --role reviewer generates reviewer-scoped snippet (no claim/close instructions)"
-  - "tkt init --role observer generates read-only snippet"
-  - "README documents multi-agent role pattern with config examples"
-  - "Existing requires/capabilities filtering works unchanged for role tokens"
-tags: ["guidance", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
+  - "Role examples use invocation identity, assignee and eligibility rather than machine capabilities for agent scheduling"
+  - "Tags, requires, eligibility and ownership stay distinct, including explicit force overrides"
+  - "Affected standalone guidance examples are consistent with current capabilities and claim behavior"
+tags: ["guidance", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
 ---
 
 # Support primary-agent role pattern via init snippets and documentation
 
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Use invocation identity and eligibility**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
+
 ## What to build
 
-Enable a multi-agent pattern where one agent (e.g. kiro) is the primary executor and others (codex, cursor) are supporting reviewers/observers. Uses the existing `requires`/`machine.capabilities` ABAC mechanism — no new filtering logic needed.
-
-### Deliverable 1: `tkt init --role <executor|reviewer|observer>`
-
-Add a `--role` flag that tailors the deployed snippet content:
-
-- **executor** (default, backward compatible): current full workflow (ready → claim → close)
-- **reviewer**: instructs agent to file findings as tickets (`tkt new --requires executor`), run `query`/`validate`, but explicitly says "do not claim or close"
-- **observer**: read-only instructions (query, ready --json, blocked, validate)
-
-Works with existing `--target` flag: `tkt init --role reviewer --target claude`
-
-### Deliverable 2: README "Multi-Agent Roles" section
-
-- Pattern explanation: primary declares `executor` capability, execution tickets use `requires: [executor]`
-- Example configs for primary vs support machines
-- Reviewer → executor handoff protocol via `tkt new --requires executor`
-
-### Not building
-
-- No new frontmatter fields (reuses `requires`)
-- No new filtering logic (existing capabilities matching suffices)
-- No runtime enforcement at `tkt claim` (advisory via instructions)
-- No `assigned_to` field
+Revise primary-agent role examples around invocation identity, optional ownership and agent eligibility. Keep tags for work streams and requires for all-of machine capabilities. Show safe force overrides, role coordination and claims without using machine capabilities to schedule agent identities. Update affected standalone instruction/skill examples coherently.
 
 ## Acceptance criteria
 
-- [ ] `tkt init --role reviewer --target agents` produces snippet without claim/close instructions
-- [ ] `tkt init --role observer --target agents` produces read-only snippet
-- [ ] `tkt init` (no --role) remains backward compatible (executor is default)
-- [ ] README has "Multi-Agent Roles" section with config examples
-- [ ] Integration test: ticket with `requires: [executor]` hidden from machine without that capability (already works — confirm with test)
+- [ ] Role examples use invocation identity, assignee and eligibility rather than machine capabilities for agent scheduling
+- [ ] Tags, requires, eligibility and ownership stay distinct, including explicit force overrides
+- [ ] Affected standalone guidance examples are consistent with current capabilities and claim behavior
 
 ## Research
 
@@ -70,4 +50,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Revise role examples to use invocation identity and eligibility rather than machine capabilities for agent scheduling.
+Resolved by the owner's 2026-11-03 chat submission: **Use invocation identity and eligibility**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

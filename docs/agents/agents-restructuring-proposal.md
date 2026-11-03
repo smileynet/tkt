@@ -197,3 +197,7 @@ map. After approval, an implementation should:
   this map. The acceptance condition is that every current rule is retained,
   relocated with a reliable trigger, or deliberately retired with an explicit
   reason.
+
+## Owner approval — 2026-11-03
+
+Staged implementation is approved in the [decision record](../decision-record-2026-11-03.md). Tickets 245–247 re-inventory current guidance, prepare reference homes, apply conditional pointers, then audit and deploy. This historical proposal is not proof that the restructuring has been applied.

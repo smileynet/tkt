@@ -1,24 +1,27 @@
 ---
 id: "159"
-title: "Document CI recipe: tkt validate --strict / lint --check as the real enforcement gate"
+title: "Document optional consumer CI with accurate enforcement limits"
 status: open
 blocked_by: []
 priority: low
 validation_criteria:
-  - "README/AGENTS carry a CI snippet running tkt validate --strict and tkt lint --check"
-  - "docs state client-side hooks are advisory; CI is the only unbypassable boundary for hand-editable .tickets/"
-tags: ["docs", "guidance", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
+  - "An explicitly optional consumer recipe runs strict validation and lint checks without adding an automatic workflow here"
+  - "Guidance accurately explains bypass and configuration limits without calling CI universally unbypassable"
+  - "Affected guidance surfaces agree and this repository verification/release authorization remains unchanged"
+tags: ["docs", "guidance", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
 ---
 
-# Document CI recipe: tkt validate --strict / lint --check as the real enforcement gate
+# Document optional consumer CI with accurate enforcement limits
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Document optional consumer CI and its limits**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## What to build
 
-Document that CI is the only unbypassable enforcement boundary for tkt, and provide a copy-paste recipe. Rationale (from #155 research): `.tickets/*.md` are hand-editable files, so every client-side control (hooks, agent deny-rules) is advisory — an actor can always edit the file directly and `git commit --no-verify`. The real gate is CI running `tkt validate --strict` and `tkt lint --check`.
-
-Add to README and/or AGENTS.md:
-- A CI snippet (GitHub Actions example) running `tkt validate --strict` and `tkt lint --check` on PRs, failing the build on contract violations / lint drift.
-- A short "enforcement model" note: client hooks warn (fast, local, bypassable); CI `--strict` blocks (the real gate).
+Document an opt-in consumer recipe for validation/lint checks and accurate bypass limits. Keep this repository on its existing local verification/manual hosted-dispatch policy. Do not add an automatic hosted workflow here or claim that CI is universally unbypassable. One authoritative enforcement-model note is referenced from the appropriate surfaces.
 
 ## Context
 
@@ -28,9 +31,9 @@ Add to README and/or AGENTS.md:
 
 ## Acceptance criteria
 
-- [ ] README/AGENTS carry a CI snippet running `tkt validate --strict` and `tkt lint --check`
-- [ ] docs state plainly that client-side hooks are advisory and CI is the only unbypassable boundary for hand-editable `.tickets/`
-- [ ] the enforcement model (warn local, block CI) is stated in one place, referenced elsewhere
+- [ ] An explicitly optional consumer recipe runs strict validation and lint checks without adding an automatic workflow here
+- [ ] Guidance accurately explains bypass and configuration limits without calling CI universally unbypassable
+- [ ] Affected guidance surfaces agree and this repository verification/release authorization remains unchanged
 
 ## Out of scope
 
@@ -46,4 +49,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Choose a scoped optional-consumer CI recipe consistent with manual-only verification policy.
+Resolved by the owner's 2026-11-03 chat submission: **Document optional consumer CI and its limits**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Implementation remains open; the owner-policy gate is cleared.

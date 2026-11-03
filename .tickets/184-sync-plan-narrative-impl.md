@@ -5,26 +5,23 @@ status: backlog
 blocked_by: []
 priority: medium
 validation_criteria:
-  - "sync-plan --check passes against a prose/phased PLAN.md with sigil-anchored IDs (- [ ] #NN ...), via AST + anchored-ID extraction; table docs/plan.md path still works (tests/integration.rs:312-430 green)"
-  - "Done predicate returns a PlanState sum type (Done|NotDone|Unknown); TKT_ASCII=1 plan reads done correctly and an unparseable cell surfaces as Unknown not silent not-done (defect 1, with regression test)"
-  - "Dep-budget sub-decision recorded (CommonMark crate vs hand-rolled heading+list-item scanner), lean scanner benchmarked first per ADR 0002"
-  - "New format/flag + default path documented in --help and all guidance surfaces per docs/agents/agent-guidance-surfaces.md"
-tags: ["planning", "kind:enhancement", "triage:needs-info", "stream:quality", "gate:decision"]
+  - "Narrative support remains deliberately deferred and no parser/format expansion is presented as approved implementation"
+  - "Any verified independent PlanState correctness defect is tracked separately from narrative support"
+  - "Future activation revalidates the parser/ownership approach against ADR 0002 and the then-current source"
+tags: ["planning", "kind:enhancement", "stream:quality", "triage:needs-info"]
 ---
 
 # Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002
 
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Keep narrative support deferred**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
+
 ## What to build
 
-The narrative-parsing implementation deferred from #183. ADR 0002 is the governing
-decision — read it first (`docs/adr/0002-plan-narrative-support.md`). This ticket
-builds **position C** (narrative plan with sigil-anchored IDs) as the opt-in format
-alongside the existing `docs/plan.md` table, and carries the structural fix for
-defect 1 (the `✅`-glyph / `TKT_ASCII=1` latent bug) via the `PlanState` sum type.
-
-Position A (plan-as-projection — regenerate derivable columns from `tkt query`) is
-the strategic primary per ADR 0002 but is a larger, separate change; this ticket is
-scoped to the narrative-read + the representation refactor that both positions need.
+Keep optional narrative plan parsing deferred. The primary derived projection direction remains ticket 187 / ADR 0002, and user-owned prose is preserved. No narrative parser implementation or format expansion is activated by this decision. When this ticket is revisited, re-check whether any independent PlanState correctness issue still exists and capture it separately instead of coupling a live repair to deferred parsing.
 
 ## Design (from ADR 0002 + #183 research)
 
@@ -65,14 +62,9 @@ format-agnostic once fed typed pairs. Introduce:
 
 ## Acceptance criteria
 
-- [ ] `PlanFormat` 2-variant enum with `extract`/`rewrite`; table path unchanged
-      (`tests/integration.rs:312-430` green)
-- [ ] `PlanState` sum type (`Done|NotDone|Unknown`); `TicketId` new-type; parse at boundary
-- [ ] `sync-plan --check` passes against a prose/phased PLAN.md with sigil-anchored IDs
-- [ ] Defect 1 fixed: `TKT_ASCII=1` plan reads done correctly; unparseable cell → `Unknown`; regression test added
-- [ ] Dep-budget sub-decision recorded (lean scanner benchmarked first)
-- [ ] `--help` + all guidance surfaces updated per `docs/agents/agent-guidance-surfaces.md`
-- [ ] `--fix` behavior for narrative decided (scoped-down or disabled) and documented
+- [ ] Narrative support remains deliberately deferred and no parser/format expansion is presented as approved implementation
+- [ ] Any verified independent PlanState correctness defect is tracked separately from narrative support
+- [ ] Future activation revalidates the parser/ownership approach against ADR 0002 and the then-current source
 
 ## References
 
@@ -92,4 +84,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Separate the PlanState correctness repair from deferred narrative parsing and settle the parser approach.
+Resolved by the owner's 2026-11-03 chat submission: **Keep narrative support deferred**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

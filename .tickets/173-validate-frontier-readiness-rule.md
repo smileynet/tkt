@@ -4,14 +4,19 @@ title: "validate: frontier-scoped readiness rule (Definition of Ready gate)"
 status: backlog
 blocked_by: []
 validation_criteria:
-  - "open+deps-done ticket missing an intent source (spec/blocked_by/etc) is flagged"
-  - "frontier ticket missing a Context section with >=1 path/link is flagged"
-  - "frontier ticket with no acceptance-criteria checkbox is flagged"
-  - "rule is warn-by-default, error under --strict; re-checks standing backlog not just creation"
-tags: ["quality", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
+  - "Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate"
+  - "Source-reference logic is reused rather than duplicated and its scope is distinct from broader readiness"
+  - "Tests preserve frontier membership/order and predictable quiet/structured diagnostics"
+tags: ["quality", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
 ---
 
 # validate: frontier-scoped readiness rule (Definition of Ready gate)
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Start with bounded advisory readiness checks**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Context
 
@@ -34,18 +39,7 @@ proves the fills are adequate.
 
 ## What to build
 
-A new `tkt validate` rule, **frontier-scoped** (only tickets with `status: open` AND all
-`blocked_by` done — the set about to be worked). Flag a ticket that lacks:
-- an **intent source** — a `spec:` field, a `blocked_by`, or a body section citing the origin
-  (user-request / discovery / ADR)
-- a **Context** (or equivalent "What to build") section containing >=1 file path or link
-- at least one **acceptance-criteria checkbox** (`- [ ]`)
-
-Behavior: **warn by default, error under `--strict`** (matches the existing severity model).
-Re-checks the standing backlog on every run, not just at creation (creation-only checks rot).
-Emit under the existing JSON finding schema with a new rule name (e.g. `frontier-not-ready`).
-Keep it advisory — readiness is a judgment call the tool can only partially prove; do NOT
-hard-block work (false positives create friction; see the project's own enforcement-hierarchy note).
+Bound frontier readiness to explicit advisory findings, reuse the source-reference logic from ticket 175, and keep source-reference checking separate from broader readiness. Do not introduce a new hard blocker or silently make advisories mandatory under strict mode. Document the exact scope and prove that normal frontier selection/order is unchanged.
 
 ## References
 
@@ -57,12 +51,9 @@ hard-block work (false positives create friction; see the project's own enforcem
 
 ## Acceptance criteria
 
-- [ ] `validate` flags a frontier ticket (open + deps done) missing an intent source
-- [ ] flags a frontier ticket missing a Context/what-to-build section with >=1 path or link
-- [ ] flags a frontier ticket with zero acceptance-criteria checkboxes
-- [ ] warn-by-default, error under `--strict`; emitted in the JSON finding schema with a named rule
-- [ ] non-frontier tickets (backlog, blocked, done) are NOT flagged by this rule
-- [ ] tests cover: ready ticket passes; each missing-field case is flagged; --strict promotes to error
+- [ ] Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate
+- [ ] Source-reference logic is reused rather than duplicated and its scope is distinct from broader readiness
+- [ ] Tests preserve frontier membership/order and predictable quiet/structured diagnostics
 
 ## Field report — 2026-11-01
 
@@ -78,4 +69,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Bound readiness checking versus source-reference checking and choose the strict-mode policy.
+Resolved by the owner's 2026-11-03 chat submission: **Start with bounded advisory readiness checks**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

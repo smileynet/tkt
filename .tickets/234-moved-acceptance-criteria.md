@@ -5,12 +5,19 @@ status: open
 blocked_by: []
 priority: medium
 validation_criteria:
-  - "Moved state recognised by close and validate"
-  - "Receiving ticket shows the moved criterion"
-tags: ["cli", "kind:enhancement", "triage:needs-info", "stream:workflow", "gate:decision"]
+  - "Moved criteria are distinct from done, resolve correctly in close/validate/audit, and require an existing destination"
+  - "The receiving criterion has a source back-reference and source/destination evidence mapping is explicit"
+  - "Retries are idempotent and interrupted multi-file transfers have tested recovery without losing or duplicating criteria"
+tags: ["cli", "kind:enhancement", "stream:workflow", "triage:ready-for-agent"]
 ---
 
 # Acceptance criteria can be marked moved to another ticket
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Use an explicit moved marker and linked transfer**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Origin
 
@@ -22,9 +29,9 @@ Sam moved one unticked criterion from philippines-trip #78 to #99 and closed #78
 
 ## Acceptance criteria
 
-- [ ] A criterion can be marked moved (for example `- [>] … → #99`), via `tkt close --move-ac N --to 99` or `tkt edit`.
-- [ ] `close`, `validate` and `audit` treat moved criteria as resolved without claiming they were done, and validate checks the target exists.
-- [ ] The receiving ticket gains the criterion with a back-reference.
+- [ ] Moved criteria are distinct from done, resolve correctly in close/validate/audit, and require an existing destination
+- [ ] The receiving criterion has a source back-reference and source/destination evidence mapping is explicit
+- [ ] Retries are idempotent and interrupted multi-file transfers have tested recovery without losing or duplicating criteria
 
 ## Triage — 2026-11-02
 
@@ -36,4 +43,9 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Decide moved-criterion syntax, evidence mapping and idempotent recovery for multi-ticket changes.
+Resolved by the owner's 2026-11-03 chat submission: **Use an explicit moved marker and linked transfer**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Implementation remains open; the owner-policy gate is cleared.
+
+## What to build
+
+Represent transferred criteria with a distinct moved marker and destination link. Add the receiving criterion with a source back-reference. Close, validate and audit recognize transfer without claiming implementation. Check the destination and evidence mapping, define deterministic retry identity, and prove recovery across interrupted multi-file writes. Final marker/flag spelling is an implementation design detail to document and test, not another pending owner-policy decision.

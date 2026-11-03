@@ -1,37 +1,33 @@
 ---
 id: "197"
-title: "parent rollup + frontier semantics"
+title: "Show computed parent progress with explicit closure"
 status: open
 blocked_by: ["192", "196"]
 priority: high
 validation_criteria:
-  - "A parent auto-reaches done when all its children are done"
-  - "A parent is excluded from tkt ready (it is a container, not work)"
-  - "A children/blocked view shows done-over-total rollup for a parent"
-tags: ["schema", "kind:enhancement", "triage:needs-info", "stream:relations", "gate:decision"]
+  - "Child progress is reported without changing the stored parent status or bypassing close policy"
+  - "Parent containers are excluded from the frontier and child views report done/total plus distinct cancelled counts"
+  - "Integration tests cover mixed child states, explicit parent closure and unchanged priority/ID ordering"
+tags: ["schema", "kind:enhancement", "stream:relations", "triage:ready-for-agent"]
 ---
 
-# parent rollup + frontier semantics
+# Show computed parent progress with explicit closure
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Show computed progress; close parents explicitly**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## What to build
 
-Give `parent` real rollup and frontier behavior so it replaces the
-tracking-ticket workaround entirely.
-
-- A parent **auto-reaches `done`** when all its children are `done` (computed; a
-  parent is a container, not independent work).
-- A parent is **excluded from `tkt ready`** so it never sits on the frontier.
-- A `children` view (or an extension of `tkt blocked`) shows `done/total` rollup
-  for a parent.
-
-Touches `src/core/ticket.rs` (frontier/rollup helpers), `src/commands/ready.rs`,
-and `blocked.rs`.
+Parent progress remains computed and separate from stored lifecycle status. A parent is never auto-closed by child status; explicit close, AC and evidence policy still apply. Show done/total child counts and a separate cancelled count without treating cancellation as done. Retain the container/frontier and child-view scope, without changing priority/ID ordering.
 
 ## Acceptance criteria
 
-- [ ] A parent auto-reaches `done` when all its children are `done`
-- [ ] A parent is excluded from `tkt ready` (it is a container, not work)
-- [ ] A children/blocked view shows done-over-total rollup for a parent
+- [ ] Child progress is reported without changing the stored parent status or bypassing close policy
+- [ ] Parent containers are excluded from the frontier and child views report done/total plus distinct cancelled counts
+- [ ] Integration tests cover mixed child states, explicit parent closure and unchanged priority/ID ordering
 
 ## Triage — 2026-11-02
 
@@ -43,4 +39,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Decide computed parent progress versus stored close-gated status, including cancellation semantics.
+Resolved by the owner's 2026-11-03 chat submission: **Show computed progress; close parents explicitly**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Implementation remains open; the owner-policy gate is cleared.

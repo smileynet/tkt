@@ -5,30 +5,23 @@ status: backlog
 blocked_by: []
 priority: medium
 validation_criteria:
-  - "tkt hooks install writes a worktree-aware pre-commit shim that warns on staged status:done without Resolution"
-  - "block and logging are opt-in via [hooks] config (both off by default); existing hooks chained via .legacy backup"
-  - "Windows: LF-only shim, zero new deps, lossless tkt hooks uninstall"
-tags: ["contract", "integrations", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
+  - "The installer is explicitly optional/advisory and preserves foreign hooks and managed ownership"
+  - "Mutation hook bypass and standing verification policy remain intact; no implicit global or blocking hook is installed"
+  - "Portable invocation, failure recovery and project-scoped configuration are documented and verified"
+tags: ["contract", "integrations", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
 ---
 
 # tkt hooks subcommand + pre-commit installer (warn-default, config block/log)
 
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Keep hooks optional and advisory**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
+
 ## What to build
 
-Add a `tkt hooks` subcommand that installs a git pre-commit hook enforcing the close protocol. Decided policy (from #155): warn by default, block opt-in via config, logging opt-in (off by default).
-
-**The hook:** a thin LF-only `#!/bin/sh` shim that delegates to `tkt hooks run pre-commit` (beads pattern — logic in the binary, so upgrades need no reinstall). `tkt hooks run pre-commit` scans staged `.tickets/*.md` for a `status: done` change lacking a `## Resolution` section (the hand-flip signature) and warns; exits 0 unless `[hooks] block = true`.
-
-**Install (Strategy A, from research):**
-- Locate the hooks dir via a NEW `git.rs` helper using `git rev-parse --git-common-dir` (worktree-aware — worktree hooks live in the shared `.git`, not the per-worktree gitdir).
-- Back up any existing `pre-commit` to `pre-commit.legacy`, chain it (run it, propagate its exit code), and write a sentinel marker so tkt recognizes its own hook.
-- Detect an existing `core.hooksPath` and warn rather than clobber.
-- `tkt hooks uninstall` restores the `.legacy` backup losslessly.
-
-**Config (`[hooks]` in .tickets/config.toml):**
-- `block` (bool, default false) — escalate warn → hard fail (exit 1)
-- `log` (bool, default false) — append warn/block outcomes to a local file (reuse the telemetry sink pattern in `src/telemetry.rs`); no writes unless enabled
-- Opt-out: `TKT_SKIP_HOOKS=1`, native `git commit --no-verify`
+Design the optional project hook installer as advisory. Preserve existing hooks and foreign content, the current mutation hook-bypass policy, and local verification policy. Installation is explicit and project-scoped; do not add a global hook or an implicit blocking gate. Document portable invocation, ownership, backup/recovery and interaction with normal Git versus tkt commits.
 
 ## Context
 
@@ -39,12 +32,9 @@ Add a `tkt hooks` subcommand that installs a git pre-commit hook enforcing the c
 
 ## Acceptance criteria
 
-- [ ] `tkt hooks install` writes a worktree-aware pre-commit shim that warns on staged `status: done` without a Resolution section
-- [ ] block and logging are opt-in via `[hooks]` config (both off by default)
-- [ ] existing pre-commit hook is chained via `.legacy` backup; `core.hooksPath` collision is detected and warned
-- [ ] `tkt hooks uninstall` restores the backup losslessly
-- [ ] Windows: LF-only shim verified; zero new deps
-- [ ] tests cover install/uninstall/chaining and the warn-vs-block config paths
+- [ ] The installer is explicitly optional/advisory and preserves foreign hooks and managed ownership
+- [ ] Mutation hook bypass and standing verification policy remain intact; no implicit global or blocking hook is installed
+- [ ] Portable invocation, failure recovery and project-scoped configuration are documented and verified
 
 ## Out of scope
 
@@ -61,4 +51,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Reconcile the optional hook installer with mutation hook bypass and the standing verification policy.
+Resolved by the owner's 2026-11-03 chat submission: **Keep hooks optional and advisory**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.

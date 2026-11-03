@@ -1,16 +1,23 @@
 ---
 id: "125"
-title: "Research and build import schemas for Jira, Linear, Beads, GitLab, and other ticket systems"
+title: "Design the first external-system import adapter contract"
 status: backlog
 blocked_by: ["77"]
 priority: medium
 validation_criteria:
-  - "schema mappings documented for at least 3 external systems"
-  - "migrate.toml templates exist for each researched system"
-tags: ["integrations", "kind:enhancement", "triage:needs-info", "stream:quality", "gate:decision"]
+  - "One identified source/version has an explicit adapter or mapping contract grounded in primary documentation and a real use case"
+  - "Fixtures cover identity, state/relations, unsupported values and unknown-field preservation without pretending the nonexistent map interface exists"
+  - "The first-adapter scope and remaining systems are separated with a concrete implementation/verification plan"
+tags: ["integrations", "kind:enhancement", "stream:quality", "triage:ready-for-agent"]
 ---
 
-# Research and build import schemas for Jira, Linear, Beads, GitLab, and other ticket systems
+# Design the first external-system import adapter contract
+
+## Owner decision — 2026-11-03
+
+Confirmed in chat: **Design one explicit adapter contract first**. This supersedes conflicting
+requirements and the earlier dated decision gate; it does not claim implementation.
+See [the authoritative record](../docs/decision-record-2026-11-03.md).
 
 ## Problem
 
@@ -18,34 +25,7 @@ tags: ["integrations", "kind:enhancement", "triage:needs-info", "stream:quality"
 
 ## What to build
 
-Dispatch subagents to research each system's data model, then produce `migrate.toml` schema mappings that `tkt migrate --map` can consume.
-
-### Systems to research
-
-| System | Export method | Priority |
-|--------|-------------|----------|
-| **Jira** | REST API / CSV export / JSON export | High (most enterprise teams) |
-| **Linear** | GraphQL API / CSV export | High (developer-focused teams) |
-| **GitLab Issues** | API / CSV export | Medium (self-hosted teams) |
-| **GitHub Issues** | `gh` CLI (see ticket 86) | Medium (already scoped) |
-| **Beads** | File-based (local) | Medium (similar to tkt) |
-| **Trello** | JSON export | Low (less structured) |
-| **Notion databases** | CSV/API export | Low (highly custom schemas) |
-| **Plain TODO.md** | File parsing | Low (no standard schema) |
-
-### For each system, produce:
-
-1. **Schema analysis** — fields available, ID format, status values, dependency representation, priority levels
-2. **Field mapping** — which fields map to tkt fields, which are dropped, which need value translation
-3. **migrate.toml template** — ready-to-use mapping file for `tkt migrate --map`
-4. **Import method** — how to get data out (API call, export button, file copy)
-5. **Limitations** — what's lost in translation, bidirectional sync feasibility
-
-### Deliverables
-
-- `docs/agents/specs/import-schemas/` directory with one doc per system
-- `skills/tkt-core/references/` templates for agent-assisted import
-- Recommendations for which systems warrant built-in CLI adapters vs skill-assisted import
+Define one explicit, versioned external-system adapter/mapping contract before broadening template research. Identify the initial source from recorded use cases and document any assumption; use primary source documentation and representative fixtures. Specify identity, status/dependency/parent mapping, unsupported values, unknown-field preservation and migration preview. Additional systems remain outside this first adapter scope.
 
 ## Context
 
@@ -55,10 +35,9 @@ Dispatch subagents to research each system's data model, then produce `migrate.t
 
 ## Acceptance criteria
 
-- [ ] At least 3 systems researched with full schema analysis
-- [ ] migrate.toml templates produced and validated against sample data
-- [ ] Recommendations documented: which warrant built-in adapters vs skill-only
-- [ ] Research findings stored in docs/agents/specs/import-schemas/
+- [ ] One identified source/version has an explicit adapter or mapping contract grounded in primary documentation and a real use case
+- [ ] Fixtures cover identity, state/relations, unsupported values and unknown-field preservation without pretending the nonexistent map interface exists
+- [ ] The first-adapter scope and remaining systems are separated with a concrete implementation/verification plan
 
 ## Triage — 2026-11-02
 
@@ -70,4 +49,5 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Choose an adapter or mapping contract before researching templates for the currently nonexistent --map interface.
+Resolved by the owner's 2026-11-03 chat submission: **Design one explicit adapter contract first**.
+See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.
