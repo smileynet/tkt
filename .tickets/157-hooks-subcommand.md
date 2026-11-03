@@ -1,7 +1,7 @@
 ---
 id: "157"
 title: "Optional advisory project pre-commit hooks"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -37,9 +37,9 @@ Design the optional project hook installer as advisory. Preserve existing hooks 
 
 ## Acceptance criteria
 
-- [ ] The installer is explicitly optional/advisory and preserves foreign hooks and managed ownership
-- [ ] Mutation hook bypass and standing verification policy remain intact; no implicit global or blocking hook is installed
-- [ ] Portable invocation, failure recovery and project-scoped configuration are documented and verified
+- [x] The installer is explicitly optional/advisory and preserves foreign hooks and managed ownership
+- [x] Mutation hook bypass and standing verification policy remain intact; no implicit global or blocking hook is installed
+- [x] Portable invocation, failure recovery and project-scoped configuration are documented and verified
 
 ## Out of scope
 
@@ -63,3 +63,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-03)
+
+Implemented explicit optional advisory pre-commit management with exact ownership, safe publication/removal recovery and preserved mutation bypass; final gate and critic accepted.
+
+### Verification
+1. ✓ The installer is explicitly optional/advisory and preserves foreign hooks and managed ownership — "Foreign/modified/customhooksPath/link preservation and dry-run/idempotence/noGitchanges integration tests pass; publication cannot overwrite a race arrival; removal unitcases preserveforeignversions. docs/evidence/optional-hooks-157.md."
+2. ✓ Mutation hook bypass and standing verification policy remain intact; no implicit global or blocking hook is installed — "Actual isolatedGitcommit withunparseableticket succeeded and printedadvisory; existingmutationhookbypasstests pass. No init/deploy/actualcheckout/globalhookactivation; requiredlocalgate/manualhostedpolicyunchanged."
+3. ✓ Portable invocation, failure recovery and project-scoped configuration are documented and verified — "Final mise run check411Rust/42Node tests passed,1existingWindows skip. Unixmodefixture notexecutedonWindows; NTFS hardlink andGitWindows shimexecution observed. Operatorguide coverscommonworktrees,mode,crash/retry/quarantine andexternaleditlimits. Critic accepted finalE33FE5BF…A1BD3374."
