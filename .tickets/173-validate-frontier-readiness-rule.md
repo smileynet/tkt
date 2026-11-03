@@ -1,13 +1,14 @@
 ---
 id: "173"
 title: "validate: frontier-scoped readiness rule (Definition of Ready gate)"
-status: open
+status: in_progress
 blocked_by: ["175"]
 validation_criteria:
   - "Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate"
   - "Source-reference logic is reused rather than duplicated and its scope is distinct from broader readiness"
   - "Tests preserve frontier membership/order and predictable quiet/structured diagnostics"
 tags: ["quality", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # validate: frontier-scoped readiness rule (Definition of Ready gate)
