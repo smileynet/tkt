@@ -61,7 +61,7 @@ fn capabilities_describes_supported_values_aliases_and_mutating_modes() {
         assert_eq!(properties["tags"]["value_delimiter"], ",");
         assert_eq!(
             properties["status"]["enum"],
-            serde_json::json!(["open", "backlog"])
+            serde_json::json!(["open", "backlog", "in_progress"])
         );
         assert_eq!(
             properties["agents"]["conflicts_with"],

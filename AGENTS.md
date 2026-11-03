@@ -193,7 +193,7 @@ remains snippet-only and quiet writes omit recommendation chatter.
 
 `backlog` (parked, excluded from frontier) → `open` → `in_progress` → `done`
 
-Reach `done` only via `tkt close` — editing a ticket's `status` to `done` by hand bypasses the close gates (ACs, resolution, evidence) and is flagged by `tkt validate`.
+Reach `done` only via `tkt close`; new, batch and edit reject done. Editing a ticket's `status` to `done` by hand bypasses the close gates (ACs, resolution, evidence) and is flagged by `tkt validate`.
 
 New tickets default to `open` (frontier-eligible); reserve `--status backlog` for work deliberately deferred out of the current cycle. Set `--tags <stream>` at creation in multi-stream projects — tags are the primary scoping mechanism for `tkt ready`/`tkt context`.
 

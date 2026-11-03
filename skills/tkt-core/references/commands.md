@@ -100,7 +100,7 @@ When a context is active:
 | Flag | Effect | Default |
 |------|--------|---------|
 | `--title "..."` | Human-readable title | Required |
-| `--status S` | `open` (default), `backlog` (deferred out of cycle), `in_progress`, `done` | `open` |
+| `--status S` | `open` (default), `backlog` (deferred out of cycle), `in_progress`; `done` is rejected (use close) | `open` |
 | `--priority P` | `urgent`, `high`, `medium`, `low` | `medium` |
 | `--blocked-by N,N` | IDs that must be done first | none |
 | `--env E` | Environment filter (`corp`, `personal`) | none |
@@ -118,7 +118,7 @@ before validating an open ticket; otherwise `stub-body` warns. Creation has no
 | Flag | Effect |
 |------|--------|
 | `--title "..."` | Change title |
-| `--status S` | Change status (`open`, `backlog`, `in_progress`). For `done`, use `tkt close` — editing status to `done` bypasses the close gates and is flagged by validate |
+| `--status S` | Change status (`open`, `backlog`, `in_progress`). `done` is rejected; use `tkt close` so closure gates run |
 | `--priority P` | Change priority (pass `''` to clear) |
 | `--blocked-by N,N` | Replace dependencies |
 | `--env E` | Set environment (pass `''` to clear) |

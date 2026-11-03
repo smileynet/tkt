@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `node tools/deploy.mjs` selects roots so installed Claude/Codex plugins count as the skill copy and refreshes local plugins. Audits identify unowned skill directories and duplicate loading across configured packs. The bash wrapper remains an alternative entry point; no extra deploy step is needed.
 
 ### Fixed
+- Generic creation and status-edit commands reject `done`, keeping completion behind the close gates.
+- Validation recognizes imported identifiers matching the complete filename stem while retaining mismatch detection.
+- Malformed configuration assignments report a validation failure instead of an operational crash.
 - Hand-authored tickets missing an ID can be repaired with `tkt lint` when their numeric-prefix filename and remaining fields are valid.
 - Agents and automation can discover every command and flag through the capabilities manifest, including aliases, supported lifecycle values and modes that write files.
 - `node tools/deploy.mjs` removes dead skill links that point into this checkout, left by an earlier deploy of a skill since renamed or removed (such as the old `tkt` skill after the four-skill split). Other links, live or dead, are left alone.

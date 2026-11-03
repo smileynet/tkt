@@ -159,7 +159,7 @@ fn argument_schema(command: &str, arg: &Arg) -> Value {
             value["enum"] = json!(choices);
         }
         "status" if matches!(command, "new" | "batch") => {
-            value["enum"] = json!(["open", "backlog"])
+            value["enum"] = json!(["open", "backlog", "in_progress"])
         }
         "status" if command == "edit" => value["enum"] = json!(["open", "in_progress", "backlog"]),
         "status" if command == "query" => value["enum"] = json!(crate::core::STATUS_VALUES),

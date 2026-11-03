@@ -110,6 +110,14 @@ pub fn run(
         changed.push("priority");
     }
     if let Some(status_val) = status {
+        if status_val == "done" {
+            return Err(crate::DomainError::with_hint(
+                crate::ErrorKind::Validation,
+                "status done can only be set by close".to_string(),
+                "use tkt close <id> so resolution, acceptance, and evidence gates run".to_string(),
+            )
+            .into());
+        }
         if status_val.is_empty() {
             domain_bail!(
                 "status cannot be cleared — use a valid value (backlog/open/in_progress/done)"

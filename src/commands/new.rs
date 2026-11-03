@@ -50,6 +50,15 @@ pub fn run(
         }
     }
     if let Some(s) = status {
+        if s == "done" {
+            return Err(crate::DomainError::with_hint(
+                crate::ErrorKind::Validation,
+                "status done can only be set by close".to_string(),
+                "create the ticket as open or backlog, then use tkt close <id> so closure gates run"
+                    .to_string(),
+            )
+            .into());
+        }
         if let Err(err) = validate::validate_status(s) {
             domain_bail!("{}", err);
         }

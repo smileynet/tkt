@@ -266,7 +266,7 @@ JWT-based auth with refresh token rotation.
 - [ ] Refresh token rotation works
 ```
 
-Tasks are just files in `.tickets/`. Edit them by hand anytime — tkt reads whatever's there. One exception: don't hand-edit `status` to `done`. Use `tkt close` so the acceptance-criteria, resolution, and evidence gates run (`tkt validate` flags done tickets closed by hand).
+Tasks are just files in `.tickets/`. Edit them by hand anytime — tkt reads whatever's there. One exception: don't hand-edit `status` to `done`. Use `tkt close` so the acceptance-criteria, resolution, and evidence gates run (`tkt validate` flags done tickets closed by hand). Generic creation and status-edit commands reject `done`.
 
 ## Configuration
 

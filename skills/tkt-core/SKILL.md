@@ -68,6 +68,8 @@ backlog → open → in_progress → done
 
 **Key rule:** `tkt ready` only shows `open` tickets whose `blocked_by` are all `done`. Backlogged tickets are invisible to the frontier — that's the point.
 
+Only `tkt close` reaches `done`; new, batch and edit reject that status so closure gates run.
+
 ---
 
 ## Backlog workflow
