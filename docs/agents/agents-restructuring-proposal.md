@@ -201,3 +201,11 @@ map. After approval, an implementation should:
 ## Owner approval — 2026-11-03
 
 Staged implementation is approved in the [decision record](../decision-record-2026-11-03.md). Tickets 245–247 re-inventory current guidance, prepare reference homes, apply conditional pointers, then audit and deploy. This historical proposal is not proof that the restructuring has been applied.
+
+## Implementation record — 2026-11-03
+
+Tickets 245 and 246 prepared the frozen current-rule inventory and applied its
+conditional reference structure. See [coverage](guidance-coverage.md),
+[extraction evidence](../evidence/guidance-extraction-246.md) and the final
+verification/deployment record from ticket 247. The proposal baseline above
+remains historical; the current runbook and verified reference homes govern use.

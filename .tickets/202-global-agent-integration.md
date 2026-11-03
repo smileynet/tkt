@@ -13,6 +13,20 @@ tags: ["guidance", "agent-integration", "integrations", "kind:enhancement", "str
 
 # Design versioned embedded skills for binary-only installs
 
+## Native source-install observation — 2026-11-03
+
+During ticket 247 deployment, local native plugin installation snapshotted the
+checkout including ignored build artifacts: the Codex cache held 4,520,879,155
+logical bytes (24,271 files), and the Claude cache held 4,506,902,767 logical bytes
+(20,520 files). Both were installed once; explicit guarded deployment roots then
+avoided an immediate second native snapshot while removing owned bare copies.
+The 15 required workflow runtime files matched source. Claude actively reads the
+checkout directly, while Codex uses its managed snapshot from the local marketplace.
+Account for this observed source-checkout cost when designing embedded versioned
+assets and lean export/install ownership; do not assume ignored build data is
+excluded by a native installer. This is design input, not an implementation or
+an instruction to unpark this deliberately deferred ticket.
+
 ## Owner decision — 2026-11-03
 
 Confirmed in chat: **Design embedded versioned skill assets**. This supersedes conflicting
