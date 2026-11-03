@@ -1,7 +1,7 @@
 ---
 id: "191"
 title: "Centralize command mutation effects and dry-run policy"
-status: backlog
+status: open
 blocked_by: ["136"]
 priority: medium
 validation_criteria:
