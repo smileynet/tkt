@@ -1,7 +1,7 @@
 ---
 id: "148"
 title: "Support primary-agent role pattern via init snippets and documentation"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:
