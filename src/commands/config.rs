@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{is_dry_run, is_quiet, project_config, tickets_dir};
+use crate::commands::common::{
+    is_dry_run, is_quiet, is_quiet_json, print_quiet_json_success, project_config, tickets_dir,
+};
 
 pub fn run(
     set: Option<&str>,
@@ -30,12 +32,16 @@ pub fn run(
         let key = key.trim();
         let value = value.trim();
         if is_dry_run() {
-            println!(
-                "Would set {} = {:?} ({})",
-                key,
-                value,
-                if project { "project" } else { "user" }
-            );
+            if is_quiet_json() {
+                print_quiet_json_success(&format!("would set {}", key));
+            } else {
+                println!(
+                    "Would set {} = {:?} ({})",
+                    key,
+                    value,
+                    if project { "project" } else { "user" }
+                );
+            }
             return Ok(0);
         }
         if project {
@@ -45,7 +51,9 @@ pub fn run(
         } else {
             crate::config::Config::set(key, value)?;
         }
-        if !is_quiet() {
+        if is_quiet() {
+            print_quiet_json_success(&format!("set {}", key));
+        } else {
             println!("{} {} = {:?}", crate::color::sym_ok(), key, value);
         }
         return Ok(0);
@@ -59,11 +67,15 @@ pub fn run(
 
     if let Some(key) = unset {
         if is_dry_run() {
-            println!(
-                "Would unset {:?} ({})",
-                key,
-                if project { "project" } else { "user" }
-            );
+            if is_quiet_json() {
+                print_quiet_json_success(&format!("would unset {}", key));
+            } else {
+                println!(
+                    "Would unset {:?} ({})",
+                    key,
+                    if project { "project" } else { "user" }
+                );
+            }
             return Ok(0);
         }
         let existed = if project {
@@ -73,7 +85,13 @@ pub fn run(
         } else {
             crate::config::Config::unset(key)?
         };
-        if !is_quiet() {
+        if is_quiet() {
+            print_quiet_json_success(&format!(
+                "{} {}",
+                if existed { "unset" } else { "unchanged" },
+                key
+            ));
+        } else {
             if existed {
                 println!(
                     "{} unset {:?} (reverted to default)",

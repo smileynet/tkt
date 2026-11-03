@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{is_dry_run, is_quiet, tickets_dir};
+use crate::commands::common::{
+    is_dry_run, is_quiet, is_quiet_json, print_quiet_json_success, tickets_dir,
+};
 use crate::context;
 
 /// Run the context command.
@@ -14,11 +16,17 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
 
     if clear {
         if is_dry_run() {
-            println!("Would clear context");
+            if is_quiet_json() {
+                print_quiet_json_success("would clear context");
+            } else {
+                println!("Would clear context");
+            }
             return Ok(0);
         }
         context::save(&dir, &context::Context::default())?;
-        if !is_quiet() {
+        if is_quiet() {
+            print_quiet_json_success("context cleared");
+        } else {
             println!("context cleared");
         }
         return Ok(0);
@@ -43,20 +51,32 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
 
     if ctx.is_empty() {
         if is_dry_run() {
-            println!("Would clear context");
+            if is_quiet_json() {
+                print_quiet_json_success("would clear context");
+            } else {
+                println!("Would clear context");
+            }
             return Ok(0);
         }
         context::save(&dir, &context::Context::default())?;
-        if !is_quiet() {
+        if is_quiet() {
+            print_quiet_json_success("context cleared");
+        } else {
             println!("context cleared");
         }
     } else {
         if is_dry_run() {
-            println!("Would set context: {}", ctx.serialize());
+            if is_quiet_json() {
+                print_quiet_json_success(&format!("would set context: {}", ctx.serialize()));
+            } else {
+                println!("Would set context: {}", ctx.serialize());
+            }
             return Ok(0);
         }
         context::save(&dir, &ctx)?;
-        if !is_quiet() {
+        if is_quiet() {
+            print_quiet_json_success(&format!("context set: {}", ctx.serialize()));
+        } else {
             println!("context set: {}", ctx.serialize());
         }
     }

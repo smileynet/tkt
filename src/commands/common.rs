@@ -44,6 +44,10 @@ pub(crate) fn is_json_output() -> bool {
     crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed)
 }
 
+pub(crate) fn is_quiet_json() -> bool {
+    is_quiet() && is_json_output()
+}
+
 pub(crate) fn is_dry_run() -> bool {
     crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed)
 }
@@ -92,6 +96,13 @@ pub(crate) fn print_success(verb: &str, id: &str, slug: &str, detail: &str) {
         crate::cli::emit_json_success(&result);
     } else {
         println!("{}", success_msg(verb, id, slug, detail));
+    }
+}
+
+/// Preserve one machine-readable success result when quiet mode suppresses human output.
+pub(crate) fn print_quiet_json_success(result: &str) {
+    if is_quiet_json() {
+        crate::cli::emit_json_success(result);
     }
 }
 

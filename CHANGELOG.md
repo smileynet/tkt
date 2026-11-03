@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Query exposes every stored frontmatter field and separates unfinished blockers from historical dependencies; ready JSON includes the same pending-blocker field.
+- Query can bypass tag context without changing it and reports when context narrows results.
 - Retire tickets as cancelled with explicit reasons and replacement/dependency handling; reopen them without discarding history.
 - Ticket commits skip commit hooks by default, preserve unrelated staged work, and support invocation-local deferred pushing with actionable push-failure details.
 - Creation accepts full body text, files or stdin and named body templates; default prompts still trigger unfilled-ticket validation.
@@ -35,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `node tools/deploy.mjs` selects roots so installed Claude/Codex plugins count as the skill copy and refreshes local plugins. Audits identify unowned skill directories and duplicate loading across configured packs. The bash wrapper remains an alternative entry point; no extra deploy step is needed.
 
 ### Fixed
+- Quiet mode preserves structured JSON success output when combined with JSON output selection.
+- Collision recovery reports possibly stale prose citations without changing bodies; validation warns about missing local ticket references.
+- DO_NOT_TRACK disables update requests and cache creation/refresh, alongside the existing CI and explicit updater opt-outs.
 - Invalid known configuration values report contextual validation errors instead of silently weakening evidence, push or filtering policy.
 - Skipped invalid tickets produce structured stderr warnings in JSON mode and respect ASCII warning symbols.
 - Enabling debug through user configuration defaults to the log file, keeping stderr clean unless a format is explicitly selected.

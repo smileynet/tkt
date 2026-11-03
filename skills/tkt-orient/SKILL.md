@@ -25,6 +25,7 @@ as a successful close.
 tkt context                       # is a work-stream scope active? note it
 tkt ready                         # the frontier: what's pickable now
 tkt query --status in_progress    # claimed/mid-flight threads
+tkt query --all-context --status in_progress # inspect WIP outside the active stream
 ```
 
 These are instant reads — batch them into one call (with `echo ---MARKER---` separators) rather than issuing them separately.

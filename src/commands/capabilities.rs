@@ -26,12 +26,12 @@ pub fn run() -> Result<i32> {
             "sync-plan" => ("idempotent", "Report drift by default; --check gates it; --fix updates the plan", "json"),
             "validate" => ("idempotent", "Read-only unless --fix repairs ticket files; --brief uses text", "json"),
             "rebase" => ("idempotent", "Fetch, renumber collisions and commit locally; --dry-run reads cached remote state without writing", "text"),
-            "config" => ("idempotent", "Read-only except --set and --unset write user configuration", "text"),
+            "config" => ("idempotent", "Read-only except --set and --unset write user configuration, or project configuration with --project", "text"),
             "telemetry" => ("idempotent", "Read-only except --enable/--disable change consent and --clear deletes local events", "text"),
-            "ready" | "blocked" => ("read_only", "Read-only report; ready also supports JSON Lines and hides tickets assigned to another agent", "text"),
+            "ready" | "blocked" => ("read_only", "Read-only report; ready supports JSON Lines with historical blocked_by and unfinished/missing pending_blockers, and hides tickets assigned to another agent", "text"),
             "help" => ("read_only", "Print help for an optional command path, such as help new", "text"),
             "audit" => ("read_only", "JSON findings by default; --brief uses text", "json"),
-            "query" => ("read_only", "JSON Lines; active tag context filters the corpus; includes assignee", "json_lines"),
+            "query" => ("read_only", "JSON Lines; active tag context filters the corpus unless --all-context; actual narrowing is reported on stderr. Known fields: id, title, status, blocked_by, pending_blockers, env, priority, spec, parent, tags, validation_criteria, requires, agents, assignee. Optional env/priority/spec/parent are omitted when absent. Unknown stored fields are raw strings in frontmatter", "json_lines"),
             "capabilities" => ("read_only", "One JSON feature manifest regardless of output flags", "json"),
             _ => ("unspecified", "Command behavior must be classified before advertising it", "text"),
         };
@@ -74,6 +74,7 @@ pub fn run() -> Result<i32> {
             "flag": "--output / -o",
             "formats": ["json", "text"],
             "default": "text",
+            "quiet_json": "Write-capable commands retain one structured success object under -q -o json, including previews and no-op outcomes",
             "error_envelope": "last line of stderr when -o json",
             "success_hints": "success envelope may carry an advisory hints[] array (code, message, suggested_command, disable); advisory only, never changes exit_code; suppress with TKT_ADVICE=0"
         }

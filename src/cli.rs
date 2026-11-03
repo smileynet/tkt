@@ -17,7 +17,7 @@ const fn version_string() -> &'static str {
     after_help = "For machine-readable command schemas: tkt capabilities -o json",
 )]
 pub(crate) struct Cli {
-    /// Suppress confirmations, emit only essential data
+    /// Suppress human confirmations; -o json still emits structured success output
     #[arg(short, long, global = true)]
     quiet: bool,
 
@@ -33,7 +33,7 @@ pub(crate) struct Cli {
     #[arg(long, global = true)]
     no_push: bool,
 
-    /// Output format: json or text (default: text)
+    /// Output format: json or text (default: text); JSON is preserved with --quiet
     #[arg(short = 'o', long = "output", global = true)]
     output_format: Option<String>,
 
@@ -302,7 +302,7 @@ enum Commands {
         #[arg(long)]
         dry_run: bool,
     },
-    /// Dump all tickets as JSON Lines (one object per line)
+    /// Dump tickets as JSON Lines (one object per line); active tag context filters by default
     Query {
         /// Filter by status (open, in_progress, done, backlog, cancelled)
         #[arg(long)]
@@ -313,6 +313,9 @@ enum Commands {
         /// Filter by parent ticket id
         #[arg(long)]
         parent: Option<String>,
+        /// Ignore the active tag context and include all tickets
+        #[arg(long)]
+        all_context: bool,
     },
     /// Show blocked tickets with their blockers
     Blocked,
@@ -631,10 +634,12 @@ pub fn run() -> i32 {
                 status,
                 priority,
                 parent,
+                all_context,
             } => crate::commands::query::run(
                 status.as_deref(),
                 priority.as_deref(),
                 parent.as_deref(),
+                all_context,
             ),
             Commands::Blocked => crate::commands::blocked::run(),
             Commands::Capabilities => crate::commands::capabilities::run(),
@@ -975,6 +980,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             status,
             priority,
             parent,
+            all_context,
         } => {
             if parent.is_some() {
                 flags.push("parent");
@@ -984,6 +990,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if status.is_some() {
                 flags.push("status");
+            }
+            if *all_context {
+                flags.push("all-context");
             }
         }
         Commands::SyncPlan {

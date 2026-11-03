@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{project_config, tickets_dir};
+use crate::commands::common::{
+    is_quiet_json, print_quiet_json_success, project_config, tickets_dir,
+};
 use crate::findings::{self, collect_corpus_findings, Finding};
 
 /// Stable identity of a finding for before/after regression comparison.
@@ -32,6 +34,8 @@ pub fn run(strict: bool, brief: bool) -> Result<i32> {
 /// Run validate with --fix mode: repair fixable issues, advise on the rest.
 pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
     let dir = tickets_dir()?;
+    let quiet_json_mutation = is_quiet_json() && !dry_run;
+    let effective_strict = strict || project_config(&dir)?.validate_strict;
 
     // Baseline finding identities BEFORE fixing (skip in dry-run — nothing is written).
     let before = if dry_run {
@@ -42,9 +46,10 @@ pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
 
     // Run the fix pass
     let result = crate::fix::run_fix(&dir, dry_run)?;
+    let quiet_json_output = is_quiet_json();
 
     // Report repairs
-    if !result.repairs.is_empty() {
+    if !quiet_json_output && !result.repairs.is_empty() {
         let verb = if dry_run { "Would fix" } else { "Fixed" };
         println!("{} ({}):", verb, result.repairs.len());
         for r in &result.repairs {
@@ -59,7 +64,7 @@ pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
     }
 
     // Report advisories
-    if !result.advisories.is_empty() {
+    if !quiet_json_output && !result.advisories.is_empty() {
         println!("Needs manual review ({}):", result.advisories.len());
         for a in &result.advisories {
             println!("  {}: {}", a.file, a.message);
@@ -68,7 +73,7 @@ pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
         println!();
     }
 
-    if result.repairs.is_empty() && result.advisories.is_empty() {
+    if !quiet_json_output && result.repairs.is_empty() && result.advisories.is_empty() {
         println!("Nothing to fix.");
     }
 
@@ -98,8 +103,51 @@ pub fn run_with_fix(strict: bool, brief: bool, dry_run: bool) -> Result<i32> {
             )
             .into());
         }
+        if quiet_json_mutation {
+            let remaining = collect_corpus_findings(&dir)?;
+            let status = findings::status_from_findings(&remaining, effective_strict);
+            crate::RESULT_COUNT.store(remaining.len() as i32, std::sync::atomic::Ordering::Relaxed);
+            if status == "pass" {
+                print_quiet_json_success(&format!(
+                    "fixed {} issue(s); {} finding(s) and {} advisory item(s) remain",
+                    result.repairs.len(),
+                    remaining.len(),
+                    result.advisories.len()
+                ));
+                return Ok(0);
+            }
+            findings::print_findings(&remaining, false, status);
+            return Ok(1);
+        }
         println!("--- post-fix validation ---");
         return run(strict, brief);
+    }
+
+    if quiet_json_output {
+        if !result.advisories.is_empty() {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "ok": false,
+                    "error": {
+                        "kind": "validation",
+                        "message": "validate --fix has items requiring manual review"
+                    },
+                    "advisories": result.advisories.iter().map(|advisory| serde_json::json!({
+                        "file": advisory.file,
+                        "message": advisory.message,
+                        "suggestion": advisory.suggestion
+                    })).collect::<Vec<_>>()
+                })
+            );
+            return Ok(1);
+        }
+        if dry_run && !result.repairs.is_empty() {
+            print_quiet_json_success(&format!("would fix {} issue(s)", result.repairs.len()));
+        } else {
+            print_quiet_json_success("nothing to fix");
+        }
+        return Ok(0);
     }
 
     Ok(if result.advisories.is_empty() { 0 } else { 1 })

@@ -18,9 +18,10 @@ Read all open tickets and the current plan (`docs/plan.md`, session decisions, s
 ```bash
 tkt context    # inspect the effective context
 tkt query      # matching and untagged tickets
+tkt query --all-context # whole-board audit without changing context
 ```
 
-Read existing ticket frontmatter for tag vocabulary; `query` omits tags.
+Read query's `tags` field for existing tag vocabulary.
 `TKT_CONTEXT` overrides the stored context. For a temporary stream query, change
 only that command's environment, preserving the stored context and any existing
 environment override. In a POSIX shell:

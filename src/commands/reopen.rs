@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, slug_from_filename};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_quiet, is_quiet_json, print_quiet_json_success, slug_from_filename,
+};
 use crate::core::Status;
 use crate::mutation::MutationContext;
 
@@ -24,6 +26,10 @@ pub fn run(id: &str) -> Result<i32> {
         domain_bail!(Conflict, "cannot reopen {}: it is not cancelled", ticket.id);
     }
     if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would reopen {}", ticket.id));
+            return Ok(0);
+        }
         println!(
             "Would reopen {} {} (cancelled → open)",
             ticket.id,
@@ -44,7 +50,13 @@ pub fn run(id: &str) -> Result<i32> {
         paths.push("docs/plan.md");
     }
     ctx.publish(&paths, &format!("chore(tickets): reopen {}", id))?;
-    if !is_quiet() {
+    if is_quiet() {
+        print_quiet_json_success(&format!(
+            "reopened {} ({})",
+            ticket.id,
+            slug_from_filename(&file.path)
+        ));
+    } else {
         println!(
             "Reopened {} ({})",
             ticket.id,

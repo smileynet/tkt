@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 
+use crate::commands::common::{is_quiet, print_quiet_json_success};
 use crate::telemetry;
 
 pub fn run(
@@ -17,14 +18,22 @@ pub fn run(
     if enable {
         telemetry::write_consent(true)
             .map_err(|e| anyhow::anyhow!("failed to write consent: {}", e))?;
-        println!("telemetry enabled — events will be recorded locally");
+        if is_quiet() {
+            print_quiet_json_success("telemetry enabled");
+        } else {
+            println!("telemetry enabled — events will be recorded locally");
+        }
         return Ok(0);
     }
 
     if disable {
         telemetry::write_consent(false)
             .map_err(|e| anyhow::anyhow!("failed to write consent: {}", e))?;
-        println!("telemetry disabled");
+        if is_quiet() {
+            print_quiet_json_success("telemetry disabled");
+        } else {
+            println!("telemetry disabled");
+        }
         return Ok(0);
     }
 
@@ -33,12 +42,24 @@ pub fn run(
             if dir.is_dir() {
                 std::fs::remove_dir_all(&dir)
                     .map_err(|e| anyhow::anyhow!("failed to clear telemetry: {}", e))?;
-                println!("telemetry data cleared");
+                if is_quiet() {
+                    print_quiet_json_success("telemetry data cleared");
+                } else {
+                    println!("telemetry data cleared");
+                }
             } else {
-                println!("no telemetry data to clear");
+                if is_quiet() {
+                    print_quiet_json_success("no telemetry data to clear");
+                } else {
+                    println!("no telemetry data to clear");
+                }
             }
         } else {
-            println!("no telemetry data directory");
+            if is_quiet() {
+                print_quiet_json_success("no telemetry data directory");
+            } else {
+                println!("no telemetry data directory");
+            }
         }
         return Ok(0);
     }

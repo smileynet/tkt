@@ -154,7 +154,7 @@ tkt reopen <id>                                   # cancelled→open, keeps hist
 tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..." (repeatable: one per validation criterion, or N=text)]
 tkt edit <id> [--title T] [--parent ID] [--tags T] [--add-tag T] [--remove-tag T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
-tkt query [--status S] [--priority P] [--parent ID]             # full corpus as JSON Lines (filterable)
+tkt query [--status S] [--priority P] [--parent ID] [--all-context] # context-scoped JSON Lines; bypass context explicitly
 tkt blocked                                       # open tickets with unsatisfied deps
 tkt capabilities                                  # machine-readable JSON feature manifest
 tkt rebase [--dry-run]                            # resolve ID collisions with upstream
@@ -204,6 +204,16 @@ edge disposition. Terminal stale prerequisite edges are dropped and named.
 Reach `done` only via `tkt close`; new, batch and edit reject done. Editing a ticket's `status` to `done` by hand bypasses the close gates (ACs, resolution, evidence) and is flagged by `tkt validate`.
 
 New tickets default to `open` (frontier-eligible); reserve `--status backlog` for work deliberately deferred out of the current cycle. Set `--tags <stream>` at creation in multi-stream projects — tags are the primary scoping mechanism for `tkt ready`/`tkt context`.
+
+### Query output
+
+Query includes typed known frontmatter fields (id, title, status, blocked_by, env,
+priority, spec, parent, tags, validation_criteria, requires, agents and assignee)
+and unknown or unparsed stored keys as raw strings under `frontmatter`. Query and ready JSON
+add `pending_blockers` for missing/non-done prerequisites; `blocked_by` retains
+completed history. Cancelled prerequisites remain pending. Query preserves tag
+context by default, reports actual narrowing on stderr, and accepts `--all-context`
+without changing context. `-o json` remains structured with `-q`.
 
 ### Agent eligibility
 
@@ -256,7 +266,7 @@ otherwise; valid rows and successful exit semantics are preserved.
 | `NO_COLOR=1` | Disable ANSI color |
 | `TKT_ADVICE=0` | Disable advisory hints (e.g. the batch nudge); `off`/`false` also accepted |
 | `CREW_ENV` | Filter frontier by env (corp/personal) |
-| `DO_NOT_TRACK=1` | Disable telemetry |
+| `DO_NOT_TRACK=1` | Disable telemetry and update-check requests/cache refresh |
 | `TKT_NO_USER_CONFIG=1` | Skip user config file (for testing — prevents ambient config leaking into child processes) |
 
 ## Architecture Decisions
@@ -272,6 +282,10 @@ otherwise; valid rows and successful exit semantics are preserved.
 - **Facade re-exports**: only re-export types from `core/mod.rs` that callers name directly; types returned by methods but never named (e.g., `AcStats`) stay unexported from the facade to avoid unused-import warnings
 
 ## Contract
+
+Rebase reports candidate stale body citations (path/line/old-new mapping) without
+rewriting prose. Validation warns on missing unqualified local #NNN/ticket NNN
+citations; qualify external issues or link them and quote code examples.
 
 Body AC checkboxes map to `--check-all` / `--ac`; frontmatter validation_criteria
 maps 1:1 by index to --evidence. The counts are independent. Fill body prompts at

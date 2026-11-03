@@ -2,7 +2,10 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, print_success};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
+    print_success,
+};
 use crate::core::validate;
 use crate::mutation::MutationContext;
 use crate::renumber::{apply_renumber, materialize_renumber, RenumberPlan};
@@ -21,7 +24,11 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
         .map_err(|e| crate::DomainError::new(crate::ErrorKind::Validation, e.to_string()))?;
 
     if is_dry_run() {
-        println!("Would renumber {} → {}", old_id, new_id);
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would renumber {} to {}", old_id, new_id));
+        } else {
+            println!("Would renumber {} → {}", old_id, new_id);
+        }
         return Ok(0);
     }
 
@@ -36,7 +43,7 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
     )?;
 
     // Report
-    if !is_quiet() {
+    if !is_quiet() || is_json_output() {
         let detail = if result.refs_updated > 0 {
             format!("{} refs updated", result.refs_updated)
         } else {

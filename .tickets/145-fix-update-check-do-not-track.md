@@ -36,4 +36,8 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Reproduce request/cache behavior in an isolated fixture before changing the missing DO_NOT_TRACK guard.
+The reproduction gate is cleared: an isolated fake-transport fixture observed the
+request/cache refresh with `DO_NOT_TRACK=1` before the fix. Fixed-source regression
+checks cover that guard and the independent CI/update-disable controls. See
+[privacy evidence](../docs/evidence/update-check-145.md), including the invalid
+initial transport attempt and its limitations. Final full-gate verification passed; see the evidence report.

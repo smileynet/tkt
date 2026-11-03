@@ -28,6 +28,10 @@ pub fn check_for_update() {
     if std::env::var("CI").is_ok() {
         return;
     }
+    // Update checks use the network and write a per-user cache, so follow telemetry consent.
+    if std::env::var("DO_NOT_TRACK").as_deref() == Ok("1") {
+        return;
+    }
 
     let cache_path = match cache_file() {
         Some(p) => p,

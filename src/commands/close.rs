@@ -3,7 +3,8 @@
 use anyhow::Result;
 
 use crate::commands::common::{
-    domain_bail, is_dry_run, is_quiet, print_success, slug_from_filename,
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
+    print_success, slug_from_filename,
 };
 use crate::config::EvidencePolicy;
 use crate::core::{self, AcSelection, Status};
@@ -186,6 +187,10 @@ pub fn run(
 
     // Dry-run: show what would happen
     if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would close {}", t.id));
+            return Ok(0);
+        }
         println!(
             "Would close {} {} (→ done)",
             t.id,
@@ -264,7 +269,16 @@ pub fn run(
     }
     ctx.publish(&paths, &format!("chore(tickets): close {}", id))?;
 
-    if !is_quiet() {
+    if is_quiet() {
+        if is_json_output() {
+            let verb = if note.is_some() {
+                "Resolution written"
+            } else {
+                "Resolution stub appended"
+            };
+            print_success("closed", &t.id, &slug_from_filename(&file.path), verb);
+        }
+    } else {
         let verb = if note.is_some() {
             "Resolution written"
         } else {

@@ -1,5 +1,9 @@
 # Telemetry
 
+`DO_NOT_TRACK=1` disables both telemetry and the update check. No updater request
+is made and its cache is neither created nor refreshed. `TKT_UPDATE_CHECK=0` and
+the presence of `CI` also suppress the updater independently of telemetry consent.
+
 tkt includes optional, local-only telemetry that records command usage to help identify bugs and improve the tool. **No data leaves your machine** — telemetry is stored as local files you can inspect, export, or delete at any time.
 
 ## Status: Local-Only (v1)
@@ -77,7 +81,7 @@ tkt telemetry --disable
 
 | Variable | Effect |
 |----------|--------|
-| `DO_NOT_TRACK=1` | Disables telemetry (universal standard) |
+| `DO_NOT_TRACK=1` | Disables telemetry and update-check requests/cache writes |
 | `TKT_TELEMETRY=off` | Disables telemetry |
 | `TKT_TELEMETRY=on` | Enables telemetry |
 | `CI=true` | Disables telemetry (CI environments) |

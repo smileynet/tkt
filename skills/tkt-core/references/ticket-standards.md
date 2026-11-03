@@ -21,6 +21,9 @@ Quality gate for ticket content. Agents creating or reviewing tickets check thes
 
 ## Intent Source Links
 
+Unqualified `#NNN` / `ticket NNN` means a local ticket; use `owner/repo#NNN` or
+an external link for another tracker, and code formatting for literal examples.
+
 Fill the body at creation with new `--body TEXT`, `--body @file` or stdin `--body -`;
 new/batch `--template NAME` reads a complete body from `.tickets/templates/NAME.md`.
 Replace default prompts and link the source in that body (`--spec` or a ticket/ADR/

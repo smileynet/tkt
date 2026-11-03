@@ -73,7 +73,7 @@ Reuse existing helpers — do NOT reinvent:
    Structurally guarantees lint/validate parity (AC: lint --check agrees with validate).
 2. Unique-match guard (rustfix MachineApplicable model) — rewrite ONLY when the ref resolves to
    exactly one existing id. 0 or >=2 candidates -> leave + (fix emits advisory).
-3. Reference rewrites are the documented failure class (clippy #8827). tkt has no compiler; the
+3. Reference rewrites are the documented failure class (clippy#8827). tkt has no compiler; the
    equivalent gate is: after fix, re-run validate logic and refuse to write if findings increase.
 4. Idempotence: normalize(normalize(x)) == normalize(x). Test double-run produces no diff.
 

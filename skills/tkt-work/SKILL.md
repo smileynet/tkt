@@ -26,6 +26,12 @@ The **frontier** = any ticket where `status: open`, all `blocked_by` are `done`,
 
 `tkt ready` may also be filtered by active tag context (set via `tkt context <tags>`). When a context is active, only tickets matching those tags appear in the frontier. Clear with `tkt context --clear`.
 
+Query follows that context too; use `query --all-context` for a whole-board read
+without changing it. Query includes stored fields and raw unknown values under
+`frontmatter`. Ready/query JSON distinguish unfinished or missing `pending_blockers`
+from historical `blocked_by`; completed edges do not need removal. `-q -o json`
+keeps mutation outcomes structured, including previews and no-op results.
+
 When tickets exist and no specific task is given:
 1. Identify the frontier: `tkt ready` (env-filtered, priority-aware). If `tkt` is not on PATH, fall back to scanning sources manually in priority order
 2. Pick the first ticket `tkt ready` lists — it already applies lowest-number-first with `priority: high` jumping the order
@@ -125,6 +131,11 @@ Resolve or record skipped files before claiming the whole corpus was checked.
 6. If the completed ticket was the last one: report "All tickets done for this spec"
 
 ## Creating Tickets
+
+Unqualified `#NNN` / `ticket NNN` citations refer to this corpus. Qualify external
+issues (`owner/repo#NNN` or a link) and quote literal examples as code. Rebase may
+report candidate stale body citations after ID collisions; review them manually
+because user-owned prose is preserved and the old ID can be ambiguous.
 
 Prefer a complete body at creation: new `--body @file`, `--body -` (stdin), or
 literal text. New/batch `--template NAME` loads `.tickets/templates/NAME.md`

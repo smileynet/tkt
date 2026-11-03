@@ -95,6 +95,7 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     all_findings.extend(check_cycles(&corpus));
     all_findings.extend(check_dangling_parent(&corpus));
     all_findings.extend(check_parent_cycles(&corpus));
+    all_findings.extend(check_dangling_body_references(&corpus));
     all_findings.extend(check_unchecked_acs(&corpus));
     all_findings.extend(check_stub_body(&corpus));
     let cfg = crate::config::ProjectConfig::load(dir);
@@ -230,6 +231,30 @@ pub fn check_dangling_deps(corpus: &[Ticket]) -> Vec<Finding> {
                     rule: "dangling-blocked-by".into(),
                     message: format!("ref {:?} has no ticket", dep),
                     severity: "error".into(),
+                });
+            }
+        }
+    }
+    findings
+}
+
+/// Warn when an unqualified numeric body citation does not resolve in this corpus.
+pub fn check_dangling_body_references(corpus: &[Ticket]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for ticket in corpus {
+        for citation in crate::renumber::body_ticket_citations(&ticket.body) {
+            if !corpus
+                .iter()
+                .any(|candidate| crate::renumber::numeric_id_eq(&candidate.id, &citation.id))
+            {
+                findings.push(Finding {
+                    file: filename(ticket),
+                    rule: "dangling-body-reference".into(),
+                    message: format!(
+                        "body reference {} on line {} has no matching local ticket ID; verify whether it is external",
+                        citation.text, citation.line
+                    ),
+                    severity: "warning".into(),
                 });
             }
         }

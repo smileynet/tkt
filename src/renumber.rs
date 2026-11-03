@@ -14,6 +14,21 @@ use crate::core::{self, Ticket};
 
 static RE_TICKET_FILENAME: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\d+)-(.+)\.md$").unwrap());
+static RE_BODY_CITATION: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)(?:#(?P<hash>\d+)|\bticket\s+(?P<ticket>\d+)\b)").unwrap());
+static RE_URL: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)(?:https?://|www\.)[^\s<>()]+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/[^\s<>()]*)?")
+        .unwrap()
+});
+static RE_EXTERNAL_MARKDOWN_LINK: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\[[^\]\n]*\]\(\s*(?:https?://|www\.)[^)\s]+[^)]*\)").unwrap());
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BodyCitation {
+    pub line: usize,
+    pub id: String,
+    pub text: String,
+}
 
 // --- Plan types ---
 
@@ -38,6 +53,13 @@ pub struct MaterializedRenumberPlan {
     writes: Vec<PlannedWrite>,
     staged_paths: Vec<String>,
     refs_updated: usize,
+    body_citations: Vec<(String, BodyCitation, String)>,
+}
+
+impl MaterializedRenumberPlan {
+    pub fn body_citations(&self) -> &[(String, BodyCitation, String)] {
+        &self.body_citations
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -179,6 +201,8 @@ pub struct AppliedRenumber {
     pub staged_paths: Vec<String>,
     /// Number of blocked_by references rewritten across other tickets.
     pub refs_updated: usize,
+    /// Body citations to moved IDs. These are reported for review, never rewritten.
+    pub body_citations: Vec<(String, BodyCitation, String)>,
 }
 
 /// Parse and render every affected ticket before a renumber begins.
@@ -221,6 +245,25 @@ pub fn materialize_renumber(
             Ticket::parse(&path).map(|ticket| (name.clone(), ticket))
         })
         .collect::<Result<_>>()?;
+
+    let mut body_citations = Vec::new();
+    for (name, ticket) in &tickets {
+        for citation in body_ticket_citations(&ticket.body) {
+            let Some((_, new)) = id_map
+                .iter()
+                .find(|(old, _)| numeric_id_eq(old, &citation.id))
+            else {
+                continue;
+            };
+            let report_name = plan
+                .entries
+                .iter()
+                .find(|entry| name == &format!("{}-{}.md", entry.old_id, entry.slug))
+                .map(|entry| format!("{}-{}.md", entry.new_id, entry.slug))
+                .unwrap_or_else(|| name.clone());
+            body_citations.push((report_name, citation, (*new).to_string()));
+        }
+    }
 
     for source_name in &source_names {
         if !names.contains(source_name) {
@@ -320,6 +363,7 @@ pub fn materialize_renumber(
         writes,
         staged_paths,
         refs_updated,
+        body_citations,
     })
 }
 
@@ -340,6 +384,7 @@ pub fn apply_renumber(plan: &MaterializedRenumberPlan) -> Result<AppliedRenumber
     Ok(AppliedRenumber {
         staged_paths: plan.staged_paths.clone(),
         refs_updated: plan.refs_updated,
+        body_citations: plan.body_citations.clone(),
     })
 }
 
@@ -349,6 +394,137 @@ fn body_cites_id(body: &str, id: &str) -> bool {
         let after = body[start + id.len()..].chars().next();
         !before.is_some_and(is_id_char) && !after.is_some_and(is_id_char)
     })
+}
+
+/// Find unqualified numeric ticket references in prose, excluding Markdown
+/// code, URLs and `owner/repo#id` references from another corpus.
+pub fn body_ticket_citations(body: &str) -> Vec<BodyCitation> {
+    let mut citations = Vec::new();
+    let mut fence: Option<(char, usize)> = None;
+    for (line_index, line) in body.lines().enumerate() {
+        let trimmed = line.trim_start();
+        if let Some((marker, length)) = fence {
+            let close_length = trimmed.chars().take_while(|c| *c == marker).count();
+            if close_length >= length && trimmed[close_length..].trim().is_empty() {
+                fence = None;
+            }
+            continue;
+        }
+        let marker = trimmed.chars().next();
+        let fence_length = marker
+            .filter(|marker| matches!(marker, '`' | '~'))
+            .map(|marker| trimmed.chars().take_while(|c| *c == marker).count());
+        if let (Some(marker), Some(length)) = (marker, fence_length.filter(|length| *length >= 3)) {
+            fence = Some((marker, length));
+            continue;
+        }
+
+        let inline_code = inline_code_ranges(line);
+        let urls: Vec<_> = RE_URL.find_iter(line).map(|m| m.range()).collect();
+        let external_markdown_links: Vec<_> = RE_EXTERNAL_MARKDOWN_LINK
+            .find_iter(line)
+            .map(|m| m.range())
+            .collect();
+        for found in RE_BODY_CITATION.captures_iter(line) {
+            let whole = found.get(0).unwrap();
+            if inline_code
+                .iter()
+                .any(|range| range.start <= whole.start() && whole.end() <= range.end)
+                || urls
+                    .iter()
+                    .any(|range| range.start <= whole.start() && whole.end() <= range.end)
+                || external_markdown_links
+                    .iter()
+                    .any(|range| range.start <= whole.start() && whole.end() <= range.end)
+            {
+                continue;
+            }
+            let text = whole.as_str();
+            if text.starts_with('#') {
+                let before = &line[..whole.start()];
+                if before
+                    .chars()
+                    .last()
+                    .is_some_and(|c| c == '#' || c.is_ascii_alphanumeric())
+                    || is_repo_qualified(before)
+                {
+                    continue;
+                }
+            }
+            let id = found
+                .name("hash")
+                .or_else(|| found.name("ticket"))
+                .unwrap()
+                .as_str()
+                .to_string();
+            citations.push(BodyCitation {
+                line: line_index + 1,
+                id,
+                text: text.to_string(),
+            });
+        }
+    }
+    citations
+}
+
+pub fn numeric_id_eq(left: &str, right: &str) -> bool {
+    match (left.parse::<u64>(), right.parse::<u64>()) {
+        (Ok(left), Ok(right)) => left == right,
+        _ => false,
+    }
+}
+
+fn inline_code_ranges(line: &str) -> Vec<std::ops::Range<usize>> {
+    let bytes = line.as_bytes();
+    let mut ranges = Vec::new();
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] != b'`' {
+            index += 1;
+            continue;
+        }
+        let start = index;
+        while index < bytes.len() && bytes[index] == b'`' {
+            index += 1;
+        }
+        let delimiter = &bytes[start..index];
+        let mut search = index;
+        let mut end = None;
+        while search < bytes.len() {
+            if bytes[search] != b'`' {
+                search += 1;
+                continue;
+            }
+            let close_start = search;
+            while search < bytes.len() && bytes[search] == b'`' {
+                search += 1;
+            }
+            if &bytes[close_start..search] == delimiter {
+                end = Some(search);
+                break;
+            }
+        }
+        if let Some(end) = end {
+            ranges.push(start..end);
+            index = end;
+        }
+    }
+    ranges
+}
+
+fn is_repo_qualified(before_hash: &str) -> bool {
+    let Some(token) = before_hash.split_whitespace().last() else {
+        return false;
+    };
+    let Some((owner, repo)) = token.rsplit_once('/') else {
+        return false;
+    };
+    !owner.is_empty()
+        && !repo.is_empty()
+        && [owner, repo].iter().all(|part| {
+            part.chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'))
+        })
 }
 
 fn is_id_char(c: char) -> bool {

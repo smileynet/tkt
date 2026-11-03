@@ -212,6 +212,11 @@ Push hooks still run. Use global `--no-push` for local filing without fetch/push
 or `[push] enabled = false` persistently; run `tkt rebase` before later pushing
 when IDs collide. Push failures name the durable local commit and retry action.
 
+Rebase reports possible stale body references with file/line and ID mapping while
+leaving prose unchanged, including in dry-run. Review ambiguous references manually.
+Validation warns about missing local `#NNN` / `ticket NNN` citations; qualify external
+issues as `owner/repo#NNN` or link them. Quoted code, URLs and headings are excluded.
+
 ```bash
 tkt edit 02 --title "New title"
 tkt edit 02 --blocked-by 01,03
@@ -258,10 +263,18 @@ commit. Commit or stash plan changes first. Missing rows remain warnings until
 mutations create none. Use explicit sync-plan for alternate plan paths.
 
 ```bash
-tkt query                        # all tickets as JSON Lines
+tkt query                        # context-scoped tickets as JSON Lines
+tkt query --all-context          # bypass context without changing it
 tkt query --status open          # filter by status
 tkt query --priority high        # filter by priority
 ```
+
+Query preserves tag context and reports actual narrowing on stderr. `--all-context`
+bypasses context while keeping explicit status, priority and parent filters.
+JSON includes tags, validation criteria, requirements, ownership and eligibility;
+unknown or unparsed stored fields appear as raw strings under `frontmatter`. Query and ready
+JSON keep historical `blocked_by` and add `pending_blockers` for missing or non-done
+prerequisites. Combining `-q` with `-o json` keeps structured JSON output.
 
 ### Migrate from other tools
 
@@ -404,6 +417,7 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 | `TKT_DEBUG=1\|true\|log\|file` | Debug output to the local debug log |
 | `TKT_DEBUG=stderr\|human` | Human-readable debug output to stderr |
 | `TKT_DEBUG=json` | Debug output as JSON Lines on stderr |
+| `DO_NOT_TRACK=1` | Disable telemetry and update-check requests/cache refresh |
 
 User configuration `debug = true` also defaults to the log file. Set
 `debug.format = "human"` or `"json"` explicitly for stderr output.

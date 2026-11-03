@@ -3,7 +3,8 @@
 use anyhow::Result;
 
 use crate::commands::common::{
-    domain_bail, is_dry_run, is_quiet, print_success, project_config, tickets_dir,
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
+    print_success, project_config, tickets_dir,
 };
 use crate::core::{self, validate};
 use crate::git;
@@ -208,10 +209,17 @@ pub fn run(
     if is_dry_run() {
         let base = core::max_id(&names) + 1;
         let width = core::id_width(&names);
-        println!("Would create {} tickets:", parsed.len());
-        for (i, (slug, title)) in parsed.iter().enumerate() {
-            let tid = format!("{:0>width$}", base + i as u64, width = width);
-            println!("  {} {}-{}.md — {}", tid, tid, slug, title);
+        let tids: Vec<String> = (0..parsed.len())
+            .map(|i| format!("{:0>width$}", base + i as u64, width = width))
+            .collect();
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would create tickets {}", tids.join(", ")));
+        } else {
+            println!("Would create {} tickets:", parsed.len());
+            for (i, (slug, title)) in parsed.iter().enumerate() {
+                let tid = &tids[i];
+                println!("  {} {}-{}.md — {}", tid, tid, slug, title);
+            }
         }
         return Ok(0);
     }
@@ -229,16 +237,23 @@ pub fn run(
         }
     };
 
-    for (i, (slug, _)) in parsed.iter().enumerate() {
-        let tid = format!("{:0>width$}", base + i as u64, width = width);
-        if is_quiet() {
-            println!("{}", tid);
-        } else {
-            let detail = match &outcome {
-                crate::transaction::PublishOutcome::LocalOnly => "local only",
-                _ => "pushed",
-            };
-            print_success("created", &tid, slug, detail);
+    let tids: Vec<String> = (0..parsed.len())
+        .map(|i| format!("{:0>width$}", base + i as u64, width = width))
+        .collect();
+    if is_quiet() && is_json_output() {
+        crate::cli::emit_json_success(&format!("created tickets {}", tids.join(", ")));
+    } else {
+        for (i, (slug, _)) in parsed.iter().enumerate() {
+            let tid = &tids[i];
+            if is_quiet() {
+                println!("{}", tid);
+            } else {
+                let detail = match &outcome {
+                    crate::transaction::PublishOutcome::LocalOnly => "local only",
+                    _ => "pushed",
+                };
+                print_success("created", tid, slug, detail);
+            }
         }
     }
     Ok(0)

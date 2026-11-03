@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_quiet, tickets_dir};
+use crate::commands::common::{domain_bail, is_quiet, print_quiet_json_success, tickets_dir};
 use crate::migrate::{self, DetectedFormat};
 
 pub fn run(from: Option<&str>, detect: bool, confirm: bool) -> Result<i32> {
@@ -61,7 +61,9 @@ fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
     let plan = migrate::plan_tk(dir);
 
     if plan.total == 0 {
-        if !is_quiet() {
+        if is_quiet() {
+            print_quiet_json_success("no tickets to migrate");
+        } else {
             println!("No tickets to migrate.");
         }
         return Ok(0);
@@ -124,7 +126,9 @@ fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
     }
 
     if dry_run {
-        if !is_quiet() {
+        if is_quiet() {
+            print_quiet_json_success(&format!("would migrate {} ticket(s)", plan.total));
+        } else {
             println!("Review the plan, then run again with --confirm to apply.");
         }
         return Ok(0);
@@ -145,7 +149,12 @@ fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
     // Apply
     let result = migrate::apply(dir, &plan)?;
 
-    if !is_quiet() {
+    if is_quiet() {
+        print_quiet_json_success(&format!(
+            "migrated {} ticket(s), renamed {}",
+            result.files_written, result.files_renamed
+        ));
+    } else {
         println!(
             "✓ Migrated {} ticket(s) ({} renamed)",
             result.files_written, result.files_renamed

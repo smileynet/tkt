@@ -35,8 +35,21 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 | `tkt ready` | Unblocked tasks sorted by priority |
 | `tkt ready --json` | JSON Lines output |
 | `tkt blocked` | Tasks with unsatisfied dependencies |
-| `tkt query` | All tasks as JSON Lines |
+| `tkt query` | Context-scoped tasks as JSON Lines; stderr notice when context narrows results |
+| `tkt query --all-context` | Bypass tag context without changing it; other explicit filters still apply |
 | `tkt query --status open --priority high` | Filtered view |
+
+Query emits typed `id`, `title`, `status`, `blocked_by`, `pending_blockers`, `tags`,
+`validation_criteria`, `requires`, `agents` and `assignee`. Optional `env`, `priority`,
+`spec` and `parent` retain their stored values. Unknown or unparsed stored keys appear in
+`frontmatter` as raw strings rather than guessed YAML types. `blocked_by` preserves
+history; `pending_blockers` includes only missing or non-done prerequisites,
+including cancelled ones. Ready JSON also includes `pending_blockers` (empty for
+eligible frontier rows). Human frontier output does not list completed blockers.
+
+Query keeps tag context by default. When context actually excludes matching rows,
+its notice goes to stderr (a `context_filter` JSONL warning under `-o json`), never
+ticket stdout. `--all-context` bypasses context; status/priority/parent filters still apply.
 
 ## Health and maintenance
 
@@ -163,6 +176,15 @@ There are no `--add-blocked-by` or `--remove-blocked-by` flags.
 | `-q` / `--quiet` | Suppress confirmations, emit only essential data |
 | `-o json` | Structured JSON output (data to stdout, errors to stderr) |
 | `--color always\|never\|auto` | Control ANSI color (default: auto) |
+
+## Reference diagnostics
+
+On collision recovery, `tkt rebase` reports possible body citations with path,
+line and old/new IDs; it never rewrites prose. Review those candidates manually:
+the old ID may refer to an upstream ticket rather than the renumbered local one.
+Dry-run reports them without writes. Validation warns on missing unqualified
+local `#NNN` / `ticket NNN` references. Use `owner/repo#NNN` or external links for
+foreign issues; code/fences, URLs and headings are ignored.
 
 ## Retiring work
 

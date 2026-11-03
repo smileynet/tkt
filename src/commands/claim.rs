@@ -3,7 +3,8 @@
 use anyhow::Result;
 
 use crate::commands::common::{
-    domain_bail, is_dry_run, is_quiet, print_success, slug_from_filename,
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
+    print_success, slug_from_filename,
 };
 use crate::core::{AgentEligibilityMismatch, AgentId, Status};
 use crate::mutation::MutationContext;
@@ -52,12 +53,16 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
     }
 
     if is_dry_run() {
-        println!(
-            "Would claim {} {} (open → in_progress)",
-            t.id,
-            slug_from_filename(&t.path)
-        );
-        println!("  Would commit and push");
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would claim {}", t.id));
+        } else {
+            println!(
+                "Would claim {} {} (open → in_progress)",
+                t.id,
+                slug_from_filename(&t.path)
+            );
+            println!("  Would commit and push");
+        }
         return Ok(0);
     }
 
@@ -76,7 +81,7 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
     }
     ctx.publish(&paths, &format!("chore(tickets): claim {}", id))?;
 
-    if !is_quiet() {
+    if !is_quiet() || is_json_output() {
         print_success(
             "claimed",
             &t.id,

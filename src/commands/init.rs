@@ -7,7 +7,9 @@
 use anyhow::Result;
 
 use crate::color::{sym_ok, sym_warn};
-use crate::commands::common::{is_dry_run, is_quiet};
+use crate::commands::common::{
+    is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
+};
 
 // --- Marker constants ---
 
@@ -44,6 +46,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
@@ -85,6 +89,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
@@ -121,6 +127,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
@@ -167,6 +175,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
@@ -214,6 +224,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
 Retire abandoned work with cancel ID --reason duplicate|superseded|obsolete|wontfix --note "why"; duplicate/superseded need --by ID. Active dependents need --repoint/--drop-edges; terminal stale edges are dropped and named. Reopen cancelled work with reopen ID; cancelled is not done.
@@ -252,13 +264,17 @@ pub fn run(
 
     let writes = !agent_only || all || target.is_some() || write.is_some();
     if writes && is_dry_run() {
-        println!("Would initialize tkt files in {}", repo_root.display());
-        if all {
-            println!("Would update all supported agent instruction targets");
-        } else if let Some(target) = target {
-            println!("Would update {} agent instructions", target);
-        } else if let Some(file) = write.as_ref().and_then(|file| file.as_ref()) {
-            println!("Would update {}", file);
+        if is_quiet_json() {
+            print_quiet_json_success("would initialize project");
+        } else {
+            println!("Would initialize tkt files in {}", repo_root.display());
+            if all {
+                println!("Would update all supported agent instruction targets");
+            } else if let Some(target) = target {
+                println!("Would update {} agent instructions", target);
+            } else if let Some(file) = write.as_ref().and_then(|file| file.as_ref()) {
+                println!("Would update {}", file);
+            }
         }
         return Ok(0);
     }
@@ -282,7 +298,9 @@ pub fn run(
         }
     } else {
         // Default: print to stdout
-        print!("{}", SNIPPET_AGENTS);
+        if !is_quiet() || !is_json_output() {
+            print!("{}", SNIPPET_AGENTS);
+        }
     }
 
     if !agent_only && !is_quiet() {
@@ -291,6 +309,9 @@ pub fn run(
         );
     }
 
+    if writes && is_quiet() {
+        print_quiet_json_success("initialized project");
+    }
     Ok(0)
 }
 

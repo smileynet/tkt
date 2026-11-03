@@ -26,7 +26,7 @@ command discovery. Installing the CLI alone does not install the workflow skills
 | Discovering work during implementation | capture it as a separate ticket without losing focus | `tkt new <slug> --title "..."` (open — or `--status backlog` only if genuinely deferred) |
 | Creating several related tickets at once | one commit/push instead of N; share `--tags`/`--blocked-by` | `tkt batch "slug:title" "slug:title" ... --tags STREAM` |
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
-| Querying the full corpus | filter by status or priority | `tkt query --status open --priority high` |
+| Querying the full corpus | bypass context; optionally filter status or priority | `tkt query --all-context --status open --priority high` |
 | Working in a specific environment | see only relevant work | Set `machine.capabilities` in config (or `CREW_ENV=corp` for legacy env filtering) → `tkt ready` filters by `requires` |
 | Keeping a plan in sync | report drift between tickets and plan doc (advisory) | `tkt sync-plan` (add `--check` to gate CI) |
 | Scoping work to a subsystem | filter frontier by tags | `tkt context backend` → `tkt ready` shows only matching |
@@ -213,6 +213,10 @@ Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` 
 
 ## Key behaviors
 
+Rebase reports potentially stale body citations instead of rewriting prose.
+Validation treats unqualified `#NNN`/`ticket NNN` as local references and warns
+when missing; qualify external issues or link them, and use code formatting for examples.
+
 - **Push on write:** All mutations push to remote immediately. Disable with `push.enabled = false` in `.tickets/config.toml`.
 - **Race detection:** Push rejected → tkt retries with new ID (new/batch) or reports the conflict.
 - **Priority sort:** `tkt ready` sorts by priority bucket (urgent > high > medium > low) then by ID.
@@ -220,7 +224,14 @@ Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` 
 - **Env filtering (legacy):** Tickets with `env: corp` only appear in `tkt ready` when `CREW_ENV=corp`. No env field = visible everywhere.
 - **Requires filtering:** Tickets with `requires: [gpu, linux]` only appear if `machine.capabilities` config includes all listed values. If a ticket has `env` but no `requires`, requires is synthesized from env for backward compat. Prefer `requires` over `env` for new tickets.
 - **Tag context:** `tkt context backend api` sets a session-scoped filter. `ready`, `query`, and `blocked` only show tickets whose `tags` include all context-include tags and none of the context-exclude tags. `new` and `batch` auto-inherit context tags.
-- **Scripted/non-interactive use — advice routing:** `tkt`'s advisory hints (e.g. the batch nudge) print to **stderr** in human mode, so parsing **stdout** is already safe. For scripts, prefer `-q`/`--quiet` (stdout becomes the bare id — including the renumbered id after a lost-race retry) or `-o json` (hints move into a structured `hints[]` array, never into the result). Set `TKT_ADVICE=0` (also `off`/`false`) to silence the nudge entirely.
+- **Scripted/non-interactive use — advice routing:** `tkt`'s advisory hints (e.g. the batch nudge) print to **stderr** in human mode. `-q`/`--quiet` keeps text output minimal; `-o json` selects structured output and remains JSON when combined with `-q`. Set `TKT_ADVICE=0` (also `off`/`false`) to silence the nudge entirely.
+
+Query retains the active tag context by default and reports actual narrowing on
+stderr. Use `tkt query --all-context` to bypass context for a whole-board audit
+without changing stored context or the current environment.
+Query includes tags, validation criteria, requires, ownership and eligibility;
+unknown or unparsed stored fields are raw strings under `frontmatter`. Query and ready JSON
+retain historical `blocked_by` alongside unfinished/missing `pending_blockers`.
 
 ---
 

@@ -96,6 +96,11 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
         }
     }
     if json {
+        let done_ids: std::collections::HashSet<&str> = corpus
+            .iter()
+            .filter(|ticket| ticket.status == Status::Done)
+            .map(|ticket| ticket.id.as_str())
+            .collect();
         for t in &front {
             let blocked_by: Vec<String> = t
                 .blocked_by
@@ -110,6 +115,16 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
                     core::json_string_escape(t.status.as_str())
                 ),
                 format!("\"blocked_by\":[{}]", blocked_by.join(",")),
+                format!(
+                    "\"pending_blockers\":{}",
+                    serde_json::to_string(
+                        &t.blocked_by
+                            .iter()
+                            .map(String::as_str)
+                            .filter(|dependency| !done_ids.contains(dependency))
+                            .collect::<Vec<_>>()
+                    )?
+                ),
             ];
             if t.env != core::Env::Either {
                 fields.push(format!(

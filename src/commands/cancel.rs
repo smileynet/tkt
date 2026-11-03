@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, slug_from_filename};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_quiet, is_quiet_json, print_quiet_json_success, slug_from_filename,
+};
 use crate::core::{self, Status};
 use crate::mutation::MutationContext;
 
@@ -120,6 +122,10 @@ pub fn run(
     }
 
     if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would cancel {} ({})", ticket.id, reason));
+            return Ok(0);
+        }
         println!(
             "Would cancel {} {} (→ cancelled: {})",
             ticket.id,
@@ -168,11 +174,13 @@ pub fn run(
     for (dependent_id, dependent_file) in rewritten {
         dependent_file.write()?;
         paths.push(ctx.rel_path(&dependent_file.path));
-        println!(
-            "{} blocked_by for {}",
-            if repoint { "Repointed" } else { "Dropped" },
-            dependent_id
-        );
+        if !is_quiet() {
+            println!(
+                "{} blocked_by for {}",
+                if repoint { "Repointed" } else { "Dropped" },
+                dependent_id
+            );
+        }
     }
     file.write()?;
     paths.push(ctx.rel_path(&file.path));
@@ -182,7 +190,9 @@ pub fn run(
     let paths: Vec<&str> = paths.iter().map(String::as_str).collect();
     ctx.publish(&paths, &format!("chore(tickets): cancel {}", id))?;
 
-    if !is_quiet() {
+    if is_quiet() {
+        print_quiet_json_success(&format!("cancelled {} ({})", ticket.id, reason));
+    } else {
         println!("Cancelled {} ({})", ticket.id, reason);
     }
     Ok(0)

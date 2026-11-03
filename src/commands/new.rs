@@ -2,7 +2,10 @@
 
 use anyhow::Result;
 
-use crate::commands::common::{domain_bail, is_dry_run, is_quiet, project_config, tickets_dir};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
+    project_config, tickets_dir,
+};
 use crate::core::{self, validate};
 use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
@@ -157,23 +160,27 @@ pub fn run(
 
     // Dry-run: show what would happen without writing
     if is_dry_run() {
-        println!("Would create .tickets/{}", filename);
-        println!(
-            "  id: {}, status: {}, priority: {}",
-            tid,
-            status.unwrap_or("open"),
-            priority.unwrap_or("medium")
-        );
-        if !blocked_by.is_empty() {
-            println!("  blocked_by: {:?}", blocked_by);
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would create {}", filename));
+        } else {
+            println!("Would create .tickets/{}", filename);
+            println!(
+                "  id: {}, status: {}, priority: {}",
+                tid,
+                status.unwrap_or("open"),
+                priority.unwrap_or("medium")
+            );
+            if !blocked_by.is_empty() {
+                println!("  blocked_by: {:?}", blocked_by);
+            }
+            if let Some(parent) = parent {
+                println!("  parent: {}", parent);
+            }
+            if !validation_criteria.is_empty() {
+                println!("  validation_criteria: {} items", validation_criteria.len());
+            }
+            println!("  Would commit and push");
         }
-        if let Some(parent) = parent {
-            println!("  parent: {}", parent);
-        }
-        if !validation_criteria.is_empty() {
-            println!("  validation_criteria: {} items", validation_criteria.len());
-        }
-        println!("  Would commit and push");
         return Ok(0);
     }
 
@@ -208,7 +215,7 @@ pub fn run(
 
     match txn.try_push()? {
         PublishResult::Done(outcome) => {
-            if is_quiet() {
+            if is_quiet() && !is_json_output() {
                 println!("{}", tid);
             } else {
                 let detail = match outcome {
@@ -249,7 +256,7 @@ pub fn run(
             )?;
 
             txn.push_retry()?;
-            if is_quiet() {
+            if is_quiet() && !is_json_output() {
                 println!("{}", tid2);
             } else {
                 emit_created(

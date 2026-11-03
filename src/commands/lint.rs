@@ -4,6 +4,7 @@ use std::path::Path;
 
 use anyhow::Result;
 
+use crate::commands::common::{is_quiet_json, print_quiet_json_success};
 use crate::core::{self, Ticket, TicketFile};
 
 /// Canonical field order for frontmatter.
@@ -90,6 +91,19 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
         }
         if errors > 0 {
             eprintln!("tkt lint: {} file(s) skipped (parse errors)", errors);
+        }
+        if changed > 0 {
+            print_quiet_json_success(&format!(
+                "{} {} ticket(s)",
+                if dry_run {
+                    "would normalize"
+                } else {
+                    "normalized"
+                },
+                changed
+            ));
+        } else if is_quiet_json() {
+            print_quiet_json_success("no tickets needed normalization");
         }
         Ok(0)
     }

@@ -3,7 +3,8 @@
 use anyhow::Result;
 
 use crate::commands::common::{
-    domain_bail, is_dry_run, is_quiet, print_success, slug_from_filename,
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
+    print_success, slug_from_filename,
 };
 use crate::core::{self, AcSelection, Env, Priority, Status};
 use crate::mutation::MutationContext;
@@ -215,12 +216,16 @@ pub fn run(
     }
 
     if is_dry_run() {
-        println!(
-            "Would edit {} {} ({})",
-            id,
-            slug_from_filename(&file.path),
-            changed.join(", ")
-        );
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would edit {} ({})", id, changed.join(", ")));
+        } else {
+            println!(
+                "Would edit {} {} ({})",
+                id,
+                slug_from_filename(&file.path),
+                changed.join(", ")
+            );
+        }
         return Ok(0);
     }
 
@@ -239,7 +244,7 @@ pub fn run(
         &paths,
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
     )?;
-    if !is_quiet() {
+    if !is_quiet() || is_json_output() {
         print_success(
             "edited",
             id,

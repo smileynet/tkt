@@ -6,7 +6,9 @@ use std::sync::LazyLock;
 use anyhow::Result;
 use regex::Regex;
 
-use crate::commands::common::{domain_bail, is_dry_run, tickets_dir};
+use crate::commands::common::{
+    domain_bail, is_dry_run, is_quiet_json, print_quiet_json_success, tickets_dir,
+};
 use crate::core::{self, Status, Ticket};
 use crate::findings::{self, Finding};
 use crate::git;
@@ -220,6 +222,18 @@ pub fn run(
     } else {
         "pass"
     };
+
+    if fix && status == "pass" && is_quiet_json() {
+        print_quiet_json_success(&format!(
+            "{} plan row(s)",
+            if dry_run {
+                format!("would reconcile {}", warnings.len())
+            } else {
+                format!("fixed {}", fixed_count)
+            }
+        ));
+        return Ok(0);
+    }
 
     if fix {
         let would = if dry_run { "would fix" } else { "fixed" };

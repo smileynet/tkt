@@ -24,7 +24,7 @@ Extend `tkt init --<agent>` to install a per-agent nudge that steers frontmatter
 
 **Codex** (`tkt init --codex` → `.codex/hooks.json`):
 - `PreToolUse` hook (matcher `apply_patch`) parsing the patch envelope (`*** Update File:` etc.) for `.tickets/` paths, warn-mode.
-- VERSION-FRAGILE: apply_patch interception silently didn't fire on older builds (#17794, #20204); hooks need `/hooks` trust re-review on edit. Document the caveat and version-gate. Lower priority than Claude.
+- VERSION-FRAGILE: apply_patch interception silently didn't fire on older builds (Codex#17794, Codex#20204); hooks need `/hooks` trust re-review on edit. Document the caveat and version-gate. Lower priority than Claude.
 
 ## Context
 

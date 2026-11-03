@@ -38,4 +38,8 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Capture local/upstream before-and-after bytes for a collision rebase and stale body references.
+The reproduction gate is cleared: the collision fixture captured local/upstream
+Git blob identities and reproduced unchanged stale body citations. The implementation
+reports candidates without rewriting prose; focused checks pass. See
+[rebase evidence](../docs/evidence/rebase-body-238.md). Final full-gate verification passed; see the evidence report. External issue references in three historical tickets were qualified
+without changing their recorded acceptance or resolution.
