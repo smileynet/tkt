@@ -1,7 +1,7 @@
 ---
 id: "238"
 title: "Renumbering leaves stale ID references in ticket bodies"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "tkt rebase reports, or rewrites, body references to renumbered IDs"
@@ -25,8 +25,8 @@ citation scan), which covers manual `renumber` but not the collision-recovery re
 
 ## Acceptance criteria
 
-- [ ] `tkt rebase` reports, or rewrites, body references to renumbered IDs.
-- [ ] `tkt validate` warns on `#NNN` / `ticket NNN` references to IDs that do not exist.
+- [x] `tkt rebase` reports, or rewrites, body references to renumbered IDs.
+- [x] `tkt validate` warns on `#NNN` / `ticket NNN` references to IDs that do not exist.
 
 ## Triage — 2026-11-02
 
@@ -43,3 +43,11 @@ Git blob identities and reproduced unchanged stale body citations. The implement
 reports candidates without rewriting prose; focused checks pass. See
 [rebase evidence](../docs/evidence/rebase-body-238.md). Final full-gate verification passed; see the evidence report. External issue references in three historical tickets were qualified
 without changing their recorded acceptance or resolution.
+
+## Resolution (2026-11-03)
+
+Rebase reports possible stale prose citations without rewriting bodies, and validation flags missing local numeric references. Independent critic accepted final source. Evidence promoted; shared cache retained for maintenance and temporary delivery helpers end after dashboard publication.
+
+### Verification
+1. ✓ tkt rebase reports, or rewrites, body references to renumbered IDs — "Collision fixture verifies old/new citation reporting in preview and real rebase while local/upstream bodies remain unchanged; docs/evidence/rebase-body-238.md."
+2. ✓ tkt validate warns on #NNN / ticket NNN references to IDs that do not exist — "Both dangling citation syntaxes warn; code, URL and external-link exclusions pass. Installed strict corpus validation reports zero findings; final gate 384 Rust tests passed."

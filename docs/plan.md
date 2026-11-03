@@ -48,7 +48,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 | 190 | Parse known config keys into strict typed policies | ✅ done |
 | 236 | tkt config shows the wrong user-config path on macOS | ✅ done |
 | 237 | debug = true in config prints to stderr instead of the log file | ✅ done |
-| 238 | Renumbering leaves stale ID references in ticket bodies | in_progress |
+| 238 | Renumbering leaves stale ID references in ticket bodies | ✅ done |
 
 ## Agent workflow and guidance
 
