@@ -195,4 +195,4 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 244 | Serve the delivery dashboard on the local network | ✅ done |
 | 248 | Compare plan lifecycle labels precisely without narrative parsing | ✅ done |
 | 249 | Add optional local pre-push verification | open |
-| 250 | Prevent debug logging from writing during dry-run | in_progress |
+| 250 | Prevent debug logging from writing during dry-run | ✅ done |
