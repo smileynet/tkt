@@ -1,7 +1,7 @@
 ---
 id: "235"
 title: "Ticket mutations skip heavy commit hooks and can defer the push"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "A --no-push flag and a push=false config let a ticket be created or edited locally, with the later push still collision-safe"
   - "A rejected push from a consumer pre-push hook is reported with the local commit id and a retry instruction, never silently left ahead"
 tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
+assignee: "codex"
 ---
 
 # Ticket mutations skip heavy commit hooks and can defer the push
