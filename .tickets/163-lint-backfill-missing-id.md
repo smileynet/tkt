@@ -1,7 +1,7 @@
 ---
 id: "163"
 title: "lint: backfill missing id from filename prefix"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -34,12 +34,12 @@ already normalizes frontmatter style.
 
 ## Acceptance criteria
 
-- [ ] `tkt lint` inserts `id:` derived from the `NNN-slug` filename prefix when frontmatter lacks `id`
-- [ ] the inserted id is a quoted string matching tkt's in-memory derivation
-- [ ] hand-authored tickets with no `id:` become parseable + canonical after `lint`
-- [ ] `tkt validate` no longer reports unparseable missing-id for fixable files
-- [ ] no change to files that already have an `id:`
-- [ ] regression test (lint::backfill_missing_id)
+- [x] `tkt lint` inserts `id:` derived from the `NNN-slug` filename prefix when frontmatter lacks `id`
+- [x] the inserted id is a quoted string matching tkt's in-memory derivation
+- [x] hand-authored tickets with no `id:` become parseable + canonical after `lint`
+- [x] `tkt validate` no longer reports unparseable missing-id for fixable files
+- [x] no change to files that already have an `id:`
+- [x] regression test (lint::backfill_missing_id)
 
 ## Triage — 2026-11-02
 
@@ -48,3 +48,12 @@ Disposition: `kind:bug`, `triage:ready-for-agent`; stream `compliance`.
 Confirmed: bare lint skips missing-id ticket and leaves bytes unchanged. lint --fix is currently rejected (exit 2). Implement backfill through the existing bare lint mutation interface; do not add a redundant --fix flag.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Bare lint safely backfills missing numeric IDs from valid filenames after full candidate parsing; existing IDs and nonwriting modes preserved. Independent critic accepted. See docs/evidence/freshness-and-lint-153-163.md.
+
+### Verification
+1. ✓ tkt lint inserts id: derived from filename NNN-slug prefix when frontmatter lacks id (test: lint::backfill_missing_id) — "Public backfill_missing_id fixture proves quoted filename-derived ID insertion."
+2. ✓ hand-authored tickets with no id: field become parseable + canonical after bare lint — "Repaired hand-authored fixture passes lint --check; body and custom field preserved."
+3. ✓ tkt validate no longer reports unparseable missing-required-field-id for fixable files — "Public validate fixture passes after repair; final gate 315 Rust tests passed."
