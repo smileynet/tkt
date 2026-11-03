@@ -193,6 +193,7 @@ tkt close 05 --check-all \
 |---------|-----|
 | `tkt validate` | Contract integrity — cycles, broken deps, invalid fields |
 | `tkt audit` | Closure quality — unchecked ACs, TBD resolutions, stale WIP |
+| `tkt audit --deep` | Evidence quality and actual unfilled template sections; quoted examples are ignored |
 | `tkt sync-plan` | Plan drift — ticket status vs plan document (advisory; `--check` gates CI) |
 | `tkt doctor` | Setup verification — current project or multi-project scan |
 | `tkt lint --check` | Preview style and missing numeric-ID repairs without writing; bare `tkt lint` applies them |

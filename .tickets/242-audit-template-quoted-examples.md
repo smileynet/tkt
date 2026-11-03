@@ -29,4 +29,10 @@ Make the done-ticket template rule inspect actual template section content rathe
 
 ## Current evidence
 
+Scope clarification: in completed tickets, a checked placeholder still lacks
+substantive content. Preserve warnings for real placeholder lines mixed with
+substantive ACs in an actual acceptance section. The open/in-progress stub rule
+may keep its existing sole-placeholder policy; share Markdown-aware section
+parsing without silently broadening readiness policy.
+
 Final deep audit after six CLI closures reports 15 findings: 14 warnings and one high-priority-open info. The 176 template warning is a confirmed false positive: its actual acceptance criteria are checked and its body includes a quoted example of an old unchecked placeholder. Five historical missing-evidence warnings remain unknown, not waived. See docs/evidence/frontier-maintenance-2026-11-03.md for the preceding verified queue.

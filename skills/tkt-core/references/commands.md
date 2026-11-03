@@ -63,6 +63,7 @@ ticket stdout. `--all-context` bypasses context; status/priority/parent filters 
 | `tkt audit` | Closure quality: unchecked ACs, TBD resolutions, stale WIP |
 | `tkt audit --strict` | Treat warnings as errors |
 | `tkt audit --brief` | Short summary |
+| `tkt audit --deep` | Inspect closure evidence and actual template-section content; ignore quoted examples while retaining real placeholders, including checked ones |
 | `tkt sync-plan [PLAN]` | Report ticket-vs-plan drift (advisory, exit 0; default: docs/plan.md) |
 | `tkt sync-plan --check [PLAN]` | CI gate: exit 1 on drift |
 | `tkt sync-plan --fix [--dry-run] [PLAN]` | Update status cells and append missing tickets under Unplanned tickets (`--dry-run` previews) |

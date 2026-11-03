@@ -27,6 +27,7 @@ Project configuration, ownership, creation bodies/templates, hooks/deferred push
 
 | ID | Work | Status |
 |---:|---|---|
+| 242 | Audit completed templates by actual section content | in_progress |
 | 138 | Update capabilities manifest with all commands | ✅ done |
 | 127 | Improve agent discoverability: help nudge to capabilities, init recommends agent setup | ✅ done |
 | 153 | Guard against stale-binary validation (prefer integration tests, add freshness check) | ✅ done |
@@ -174,9 +175,3 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 223 | Keep plan status current during ticket mutations | ✅ done |
 | 224 | Agent eligibility policy and invocation-scoped identity | ✅ done |
 | 225 | Make upstream deployment validation enforce strict plugin and catalog checks | ✅ done |
-
-## Unplanned tickets
-
-| ID | Work | Status |
-|---:|---|---|
-| 242 | Audit completed templates by actual section content | in_progress |

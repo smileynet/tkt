@@ -2,6 +2,13 @@
 
 Use `tkt audit --deep` for structural checks, then apply this guidance for contextual analysis that requires reading and reasoning about ticket content.
 
+The template rule inspects actual level-2 intent and acceptance sections, ignoring
+quoted or fenced examples. Real empty/default-prompt intent and placeholder AC
+lines remain unfinished content, even when their boxes are checked after closure.
+This rule does not waive missing historical proof. Open/in-progress stub detection
+retains its existing sole-placeholder policy; completed audits also catch a real
+placeholder mixed with substantive criteria. Review findings before editing prose.
+
 ## When to use
 
 - After a batch of tickets are closed (release review)
@@ -66,7 +73,7 @@ When multiple tickets are closed in the same session, scrutinize for gaming.
 |---------|-------------|
 | Config/infra tickets with "applied X to N projects" | Genuinely repetitive work |
 | Research spikes closed with unique findings per ticket | Different content, same session |
-| Tickets closed with `--force` + "Superseded by #N" | Explicit lifecycle management |
+| Cancelled tickets with a recorded reason and replacement | Explicit lifecycle management, without claiming completion |
 | Tickets with unique, specific evidence per ticket | Work was done, just done quickly |
 | Trivial tickets (rename, typo fix) closed rapidly | Scope matches speed |
 
@@ -115,7 +122,7 @@ A ticket closed with only template text = work happened but wasn't documented.
 ### Ticket 05 — Implement caching
 - ⚠ Evidence for "response time < 200ms" is "tested" (no measurement)
 - ⚠ Resolution is 4 words: "Added Redis caching layer"
-- Recommendation: Re-close with actual latency measurement
+- Recommendation: Record a fresh latency measurement and distinguish it from the original closure evidence
 
 ### Ticket 08 — Deploy pipeline
 - ✓ All evidence is specific and measurable

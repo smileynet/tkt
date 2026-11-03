@@ -262,11 +262,7 @@ pub fn check_template_only(corpus: &[Ticket]) -> Vec<Finding> {
             continue;
         }
 
-        let has_tbd_body =
-            t.body.contains("## What to build\n\nTBD") || t.body.contains("## What to build\n\n\n");
-        let has_tbd_ac = t.body.contains("- [ ] TBD");
-
-        if has_tbd_body || has_tbd_ac {
+        if crate::findings::has_completed_template_content(&t.body) {
             findings.push(Finding {
                 file: filename(t),
                 rule: "template-only-closure".into(),

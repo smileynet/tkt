@@ -47,6 +47,7 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
@@ -90,6 +91,7 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
@@ -128,6 +130,7 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
@@ -176,6 +179,7 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.
@@ -225,6 +229,7 @@ Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent I
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
 Body AC checkboxes use --check-all/--ac; frontmatter validation_criteria maps 1:1 by index to --evidence. The counts are independent.

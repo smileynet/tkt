@@ -666,46 +666,152 @@ pub fn check_stub_body(corpus: &[Ticket]) -> Vec<Finding> {
         .collect()
 }
 
-/// Extract the trimmed content of a `## <heading>` section (heading line matched
-/// at start-of-line), stopping at the next `## ` heading. None if absent.
-fn section_content<'a>(body: &'a str, heading: &str) -> Option<&'a str> {
-    let start_idx = if body.starts_with(heading) {
-        0
-    } else {
-        body.find(&format!("\n{}", heading))? + 1
-    };
-    let after_heading = start_idx + heading.len();
-    let content_start = body[after_heading..]
-        .find('\n')
-        .map(|i| after_heading + i + 1)
-        .unwrap_or(body.len());
-    let content_end = body[content_start..]
-        .find("\n## ")
-        .map(|i| content_start + i)
-        .unwrap_or(body.len());
-    Some(body[content_start..content_end].trim())
-}
-
-/// True when the body is an unfilled `tkt new` template stub: the intent section
-/// is empty or contains the old/new prompt, or its only checkbox is a prompt.
-fn is_stub_body(body: &str) -> bool {
-    let intent_stub = section_content(body, "## What to build")
-        .map(|c| c.is_empty() || c == "TBD" || c == core::ticket::DEFAULT_INTENT_PROMPT)
-        .unwrap_or(false);
-
-    let ac_stub = section_content(body, "## Acceptance criteria")
-        .map(|c| {
-            let checkboxes: Vec<&str> = c
+/// Classify real level-two template sections while excluding fenced examples.
+/// Lifecycle policy remains explicit: completed tickets treat any exact
+/// placeholder AC line as unfinished, even if it is checked or mixed with real ACs.
+pub(crate) fn has_completed_template_content(body: &str) -> bool {
+    let sections = template_sections(body);
+    sections
+        .intent
+        .iter()
+        .any(|section| section.is_empty() || is_placeholder_intent(&section.content))
+        || sections.acceptance.iter().any(|section| {
+            let lines: Vec<_> = section
+                .content
                 .lines()
                 .map(str::trim)
-                .filter(|l| l.starts_with("- ["))
+                .filter(|line| !line.is_empty())
                 .collect();
-            checkboxes == ["- [ ] TBD"]
-                || checkboxes == [format!("- [ ] {}", core::ticket::DEFAULT_AC_PROMPT)]
+            (lines.is_empty() && section.is_empty())
+                || lines.iter().any(|line| is_placeholder_ac_line(line))
         })
-        .unwrap_or(false);
+}
 
-    intent_stub || ac_stub
+fn is_stub_body(body: &str) -> bool {
+    let sections = template_sections(body);
+    sections
+        .intent
+        .iter()
+        .any(|section| section.is_empty() || is_placeholder_intent(&section.content))
+        || sections
+            .acceptance
+            .iter()
+            .any(|section| is_placeholder_ac(&section.content))
+}
+
+#[derive(Default)]
+struct TemplateSection {
+    content: String,
+    has_fenced_content: bool,
+}
+
+impl TemplateSection {
+    fn is_empty(&self) -> bool {
+        self.content.trim().is_empty() && !self.has_fenced_content
+    }
+}
+
+struct TemplateSections {
+    intent: Vec<TemplateSection>,
+    acceptance: Vec<TemplateSection>,
+}
+
+#[derive(Clone, Copy)]
+enum TemplateTarget {
+    Intent,
+    Acceptance,
+}
+
+fn template_sections(body: &str) -> TemplateSections {
+    let mut sections = TemplateSections {
+        intent: Vec::new(),
+        acceptance: Vec::new(),
+    };
+    let mut current: Option<TemplateTarget> = None;
+    let mut fence: Option<(char, usize)> = None;
+    for line in body.lines() {
+        let trimmed = line.trim();
+        let delimiter = trimmed.chars().next().filter(|c| *c == '`' || *c == '~');
+        let marker_width = delimiter.map_or(0, |first| {
+            trimmed.chars().take_while(|c| *c == first).count()
+        });
+        if marker_width >= 3 {
+            let marker_rest = &trimmed[marker_width..];
+            if let Some((open, width)) = fence {
+                if delimiter == Some(open) && marker_width >= width && marker_rest.trim().is_empty()
+                {
+                    fence = None;
+                }
+            } else {
+                match current {
+                    Some(TemplateTarget::Intent) => mark_fenced_content(&mut sections.intent),
+                    Some(TemplateTarget::Acceptance) => {
+                        mark_fenced_content(&mut sections.acceptance)
+                    }
+                    _ => {}
+                }
+                fence = Some((delimiter.expect("fence delimiter"), marker_width));
+            }
+            continue;
+        }
+        if fence.is_some() {
+            continue;
+        }
+        match trimmed {
+            "## What to build" => {
+                sections.intent.push(TemplateSection::default());
+                current = Some(TemplateTarget::Intent);
+            }
+            "## Acceptance criteria" => {
+                sections.acceptance.push(TemplateSection::default());
+                current = Some(TemplateTarget::Acceptance);
+            }
+            value if value.starts_with("## ") => current = None,
+            _ => match current {
+                Some(TemplateTarget::Intent) => append_section(&mut sections.intent, line),
+                Some(TemplateTarget::Acceptance) => append_section(&mut sections.acceptance, line),
+                _ => {}
+            },
+        }
+    }
+    sections
+}
+
+fn append_section(sections: &mut [TemplateSection], line: &str) {
+    let content = &mut sections.last_mut().expect("active section").content;
+    if !content.is_empty() {
+        content.push('\n');
+    }
+    content.push_str(line);
+}
+
+fn mark_fenced_content(sections: &mut [TemplateSection]) {
+    sections
+        .last_mut()
+        .expect("active section")
+        .has_fenced_content = true;
+}
+
+fn is_placeholder_intent(content: &str) -> bool {
+    let content = content.trim();
+    content == "TBD" || content == core::ticket::DEFAULT_INTENT_PROMPT
+}
+
+fn is_placeholder_ac(content: &str) -> bool {
+    let checkboxes: Vec<&str> = content
+        .lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with("- ["))
+        .collect();
+    checkboxes == ["- [ ] TBD"]
+        || checkboxes == [format!("- [ ] {}", core::ticket::DEFAULT_AC_PROMPT)]
+}
+
+fn is_placeholder_ac_line(line: &str) -> bool {
+    ["- [ ] ", "- [x] ", "- [X] "].iter().any(|prefix| {
+        line.strip_prefix(prefix)
+            .is_some_and(|text| text == "TBD" || text == core::ticket::DEFAULT_AC_PROMPT)
+    })
 }
 
 #[cfg(test)]

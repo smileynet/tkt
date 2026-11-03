@@ -142,6 +142,8 @@ literal text. New/batch `--template NAME` loads `.tickets/templates/NAME.md`
 verbatim. Default prompts must be filled and link the intent source; they remain
 stub findings until replaced. Claim records the current agent as optional assignee;
 other owners require an explicit force override, independently of eligibility.
+Quoted template examples are valid specification content. Actual default prompts
+need replacement; checking a placeholder box does not supply a real criterion.
 
 To adjust existing tags, edit applies `--tags` replacement (empty clears), then
 `--add-tag` unique additions, then `--remove-tag` removals. These are repeatable;

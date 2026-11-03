@@ -276,6 +276,10 @@ unknown or unparsed stored fields appear as raw strings under `frontmatter`. Que
 JSON keep historical `blocked_by` and add `pending_blockers` for missing or non-done
 prerequisites. Combining `-q` with `-o json` keeps structured JSON output.
 
+The deep-audit template rule inspects actual intent and acceptance sections. Quoted template
+examples are ignored; real empty/default prompts and placeholder criteria still
+warn, including checked placeholders. Missing historical evidence remains visible.
+
 ### Migrate from other tools
 
 ```bash

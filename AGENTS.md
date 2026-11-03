@@ -283,6 +283,11 @@ otherwise; valid rows and successful exit semantics are preserved.
 
 ## Contract
 
+The deep-audit template rule checks actual intent/acceptance sections, ignoring quoted template
+examples. Empty/default prompts and real placeholder ACs remain warnings even
+when checked after closure; historical evidence omissions are not waived.
+Open/in-progress stub detection retains its sole-placeholder policy.
+
 Rebase reports candidate stale body citations (path/line/old-new mapping) without
 rewriting prose. Validation warns on missing unqualified local #NNN/ticket NNN
 citations; qualify external issues or link them and quote code examples.
