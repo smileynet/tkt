@@ -1,7 +1,7 @@
 ---
 id: "173"
 title: "validate: frontier-scoped readiness rule (Definition of Ready gate)"
-status: in_progress
+status: done
 blocked_by: ["175"]
 validation_criteria:
   - "Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate"
@@ -12,6 +12,10 @@ assignee: "codex"
 ---
 
 # validate: frontier-scoped readiness rule (Definition of Ready gate)
+
+## Bounded implementation scope — 2026-11-03
+
+Audit the project structural frontier using existing dependency/container/capability selection and shared ready capability resolution. The audit is project-wide, not narrowed by invocation identity, ownership, tags or parent-view filters. Info-only missing source/AC/validation slots never change readiness or strict exit status. Reuse the source predicate; source-specific policy remains separately controlled by ticket175. Fenced or moved-only acceptance examples do not fill the AC slot. Transitive backlog-chain diagnosis is outside this first rule and remains future scope, not a claimed result.
 
 ## Owner decision — 2026-11-03
 
@@ -52,9 +56,9 @@ Bound frontier readiness to explicit advisory findings, reuse the source-referen
 
 ## Acceptance criteria
 
-- [ ] Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate
-- [ ] Source-reference logic is reused rather than duplicated and its scope is distinct from broader readiness
-- [ ] Tests preserve frontier membership/order and predictable quiet/structured diagnostics
+- [x] Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate
+- [x] Source-reference logic is reused rather than duplicated and its scope is distinct from broader readiness
+- [x] Tests preserve frontier membership/order and predictable quiet/structured diagnostics
 
 ## Field report — 2026-11-01
 
@@ -77,3 +81,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-03)
+
+Implemented bounded info-only project frontier slot checks, shared native capabilities and source predicate; repaired indirect validate-fix info gate, final full gate and critic accepted.
+
+### Verification
+1. ✓ Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate — "Source/AC/validation slots on native structural frontier are info-only even understrict; final mise run check405Rust/42Node passed,1existingWindows skip. docs/evidence/frontier-readiness-173.md."
+2. ✓ Source-reference logic is reused rather than duplicated and its scope is distinct from broader readiness — "Reuses175sourcepredicate and nativefrontierselection/sharedreadycapabilities; projectwide scope explicit, no transitivebacklog/adequacyclaim. Fenced/moved/emptyAC slots excluded."
+3. ✓ Tests preserve frontier membership/order and predictable quiet/structured diagnostics — "PublicstrictquietJSON/before-afterreadyregression coversblocked/backlog/container/capability/WIPscope; repairinfoadvice no longer gates--fix, actualwarning/errorregressions still gate. Independentcritic accepted final corrections."
