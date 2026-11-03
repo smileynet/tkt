@@ -1,7 +1,7 @@
 ---
 id: "193"
 title: "[labels.*] config: parse single-select + closed-value namespaces"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
