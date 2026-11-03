@@ -1,13 +1,14 @@
 ---
 id: "232"
 title: "Frontier output distinguishes unfinished blockers from finished ones"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
   - "ready JSON has pending_blockers"
   - "Human output shows only unfinished blockers"
 tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:workflow"]
+assignee: "codex"
 ---
 
 # Frontier output distinguishes unfinished blockers from finished ones
