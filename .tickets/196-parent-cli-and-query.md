@@ -1,7 +1,7 @@
 ---
 id: "196"
 title: "parent CLI + query/capabilities surface"
-status: open
+status: in_progress
 blocked_by: ["192", "195"]
 priority: high
 validation_criteria:
