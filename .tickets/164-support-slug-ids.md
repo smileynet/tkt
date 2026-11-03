@@ -1,7 +1,7 @@
 ---
 id: "164"
 title: "validate: recognize slug ids as canonical (stop false id-filename-mismatch)"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:

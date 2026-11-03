@@ -43,7 +43,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 145 | Fix update_check ignores DO_NOT_TRACK | open |
 | 151 | load_corpus ejection is stderr-only, bypasses JSON envelope and TKT_ASCII/sym_warn | open |
 | 163 | lint: backfill missing id from filename prefix | ✅ done |
-| 164 | validate: recognize slug ids as canonical (stop false id-filename-mismatch) | open |
+| 164 | validate: recognize slug ids as canonical (stop false id-filename-mismatch) | in_progress |
 | 165 | config --set: support project scope (.tickets/config.toml), not just user | open |
 | 190 | Parse known config keys into strict typed policies | open |
 | 236 | tkt config shows the wrong user-config path on macOS | open |
