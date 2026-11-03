@@ -23,7 +23,7 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-Discovery and the first integrity/configuration repairs are complete, including typed policies #190, editable tags #233, structured corpus diagnostics #151 and dist configuration #66. The guidance proposal #226 is complete; restructuring remains unapplied pending approval. Current parallel work is #165 (project config writes), #194 (assignee ownership) and #176 (creation body/templates). Each implementation requires independent critic acceptance and the local gate before closure. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
+Project configuration #165, ownership #194 and full creation bodies/templates #176 are complete alongside earlier integrity repairs. The guidance proposal #226 remains unapplied pending approval. Current parallel work is #235 (commit hooks/deferred push), #227 (cancellation lifecycle) and #177 (remaining content-guidance alignment). Each implementation requires independent critic acceptance and the local gate before closure. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
 
 | ID | Work | Status |
 |---:|---|---|
