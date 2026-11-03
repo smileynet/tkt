@@ -38,10 +38,10 @@ For another plan path, append that path explicitly. Plain `sync-plan` is advisor
 and exits zero on drift; it is not an equivalent gate. A project without a plan
 does not need to create one merely to use the first two checks.
 
-The current plan checker recognizes canonical `✅ done` cells, but a probe found
-that plain `done` and some other lifecycle mismatches can escape detection. Ticket
-248 tracks that independent correctness repair; this recipe does not imply those
-cases are already enforced. Narrative parsing remains deferred under ticket 184.
+The independent plan-comparison repair in ticket 248 checks all five lifecycle
+labels, including plain `done`, and reports unknown cells. It preserves canonical
+`✅ done` and cancellation reasons. Narrative parsing remains deferred under
+ticket 184; this repair only compares existing table cells.
 
 ## What a required check can and cannot establish
 

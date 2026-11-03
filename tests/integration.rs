@@ -466,6 +466,87 @@ fn test_sync_plan_detects_drift() {
 }
 
 #[test]
+fn test_sync_plan_compares_every_lifecycle_and_repairs_unknown_cells() {
+    let (_tmp, root) = setup_repo();
+    std::fs::create_dir_all(root.join("docs")).unwrap();
+    let head = git(&root, &["rev-parse", "HEAD"]);
+    for (status, cell) in [
+        ("open", "done"),
+        ("in_progress", "open"),
+        ("backlog", "in_progress"),
+        ("done", "backlog"),
+        ("open", "✅ open"),
+        ("open", "unknown"),
+        ("cancelled", "cancelled (wontfix)"),
+    ] {
+        std::fs::write(root.join(".tickets/02-state.md"),format!("---\nid: \"02\"\ntitle: \"State\"\nstatus: {status}\nblocked_by: []\n---\n\n## Cancellation\n\n- Reason: obsolete\n")).unwrap();
+        let plan=format!("# User prose stays\n\n| 01 | Seed | ✅ done |\n| 02 | State | {cell} |\n\nMore user prose.\n");
+        std::fs::write(root.join("docs/plan.md"), &plan).unwrap();
+        let (code, text) = run_tkt(&root, &["sync-plan", "--check", "--brief"]);
+        assert_eq!(code, 1, "{status}/{cell}: {text}");
+        assert!(
+            text.contains(if cell == "unknown" || cell == "✅ open" {
+                "plan-status-invalid"
+            } else {
+                "plan-status-drift"
+            }),
+            "{text}"
+        );
+        assert_eq!(run_tkt(&root, &["sync-plan", "--brief"]).0, 0);
+        assert_eq!(run_tkt(&root, &["sync-plan", "--strict", "--brief"]).0, 1);
+        assert_eq!(
+            run_tkt(&root, &["sync-plan", "--fix", "--dry-run", "--brief"]).0,
+            0
+        );
+        assert_eq!(
+            std::fs::read_to_string(root.join("docs/plan.md")).unwrap(),
+            plan
+        );
+        let (code, text) = run_tkt(&root, &["sync-plan", "--fix", "--brief"]);
+        assert_eq!(code, 0, "{text}");
+        let fixed = std::fs::read_to_string(root.join("docs/plan.md")).unwrap();
+        let expected = match status {
+            "done" => "✅ done",
+            "cancelled" => "cancelled (obsolete)",
+            other => other,
+        };
+        assert!(
+            fixed.contains(&format!("| 02 | State | {expected} |")),
+            "{fixed}"
+        );
+        assert!(fixed.starts_with("# User prose stays\n"));
+        assert!(fixed.ends_with("More user prose.\n"));
+        assert_eq!(run_tkt(&root, &["sync-plan", "--check", "--brief"]).0, 0);
+        assert_eq!(git(&root, &["rev-parse", "HEAD"]), head);
+    }
+}
+
+#[test]
+fn test_sync_plan_matching_lifecycle_cells_are_unchanged() {
+    let (_tmp, root) = setup_repo();
+    std::fs::create_dir_all(root.join("docs")).unwrap();
+    for (status, cell) in [
+        ("open", "open"),
+        ("in_progress", "in_progress"),
+        ("backlog", "backlog"),
+        ("done", "done"),
+        ("done", "✅ done"),
+        ("cancelled", "cancelled (obsolete)"),
+    ] {
+        std::fs::write(root.join(".tickets/02-state.md"),format!("---\nid: \"02\"\ntitle: \"State\"\nstatus: {status}\nblocked_by: []\n---\n\n## Cancellation\n\n- Reason: obsolete\n")).unwrap();
+        let plan = format!("| 01 | Seed | ✅ done |\n| 02 | State | {cell} |\n");
+        std::fs::write(root.join("docs/plan.md"), &plan).unwrap();
+        let (code, text) = run_tkt(&root, &["sync-plan", "--check", "--strict", "--brief"]);
+        assert_eq!(code, 0, "{text}");
+        assert_eq!(run_tkt(&root, &["sync-plan", "--fix", "--brief"]).0, 0);
+        assert_eq!(
+            std::fs::read_to_string(root.join("docs/plan.md")).unwrap(),
+            plan
+        );
+    }
+}
+
+#[test]
 fn test_sync_plan_fix_corrects_status() {
     let (_tmp, clone) = setup_repo();
 

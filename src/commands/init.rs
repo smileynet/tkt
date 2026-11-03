@@ -20,7 +20,7 @@ const MARKER_END: &str = "<!-- tkt:end -->";
 
 const SNIPPET_AGENTS: &str = r#"## Tickets
 
-Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
 
@@ -76,7 +76,7 @@ Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity`
 
 const SNIPPET_CLAUDE: &str = r#"## Tickets
 
-Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
 
@@ -123,7 +123,7 @@ alwaysApply: true
 
 This project uses tkt for work tracking (.tickets/ directory).
 
-Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
 
@@ -173,7 +173,7 @@ Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity`
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
 
-Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
 
@@ -229,7 +229,7 @@ trigger: always_on
 
 This project uses tkt for work tracking. Tickets in .tickets/.
 
-Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically.
+Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
 

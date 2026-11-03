@@ -16,6 +16,17 @@ use crate::git;
 static RE_PLAN_ROW: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?m)^\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|\s*$").unwrap());
 
+fn parse_plan_status(cell: &str) -> Option<Status> {
+    let cell = cell.trim();
+    if cell == "✅ done" {
+        Some(Status::Done)
+    } else if cell.starts_with("cancelled (") && cell.ends_with(')') {
+        Some(Status::Cancelled)
+    } else {
+        Status::parse(cell).ok()
+    }
+}
+
 fn plan_status_value(ticket: &Ticket) -> String {
     match ticket.status {
         Status::Done => "✅ done".to_string(),
@@ -98,7 +109,7 @@ pub fn run(
     for caps in RE_PLAN_ROW.captures_iter(&plan_text.clone()) {
         let tid = caps[1].trim();
         let status_cell = &caps[2];
-        let plan_done = status_cell.contains("✅");
+        let plan_status = parse_plan_status(status_cell);
 
         match corpus_map.get(tid) {
             Some(t) => {
@@ -109,12 +120,8 @@ pub fn run(
                         .as_deref()
                         .unwrap_or("reason missing")
                 );
-                let plan_cancelled = status_cell.trim().starts_with("cancelled");
-                let status_disagrees = match t.status {
-                    Status::Done => !plan_done,
-                    Status::Cancelled => status_cell.trim() != cancellation_value,
-                    _ => plan_done || plan_cancelled,
-                };
+                let status_disagrees = plan_status != Some(t.status)
+                    || (t.status == Status::Cancelled && status_cell.trim() != cancellation_value);
                 if status_disagrees {
                     if fix && !dry_run {
                         let new_status = match t.status {
@@ -137,16 +144,15 @@ pub fn run(
                         // blocking — escalated to a failure only under --check/--strict.
                         findings.push(Finding {
                             file: t.path.file_name().unwrap().to_string_lossy().to_string(),
-                            rule: "plan-status-drift".into(),
+                            rule: if plan_status.is_none() {
+                                "plan-status-invalid"
+                            } else {
+                                "plan-status-drift"
+                            }
+                            .into(),
                             message: format!(
                                 "plan says {}, ticket is {} (run: tkt sync-plan --fix)",
-                                if plan_done {
-                                    "done"
-                                } else if plan_cancelled {
-                                    "cancelled"
-                                } else {
-                                    "not done"
-                                },
+                                status_cell.trim(),
                                 if t.status == Status::Cancelled {
                                     cancellation_value.as_str()
                                 } else {
