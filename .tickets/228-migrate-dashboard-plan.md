@@ -25,11 +25,11 @@ Intent source: the 2026-10-29 session wrap retrospective. The current dashboard 
 
 ## Acceptance criteria
 
-- [ ] Preserve every existing dashboard entry and its linked assets.
-- [ ] Add the current Plan-tab renderer and generated gm-tickets snapshot for the entire board, without an active tag context.
-- [ ] Align AGENTS.md dashboard instructions with the generated-block ownership rules.
-- [ ] Re-running snapshot-tickets.mjs refreshes the Plan tab without altering entries.
-- [ ] Current check-dashboard.mjs passes without errors or warnings.
+- [x] Preserve every existing dashboard entry and its linked assets.
+- [x] Add the current Plan-tab renderer and generated gm-tickets snapshot for the entire board, without an active tag context.
+- [x] Align AGENTS.md dashboard instructions with the generated-block ownership rules.
+- [x] Re-running snapshot-tickets.mjs refreshes the Plan tab without altering entries.
+- [x] Current check-dashboard.mjs passes without errors or warnings.
 - [ ] Inspect overview, history, and Plan views at phone and laptop widths.
 
 ## Out of scope
