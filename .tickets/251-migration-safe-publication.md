@@ -1,7 +1,7 @@
 ---
 id: "251"
 title: "Preserve migration sources and foreign destinations"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -10,6 +10,7 @@ validation_criteria:
   - "Shared no-clobber publication retains hooks/projection and migration contracts, dry-run behavior, full gate and critic acceptance"
 tags: ["stream:quality", "kind:bug", "triage:ready-for-agent"]
 parent: "191"
+assignee: "codex"
 ---
 # Preserve migration sources and foreign destinations
 
