@@ -1,7 +1,7 @@
 ---
 id: "125"
 title: "Design the first external-system import adapter contract"
-status: backlog
+status: open
 blocked_by: ["77"]
 priority: medium
 validation_criteria:

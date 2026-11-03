@@ -123,7 +123,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 90 | tkt open <id>: find URLs in ticket body and open in browser | open |
 | 93 | Pluggable schema definitions with meta field + ai_context support | open |
 | 99 | Make update check interval configurable | open |
-| 125 | Design the first external-system import adapter contract | backlog |
+| 125 | Design the first external-system import adapter contract | open |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | backlog |
 | 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | backlog |
