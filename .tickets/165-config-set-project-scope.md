@@ -1,7 +1,7 @@
 ---
 id: "165"
 title: "config --set: support project scope (.tickets/config.toml), not just user"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -39,12 +39,12 @@ but the CLI should write native TOML booleans.
 
 ## Acceptance criteria
 
-- [ ] `tkt config --set --project key=value` writes `.tickets/config.toml`
-- [ ] `tkt config --unset --project key` removes from project config
-- [ ] booleans serialize as native TOML `true`/`false`, not `"true"`
-- [ ] default (no flag) keeps user-level behavior
-- [ ] help text documents both scopes and corrects the "user-level" description
-- [ ] test: config::set_project_scope
+- [x] `tkt config --set --project key=value` writes `.tickets/config.toml`
+- [x] `tkt config --unset --project key` removes from project config
+- [x] booleans serialize as native TOML `true`/`false`, not `"true"`
+- [x] default (no flag) keeps user-level behavior
+- [x] help text documents both scopes and corrects the "user-level" description
+- [x] test: config::set_project_scope
 
 ## Additional finding (same session)
 
@@ -62,3 +62,12 @@ Disposition: `kind:bug`, `triage:ready-for-agent`; stream `config`.
 Confirmed: config --project --set close.require_resolution=true exits 2 because --project is absent. Preserve default user scope and native TOML values; coordinate typed reads with #190 without treating it as a hard prerequisite.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Project-scoped config writes/unsets validate before atomic replacement with native values, preserving default user scope and warning for detached HEAD without committing. Critic accepted. Evidence promoted docs/evidence/project-owner-body-165-194-176.md; fixtures self-clean and shared caches retained for queue.
+
+### Verification
+1. ✓ tkt config --set --project key=value writes .tickets/config.toml (test: config::set_project_scope) — "Four public project_config fixtures cover set/unset/sections/native booleans and namespace arrays."
+2. ✓ tkt config --set without flag keeps current user-level behavior (back-compat) — "Default user behavior and config_errors fixtures pass; candidate invalid writes preserve bytes."
+3. ✓ help text documents both scopes — "Help documents scopes/no auto-commit; detached warning fixture passed. Full gate361Rust42Nodepass one existing skip."

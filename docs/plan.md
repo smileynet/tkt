@@ -44,7 +44,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 151 | load_corpus ejection is stderr-only, bypasses JSON envelope and TKT_ASCII/sym_warn | ✅ done |
 | 163 | lint: backfill missing id from filename prefix | ✅ done |
 | 164 | validate: recognize slug ids as canonical (stop false id-filename-mismatch) | ✅ done |
-| 165 | config --set: support project scope (.tickets/config.toml), not just user | in_progress |
+| 165 | config --set: support project scope (.tickets/config.toml), not just user | ✅ done |
 | 190 | Parse known config keys into strict typed policies | ✅ done |
 | 236 | tkt config shows the wrong user-config path on macOS | ✅ done |
 | 237 | debug = true in config prints to stderr instead of the log file | ✅ done |
