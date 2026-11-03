@@ -1,7 +1,7 @@
 ---
 id: "226"
 title: "Propose AGENTS.md restructuring while preserving guidance coverage"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Proposal maps every moved section to an existing or new reference, preserves operational and safety rules, and updates the guidance-surface matrix coherently"
@@ -25,11 +25,11 @@ Intent source: the 2026-10-29 conformance audit, independent critic review, and 
 
 ## Acceptance criteria
 
-- [ ] Inventory sections and justify what stays always loaded versus what moves behind a pointer.
-- [ ] Map every proposed extraction to an existing or proposed destination and specify when its pointer should trigger.
-- [ ] Preserve verification, commit/push/deploy, standalone-skill, release authorization, and platform safety requirements.
-- [ ] Propose matching changes to the guidance-surface matrix and update checklist; avoid duplicating authoritative reference content.
-- [ ] Present the proposal for approval before implementing AGENTS.md restructuring.
+- [x] Inventory sections and justify what stays always loaded versus what moves behind a pointer.
+- [x] Map every proposed extraction to an existing or proposed destination and specify when its pointer should trigger.
+- [x] Preserve verification, commit/push/deploy, standalone-skill, release authorization, and platform safety requirements.
+- [x] Propose matching changes to the guidance-surface matrix and update checklist; avoid duplicating authoritative reference content.
+- [x] Present the proposal for approval before implementing AGENTS.md restructuring.
 
 ## Out of scope
 
@@ -42,3 +42,10 @@ Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `guidance`.
 Proposal-only task remains current. Include verification-policy contradictions and progressive disclosure; restructuring requires approval after the concrete coverage map is reviewed.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Reviewable proposal inventories every section/constraint/architecture/contract and required matrix changes. Independent critic accepted after exhaustive mapping fixes. Proposal promoted docs/agents/agents-restructuring-proposal.md; no restructuring applied, implementation requires approval. No disposable artifacts created; shared build cache remains needed for queue.
+
+### Verification
+1. ✓ Proposal maps every moved section to an existing or new reference, preserves operational and safety rules, and updates the guidance-surface matrix coherently — "Independent critic reviewed exact coverage map and final corrected reference homes; documentation scope/accuracy check passed. Proposal presented for approval, actual AGENTS structure/matrix unchanged."
