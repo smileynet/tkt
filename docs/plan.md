@@ -110,7 +110,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 
 ## Reactivated work and remaining deferrals
 
-The owner requested execution of actionable parked work. See [the per-ticket review](parked-review-2026-11-03.md). Completed after critic acceptance: #202 design, #99 update cadence, #186 parity retirement and #125 adapter design. The shared #175 source check and #173 bounded readiness check are complete after critic acceptance. The optional #157 project hook installer is complete and remains disabled here. The #187 derived projection is complete. Current frontier starts with #191 mutation-effect audit; #86 importer and #158 advisory native-hook work are unblocked. #173 depends on the shared #175 predicate; #86 depends on the #125 adapter contract. These are actual implementation prerequisites, not scheduling edges. #191 starts with an effect audit before any refactor. #147 still needs reproduction evidence; current native hook evidence reactivated #158 with advisory-only scope and no stale Git-hook dependency. #184 remains explicitly deferred.
+The owner requested execution of actionable parked work. See [the per-ticket review](parked-review-2026-11-03.md). Completed after critic acceptance: #202 design, #99 update cadence, #186 parity retirement and #125 adapter design. The shared #175 source check and #173 bounded readiness check are complete after critic acceptance. The optional #157 project hook installer is complete and remains disabled here. The #187 derived projection is complete. The #191 mutation-effect audit reproduced a diagnostic dry-run leak; child #250 is the immediate repair. The broader all-mutator consolidation remains in progress; see [the source audit](mutation-effects-audit.md). #86 importer and #158 advisory native-hook work are unblocked. #173 depends on the shared #175 predicate; #86 depends on the #125 adapter contract. These are actual implementation prerequisites, not scheduling edges. #191 starts with an effect audit before any refactor. #147 still needs reproduction evidence; current native hook evidence reactivated #158 with advisory-only scope and no stale Git-hook dependency. #184 remains explicitly deferred.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -195,3 +195,4 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 244 | Serve the delivery dashboard on the local network | ✅ done |
 | 248 | Compare plan lifecycle labels precisely without narrative parsing | ✅ done |
 | 249 | Add optional local pre-push verification | open |
+| 250 | Prevent debug logging from writing during dry-run | open |
