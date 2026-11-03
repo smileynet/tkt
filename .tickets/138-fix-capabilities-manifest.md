@@ -1,7 +1,7 @@
 ---
 id: "138"
 title: "Update capabilities manifest with all commands"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -32,14 +32,14 @@ v0.3.1 bugfix release.
 
 ## Acceptance criteria
 
-- [ ] `tkt capabilities` includes all public CLI commands, including all commands currently omitted
-- [ ] Each added mutation command declares its effects and meaningful input schema
-- [ ] Existing schemas include `new`/`batch` tags and requires, and never advertise
+- [x] `tkt capabilities` includes all public CLI commands, including all commands currently omitted
+- [x] Each added mutation command declares its effects and meaningful input schema
+- [x] Existing schemas include `new`/`batch` tags and requires, and never advertise
       `edit --status done` as a supported lifecycle transition
-- [ ] Each command's inputSchema includes every flag its `--help` documents (e.g. `new`
+- [x] Each command's inputSchema includes every flag its `--help` documents (e.g. `new`
       includes `--tags`, `--vc`/`--validation`, `--requires` — gaps found by #208)
-- [ ] A regression test or derived command inventory prevents command and field drift
-- [ ] #127's help/init guidance can safely point agents to the complete manifest
+- [x] A regression test or derived command inventory prevents command and field drift
+- [x] #127's help/init guidance can safely point agents to the complete manifest
 
 ## Consumer evidence (from #208, consolidated)
 
@@ -81,3 +81,10 @@ Observed gap: edit currently accepts done without close gates. The manifest foll
 the supported close-only contract; #241 owns the independently reproduced runtime
 fix. #127 still owns the top-level help/init recommendations; the manifest is ready
 for those pointers. No runtime mutation behavior was changed by #138.
+
+## Resolution (2026-11-03)
+
+Derived the complete command/flag manifest from Clap, added supported domain schemas, mutation modes and output metadata, and documented the wire format. Full local gate: 307 Rust passes, 38 Node passes and one existing Windows skip; fmt and Clippy clean. Independent Standards and Spec reviews found no actionable issues. Installed source 62a40a3 returned 22 commands. Promoted proof to docs/evidence/capabilities-138.md and the separate lifecycle bypass reproduction to ticket 241; own temporary probe and scripts sent to OS trash. Kept shared maintainer target cache for follow-on 127/153 checks.
+
+### Verification
+1. ✓ tkt capabilities lists all 20+ commands — "Pass: installed tkt 0.4.0 (62a40a3), matching implementation HEAD, returned 22 commands; public integration tests compare every help command and flag. Full mise run check passed 307 Rust tests and 38 Node tests, with one existing Windows relative-link skip; fmt no diff and Clippy zero warnings. Independent Standards/Spec reviews passed; durable proof docs/evidence/capabilities-138.md."
