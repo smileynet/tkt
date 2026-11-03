@@ -1,7 +1,7 @@
 ---
 id: "227"
 title: "Add a cancelled status and tkt cancel/reopen per ADR 0004"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -11,6 +11,7 @@ validation_criteria:
   - "ready and blocked exclude cancelled; query reports and filters it; capabilities, sync-plan and audit handle it"
   - "Integration tests cover each rule above, plus reopen and the push-gated commit"
 tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:relations"]
+assignee: "codex"
 ---
 
 # Add a cancelled status and tkt cancel/reopen per ADR 0004
