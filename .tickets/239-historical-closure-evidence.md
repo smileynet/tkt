@@ -1,7 +1,7 @@
 ---
 id: "239"
 title: "Review historical closure warnings without fabricating evidence"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
