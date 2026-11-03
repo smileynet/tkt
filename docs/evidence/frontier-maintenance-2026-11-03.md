@@ -93,3 +93,42 @@ through this run. Independent critic accepted the final implementation, includin
 the added missing `ticket 998` assertion and explicit DNT on Git child processes.
 Native Claude manifest validation and four-skill inventory passed; deploy manifest
 check passed. These checks do not perform the directory safety/policy review.
+
+## Installed verification — 2026-11-03
+
+`cargo install --path . --locked` passed (49.84 s), and
+`node tools/check-binary-fresh.mjs` reported fresh `768d392`, matching HEAD before
+live checks. With `DO_NOT_TRACK=1`, installed strict validation and plan checks
+passed with zero findings; query returned all 241 rows with required typed and
+pending-blocker fields. A valid `new --dry-run -q -o json --validation ...` returned
+one success object and preserved HEAD/worktree state. The initial preview probe
+omitted the project's required validation criterion and was correctly rejected
+with GateFailed/exit 1; that rejected input was not counted as a success.
+
+`node tools/deploy.mjs` passed and installed four workflow skills plus the local
+Antigravity pack. The generic missing-logo note is informational. The reproducible
+`dist/agy-plugin` output is retained (338,341 bytes) for this deployment; the next
+deployment replaces it. No rendered dashboard checks were performed.
+
+## Queue checkpoint after the six CLI closures
+
+Tickets 143, 144, 145, 231, 232 and 238 were closed via the CLI with checked
+criteria and criterion-specific evidence. This brings the completed queue to
+31 tickets and the board to 206 done, six cancelled, two UI in progress, five
+open decision/dependency-gated items and 22 deferred backlog items.
+
+A subsequent deep audit reported 15 findings (14 warnings, one informational).
+Its extra template warning on newly completed 176 is a false positive caused by
+the specification's quoted placeholder example. The rule-change recommendation
+from the historical review is now captured as
+[242](../../.tickets/242-audit-template-quoted-examples.md), an open, unblocked
+implementation; the board therefore contains 242 tickets and six open items.
+The five missing historical evidence records remain unknown. The new rule must
+retain real unfinished templates rather than rewriting historical prose.
+
+The six deliveries are reflected in the 51-entry dashboard, with all 242 tickets
+in its snapshot. The checker passed with zero errors/warnings and zero asks.
+The evidence export initially introduced mixed line endings; the resulting
+whitespace failure was corrected with LF normalization and `git diff --check`
+passed. Source/test hashes and the 384-test result remain applicable to the
+six-ticket implementation; they do not cover the forthcoming 242 change.

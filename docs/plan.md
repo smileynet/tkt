@@ -23,7 +23,7 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-Project configuration, ownership, full creation bodies/templates, commit hooks/deferred push, cancellation and content guidance are complete. Six obsolete items were cancelled without claiming completion. The guidance proposal #226 remains unapplied pending approval. Current implementation verification covers #145 (updater privacy) and #238 (body-reference diagnostics). The next claimed work is #143 (quiet JSON mutation output), #144 (visible and bypassable query context), #231 (complete query fields) and #232 (pending blockers). Each requires independent critic acceptance and the local gate before closure. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
+Project configuration, ownership, creation bodies/templates, hooks/deferred push, cancellation, content guidance, updater privacy, body-reference diagnostics and query/output repairs are complete. Six obsolete items were cancelled without claiming completion. The final deep audit confirmed a separate actionable false positive: #242 corrects completed-template detection when specifications quote placeholder examples. It is the next unblocked implementation; historical prose and missing evidence remain intact. The guidance proposal #226 remains unapplied pending approval. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -174,3 +174,9 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 223 | Keep plan status current during ticket mutations | ✅ done |
 | 224 | Agent eligibility policy and invocation-scoped identity | ✅ done |
 | 225 | Make upstream deployment validation enforce strict plugin and catalog checks | ✅ done |
+
+## Unplanned tickets
+
+| ID | Work | Status |
+|---:|---|---|
+| 242 | Audit completed templates by actual section content | open |

@@ -28,3 +28,19 @@ through this run. Independent critic accepted the final implementation, includin
 the added missing `ticket 998` assertion and explicit DNT on Git child processes.
 Native Claude manifest validation and four-skill inventory passed; deploy manifest
 check passed. These checks do not perform the directory safety/policy review.
+
+## Installed verification — 2026-11-03
+
+`cargo install --path . --locked` passed (49.84 s), and
+`node tools/check-binary-fresh.mjs` reported fresh `768d392`, matching HEAD before
+live checks. With `DO_NOT_TRACK=1`, installed strict validation and plan checks
+passed with zero findings; query returned all 241 rows with required typed and
+pending-blocker fields. A valid `new --dry-run -q -o json --validation ...` returned
+one success object and preserved HEAD/worktree state. The initial preview probe
+omitted the project's required validation criterion and was correctly rejected
+with GateFailed/exit 1; that rejected input was not counted as a success.
+
+`node tools/deploy.mjs` passed and installed four workflow skills plus the local
+Antigravity pack. The generic missing-logo note is informational. The reproducible
+`dist/agy-plugin` output is retained (338,341 bytes) for this deployment; the next
+deployment replaces it. No rendered dashboard checks were performed.
