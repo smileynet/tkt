@@ -1,7 +1,7 @@
 ---
 id: "202"
 title: "Design versioned embedded skills for binary-only installs"
-status: backlog
+status: open
 blocked_by: []
 priority: high
 validation_criteria:
