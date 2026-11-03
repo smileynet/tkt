@@ -1,7 +1,7 @@
 ---
 id: "191"
 title: "Centralize command mutation effects and dry-run policy"
-status: open
+status: in_progress
 blocked_by: ["136"]
 priority: medium
 validation_criteria:
@@ -10,6 +10,7 @@ validation_criteria:
   - "The shared executor preserves atomic writes and push gating"
   - "Table-driven tests cover no-write dry-run behavior"
 tags: ["architecture", "integrity", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
+assignee: "codex"
 ---
 
 # Centralize command mutation effects and dry-run policy
