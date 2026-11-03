@@ -1,7 +1,7 @@
 ---
 id: "229"
 title: "tkt-work close step cleans up the ticket's scratch and build artifacts"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
