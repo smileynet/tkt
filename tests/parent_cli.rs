@@ -288,3 +288,96 @@ fn frontier_excludes_containers_preserves_order_and_parents_require_explicit_clo
         .unwrap()
         .contains("status: open"));
 }
+
+#[test]
+fn native_relations_walkthrough_combines_progress_ownership_and_label_policy() {
+    let (_temp, root) = repo();
+    std::fs::write(root.join(".tickets/config.toml"),"[push]\nenabled = false\n[labels.triage]\nsingle_select = true\nvalues = [\"needs-info\", \"ready\"]\n").unwrap();
+    git(&root, &["add", "."]);
+    git(&root, &["commit", "-qm", "label policy"]);
+    let new=cli(&root,&["new","delivery","--parent","01","--tags","triage:ready","--body","## What to build\n\nDeliver one child.\n\n## Acceptance criteria\n\n- [ ] Child accepted\n","--validation","Child delivery verified"]);
+    assert!(new.status.success(), "{new:?}");
+    let ready = cli(&root, &["ready", "--json"]);
+    let rows: Vec<serde_json::Value> = String::from_utf8(ready.stdout)
+        .unwrap()
+        .lines()
+        .map(|s| serde_json::from_str(s).unwrap())
+        .collect();
+    assert_eq!(
+        rows.iter()
+            .map(|r| r["id"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["02", "03"]
+    );
+    let claim = cli(&root, &["--agent", "codex", "claim", "03"]);
+    assert!(claim.status.success(), "{claim:?}");
+    let query = cli(&root, &["query", "--parent", "01"]);
+    let rows: Vec<serde_json::Value> = String::from_utf8(query.stdout)
+        .unwrap()
+        .lines()
+        .map(|s| serde_json::from_str(s).unwrap())
+        .collect();
+    assert_eq!(
+        rows.iter().find(|r| r["id"] == "03").unwrap()["assignee"],
+        "codex"
+    );
+    let close = cli(
+        &root,
+        &[
+            "--agent",
+            "codex",
+            "close",
+            "03",
+            "--check-all",
+            "--resolution",
+            "Child accepted independently",
+            "--evidence",
+            "End-to-end delivery checked",
+        ],
+    );
+    assert!(close.status.success(), "{close:?}");
+    let children = cli(&root, &["children", "01", "-o", "json"]);
+    let progress: serde_json::Value = serde_json::from_slice(&children.stdout).unwrap();
+    assert_eq!(progress["status"], "open");
+    assert_eq!(progress["progress"]["done"], 1);
+    assert_eq!(progress["progress"]["total"], 2);
+    for (tag, rule) in [
+        ("triage:needs-info", "label-namespace-single-select"),
+        ("triage:unknown", "label-namespace-value"),
+    ] {
+        assert!(cli(&root, &["edit", "03", "--add-tag", tag])
+            .status
+            .success());
+        let validation = cli(&root, &["validate", "--brief"]);
+        assert_eq!(validation.status.code(), Some(1));
+        assert!(String::from_utf8(validation.stdout).unwrap().contains(rule));
+        assert!(cli(&root, &["edit", "03", "--remove-tag", tag])
+            .status
+            .success());
+    }
+    let validation = cli(&root, &["validate", "--strict", "--brief"]);
+    assert!(validation.status.success(), "{validation:?}");
+    let manifest = cli(&root, &["capabilities"]);
+    let manifest: serde_json::Value = serde_json::from_slice(&manifest.stdout).unwrap();
+    assert!(manifest["config"]["label_namespaces"].is_object());
+    assert!(manifest["ticket_relations"]["assignee"]
+        .as_str()
+        .unwrap()
+        .contains("claim"));
+    std::fs::create_dir(root.join(".github")).unwrap();
+    for (target, path) in [
+        ("agents", "AGENTS.md"),
+        ("claude", "CLAUDE.md"),
+        ("copilot", ".github/copilot-instructions.md"),
+        ("cursor", ".cursor/rules/tkt.mdc"),
+        ("kiro", ".kiro/steering/tkt.md"),
+        ("windsurf", ".windsurf/rules/tkt.md"),
+    ] {
+        let snippet = cli(&root, &["init", "--agent-only", "--target", target]);
+        assert!(snippet.status.success(), "{snippet:?}");
+        let text = std::fs::read_to_string(root.join(path)).unwrap();
+        for term in ["parent", "assignee", "[labels.<namespace>]"] {
+            assert!(text.contains(term), "{target}: missing {term}");
+        }
+    }
+}

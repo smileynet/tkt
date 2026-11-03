@@ -60,7 +60,17 @@ pub fn run() -> Result<i32> {
         "config": {
             "user": crate::config::config_file_path().map(|path| path.to_string_lossy().into_owned()),
             "project": ".tickets/config.toml",
-            "cascade": "CLI flag > env var > project > user > default"
+            "cascade": "CLI flag > env var > project > user > default",
+            "label_namespaces": {
+                "path": "[labels.<namespace>]",
+                "fields": {"single_select": "boolean; at most one namespaced tag", "values": "single-line JSON-style double-quoted string array without trailing comma"},
+                "validation": "Declared values are closed; undeclared namespaces remain free-form. Malformed configuration is an error"
+            }
+        },
+        "ticket_relations": {
+            "parent": "Optional existing ticket ID; new/batch/edit --parent, query --parent for direct children; any ticket with children is excluded from ready. children ID reports computed progress, never auto-closes",
+            "assignee": "Optional invocation AgentId recorded by claim; ready hides other owners; --agent/TKT_AGENT identifies the caller, eligibility remains separate",
+            "compatibility": "Optional additive fields/config; old tickets remain valid without parent, assignee or namespace declarations"
         },
         "errors": [
             {"kind": "not_found", "exit_code": 1, "retryable": false, "description": "Ticket or resource does not exist"},

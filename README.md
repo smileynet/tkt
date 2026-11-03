@@ -232,6 +232,12 @@ New and batch also accept `--parent ID`. Query emits the stored parent and
 `tkt query --parent ID` filters children. Invalid parent targets and introduced
 parent cycles are rejected before writing.
 
+Parent, assignee and label-namespace declarations are optional, additive extensions;
+existing tickets without them remain valid. Follow the [combined native relations
+walkthrough](docs/native-relations.md) to create an effort with children, claim work
+under an invocation identity, inspect progress and validate a single-select label
+namespace. Parents close explicitly with their own acceptance and evidence.
+
 ### Tags & context
 
 ```bash

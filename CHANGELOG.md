@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration can write and unset shared project settings with native typed values and atomic replacement.
 - Edit can replace, clear, add and remove tags without hand-editing ticket files or changing active context.
 - New, batch and edit can set a parent; edit can clear it, and query can select children. Invalid parent targets and cycles are rejected before writes.
+- Inspect computed direct-child progress with separate cancellation counts; parent containers leave the ready queue and close explicitly through the normal acceptance and evidence gates. Parent/assignee fields and label policies are optional additions, so existing tickets remain valid.
 - Validation enforces declared label values and single-select namespaces while leaving undeclared tags unrestricted.
 - Project configuration can declare label namespaces with a single-select policy and a closed value list; invalid declarations report configuration errors.
 - Help and initialization guide agents to complete command schemas, project instructions and separately installed workflow skills.
