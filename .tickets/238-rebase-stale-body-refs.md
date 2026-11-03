@@ -6,7 +6,7 @@ blocked_by: []
 validation_criteria:
   - "tkt rebase reports, or rewrites, body references to renumbered IDs"
   - "tkt validate warns on #NNN / ticket NNN references to IDs that do not exist"
-tags: ["cli", "kind:bug", "triage:needs-info", "stream:workflow", "gate:evidence"]
+tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:workflow"]
 assignee: "codex"
 ---
 
@@ -32,7 +32,7 @@ citation scan), which covers manual `renumber` but not the collision-recovery re
 
 Disposition: `kind:bug`, `triage:needs-info`; stream `cli`.
 
-Confirmed dangling #999/ticket 998 body references pass validate, but collision-renumber stale-body behavior was not reproduced. Capture both local/upstream before/after bytes before changing rebase; false-positive/body-ownership policy needs a bounded design.
+Confirmed dangling `#999`/`ticket 998` body-reference examples pass validate, but collision-renumber stale-body behavior was not reproduced. Capture both local/upstream before/after bytes before changing rebase; false-positive/body-ownership policy needs a bounded design.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
 
