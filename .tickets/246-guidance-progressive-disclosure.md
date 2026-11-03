@@ -1,13 +1,14 @@
 ---
 id: "246"
 title: "Apply approved conditional guidance pointers and update coverage matrix"
-status: open
+status: in_progress
 blocked_by: ["245"]
 spec: "docs/agents/agents-restructuring-proposal.md"
 validation_criteria:
   - "Every current rule has verified coverage and source links; no policy is silently weakened"
   - "Independent critic and applicable guidance/deployment checks pass with evidence"
 tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:guidance"]
+assignee: "codex"
 ---
 # Apply approved conditional guidance pointers
 
