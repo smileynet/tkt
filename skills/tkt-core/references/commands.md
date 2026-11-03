@@ -318,3 +318,5 @@ and `<!-- tkt:projection:end -->`. New-file publication requires hard-link suppo
 and refuses a destination that appears after preview. Existing-file replacement
 checks for a changed snapshot but still requires a single writer: coordinate
 external edits to the destination as well as the corpus.
+
+Dry-run diagnostics: file debug logging is suppressed for previews, including the local validate/rebase dry-run forms. Existing logs are neither created nor appended. Explicit human/JSON stderr debug output remains available; ordinary non-preview file logging is unchanged. This repairs the documented no-write preview behavior.

@@ -24,7 +24,8 @@ backup operations and an explicit publication disposition. Preview/application
 must be distinguished before any persistent diagnostics, filesystem or Git step.
 Existing transaction owners retain their allocation and existing-ticket roles.
 
-Next steps: repair250with public absent/preexisting-state controls; inventory all
+Child250is complete after public red/green controls,fullgate andcriticacceptance.
+Next steps: inventory all
 mutating paths including newly added hooks/projection; define a small concrete
 plan and its result types; migrate families with existing error/output policies;
 run a cross-command no-write matrix. No generic trait/plugin framework, opaque

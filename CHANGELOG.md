@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `node tools/deploy.mjs` selects roots so installed Claude/Codex plugins count as the skill copy and refreshes local plugins. Audits identify unowned skill directories and duplicate loading across configured packs. The bash wrapper remains an alternative entry point; no extra deploy step is needed.
 
 ### Fixed
+- Dry-run diagnostics leave file logs untouched, including local validate/rebase preview modes, while explicit stderr debug formats remain available.
 - Plan checks catch plain-done and nonterminal lifecycle mismatches and report unknown status cells, while preserving advisory reports and prose.
 - Deep closure audits distinguish quoted template examples from actual unfinished sections, including checked placeholder criteria.
 - Quiet mode preserves structured JSON success output when combined with JSON output selection.

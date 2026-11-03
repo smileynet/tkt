@@ -76,6 +76,9 @@ pub fn debug_event(mode: DebugMode, session: &str, project: &str, msg: &str) {
 /// Write a debug line to the log file. Silently swallows errors.
 fn write_debug_log(msg: &str) {
     use std::io::Write;
+    if crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
     let path = debug_log_path();
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);

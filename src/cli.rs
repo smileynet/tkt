@@ -432,6 +432,21 @@ pub fn run() -> i32 {
     };
     let cmd_name = command_name(&cli.command);
 
+    crate::QUIET.store(cli.quiet, std::sync::atomic::Ordering::Relaxed);
+    let dry_run = cli.dry_run
+        || matches!(
+            &cli.command,
+            Commands::Validate { dry_run: true, .. } | Commands::Rebase { dry_run: true }
+        );
+    crate::DRY_RUN.store(dry_run, std::sync::atomic::Ordering::Relaxed);
+    crate::NO_PUSH.store(cli.no_push, std::sync::atomic::Ordering::Relaxed);
+    let json_output = cli
+        .output_format
+        .as_deref()
+        .map(|f| f.eq_ignore_ascii_case("json"))
+        .unwrap_or(false);
+    crate::JSON_OUTPUT.store(json_output, std::sync::atomic::Ordering::Relaxed);
+
     // Debug mode setup
     let dbg = crate::telemetry::debug_mode();
     let session = crate::telemetry::generate_session_id();
@@ -446,21 +461,6 @@ pub fn run() -> i32 {
         &project,
         &format!("session={} project={} cmd={}", session, project, cmd_name),
     );
-
-    // Store quiet flag for access by command functions
-    crate::QUIET.store(cli.quiet, std::sync::atomic::Ordering::Relaxed);
-
-    // Store dry-run flag
-    crate::DRY_RUN.store(cli.dry_run, std::sync::atomic::Ordering::Relaxed);
-    crate::NO_PUSH.store(cli.no_push, std::sync::atomic::Ordering::Relaxed);
-
-    // Store JSON output flag
-    let json_output = cli
-        .output_format
-        .as_deref()
-        .map(|f| f.eq_ignore_ascii_case("json"))
-        .unwrap_or(false);
-    crate::JSON_OUTPUT.store(json_output, std::sync::atomic::Ordering::Relaxed);
 
     // Initialize color mode from --color flag and environment
     crate::color::init(cli.color.as_deref());
