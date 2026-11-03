@@ -1,7 +1,7 @@
 ---
 id: "115"
 title: "Review recall telemetry and debug functionality for useful patterns"
-status: backlog
+status: cancelled
 blocked_by: ["227"]
 priority: medium
 validation_criteria:
@@ -31,3 +31,9 @@ Disposition: `kind:enhancement`, `triage:wontfix`; stream `integrations`.
 Approved obsolete recall integration; await #227 cancellation. Retired consumer is not a current implementation target.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Cancellation
+
+- Reason: obsolete
+- Note: Approved retirement: the tracked tooling was retired during the convention cutover.
+- Date: 2026-11-03
