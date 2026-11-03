@@ -150,7 +150,7 @@ tkt new <slug> --title "..." [--spec S] [--parent ID] [--blocked-by NN,NN] [--pr
 tkt batch <slug[:title]>... [--spec S] [--parent ID] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
 tkt claim <id>                                    # status→in_progress, pushed
 tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..." (repeatable: one per validation criterion, or N=text)]
-tkt edit <id> [--title T] [--parent ID] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
+tkt edit <id> [--title T] [--parent ID] [--tags T] [--add-tag T] [--remove-tag T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
 tkt query [--status S] [--priority P] [--parent ID]             # full corpus as JSON Lines (filterable)
 tkt blocked                                       # open tickets with unsatisfied deps
@@ -204,6 +204,11 @@ Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; 
 Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.
 
 ### Configuration
+
+Known effective policy values are parsed strictly with key/value/source errors;
+boolean aliases true/false/1/0/yes/no remain valid. Unknown keys retain warnings.
+Corpus skip diagnostics use stderr JSONL warnings under `-o json` and `sym_warn`
+otherwise; valid rows and successful exit semantics are preserved.
 
 - **User config**: `~/.config/tkt/config.toml` — debug mode, format preferences
 - **Project config**: `.tickets/config.toml` — committed to repo, shared by contributors

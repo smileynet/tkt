@@ -106,7 +106,7 @@ When a context is active:
 | `--parent ID` | Existing parent ticket (hierarchy, independent of prerequisites) | none |
 | `--env E` | Environment filter (`corp`, `personal`) | none |
 | `--spec S` | Originating spec slug | none |
-| `--tags T,T` | Work-stream / categorization tags — the primary scoping mechanism for `ready`/`context`. Set at creation (one tag is the norm in multi-stream projects); also auto-applied from active context. NOTE: `tkt edit` has NO `--tags` flag — to retag an existing ticket, edit its frontmatter `tags:` line directly (or set at creation / via `tkt context`). | none |
+| `--tags T,T` | Work-stream / categorization tags; also inherited from active context on creation | none |
 | `--validation "..."` | Validation criteria (repeatable). Alias: `--vc` | none |
 | `--requires R,R` | Machine capabilities required (e.g., `gpu,linux,corp`) | none |
 
@@ -123,6 +123,9 @@ before validating an open ticket; otherwise `stub-body` warns. Creation has no
 | `--priority P` | Change priority (pass `''` to clear) |
 | `--blocked-by N,N` | Replace dependencies |
 | `--parent ID` | Set parent; pass `''` to clear. Missing, self and cyclic parents are rejected |
+| `--tags T,T` | Replace tags (repeatable); pass `''` to clear |
+| `--add-tag T` | Add unique tags after replacement (repeatable) |
+| `--remove-tag T` | Remove exact tags last (repeatable; removals win) |
 | `--env E` | Set environment (pass `''` to clear) |
 | `--spec S` | Set spec link (pass `''` to clear) |
 | `--ac N,N` | Check acceptance criteria boxes (1-based) |
@@ -152,6 +155,16 @@ There are no `--add-blocked-by` or `--remove-blocked-by` flags.
 | `--color always\|never\|auto` | Control ANSI color (default: auto) |
 
 ## Enforcement config (.tickets/config.toml)
+
+Known effective policy values are parsed once into typed values. Invalid values
+fail with key/value/source context; booleans retain true/false/1/0/yes/no aliases.
+Project settings override user defaults; unknown keys remain warnings. Evidence
+policy is true/warn/false, not an arbitrary truthy string.
+
+Corpus-loading commands can skip unparseable files. Under `-o json`, each skip is
+a stderr JSONL object `{ "warning": { "kind": "unparseable_ticket", "path": "...",
+"message": "..." } }`; valid rows stay on stdout and successful commands retain
+their exit status. Human diagnostics use the configured warning symbol/ASCII mode.
 
 These settings control what `tkt close` requires:
 

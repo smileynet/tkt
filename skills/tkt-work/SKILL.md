@@ -74,6 +74,10 @@ commit. Missing rows need `tkt sync-plan --fix`; alternate plans need explicit s
 
 When a ticket's acceptance criteria are all met:
 
+Treat corpus skip warnings as incomplete input, even when a command exits 0.
+Under `-o json`, warnings are stderr JSONL objects separate from result stdout.
+Resolve or record skipped files before claiming the whole corpus was checked.
+
 1. Verify each AC independently — run the check, confirm pass. Don't check boxes you haven't verified.
    Where review is required, verify its recorded source/capture identities still
    match the implementation being closed. Record the accepted identity and review
@@ -107,6 +111,10 @@ When a ticket's acceptance criteria are all met:
 6. If the completed ticket was the last one: report "All tickets done for this spec"
 
 ## Creating Tickets
+
+To adjust existing tags, edit applies `--tags` replacement (empty clears), then
+`--add-tag` unique additions, then `--remove-tag` removals. These are repeatable;
+context is preserved and is not inherited by edits.
 
 Use `--parent ID` on new/batch for hierarchy independently of `--blocked-by`.
 Edit sets the same field (`--parent ''` clears it); missing/self/cyclic references

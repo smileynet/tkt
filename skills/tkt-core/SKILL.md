@@ -189,6 +189,10 @@ array; malformed declarations fail configuration loading. Validation enforces
 declared values and single-select cardinality; undeclared tags remain free-form.
 See the command reference for the narrow configuration syntax.
 
+Invalid known policy values fail with key/value/source context instead of silently
+weakening gates. Corpus skip warnings are nonfatal; `-o json` puts one structured
+warning per stderr line, so distinguish an empty corpus from skipped invalid files.
+
 Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` to auto-repair (validate and sync-plan). Full options in [commands.md](references/commands.md).
 
 ---
@@ -216,6 +220,10 @@ Before writing ticket body content, read [ticket-standards.md](references/ticket
 4. Testable validation (acceptance criteria an agent can verify)
 
 Set `--tags <stream>` at creation in multi-stream projects (one tag is the norm; omit in single-stream projects) — retro-tagging rarely happens, and tags are what scope `tkt ready`/`tkt context` to a subsystem.
+
+Retag existing work with edit: `--tags a --tags b` replaces, `--tags ''` clears,
+`--add-tag x` adds unique values, and `--remove-tag y` removes last. Edit does not
+inherit active context tags or change that context.
 
 ---
 

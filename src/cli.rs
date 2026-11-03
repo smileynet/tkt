@@ -202,6 +202,15 @@ enum Commands {
         id: String,
         #[arg(long)]
         title: Option<String>,
+        /// Replace ticket tags; repeat or use commas to provide multiple tags, empty clears
+        #[arg(long, value_delimiter = ',', action = clap::ArgAction::Append)]
+        tags: Option<Vec<String>>,
+        /// Add tags after any replacement; repeat or use commas for multiple tags
+        #[arg(long = "add-tag", value_delimiter = ',', action = clap::ArgAction::Append)]
+        add_tags: Vec<String>,
+        /// Remove exact tag values after replacement and additions
+        #[arg(long = "remove-tag", value_delimiter = ',', action = clap::ArgAction::Append)]
+        remove_tags: Vec<String>,
         #[arg(long)]
         blocked_by: Option<String>,
         /// Set or clear the parent ticket id (empty clears)
@@ -500,6 +509,9 @@ pub fn run() -> i32 {
             Commands::Edit {
                 id,
                 title,
+                tags,
+                add_tags,
+                remove_tags,
                 blocked_by,
                 parent,
                 env,
@@ -513,6 +525,9 @@ pub fn run() -> i32 {
             } => crate::commands::edit::run(
                 &id,
                 title.as_deref(),
+                tags.as_deref(),
+                &add_tags,
+                &remove_tags,
                 blocked_by.as_deref(),
                 parent.as_deref(),
                 env.as_deref(),
@@ -796,6 +811,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         }
         Commands::Edit {
             title,
+            tags,
+            add_tags,
+            remove_tags,
             blocked_by,
             parent,
             env,
@@ -826,6 +844,15 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if status.is_some() {
                 flags.push("status");
+            }
+            if tags.is_some() {
+                flags.push("tags");
+            }
+            if !add_tags.is_empty() {
+                flags.push("add-tag");
+            }
+            if !remove_tags.is_empty() {
+                flags.push("remove-tag");
             }
             if title.is_some() {
                 flags.push("title");

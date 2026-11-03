@@ -192,6 +192,8 @@ tkt edit 02 --blocked-by 01,03
 tkt edit 02 --priority high
 tkt edit 02 --parent 01           # hierarchy, independent of prerequisites
 tkt edit 02 --parent ''           # clear parent
+tkt edit 02 --tags backend,auth   # replace tags (empty clears)
+tkt edit 02 --add-tag urgent --remove-tag someday
 tkt edit 02 --status backlog       # pull from frontier
 ```
 
@@ -373,6 +375,16 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 
 User configuration `debug = true` also defaults to the log file. Set
 `debug.format = "human"` or `"json"` explicitly for stderr output.
+
+Known policy values are parsed strictly: booleans accept true/false/1/0/yes/no,
+evidence accepts true/warn/false, and priority/environment defaults use their
+declared values. Invalid effective settings report the key, value and source;
+project values override user defaults. Unknown keys retain warning compatibility.
+
+Skipped unparseable tickets remain nonfatal diagnostics. With `-o json`, each
+warning is a JSON object on its own stderr line (`warning.kind`, `path`, `message`),
+separate from result stdout. Human warnings honor ASCII mode. Empty results with
+skip warnings differ from an empty corpus; exit 0 does not establish corpus health.
 
 ## Contributing
 

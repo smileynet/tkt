@@ -70,6 +70,25 @@ fn capabilities_describes_supported_values_aliases_and_mutating_modes() {
         );
     }
     let edit = &manifest["commands"]["edit"]["inputSchema"]["properties"];
+    for field in ["tags", "add_tag", "remove_tag"] {
+        assert_eq!(edit[field]["type"], "array", "edit.{field}");
+        assert!(
+            edit[field]["description"].as_str().is_some(),
+            "edit.{field}"
+        );
+    }
+    assert!(edit["tags"]["description"]
+        .as_str()
+        .unwrap()
+        .contains("Replace"));
+    assert!(edit["add_tag"]["description"]
+        .as_str()
+        .unwrap()
+        .contains("Add"));
+    assert!(edit["remove_tag"]["description"]
+        .as_str()
+        .unwrap()
+        .contains("Remove"));
     assert_eq!(edit["parent"]["type"], "string");
     assert!(edit["parent"]["description"]
         .as_str()

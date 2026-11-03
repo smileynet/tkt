@@ -42,6 +42,8 @@ New work defaults to `open`. Use `--status backlog` only for work deliberately d
 Reach `done` only via `tkt close`; new, batch and edit reject done. Never hand-edit done (it skips the close gates).
 Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
+Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
+Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 
 ### Workflow
 
@@ -76,6 +78,8 @@ New work defaults to open. Use --status backlog only for deliberately deferred w
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
 Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
+Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
+Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: what was shipped"
 For shared repos: tkt ready → claim <id> → work → close <id> --check-all --resolution "..."
@@ -105,6 +109,8 @@ New work defaults to open. Use --status backlog only for deliberately deferred w
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
 Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
+Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
+Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 
 ## Commands
 - `tkt ready` — see unblocked tickets (frontier)
@@ -144,6 +150,8 @@ New work defaults to open. Use --status backlog only for deliberately deferred w
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
 Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
+Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
+Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 
 ## Commands
 tkt ready              # frontier (open + deps done + env match)
@@ -184,6 +192,8 @@ New work defaults to open. Use --status backlog only for deliberately deferred w
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
 Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
+Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
+Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "..." (--evidence: 1 per criterion), validate --brief
 Create: new <slug> --title "..." [--tags stream] [--blocked-by N,N]  (defaults to open)

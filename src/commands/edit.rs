@@ -12,6 +12,9 @@ use crate::mutation::MutationContext;
 pub fn run(
     id: &str,
     title: Option<&str>,
+    tags: Option<&[String]>,
+    add_tags: &[String],
+    remove_tags: &[String],
     blocked_by: Option<&str>,
     parent: Option<&str>,
     env: Option<&str>,
@@ -47,6 +50,19 @@ pub fn run(
             &format!("\"{}\"", core::yaml_scalar_escape(title_val)),
         );
         changed.push("title");
+    }
+    if let Some(tags) = edit_tags(&t.tags, tags, add_tags, remove_tags) {
+        if tags.is_empty() {
+            file.remove_field("tags");
+        } else {
+            let values = tags
+                .iter()
+                .map(|tag| format!("\"{}\"", core::yaml_scalar_escape(tag)))
+                .collect::<Vec<_>>()
+                .join(", ");
+            file.set_field("tags", &format!("[{}]", values));
+        }
+        changed.push("tags");
     }
     if let Some(deps_str) = blocked_by {
         let deps: Vec<&str> = deps_str
@@ -215,6 +231,34 @@ pub fn run(
         );
     }
     Ok(0)
+}
+
+fn edit_tags(
+    current: &[String],
+    replacement: Option<&[String]>,
+    add: &[String],
+    remove: &[String],
+) -> Option<Vec<String>> {
+    if replacement.is_none() && add.is_empty() && remove.is_empty() {
+        return None;
+    }
+    let mut tags: Vec<String> = replacement
+        .unwrap_or(current)
+        .iter()
+        .filter(|tag| !tag.is_empty())
+        .cloned()
+        .collect();
+    for tag in add.iter().filter(|tag| !tag.is_empty()) {
+        if !tags.contains(tag) {
+            tags.push(tag.clone());
+        }
+    }
+    tags.retain(|tag| {
+        !remove
+            .iter()
+            .any(|removed| !removed.is_empty() && removed == tag)
+    });
+    Some(tags)
 }
 
 fn validate_parent_assignment(parent: &str, own_id: &str, corpus: &[core::Ticket]) -> Result<()> {
