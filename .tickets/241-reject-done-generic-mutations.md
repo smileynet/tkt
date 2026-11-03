@@ -1,7 +1,7 @@
 ---
 id: "241"
 title: "Reject done status outside the close lifecycle"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -40,8 +40,16 @@ edits and #227's cancellation lifecycle; neither should be weakened or duplicate
 
 ## Acceptance criteria
 
-- [ ] Reproduce edit/new/batch behavior independently and classify each confirmed, rejected or obsolete before changing code.
-- [ ] Generic status mutations reject done with a structured Validation error and direct the caller to close.
-- [ ] A rejected invocation leaves ticket bytes, staging and Git HEAD unchanged, including dry-run cases.
-- [ ] Normal close still enforces its gates and writes the Resolution; other supported statuses retain compatibility.
-- [ ] Public CLI integration fixtures and the full local gate pass.
+- [x] Reproduce edit/new/batch behavior independently and classify each confirmed, rejected or obsolete before changing code.
+- [x] Generic status mutations reject done with a structured Validation error and direct the caller to close.
+- [x] A rejected invocation leaves ticket bytes, staging and Git HEAD unchanged, including dry-run cases.
+- [x] Normal close still enforces its gates and writes the Resolution; other supported statuses retain compatibility.
+- [x] Public CLI integration fixtures and the full local gate pass.
+
+## Resolution (2026-11-03)
+
+New/batch/edit reject done before mutation with Validation and close hint; close gates and compatible statuses retained. Independent critic accepted final guidance/capabilities. docs/evidence/lifecycle-identifiers-config-241-164-140.md.
+
+### Verification
+1. ✓ Generic status mutations cannot create or set done; close remains the evidence-gated route — "Three lifecycle integration tests prove generic done rejected and close gates remain; baseline confirmed all three routes accepted done."
+2. ✓ Integration fixtures prove failed mutations preserve ticket bytes and Git state — "Normal and dry-run rejection tests preserve ticket bytes, index status and HEAD; full gate322Rust42Nodepass one existing skip."
