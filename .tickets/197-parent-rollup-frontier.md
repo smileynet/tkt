@@ -1,7 +1,7 @@
 ---
 id: "197"
 title: "Show computed parent progress with explicit closure"
-status: open
+status: in_progress
 blocked_by: ["192", "196"]
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Parent containers are excluded from the frontier and child views report done/total plus distinct cancelled counts"
   - "Integration tests cover mixed child states, explicit parent closure and unchanged priority/ID ordering"
 tags: ["schema", "kind:enhancement", "stream:relations", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Show computed parent progress with explicit closure
