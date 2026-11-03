@@ -1,12 +1,13 @@
 ---
 id: "244"
 title: "Serve the delivery dashboard on the local network"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Live LAN-address HTTP response matches the current page; only explicit resources are served"
   - "HTTP regressions and lifecycle documentation are verified, with remote-device limits stated"
 tags: ["dashboard", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
+assignee: "codex"
 ---
 # Serve the dashboard on the LAN
 
