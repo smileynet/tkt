@@ -179,4 +179,4 @@ re-certified by this reconciliation; #239 records audit follow-up.
 
 | ID | Work | Status |
 |---:|---|---|
-| 242 | Audit completed templates by actual section content | open |
+| 242 | Audit completed templates by actual section content | in_progress |

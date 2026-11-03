@@ -1,13 +1,14 @@
 ---
 id: "242"
 title: "Audit completed templates by actual section content"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
   - "Quoted examples are ignored while actual unfinished templates and historical evidence warnings remain visible"
   - "Independent critic and full local gate pass; final corpus findings have evidence-backed dispositions"
 tags: ["quality", "kind:bug", "triage:ready-for-agent", "stream:quality"]
+assignee: "codex"
 ---
 # Ignore quoted template examples in completed-ticket audits
 
