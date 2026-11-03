@@ -1,7 +1,7 @@
 ---
 id: "176"
 title: "new: clearer body template + --body flag to fill content at creation"
-status: in_progress
+status: done
 blocked_by: ["174"]
 priority: medium
 validation_criteria:
@@ -38,13 +38,13 @@ Blocked by #174 (the detector must exist so "still detectable" AC is testable).
 
 ## Acceptance criteria
 
-- [ ] `tkt new` writes prompting section text instead of a bare `TBD` line
-- [ ] `tkt new --body @file` and `--body -` fill the body at creation
-- [ ] An unfilled body is still flagged by the `stub-body` finding (#174)
-- [ ] `new --template <name>` and `batch --template <name>` read `.tickets/templates/<name>.md`; missing templates fail clearly and default behavior works without that directory.
-- [ ] `batch` uses the same default template
-- [ ] Guidance surfaces updated per docs/agents/agent-guidance-surfaces.md
-- [ ] `mise run check` passes
+- [x] `tkt new` writes prompting section text instead of a bare `TBD` line
+- [x] `tkt new --body @file` and `--body -` fill the body at creation
+- [x] An unfilled body is still flagged by the `stub-body` finding (#174)
+- [x] `new --template <name>` and `batch --template <name>` read `.tickets/templates/<name>.md`; missing templates fail clearly and default behavior works without that directory.
+- [x] `batch` uses the same default template
+- [x] Guidance surfaces updated per docs/agents/agent-guidance-surfaces.md
+- [x] `mise run check` passes
 
 ## Absorbs #87 (2026-10-29)
 
@@ -62,3 +62,13 @@ Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
 new --help has no body/template flags and creation still emits TBD. #87's named-template scope must be represented explicitly in ACs; keep #174 stub detection working.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Creation accepts full body literal/file/stdin and named templates for new/batch, with captured retry content and detectable prompting defaults. Critic accepted source/guidance. Evidence promoted docs/evidence/project-owner-body-165-194-176.md; fixtures self-clean shared caches retained.
+
+### Verification
+1. ✓ tkt new writes a body with prompting section text instead of bare TBD (test: integration::new_body_template_prompts) — "Public body_input default prompt test red before and pass after."
+2. ✓ tkt new --body @file / --body - fills the body at creation (test: integration::new_body_from_input) — "File/stdin and literal creation paths pass including paths with spaces and dry-run no writes."
+3. ✓ new and batch support named body templates from .tickets/templates with clear missing-template errors — "New/batch named templates use validated names; missing/unsafe names fail before writes."
+4. ✓ stub remains detectable by the stub-body finding when body is left unfilled (test: integration::new_body_still_detectable) — "New and legacy prompt detection works; full gate361Rust42Nodepass one existing skip; native Claude checks passed."
