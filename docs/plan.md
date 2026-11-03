@@ -192,4 +192,4 @@ re-certified by this reconciliation; #239 records audit follow-up.
 |---:|---|---|
 | 243 | Collect dashboard decisions with recommendations and chat export | in_progress |
 | 244 | Serve the delivery dashboard on the local network | ✅ done |
-| 248 | Compare plan lifecycle labels precisely without narrative parsing | in_progress |
+| 248 | Compare plan lifecycle labels precisely without narrative parsing | ✅ done |
