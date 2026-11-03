@@ -1,7 +1,7 @@
 ---
 id: "175"
 title: "validate: advisory no-source-reference finding (union of spec/#NN/parent/link)"
-status: open
+status: in_progress
 blocked_by: ["174"]
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "any one reference kind satisfies the check (test: integration::validate_source_ref_union)"
   - "advisory by default (exit 0); [validate] config key opts into hard gate (test: integration::validate_source_ref_gate)"
 tags: ["quality", "kind:enhancement", "triage:ready-for-agent", "stream:guidance"]
+assignee: "codex"
 ---
 
 # validate: advisory no-source-reference finding (union of spec/#NN/parent/link)
