@@ -1,7 +1,7 @@
 ---
 id: "142"
 title: "Fix CREW_ENV=either hides everything and ac edge cases"
-status: backlog
+status: cancelled
 blocked_by: []
 priority: low
 validation_criteria:
@@ -32,3 +32,9 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Planning gate
 
 Capture a minimal CREW_ENV=either reproduction with the expected capability semantics.
+
+## Cancellation
+
+- Reason: wontfix
+- Note: No current defect demonstrated: fresh CREW_ENV=either fixture returns plain/either tickets and correctly excludes a GPU requirement. Historical hidden-all report and unspecified AC edge cases remain unverified. Reopen with a minimal counterexample and expected semantics.
+- Date: 2026-11-03

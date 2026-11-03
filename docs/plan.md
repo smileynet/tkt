@@ -112,7 +112,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 93 | Pluggable schema definitions with meta field + ai_context support | backlog |
 | 99 | Make update check interval configurable | backlog |
 | 125 | Research and build import schemas for Jira, Linear, Beads, GitLab, and other ticket systems | backlog |
-| 142 | Fix CREW_ENV=either hides everything and ac edge cases | backlog |
+| 142 | Fix CREW_ENV=either hides everything and ac edge cases | cancelled (wontfix) |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | backlog |
 | 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | backlog |
