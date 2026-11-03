@@ -1,12 +1,13 @@
 ---
 id: "145"
 title: "Fix update_check ignores DO_NOT_TRACK"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
   - "update check respects DO_NOT_TRACK=1"
 tags: ["cli", "kind:bug", "triage:needs-info", "stream:quality", "gate:evidence"]
+assignee: "codex"
 ---
 
 # Fix update_check ignores DO_NOT_TRACK
