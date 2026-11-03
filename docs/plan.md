@@ -129,7 +129,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 157 | tkt hooks subcommand + pre-commit installer (warn-default, config block/log) | open |
 | 158 | tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex) | backlog |
 | 168 | Measure demand for missing-tag and backlog advisories | open |
-| 173 | validate: frontier-scoped readiness rule (Definition of Ready gate) | backlog |
+| 173 | validate: frontier-scoped readiness rule (Definition of Ready gate) | open |
 | 175 | validate: advisory no-source-reference finding (union of spec/#NN/parent/link) | backlog |
 | 184 | Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002 | backlog |
 | 186 | Reconcile or retire the historical Python parity harness | backlog |

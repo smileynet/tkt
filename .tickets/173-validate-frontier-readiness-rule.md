@@ -1,7 +1,7 @@
 ---
 id: "173"
 title: "validate: frontier-scoped readiness rule (Definition of Ready gate)"
-status: backlog
+status: open
 blocked_by: []
 validation_criteria:
   - "Frontier-only readiness criteria are explicit, bounded and advisory with no new implicit hard gate"
