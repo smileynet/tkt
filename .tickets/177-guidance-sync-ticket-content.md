@@ -1,7 +1,7 @@
 ---
 id: "177"
 title: "guidance: state evidence↔validation_criteria rule, tag editing, fill-body-at-new, link-the-source"
-status: open
+status: in_progress
 blocked_by: ["176", "233"]
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "init.rs snippets instruct fill-body-at-new and link-the-source (test: manual doc review)"
   - "tag-edit guidance matches the replace/add/remove/clear interface delivered by #233"
 tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:guidance"]
+assignee: "codex"
 ---
 
 # guidance: state evidence↔validation_criteria rule, tag editing, fill-body-at-new, link-the-source
