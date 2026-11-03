@@ -1,7 +1,7 @@
 ---
 id: "151"
 title: "load_corpus ejection is stderr-only, bypasses JSON envelope and TKT_ASCII/sym_warn"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -26,9 +26,9 @@ Make ejection diagnostics first-class: route through `sym_warn`, honor `TKT_ASCI
 
 ## Acceptance criteria
 
-- [ ] ejected-ticket warnings honor -o json (structured), TKT_ASCII, and sym_warn
-- [ ] consumers can distinguish empty corpus from corpus-with-ejected-tickets
-- [ ] existing corpus-loading behavior unchanged for well-formed tickets
+- [x] ejected-ticket warnings honor -o json (structured), TKT_ASCII, and sym_warn
+- [x] consumers can distinguish empty corpus from corpus-with-ejected-tickets
+- [x] existing corpus-loading behavior unchanged for well-formed tickets
 
 ## Out of scope
 
@@ -41,3 +41,11 @@ Disposition: `kind:bug`, `triage:ready-for-agent`; stream `parser`.
 Confirmed: TKT_ASCII=1 tkt -o json query on a ticket lacking id exits 0 with empty stdout and a Unicode warning on stderr. Preserve valid-corpus behavior while exposing skipped-ticket diagnostics.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Corpus skips emit stderr JSONL warning objects in JSON mode and ASCII-aware human symbols, preserving valid rows and nonfatal behavior. Critic accepted. Evidence promoted; fixtures self-clean/shared target retained. docs/evidence/config-tags-diagnostics-190-233-151.md.
+
+### Verification
+1. ✓ ejected-ticket warnings honor -o json (structured), TKT_ASCII, and sym_warn — "Public corpus diagnostic fixture red before and green after for structured warning and ASCII output."
+2. ✓ consumers can distinguish empty corpus from corpus-with-ejected-tickets — "Fixture distinguishes empty from skipped and preserves mixed valid result; full gate350Rust42Nodepass one skip."
