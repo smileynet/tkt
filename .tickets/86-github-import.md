@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "`tkt import --github` imports open issues from current repo"
-tags: ["integrations", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["integrations", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 ---
 
 # tkt import --github: pull open issues into .tickets/

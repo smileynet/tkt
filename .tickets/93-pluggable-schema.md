@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "`.tickets/schema.toml` parsed on startup when present"
-tags: ["schema", "kind:enhancement", "triage:needs-info"]
+tags: ["schema", "kind:enhancement", "triage:needs-info", "stream:relations", "gate:decision"]
 ---
 
 # Pluggable schema definitions with meta field + ai_context support
@@ -157,3 +157,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `schema`.
 Deferred design proposal, not an implementation brief: runtime CLI fields, schema migration and nested meta exceed the current narrow parser. Decide supported representation before building.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Choose the supported custom-field representation and schema migration policy within the narrow frontmatter parser.

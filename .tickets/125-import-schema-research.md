@@ -7,7 +7,7 @@ priority: medium
 validation_criteria:
   - "schema mappings documented for at least 3 external systems"
   - "migrate.toml templates exist for each researched system"
-tags: ["integrations", "kind:enhancement", "triage:needs-info"]
+tags: ["integrations", "kind:enhancement", "triage:needs-info", "stream:quality", "gate:decision"]
 ---
 
 # Research and build import schemas for Jira, Linear, Beads, GitLab, and other ticket systems
@@ -67,3 +67,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
 Deferred research depends on an unimplemented --map interface: migrate --map example.toml exits 2. First choose adapter/mapping contract; no third-party schema facts were verified in this audit.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Choose an adapter or mapping contract before researching templates for the currently nonexistent --map interface.

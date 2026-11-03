@@ -9,7 +9,7 @@ validation_criteria:
   - "Evidence, push, priority, and environment policies use typed parsed values"
   - "A typo cannot silently disable required evidence or publishing"
   - "Configuration compatibility cases are covered by tests"
-tags: ["config", "integrity", "kind:bug", "triage:ready-for-agent"]
+tags: ["config", "integrity", "kind:bug", "triage:ready-for-agent", "stream:config"]
 ---
 
 # Parse known config keys into strict typed policies

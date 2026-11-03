@@ -5,7 +5,7 @@ status: open
 blocked_by: []
 validation_criteria:
   - "Proposal maps every moved section to an existing or new reference, preserves operational and safety rules, and updates the guidance-surface matrix coherently"
-tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:guidance"]
 ---
 
 # Propose AGENTS.md restructuring while preserving guidance coverage

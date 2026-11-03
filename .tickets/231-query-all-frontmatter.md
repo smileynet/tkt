@@ -7,7 +7,7 @@ priority: medium
 validation_criteria:
   - "query JSON includes tags"
   - "query JSON includes every stored field"
-tags: ["cli", "kind:bug", "triage:ready-for-agent"]
+tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:workflow"]
 ---
 
 # tkt query outputs every frontmatter field, including tags

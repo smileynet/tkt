@@ -1,5 +1,10 @@
 # Dashboard migration — ticket 228
 
+The source identities below describe this migration's earlier static-check run.
+Ticket 240 subsequently updates the canonical graph renderer and planning data;
+its [current evidence](dashboard-workstream-gates-240.md) supersedes this source
+identity. Neither task claims rendered acceptance while browser use is disabled.
+
 Implementation: 2026-11-02. Source: docs/status.html, migrated from the installed
 delivery-dashboard/assets/dashboard-template.html without renderer modifications.
 AGENTS.md now distinguishes hand-edited configuration/entries from the helper-owned

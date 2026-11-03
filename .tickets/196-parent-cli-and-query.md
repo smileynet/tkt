@@ -8,7 +8,7 @@ validation_criteria:
   - "the --parent flag is accepted on new, batch, and edit (set and clear)"
   - "query emits parent and supports a --parent filter; capabilities documents the field"
   - "Invalid parent (nonexistent id) is rejected at command time with a clear error"
-tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:relations"]
 ---
 
 # parent CLI + query/capabilities surface

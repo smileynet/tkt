@@ -8,7 +8,7 @@ validation_criteria:
   - "Ticket struct has assignee: Option<AgentId>, parsed/serialized like spec"
   - "tkt claim sets assignee alongside in_progress; refuses an already-assigned ticket without --force"
   - "tkt ready excludes tickets assigned to another identity; query/ready surface assignee"
-tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:relations"]
 ---
 
 # assignee field + claim-by-assignment + frontier honors it

@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "update check respects DO_NOT_TRACK=1"
-tags: ["cli", "kind:bug", "triage:needs-info"]
+tags: ["cli", "kind:bug", "triage:needs-info", "stream:quality", "gate:evidence"]
 ---
 
 # Fix update_check ignores DO_NOT_TRACK
@@ -32,3 +32,7 @@ Disposition: `kind:bug`, `triage:needs-info`; stream `cli`.
 Source inspection confirms update_check.rs has no DO_NOT_TRACK guard. Network/cache behavior was not dynamically reproduced; capture an isolated curl/cache fixture before implementing. Existing privacy request remains actionable investigation.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Reproduce request/cache behavior in an isolated fixture before changing the missing DO_NOT_TRACK guard.

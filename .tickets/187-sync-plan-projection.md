@@ -8,7 +8,7 @@ validation_criteria:
   - "A projection command renders every relevant ticket from the corpus with deterministic ordering and derived status"
   - "Generated output is written atomically and respects global dry-run"
   - "The command preserves or clearly separates any non-derivable human narrative"
-tags: ["planning", "sync-plan", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["planning", "sync-plan", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # Generate a derived sync-plan projection from the ticket corpus

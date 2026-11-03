@@ -7,7 +7,7 @@ priority: medium
 validation_criteria:
   - "ready JSON has pending_blockers"
   - "Human output shows only unfinished blockers"
-tags: ["cli", "kind:bug", "triage:ready-for-agent"]
+tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:workflow"]
 ---
 
 # Frontier output distinguishes unfinished blockers from finished ones

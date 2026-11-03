@@ -8,7 +8,7 @@ validation_criteria:
   - "a surface states the evidence↔validation_criteria 1:1-by-index rule plainly (test: manual doc review)"
   - "init.rs snippets instruct fill-body-at-new and link-the-source (test: manual doc review)"
   - "tag-edit guidance matches the replace/add/remove/clear interface delivered by #233"
-tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:guidance"]
 ---
 
 # guidance: state evidence↔validation_criteria rule, tag editing, fill-body-at-new, link-the-source

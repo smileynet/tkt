@@ -8,7 +8,7 @@ validation_criteria:
   - "A parent auto-reaches done when all its children are done"
   - "A parent is excluded from tkt ready (it is a container, not work)"
   - "A children/blocked view shows done-over-total rollup for a parent"
-tags: ["schema", "kind:enhancement", "triage:needs-info"]
+tags: ["schema", "kind:enhancement", "triage:needs-info", "stream:relations", "gate:decision"]
 ---
 
 # parent rollup + frontier semantics
@@ -40,3 +40,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `schema`.
 Automatic done contradicts the close-only evidence contract. Decide computed progress versus stored status and cancellation semantics before implementation; do not auto-close parent files.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Decide computed parent progress versus stored close-gated status, including cancellation semantics.

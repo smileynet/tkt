@@ -9,7 +9,7 @@ validation_criteria:
   - "tkt init --role observer generates read-only snippet"
   - "README documents multi-agent role pattern with config examples"
   - "Existing requires/capabilities filtering works unchanged for role tokens"
-tags: ["guidance", "kind:enhancement", "triage:needs-info"]
+tags: ["guidance", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
 ---
 
 # Support primary-agent role pattern via init snippets and documentation
@@ -67,3 +67,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `guidance`.
 init --role observer exits 2 (missing feature). The old use of machine capabilities for agent scheduling conflicts with #224's separate identity/eligibility contract. Redesign examples before implementation.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Revise role examples to use invocation identity and eligibility rather than machine capabilities for agent scheduling.

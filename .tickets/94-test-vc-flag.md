@@ -7,7 +7,7 @@ priority: low
 validation_criteria:
   - "tests pass"
   - "clippy clean"
-tags: ["quality", "kind:enhancement", "triage:wontfix"]
+tags: ["quality", "kind:enhancement", "triage:wontfix", "stream:relations"]
 ---
 
 # Test VC flag

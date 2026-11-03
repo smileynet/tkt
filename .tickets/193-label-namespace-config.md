@@ -8,7 +8,7 @@ validation_criteria:
   - "config.rs parses [labels.<ns>] tables with single_select bool and values list"
   - "Unknown/malformed [labels.*] entries produce a clear config error"
   - "Existing configs without [labels.*] continue to load unchanged (backward compatible)"
-tags: ["config", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["config", "kind:enhancement", "triage:ready-for-agent", "stream:config"]
 ---
 
 # [labels.*] config: parse single-select + closed-value namespaces

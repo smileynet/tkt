@@ -9,7 +9,7 @@ validation_criteria:
   - "Done predicate returns a PlanState sum type (Done|NotDone|Unknown); TKT_ASCII=1 plan reads done correctly and an unparseable cell surfaces as Unknown not silent not-done (defect 1, with regression test)"
   - "Dep-budget sub-decision recorded (CommonMark crate vs hand-rolled heading+list-item scanner), lean scanner benchmarked first per ADR 0002"
   - "New format/flag + default path documented in --help and all guidance surfaces per docs/agents/agent-guidance-surfaces.md"
-tags: ["planning", "kind:enhancement", "triage:needs-info"]
+tags: ["planning", "kind:enhancement", "triage:needs-info", "stream:quality", "gate:decision"]
 ---
 
 # Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002
@@ -89,3 +89,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `planning`.
 ADR 0002 governs optional narrative parsing; table projection remains #187. Decide how to isolate the PlanState/ASCII correctness fix from the deferred parser and resolve benchmark-vs-AST wording before building.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Separate the PlanState correctness repair from deferred narrative parsing and settle the parser approach.

@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "tkt query ignores context or documents the filtering"
-tags: ["cli", "kind:bug", "triage:ready-for-agent"]
+tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # Context silently narrows query (full corpus claim violated)

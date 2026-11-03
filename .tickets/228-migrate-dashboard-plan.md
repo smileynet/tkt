@@ -5,7 +5,7 @@ status: in_progress
 blocked_by: []
 validation_criteria:
   - "Dashboard preserves existing entries, renders an all-ticket Plan tab, supports snapshot refresh, and passes the current checker without warnings"
-tags: ["tooling", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["tooling", "kind:enhancement", "triage:ready-for-agent", "stream:quality", "gate:evidence"]
 ---
 
 # Migrate status dashboard to the current Plan-tab contract
@@ -58,3 +58,7 @@ Phone/laptop tabs, interactions and clipping remain unverified. No alternate rou
 was attempted and no accepted receipt was created. Keep this ticket in progress
 until the final visual AC is observed. Record this limitation in Details; do not ask the user to review the dashboard. The user provides feedback when needed.
 No scratch/capture artifacts were made.
+
+## Planning gate
+
+Source and data checks pass; laptop/phone rendering is unverified because local browser use is disabled.

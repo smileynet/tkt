@@ -7,7 +7,7 @@ priority: high
 validation_criteria:
   - "tkt --help includes a note pointing agents to tkt capabilities for structured discovery"
   - "tkt init output recommends adding skill and AGENTS.md guidance for maximum effectiveness"
-tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:discovery"]
 ---
 
 # Improve agent discoverability: help nudge to capabilities, init recommends agent setup

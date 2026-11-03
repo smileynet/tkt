@@ -8,7 +8,7 @@ validation_criteria:
   - "a dry-run reports every supported harness target and performs no filesystem changes"
   - "installation preserves unmanaged user content and records ownership before replacing a managed integration"
   - "an OpenCode-only environment receives both the project instruction path and the global tkt skill"
-tags: ["guidance", "agent-integration", "integrations", "kind:enhancement", "triage:needs-info"]
+tags: ["guidance", "agent-integration", "integrations", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
 ---
 
 # Deploy tkt guidance and skill safely across supported harnesses
@@ -99,3 +99,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
 Repository deploy already exists; remaining binary-only skill delivery is excluded by Cargo.toml include inventory. Decide embedded-assets/deploy command before implementation; verify harness paths when worked.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Choose embedded skill assets and a binary-only deployment interface before implementation.

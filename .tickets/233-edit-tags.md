@@ -7,7 +7,7 @@ priority: medium
 validation_criteria:
   - "edit --tags replaces tags"
   - "edit --tags '' clears them"
-tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 ---
 
 # tkt edit can set and clear tags

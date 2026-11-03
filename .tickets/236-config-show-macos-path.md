@@ -5,7 +5,7 @@ status: open
 blocked_by: []
 validation_criteria:
   - "tkt config and its help print the path the config loader actually reads on each OS"
-tags: ["config", "kind:bug", "triage:ready-for-agent"]
+tags: ["config", "kind:bug", "triage:ready-for-agent", "stream:config"]
 ---
 
 # tkt config shows the wrong user-config path on macOS

@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "tkt config --set malformed exits 1; JSON output classifies it as Validation rather than Io/crash"
-tags: ["config", "kind:bug", "triage:ready-for-agent"]
+tags: ["config", "kind:bug", "triage:ready-for-agent", "stream:config"]
 ---
 
 # Fix exit code taxonomy leaks: config errors exit 2 instead of 1

@@ -5,7 +5,7 @@ status: backlog
 blocked_by: []
 validation_criteria:
   - "`update_check.interval` accepted as a user config key"
-tags: ["config", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["config", "kind:enhancement", "triage:ready-for-agent", "stream:config"]
 ---
 
 # Make update check interval configurable

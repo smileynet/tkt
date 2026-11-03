@@ -6,7 +6,7 @@ blocked_by: ["227"]
 priority: low
 validation_criteria:
   - "Cancellation follows ADR 0004 without claiming original work completed"
-tags: ["cli", "kind:enhancement", "triage:wontfix"]
+tags: ["cli", "kind:enhancement", "triage:wontfix", "stream:workflow"]
 ---
 
 # tkt new --template: predefined ticket body structures

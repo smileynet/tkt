@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt capabilities and the init agent snippet document parent, assignee, and [labels.*]"
   - "README and CHANGELOG describe the new fields/config as additive and backward compatible"
   - "An end-to-end test exercises an epic with children plus a single-select label namespace"
-tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:relations"]
 ---
 
 # docs, capabilities, CHANGELOG for parent/assignee/labels

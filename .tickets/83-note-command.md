@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "`tkt note <id>` opens the ticket file in $EDITOR"
-tags: ["cli", "kind:enhancement", "triage:needs-info"]
+tags: ["cli", "kind:enhancement", "triage:needs-info", "stream:workflow", "gate:decision"]
 ---
 
 # tkt note: open ticket body in $EDITOR
@@ -49,3 +49,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `cli`.
 Deferred proposal combines a noncommitting editor with a committing append form. Decide the mutation/commit contract and noninteractive input before implementation.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Choose the commit contract for interactive editing versus noninteractive append before designing the note interface.

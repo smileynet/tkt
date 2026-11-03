@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "CREW_ENV=either shows all tickets"
-tags: ["cli", "kind:bug", "triage:needs-info"]
+tags: ["cli", "kind:bug", "triage:needs-info", "stream:quality", "gate:evidence"]
 ---
 
 # Fix CREW_ENV=either hides everything and ac edge cases
@@ -28,3 +28,7 @@ Disposition: `kind:bug`, `triage:needs-info`; stream `cli`.
 Earlier no-reproduction result remains unresolved. Supply a minimal CREW_ENV=either fixture and expected capability semantics; the unspecified AC edge cases are not build scope.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Capture a minimal CREW_ENV=either reproduction with the expected capability semantics.

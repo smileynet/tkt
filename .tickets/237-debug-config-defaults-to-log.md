@@ -6,7 +6,7 @@ blocked_by: []
 validation_criteria:
   - "With debug = true and no debug.format, output goes to the log file and stderr stays clean"
   - "A test covers the config-only (no TKT_DEBUG) path"
-tags: ["config", "kind:bug", "triage:ready-for-agent"]
+tags: ["config", "kind:bug", "triage:ready-for-agent", "stream:config"]
 ---
 
 # debug = true in config prints to stderr instead of the log file

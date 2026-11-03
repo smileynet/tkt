@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "Every historical closure warning has a documented evidence-backed disposition; unavailable original proof remains explicitly unknown"
-tags: ["quality", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["quality", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # Review historical closure warnings without fabricating evidence

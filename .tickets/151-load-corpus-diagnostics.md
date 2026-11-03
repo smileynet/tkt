@@ -7,7 +7,7 @@ priority: low
 validation_criteria:
   - "ejected-ticket warnings honor -o json (structured), TKT_ASCII, and sym_warn"
   - "consumers can distinguish empty corpus from corpus-with-ejected-tickets"
-tags: ["parser", "kind:bug", "triage:ready-for-agent"]
+tags: ["parser", "kind:bug", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # load_corpus ejection is stderr-only, bypasses JSON envelope and TKT_ASCII/sym_warn

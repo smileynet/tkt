@@ -8,7 +8,7 @@ validation_criteria:
   - "frontier ticket missing a Context section with >=1 path/link is flagged"
   - "frontier ticket with no acceptance-criteria checkbox is flagged"
   - "rule is warn-by-default, error under --strict; re-checks standing backlog not just creation"
-tags: ["quality", "kind:enhancement", "triage:needs-info"]
+tags: ["quality", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
 ---
 
 # validate: frontier-scoped readiness rule (Definition of Ready gate)
@@ -75,3 +75,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `quality`.
 Deferred readiness proposal overlaps #175 source-reference rule. Separate frontier readiness from transitive backlog-blocker advisory and decide strict-mode policy before adding duplicate findings.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Bound readiness checking versus source-reference checking and choose the strict-mode policy.

@@ -9,7 +9,7 @@ validation_criteria:
   - "Dry run performs no persistent filesystem or Git mutation"
   - "The shared executor preserves atomic writes and push gating"
   - "Table-driven tests cover no-write dry-run behavior"
-tags: ["architecture", "integrity", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["architecture", "integrity", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # Centralize command mutation effects and dry-run policy

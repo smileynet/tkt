@@ -8,7 +8,7 @@ validation_criteria:
   - "when id equals the filename stem (slug id), validate does NOT emit id-filename-mismatch (test: validate::slug_id_canonical)"
   - "numeric-id corpuses still flag genuine mismatches"
   - "ADR records the decision on whether non-numeric ids are officially supported"
-tags: ["compliance", "kind:bug", "triage:ready-for-agent"]
+tags: ["compliance", "kind:bug", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # validate: recognize slug ids as canonical (stop false id-filename-mismatch)

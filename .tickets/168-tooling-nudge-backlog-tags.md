@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt new prints a non-blocking advisory to stderr when a ticket is created with no tags (gated on !quiet)"
   - "validate or doctor emits an advisory (not error) counting untagged live tickets, via a check_missing_tags finding in findings.rs"
   - "decision recorded on whether to add a new.default_status config key (mirroring new.default_priority) or keep the hard-coded open default"
-tags: ["guidance", "kind:enhancement", "triage:needs-info"]
+tags: ["guidance", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
 ---
 
 # Optional tooling nudge: advisory on tag-less/backlog tickets
@@ -72,3 +72,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `guidance`.
 Deferred advisory proposal after completed #167. First measure whether nudges are still wanted; keep quiet/JSON behavior and do not promote advisory tag checks into a mandatory gate.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Decide whether observed tag/backlog usage justifies a new advisory and a default-status setting.

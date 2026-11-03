@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "Post-hooks fire for new, claim, close, edit"
-tags: ["integrations", "kind:enhancement", "triage:needs-info"]
+tags: ["integrations", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
 ---
 
 # Lifecycle hooks: on-new, on-claim, on-close scripts
@@ -53,3 +53,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
 Deferred lifecycle hooks, distinct from git-hook bypass in #235 and installer #157. Resolve the contradictory timeout/nonblocking-push contract and supported Windows invocation.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Resolve whether lifecycle hooks may delay publishing, and define their Windows invocation contract.

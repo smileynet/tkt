@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "`tkt done` shows recently completed tickets (default: last 7 days)"
-tags: ["cli", "kind:enhancement", "triage:needs-info"]
+tags: ["cli", "kind:enhancement", "triage:needs-info", "stream:workflow", "gate:decision"]
 ---
 
 # tkt done --week: show-resolved report for standups
@@ -50,3 +50,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `cli`.
 Deferred reporting feature. Decide authoritative completion timestamp and behavior when git history is unavailable; mtime is not proof of completion time.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Choose the authoritative completion timestamp and the fallback when Git history is unavailable.

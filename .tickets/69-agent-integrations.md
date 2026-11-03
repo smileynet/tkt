@@ -6,7 +6,7 @@ blocked_by: ["68"]
 priority: low
 validation_criteria:
   - "Research spike completed: document which integrations are worth building"
-tags: ["integrations", "kind:enhancement", "triage:needs-info"]
+tags: ["integrations", "kind:enhancement", "triage:needs-info", "stream:quality", "gate:decision"]
 ---
 
 # Explore agent/harness-specific integrations (hooks, MCP, skills)
@@ -121,3 +121,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
 Skills and plugins exist; the remaining deliverable is a recorded integration decision, not a second plugin implementation. Confirm which historical ACs are satisfied before closing or cancelling.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Record which delivered integrations satisfy the exploration, and whether to close the remaining decision scope or retire it.

@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt lint inserts id: derived from filename NNN-slug prefix when frontmatter lacks id (test: lint::backfill_missing_id)"
   - "hand-authored tickets with no id: field become parseable + canonical after bare lint"
   - "tkt validate no longer reports unparseable missing-required-field-id for fixable files"
-tags: ["compliance", "kind:bug", "triage:ready-for-agent"]
+tags: ["compliance", "kind:bug", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # lint: backfill missing id from filename prefix

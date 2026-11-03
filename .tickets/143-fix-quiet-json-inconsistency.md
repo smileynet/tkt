@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "all mutations produce a structured JSON success object under -o json -q"
-tags: ["cli", "kind:bug", "triage:ready-for-agent"]
+tags: ["cli", "kind:bug", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # Fix -q + -o json emits bare non-JSON output inconsistently

@@ -6,7 +6,7 @@ blocked_by: ["227"]
 priority: medium
 validation_criteria:
   - "Cancellation follows ADR 0004 without claiming original work completed"
-tags: ["integrations", "kind:enhancement", "triage:wontfix"]
+tags: ["integrations", "kind:enhancement", "triage:wontfix", "stream:quality"]
 ---
 
 # Review recall telemetry and debug functionality for useful patterns

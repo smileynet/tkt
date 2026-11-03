@@ -9,7 +9,7 @@ validation_criteria:
   - "tkt new --body @file / --body - fills the body at creation (test: integration::new_body_from_input)"
   - "new and batch support named body templates from .tickets/templates with clear missing-template errors"
   - "stub remains detectable by the stub-body finding when body is left unfilled (test: integration::new_body_still_detectable)"
-tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 ---
 
 # new: clearer body template + --body flag to fill content at creation

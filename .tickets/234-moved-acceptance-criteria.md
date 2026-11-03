@@ -7,7 +7,7 @@ priority: medium
 validation_criteria:
   - "Moved state recognised by close and validate"
   - "Receiving ticket shows the moved criterion"
-tags: ["cli", "kind:enhancement", "triage:needs-info"]
+tags: ["cli", "kind:enhancement", "triage:needs-info", "stream:workflow", "gate:decision"]
 ---
 
 # Acceptance criteria can be marked moved to another ticket
@@ -33,3 +33,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `cli`.
 Moved-AC intent is current; decide marker grammar, multiple source/destination criteria, evidence mapping, idempotence and atomic multi-ticket recovery before implementation. Do not mark moved work done.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Decide moved-criterion syntax, evidence mapping and idempotent recovery for multi-ticket changes.

@@ -8,7 +8,7 @@ validation_criteria:
   - "check_dangling_parent flags a parent id with no matching ticket"
   - "check_parent_cycles detects a parent chain cycle; a ticket cannot be its own parent"
   - "Both checks wired into collect_findings and covered by tests mirroring check_cycles"
-tags: ["schema", "kind:bug", "triage:ready-for-agent"]
+tags: ["schema", "kind:bug", "triage:ready-for-agent", "stream:relations"]
 ---
 
 # parent validation: dangling + cycle checks

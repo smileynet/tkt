@@ -6,7 +6,7 @@ blocked_by: []
 priority: high
 validation_criteria:
   - "tkt capabilities lists all 20+ commands"
-tags: ["tooling", "kind:bug", "triage:ready-for-agent"]
+tags: ["tooling", "kind:bug", "triage:ready-for-agent", "stream:discovery"]
 ---
 
 # Update capabilities manifest with all commands

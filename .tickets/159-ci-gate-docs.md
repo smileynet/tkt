@@ -7,7 +7,7 @@ priority: low
 validation_criteria:
   - "README/AGENTS carry a CI snippet running tkt validate --strict and tkt lint --check"
   - "docs state client-side hooks are advisory; CI is the only unbypassable boundary for hand-editable .tickets/"
-tags: ["docs", "guidance", "kind:enhancement", "triage:needs-info"]
+tags: ["docs", "guidance", "kind:enhancement", "triage:needs-info", "stream:guidance", "gate:decision"]
 ---
 
 # Document CI recipe: tkt validate --strict / lint --check as the real enforcement gate
@@ -43,3 +43,7 @@ Disposition: `kind:enhancement`, `triage:needs-info`; stream `guidance`.
 Old automatic-PR-CI prescription conflicts with current standing manual-dispatch-only verification rule. Propose optional consumer enforcement and accurate bypass limits; do not add hosted CI or describe it as universally unbypassable.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Choose a scoped optional-consumer CI recipe consistent with manual-only verification policy.

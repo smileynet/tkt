@@ -6,7 +6,7 @@ blocked_by: ["01"]
 priority: low
 validation_criteria:
   - "`[workspace.metadata.dist]` section removed from Cargo.toml"
-tags: ["tooling", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["tooling", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
 ---
 
 # Migrate [workspace.metadata.dist] to dist-workspace.toml

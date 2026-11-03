@@ -10,7 +10,7 @@ validation_criteria:
   - "validate errors on a cancelled ticket without a Cancellation section and on any blocked_by pointing at a cancelled ticket"
   - "ready and blocked exclude cancelled; query reports and filters it; capabilities, sync-plan and audit handle it"
   - "Integration tests cover each rule above, plus reopen and the push-gated commit"
-tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:relations"]
 ---
 
 # Add a cancelled status and tkt cancel/reopen per ADR 0004

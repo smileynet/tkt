@@ -8,7 +8,7 @@ validation_criteria:
   - "Parity documentation accurately states whether the harness is runnable from this repository"
   - "If retained, fixtures and a supported reference implementation are available"
   - "If retired, release confidence relies on maintained Rust integration coverage"
-tags: ["quality", "tests", "kind:bug", "triage:needs-info"]
+tags: ["quality", "tests", "kind:bug", "triage:needs-info", "stream:quality", "gate:decision"]
 ---
 
 # Reconcile or retire the historical Python parity harness
@@ -47,3 +47,7 @@ Disposition: `kind:bug`, `triage:needs-info`; stream `quality`.
 tests/parity/run.sh still expects python -m tkt (or an external command), absent from tracked source. No runnable Python reference was found; choose retirement or provide a pinned reference, never count the dormant harness as a passing check.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Planning gate
+
+Choose retirement of the parity harness or supply a supported, pinned Python reference.

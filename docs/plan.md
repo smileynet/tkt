@@ -5,16 +5,25 @@ explicit deferral; statuses are projections checked by `tkt sync-plan`.
 
 Reconciled 2026-11-02 against checkout `62c8226` and the deployed matching binary.
 See [full-board triage](agents/ticket-triage-2026-11-02.md) for per-ticket evidence,
-readiness and unknowns. There is no active tag context and no claimed work.
+readiness and unknowns. There is no active tag context. Dashboard work (#228 and #240) is in progress; rendered verification remains unavailable.
 
 v0.4.0 is historical completed work (#146, local tag `v0.4.0`); the old prepublication
 warning is retired. Later release readiness is governed by [release maintenance](releasing.md):
 current authorization stops at reviewed staged candidates. This plan does not authorize
 a new release or imply that all remaining work belongs to a promised version.
 
+## Graph reading
+
+The dashboard groups every unfinished ticket into one of six `stream:` workstreams.
+`gate:decision` names an unresolved contract or policy choice; `gate:evidence` names
+a required observation. The ticket body explains each gate under Planning gate.
+Neither changes status or invents a dependency. Backlog remains deferred even when
+prerequisites are met. The graph shows gates on dependency-blocked tickets too,
+including the #197 parent-status decision upstream of #199 and #200.
+
 ## Current maintenance frontier
 
-Next: complete discovery (#138 → #127), then guard install freshness (#153), which recurred during this session. No ticket is in progress. This queue records sequencing, not artificial dependency edges; the mechanical frontier still sorts priority then ID.
+Next: complete discovery (#138 → #127), then guard install freshness (#153), which recurred during this session. Dashboard work is in progress outside this implementation queue. This queue records sequencing, not artificial dependency edges; the mechanical frontier still sorts priority then ID.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -59,6 +68,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 234 | Acceptance criteria can be marked moved to another ticket | open |
 | 235 | Ticket mutations skip heavy commit hooks and can defer the push | open |
 | 239 | Review historical closure warnings without fabricating evidence | open |
+| 240 | Show workstreams and decision/evidence gates in the ticket graph | in_progress |
 
 ## Native relations and label namespaces
 

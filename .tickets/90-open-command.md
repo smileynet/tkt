@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "`tkt open <id>` opens first URL found in ticket body"
-tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 ---
 
 # tkt open: find URLs in ticket body and open in browser

@@ -6,7 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "`tkt undo` reverts last tkt-generated commit"
-tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 ---
 
 # tkt undo: revert last mutation

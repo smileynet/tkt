@@ -8,7 +8,7 @@ validation_criteria:
   - "validate warns when a ticket has no spec, no blocked_by, and no #NN/docs/.memory reference in body (test: integration::validate_no_source_ref)"
   - "any one reference kind satisfies the check (test: integration::validate_source_ref_union)"
   - "advisory by default (exit 0); [validate] config key opts into hard gate (test: integration::validate_source_ref_gate)"
-tags: ["quality", "kind:enhancement", "triage:ready-for-agent"]
+tags: ["quality", "kind:enhancement", "triage:ready-for-agent", "stream:guidance"]
 ---
 
 # validate: advisory no-source-reference finding (union of spec/#NN/parent/link)
