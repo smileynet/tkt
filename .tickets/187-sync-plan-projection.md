@@ -1,7 +1,7 @@
 ---
 id: "187"
 title: "Generate a derived sync-plan projection from the ticket corpus"
-status: backlog
+status: open
 blocked_by: []
 priority: medium
 validation_criteria:
