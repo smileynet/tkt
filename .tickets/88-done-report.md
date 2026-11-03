@@ -4,6 +4,9 @@ title: "tkt done --week: show-resolved report for standups"
 status: backlog
 blocked_by: []
 priority: low
+validation_criteria:
+  - "`tkt done` shows recently completed tickets (default: last 7 days)"
+tags: ["cli", "kind:enhancement", "triage:needs-info"]
 ---
 
 # tkt done --week: show-resolved report for standups
@@ -39,12 +42,11 @@ Data source: tickets with `status: done`, sorted by git commit date of the statu
 - [ ] Shows completion date alongside ticket ID and title
 - [ ] Sorted reverse-chronologically (most recent first)
 
-# tkt done --week: show-resolved report for standups
 
-## What to build
+## Triage — 2026-11-02
 
-TBD
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `cli`.
 
-## Acceptance criteria
+Deferred reporting feature. Decide authoritative completion timestamp and behavior when git history is unavailable; mtime is not proof of completion time.
 
-- [ ] TBD
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

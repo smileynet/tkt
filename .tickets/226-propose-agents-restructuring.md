@@ -5,7 +5,7 @@ status: open
 blocked_by: []
 validation_criteria:
   - "Proposal maps every moved section to an existing or new reference, preserves operational and safety rules, and updates the guidance-surface matrix coherently"
-tags: ["guidance"]
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Propose AGENTS.md restructuring while preserving guidance coverage
@@ -34,3 +34,11 @@ Intent source: the 2026-10-29 conformance audit, independent critic review, and 
 ## Out of scope
 
 CLI behavior changes, release/version changes, broad README rewrites, and implementing the proposed restructuring without approval.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `guidance`.
+
+Proposal-only task remains current. Include verification-policy contradictions and progressive disclosure; restructuring requires approval after the concrete coverage map is reviewed.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

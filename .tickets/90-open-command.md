@@ -4,6 +4,9 @@ title: "tkt open <id>: find URLs in ticket body and open in browser"
 status: backlog
 blocked_by: []
 priority: low
+validation_criteria:
+  - "`tkt open <id>` opens first URL found in ticket body"
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # tkt open: find URLs in ticket body and open in browser
@@ -38,12 +41,11 @@ Behavior:
 - [ ] Error message if no URLs in ticket
 - [ ] Error message if ticket not found
 
-# tkt open <id>: find URLs in ticket body and open in browser
 
-## What to build
+## Triage — 2026-11-02
 
-TBD
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
 
-## Acceptance criteria
+Deferred URL helper is absent from src/cli.rs. --list must list without launching; launch only the explicit selected/default URL and handle Windows without shell interpolation.
 
-- [ ] TBD
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

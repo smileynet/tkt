@@ -1,17 +1,17 @@
 ---
 id: "163"
-title: "lint --fix: backfill missing id from filename prefix"
+title: "lint: backfill missing id from filename prefix"
 status: open
 blocked_by: []
 priority: high
 validation_criteria:
-  - "tkt lint --fix inserts id: derived from filename NNN-slug prefix when frontmatter lacks id (test: lint::backfill_missing_id)"
-  - "hand-authored tickets with no id: field become parseable + canonical after lint --fix"
+  - "tkt lint inserts id: derived from filename NNN-slug prefix when frontmatter lacks id (test: lint::backfill_missing_id)"
+  - "hand-authored tickets with no id: field become parseable + canonical after bare lint"
   - "tkt validate no longer reports unparseable missing-required-field-id for fixable files"
-tags: ["compliance"]
+tags: ["compliance", "kind:bug", "triage:ready-for-agent"]
 ---
 
-# lint --fix: backfill missing id from filename prefix
+# lint: backfill missing id from filename prefix
 
 ## What to build
 
@@ -24,7 +24,7 @@ tkt derives the id from the filename at read time (in-memory) but does **not** p
 it, so raw files still fail for any external reader and for validate itself. The repair
 today is manual (insert `id: "NNN"` from the `NNN-slug.md` filename prefix into each file).
 
-This should be a one-command fix. `tkt lint --fix` should backfill `id:` from the
+This should be a one-command fix. `tkt lint` should backfill `id:` from the
 filename prefix when the frontmatter lacks it — deterministic and safe (the filename
 prefix is already the canonical id source tkt uses in memory).
 
@@ -34,9 +34,17 @@ already normalizes frontmatter style.
 
 ## Acceptance criteria
 
-- [ ] `tkt lint --fix` inserts `id:` derived from the `NNN-slug` filename prefix when frontmatter lacks `id`
+- [ ] `tkt lint` inserts `id:` derived from the `NNN-slug` filename prefix when frontmatter lacks `id`
 - [ ] the inserted id is a quoted string matching tkt's in-memory derivation
-- [ ] hand-authored tickets with no `id:` become parseable + canonical after `lint --fix`
+- [ ] hand-authored tickets with no `id:` become parseable + canonical after `lint`
 - [ ] `tkt validate` no longer reports unparseable missing-id for fixable files
 - [ ] no change to files that already have an `id:`
 - [ ] regression test (lint::backfill_missing_id)
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `compliance`.
+
+Confirmed: bare lint skips missing-id ticket and leaves bytes unchanged. lint --fix is currently rejected (exit 2). Implement backfill through the existing bare lint mutation interface; do not add a redundant --fix flag.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

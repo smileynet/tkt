@@ -4,6 +4,9 @@ title: "Explore agent/harness-specific integrations (hooks, MCP, skills)"
 status: backlog
 blocked_by: ["68"]
 priority: low
+validation_criteria:
+  - "Research spike completed: document which integrations are worth building"
+tags: ["integrations", "kind:enhancement", "triage:needs-info"]
 ---
 
 # Explore agent/harness-specific integrations (hooks, MCP, skills)
@@ -110,3 +113,11 @@ Start with the **skill file** (lowest cost, highest portability). A single `SKIL
 Partly delivered: 0.5.0 ships Claude, Codex and Antigravity plugins and a Claude
 SessionStart hook that injects the frontier. What is missing is the recorded decision
 (criterion 2). Write that decision, check what is met, and close; or retire via #182.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
+
+Skills and plugins exist; the remaining deliverable is a recorded integration decision, not a second plugin implementation. Confirm which historical ACs are satisfied before closing or cancelling.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

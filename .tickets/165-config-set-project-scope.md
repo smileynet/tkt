@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt config --set --project key=value writes .tickets/config.toml (test: config::set_project_scope)"
   - "tkt config --set without flag keeps current user-level behavior (back-compat)"
   - "help text documents both scopes"
-tags: ["dx"]
+tags: ["dx", "config", "kind:bug", "triage:ready-for-agent"]
 ---
 
 # config --set: support project scope (.tickets/config.toml), not just user
@@ -54,3 +54,11 @@ and `codex_runner-lbp` are three worktrees of ONE repo. Only the main worktree t
 per-worktree `.tickets/config.toml` on a detached worktree creates an orphaned commit.
 Project config correctly lives once on `main`. A project-scope `--set` should detect
 detached-HEAD / worktree state and warn rather than silently commit to a detached HEAD.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `config`.
+
+Confirmed: config --project --set close.require_resolution=true exits 2 because --project is absent. Preserve default user scope and native TOML values; coordinate typed reads with #190 without treating it as a hard prerequisite.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

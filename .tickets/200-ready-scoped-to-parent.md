@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt ready --parent <id> lists only open, unblocked, unclaimed children of that parent (the per-map frontier), in the same priority-then-id order as global ready"
   - "Works with the interim epic convention too (filter by epic:<slug> tag) OR documented as parent-only; decision recorded"
   - "Driving use case (wayfinder: a session resolves the ready frontier of one map) noted in the ticket"
-tags: ["type:enhancement"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # tkt ready --parent <id>: frontier scoped to one epic/map
@@ -42,3 +42,11 @@ Touches `src/commands/ready.rs` and the frontier helper in `src/core/ticket.rs`.
 - [ ] `tkt ready --parent <id>` lists only open, unblocked, unclaimed children of that parent, in priority-then-id order
 - [ ] Interim behavior (epic-tag filter vs parent-only) decided and documented
 - [ ] Driving use case (wayfinder per-map frontier) noted here
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
+
+Keep #196/#197 dependencies. Parent-scoped frontier is absent; reuse readiness and priority/ID ordering. Decide parent-only versus interim tag alias without inventing computed sort overrides.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

@@ -4,6 +4,9 @@ title: "Lifecycle hooks: on-new, on-claim, on-close scripts"
 status: backlog
 blocked_by: []
 priority: low
+validation_criteria:
+  - "Post-hooks fire for new, claim, close, edit"
+tags: ["integrations", "kind:enhancement", "triage:needs-info"]
 ---
 
 # Lifecycle hooks: on-new, on-claim, on-close scripts
@@ -42,12 +45,11 @@ Hook contract:
 - [ ] Hook execution doesn't block push operations
 - [ ] Integration test with a simple hook script
 
-# Lifecycle hooks: on-new, on-claim, on-close scripts
 
-## What to build
+## Triage — 2026-11-02
 
-TBD
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
 
-## Acceptance criteria
+Deferred lifecycle hooks, distinct from git-hook bypass in #235 and installer #157. Resolve the contradictory timeout/nonblocking-push contract and supported Windows invocation.
 
-- [ ] TBD
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

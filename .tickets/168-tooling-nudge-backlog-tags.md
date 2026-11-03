@@ -8,6 +8,7 @@ validation_criteria:
   - "tkt new prints a non-blocking advisory to stderr when a ticket is created with no tags (gated on !quiet)"
   - "validate or doctor emits an advisory (not error) counting untagged live tickets, via a check_missing_tags finding in findings.rs"
   - "decision recorded on whether to add a new.default_status config key (mirroring new.default_priority) or keep the hard-coded open default"
+tags: ["guidance", "kind:enhancement", "triage:needs-info"]
 ---
 
 # Optional tooling nudge: advisory on tag-less/backlog tickets
@@ -40,7 +41,7 @@ A minimal, non-blocking tooling nudge that reinforces the guidance without addin
 - **Hooks identified (from review-code.md / review-config.md):**
   - Creation advisory: success branch of `new::run` (`src/commands/new.rs:137-149`), after
     `effective_tags` computed (`new.rs:72-82`), gated on `!is_quiet()`.
-  - Corpus finding: add `check_missing_tags` in `src/core/findings.rs` (grep for "tag" there =
+  - Corpus finding: add `check_missing_tags` in `src/findings.rs` (grep for "tag" there =
     0 matches today), register in `collect_findings` (`src/commands/validate.rs:30-38`) and
     doctor (`src/commands/doctor.rs:374-380`).
   - `tags` is absent from lint `CANONICAL_ORDER` (`src/commands/lint.rs:9-17`) — adding it would
@@ -63,3 +64,11 @@ A minimal, non-blocking tooling nudge that reinforces the guidance without addin
       a `check_missing_tags` finding in `findings.rs`
 - [ ] Decision recorded on `new.default_status` config key vs keeping the hard-coded `open` default
 - [ ] `cargo fmt && cargo clippy --all-targets && cargo test` all pass with zero warnings
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `guidance`.
+
+Deferred advisory proposal after completed #167. First measure whether nudges are still wanted; keep quiet/JSON behavior and do not promote advisory tag checks into a mandatory gate.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

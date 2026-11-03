@@ -8,7 +8,7 @@ validation_criteria:
   - "when id equals the filename stem (slug id), validate does NOT emit id-filename-mismatch (test: validate::slug_id_canonical)"
   - "numeric-id corpuses still flag genuine mismatches"
   - "ADR records the decision on whether non-numeric ids are officially supported"
-tags: ["compliance"]
+tags: ["compliance", "kind:bug", "triage:ready-for-agent"]
 ---
 
 # validate: recognize slug ids as canonical (stop false id-filename-mismatch)
@@ -43,3 +43,11 @@ Fix:
 - [ ] slug-id projects (codex_runner, catalyst-mono) validate without the mismatch noise
 - [ ] ADR records whether non-numeric ids are officially supported
 - [ ] regression test (validate::slug_id_canonical)
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `compliance`.
+
+Confirmed: id slug-key in slug-key.md produces id-filename-mismatch, exit 1. Preserve numeric mismatch detection; record supported-ID decision as part of the fix.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

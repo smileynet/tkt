@@ -115,6 +115,42 @@ details.row .body{padding:0 0 14px}
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-11-02-board-reconciliation",
+    "date": "2026-11-02",
+    "kind": "decision",
+    "fidelity": "live",
+    "title": "Remaining work has a current scope and a clear next step",
+    "summary": "Every unfinished item now distinguishes work that can start from questions still needing evidence or a decision. The plan separates actionable work, deferred ideas and pending retirements.",
+    "visual": {
+      "type": "steps",
+      "items": [
+        {
+          "label": "Check reported gaps",
+          "state": "done"
+        },
+        {
+          "label": "Resolve stale scopes and blockers",
+          "state": "done"
+        },
+        {
+          "label": "Follow the reconciled queue",
+          "state": "now"
+        }
+      ]
+    },
+    "details": "Reviewed all 65 initially unfinished tickets and the 173 completed records through strict validation and deep closure audit; added ticket239 for 20 historical warning dispositions. All 66 remaining tickets now have kind/triage tags and dated assessments: 40 ready-for-agent, 21 needs-info, 5 approved retirements awaiting ticket227. No product code or completed status changed. Existing missing gm-tickets/Plan renderer warning remains ticket228; no rendered UI review or product test-suite pass is claimed. Verification: strict ticket validation and strict plan sync each passed with zero findings; lint was canonical; metadata/link/scope checks passed and confirmed all 173 completed records unchanged. Dashboard data check passed with the existing Plan-tab warning. Temporary probes and index were sent to OS trash; existing artifact families were preserved with sizes in the report.",
+    "links": [
+      {
+        "label": "Current execution plan",
+        "href": "plan.md"
+      },
+      {
+        "label": "Full-board evidence and triage",
+        "href": "agents/ticket-triage-2026-11-02.md"
+      }
+    ]
+  },
+  {
     "id": "2026-11-02-deployer-repair",
     "date": "2026-11-02",
     "kind": "shipped",

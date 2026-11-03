@@ -4,6 +4,9 @@ title: "tkt import --github: pull open issues into .tickets/"
 status: backlog
 blocked_by: []
 priority: low
+validation_criteria:
+  - "`tkt import --github` imports open issues from current repo"
+tags: ["integrations", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # tkt import --github: pull open issues into .tickets/
@@ -45,12 +48,11 @@ Behavior:
 - [ ] Commits and pushes imported tickets
 - [ ] Graceful error if `gh` not available or not authenticated
 
-# tkt import --github: pull open issues into .tickets/
 
-## What to build
+## Triage — 2026-11-02
 
-TBD
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `integrations`.
 
-## Acceptance criteria
+Deferred one-way import. src/cli.rs has migrate but no import command; preserve source issue identity and bounded allocation. No external service changes are authorized by triage.
 
-- [ ] TBD
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

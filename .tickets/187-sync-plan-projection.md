@@ -8,7 +8,7 @@ validation_criteria:
   - "A projection command renders every relevant ticket from the corpus with deterministic ordering and derived status"
   - "Generated output is written atomically and respects global dry-run"
   - "The command preserves or clearly separates any non-derivable human narrative"
-tags: ["planning", "sync-plan"]
+tags: ["planning", "sync-plan", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Generate a derived sync-plan projection from the ticket corpus
@@ -39,3 +39,11 @@ This is intentionally separate from #184: projection is the primary derived-plan
 - [ ] The location and behavior of human-authored narrative are explicitly preserved or separated
 - [ ] Table-format `sync-plan` compatibility and #184's opt-in narrative design remain intact
 - [ ] Help, README, and agent guidance explain ticket files as the source of truth
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `planning`.
+
+Deferred deterministic projection per ADR 0002; current sync-plan only checks/fixes tables. Preserve human narrative and independent optional #184 scope.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

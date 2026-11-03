@@ -4,6 +4,9 @@ title: "tkt note <id>: open ticket body in $EDITOR"
 status: backlog
 blocked_by: []
 priority: low
+validation_criteria:
+  - "`tkt note <id>` opens the ticket file in $EDITOR"
+tags: ["cli", "kind:enhancement", "triage:needs-info"]
 ---
 
 # tkt note: open ticket body in $EDITOR
@@ -34,16 +37,15 @@ Behavior:
 - [ ] Does not commit changes (body is user-owned)
 - [ ] Works with numeric ID (finds the matching file)
 
-# tkt note <id>: open ticket body in $EDITOR
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
-- [ ] TBD
 
 ## Field report — 2026-11-01
 
 Agents can't use an editor. Proposed non-interactive form: `tkt note <id> --append "text"` (or `--file`) adds a dated `## Note — YYYY-MM-DD` section and commits it. In one philippines-trip session, ticket bodies were hand-edited about 15 times for decisions and status notes.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `cli`.
+
+Deferred proposal combines a noncommitting editor with a committing append form. Decide the mutation/commit contract and noninteractive input before implementation.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

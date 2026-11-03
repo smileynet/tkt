@@ -6,6 +6,7 @@ blocked_by: []
 priority: low
 validation_criteria:
   - "tkt query ignores context or documents the filtering"
+tags: ["cli", "kind:bug", "triage:ready-for-agent"]
 ---
 
 # Context silently narrows query (full corpus claim violated)
@@ -32,3 +33,11 @@ context is set; it would pass the bypass flag instead.
 - [ ] With a context set, the bypass flag returns every ticket; without it, output is unchanged
 - [ ] When a context narrows the output, a notice goes to stderr only, never into JSON stdout
 - [ ] An integration test covers context plus bypass, and the tkt-reconcile context flow still passes
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `cli`.
+
+Confirmed: TKT_CONTEXT=other query hides an ink-tagged ticket and retains an untagged ticket, with no stderr notice. Keep existing scoped default; add/document bypass.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

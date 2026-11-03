@@ -8,6 +8,7 @@ validation_criteria:
   - "validate warns when a ticket has no spec, no blocked_by, and no #NN/docs/.memory reference in body (test: integration::validate_no_source_ref)"
   - "any one reference kind satisfies the check (test: integration::validate_source_ref_union)"
   - "advisory by default (exit 0); [validate] config key opts into hard gate (test: integration::validate_source_ref_gate)"
+tags: ["quality", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # validate: advisory no-source-reference finding (union of spec/#NN/parent/link)
@@ -46,3 +47,11 @@ Blocked by #174 (lands the validate-finding scaffold first).
 - [ ] Advisory by default (exit 0); `[validate] require_source_reference` opts into a hard gate
 - [ ] Spike/backlog exemption considered (research open question)
 - [ ] `mise run check` passes
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `quality`.
+
+Deferred source-reference advisory after completed #174. Own reusable source-reference predicate; #173 should reuse it. Durable inline requirements suffice; missing historical scratch research is not required.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

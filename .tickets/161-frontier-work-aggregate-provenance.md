@@ -2,9 +2,10 @@
 id: "161"
 title: "frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex"
 status: backlog
-blocked_by: []
+blocked_by: ["227"]
 validation_criteria:
   - "frontier-work.md step 4 triggers verify-before-edit for Reporter: Codex AND Reporter: aggregate (...); single-reviewer behavior unchanged"
+tags: ["guidance", "kind:enhancement", "triage:wontfix"]
 ---
 
 # frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex
@@ -50,4 +51,12 @@ status: unconfirmed` verbatim.
 ## Pending close (2026-10-29)
 
 The 2026-10-29 scope review marked this for closure: crew-research was retired in the 2026-10-26 cutover. With `allow_force = false` it
-stays open until #182 decides how to retire tickets whose criteria won't be met.
+stays open until #227 implements the accepted ADR 0004 cancellation mechanism.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:wontfix`; stream `guidance`.
+
+Approved obsolete steering/consumer work; #207 retired the steering surface. Await #227 cancellation; do not recreate frontier-work.md.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

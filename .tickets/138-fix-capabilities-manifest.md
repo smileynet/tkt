@@ -6,6 +6,7 @@ blocked_by: []
 priority: high
 validation_criteria:
   - "tkt capabilities lists all 20+ commands"
+tags: ["tooling", "kind:bug", "triage:ready-for-agent"]
 ---
 
 # Update capabilities manifest with all commands
@@ -31,7 +32,7 @@ v0.3.1 bugfix release.
 
 ## Acceptance criteria
 
-- [ ] `tkt capabilities` includes all public CLI commands, including the ten currently omitted commands
+- [ ] `tkt capabilities` includes all public CLI commands, including all commands currently omitted
 - [ ] Each added mutation command declares its effects and meaningful input schema
 - [ ] Existing schemas include `new`/`batch` tags and requires, and never advertise
       `edit --status done` as a supported lifecycle transition
@@ -52,4 +53,12 @@ manifest is incomplete at 0.4.0 (92d4833). Specifics it found:
 
 An automation that trusts the manifest as authoritative (as its description invites) will
 mis-validate until this is fixed — so the single-source (clap-derived) + drift test is
-load-bearing, not nice-to-have. (#208 closed as duplicate of this ticket.)
+load-bearing, not nice-to-have. (#208 is parked as a duplicate, pending cancellation support in #227.)
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `tooling`.
+
+Confirmed: capabilities lists 11 commands including config, but omits context/blocked/audit/sync-plan/renumber/init/doctor/migrate/rebase/telemetry. Own command/flag completeness; #208 is its duplicate.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

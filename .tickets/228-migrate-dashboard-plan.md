@@ -5,7 +5,7 @@ status: open
 blocked_by: []
 validation_criteria:
   - "Dashboard preserves existing entries, renders an all-ticket Plan tab, supports snapshot refresh, and passes the current checker without warnings"
-tags: ["tooling"]
+tags: ["tooling", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Migrate status dashboard to the current Plan-tab contract
@@ -35,3 +35,11 @@ Intent source: the 2026-10-29 session wrap retrospective. The current dashboard 
 ## Out of scope
 
 Broad AGENTS.md restructuring, ticket status/priority changes, release/version changes, and rewriting dashboard history.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `tooling`.
+
+Dashboard lacks gm-tickets and Plan renderer. Migration is separate work; this reconciliation changes only gm-entries, preserves history, and records the existing checker warning.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

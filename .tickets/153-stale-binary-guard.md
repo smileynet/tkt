@@ -7,7 +7,7 @@ priority: high
 validation_criteria:
   - "AGENTS.md directs validation via cargo test integration tests (freshly-built target binary), not PATH-installed tkt"
   - "tools/check-binary-fresh.sh exits 1 when installed tkt hash != HEAD, 0 when matched, with JSON status output"
-tags: ["tooling"]
+tags: ["tooling", "kind:bug", "triage:ready-for-agent"]
 ---
 
 # Guard against stale-binary validation (prefer integration tests, add freshness check)
@@ -40,3 +40,11 @@ Two-part fix:
 ## Out of scope
 
 - Blocking cargo install or adding a pre-commit hook (too heavy for the frequency)
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `tooling`.
+
+Confirmed this session: installed hash 92d4833 differed from HEAD 62c8226 and --agent failed until deployment. The freshness guard is absent; use integration binaries for product checks and compare hashes only when install/deploy itself is under test.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

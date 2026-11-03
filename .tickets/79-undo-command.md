@@ -4,6 +4,9 @@ title: "tkt undo: revert last mutation"
 status: backlog
 blocked_by: []
 priority: low
+validation_criteria:
+  - "`tkt undo` reverts last tkt-generated commit"
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # tkt undo: revert last mutation
@@ -34,12 +37,11 @@ Edge cases:
 - [ ] Shows what was reverted in the confirmation message
 - [ ] Integration test covering undo of close, claim, and new
 
-# tkt undo: revert last mutation
 
-## What to build
+## Triage — 2026-11-02
 
-TBD
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
 
-## Acceptance criteria
+Deferred feature; src/cli.rs has no undo command. Match actual chore(tickets) commit messages, refuse unrelated HEAD, and preserve push gating.
 
-- [ ] TBD
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

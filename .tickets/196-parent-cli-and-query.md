@@ -2,12 +2,13 @@
 id: "196"
 title: "parent CLI + query/capabilities surface"
 status: open
-blocked_by: ["192"]
+blocked_by: ["192", "195"]
 priority: high
 validation_criteria:
   - "the --parent flag is accepted on new, batch, and edit (set and clear)"
   - "query emits parent and supports a --parent filter; capabilities documents the field"
   - "Invalid parent (nonexistent id) is rejected at command time with a clear error"
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # parent CLI + query/capabilities surface
@@ -29,3 +30,11 @@ Expose the `parent` field (ticket 192) through the CLI and machine surfaces.
 - [ ] The `--parent` flag is accepted on `new`, `batch`, and `edit` (set and clear)
 - [ ] `query` emits `parent` and supports a `--parent` filter; `capabilities` documents the field
 - [ ] An invalid parent (nonexistent id) is rejected at command time with a clear error
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
+
+Parent storage exists but new/batch/edit/query have no parent interface. Add dependency #195 so new mutations share valid parent rules; retain completed #192 history.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

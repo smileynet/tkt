@@ -2,13 +2,13 @@
 id: "158"
 title: "tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex)"
 status: backlog
-blocked_by: []
+blocked_by: ["157"]
 priority: low
 validation_criteria:
   - "tkt init --claude writes .claude/settings.json PreToolUse warn-nudge (Edit matcher) toward tkt edit/close"
   - "tkt init --codex installs apply_patch PreToolUse hook, version-gated with clear caveat"
   - "warn-default; hard deny (Edit(.tickets/**)) only under opt-in config"
-tags: ["contract"]
+tags: ["contract", "integrations", "kind:enhancement", "triage:needs-info"]
 ---
 
 # tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex)
@@ -45,3 +45,11 @@ Extend `tkt init --<agent>` to install a per-agent nudge that steers frontmatter
 
 - pre-commit hook + `tkt hooks` machinery (#157)
 - CI gate docs (#159)
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
+
+Add missing dependency #157 for its shared hook config. Harness hook claims are version-sensitive and unverified; current Codex plugin explicitly installs no hooks. Verify official support before implementation.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

@@ -5,9 +5,10 @@ status: open
 blocked_by: []
 priority: high
 validation_criteria:
-  - "tkt new, claim, edit and close commit only the ticket file and do not run a consumer repo's heavy pre-commit gate (documented opt-in to keep hooks)"
+  - "tkt new, claim, edit and close commit only the affected ticket and existing plan files and do not run a consumer repo's heavy pre-commit gate (documented opt-in to keep hooks)"
   - "A --no-push flag and a push=false config let a ticket be created or edited locally, with the later push still collision-safe"
   - "A rejected push from a consumer pre-push hook is reported with the local commit id and a retry instruction, never silently left ahead"
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Ticket mutations skip heavy commit hooks and can defer the push
@@ -28,12 +29,20 @@ Owner request on 2026-11-01 from a tagalog-helper session ("file and push ticket
 
 ## What to build
 
-- Ticket mutations commit with hooks skipped by default (`--no-verify` scoped to the ticket file only), with a documented `hooks = "run"` opt-in for repos that want them.
+- Ticket mutations commit with hooks skipped by default (a hook bypass scoped to that git invocation and the affected ticket/plan files), with a documented `hooks = "run"` opt-in for repos that want them.
 - `--no-push` and `push = false` for local filing. The later push keeps the existing collision and renumber safety.
 - A failed push names the local commit, the hook output and how to retry. The command's exit status reflects "created locally, not pushed".
 
 ## Acceptance criteria
 
-- [ ] Fixture repo with a slow and a failing pre-commit hook: `tkt new` completes quickly and commits only the ticket file.
+- [ ] Fixture repo with a slow and a failing pre-commit hook: `tkt new` completes quickly and commits only affected ticket and existing plan files.
 - [ ] `--no-push` and `push = false` leave the commit local; a later push renumbers safely on collision.
 - [ ] Fixture with a failing pre-push hook: the exit code and message distinguish "created, not pushed".
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
+
+Confirmed git::commit invokes git commit -qm (hooks run), and new lacks --no-push. push.enabled=false already works; MutationContext already reports local durable commit on push failure. Extend missing behavior rather than rebuild those parts; preserve plan-file changes in mutation commits.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

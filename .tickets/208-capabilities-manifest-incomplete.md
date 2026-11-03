@@ -2,13 +2,13 @@
 id: "208"
 title: "tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...)"
 status: backlog
-blocked_by: []
+blocked_by: ["227"]
 priority: medium
 validation_criteria:
   - "tkt capabilities -o json lists every top-level command that tkt --help lists (context, blocked, audit, sync-plan, renumber, init, doctor, migrate, rebase, telemetry, config included)"
   - "Each command's inputSchema includes every flag its --help documents (e.g. new includes --tags, --vc/--validation, --requires)"
   - "A test asserts capabilities output stays in sync with the actual clap command/flag definitions so it can't drift again"
-tags: ["type:bug", "stream:tooling"]
+tags: ["tooling", "kind:bug", "triage:wontfix"]
 ---
 
 # tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...)
@@ -61,4 +61,12 @@ force-close and these ACs aren't honestly met yet — parked rather than gamed.
 ## Pending close (2026-10-29)
 
 The 2026-10-29 scope review marked this for closure: it is a duplicate, folded into #138. With `allow_force = false` it
-stays open until #182 decides how to retire tickets whose criteria won't be met.
+stays open until #227 implements the accepted ADR 0004 cancellation mechanism.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:wontfix`; stream `tooling`.
+
+Approved duplicate of #138; await #227 cancellation with --by 138. Do not implement a second manifest fix; the earlier statement that #208 was already closed was inaccurate.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

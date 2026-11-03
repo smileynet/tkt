@@ -2,8 +2,11 @@
 id: "87"
 title: "tkt new --template: predefined ticket body structures"
 status: backlog
-blocked_by: []
+blocked_by: ["227"]
 priority: low
+validation_criteria:
+  - "Cancellation follows ADR 0004 without claiming original work completed"
+tags: ["cli", "kind:enhancement", "triage:wontfix"]
 ---
 
 # tkt new --template: predefined ticket body structures
@@ -38,17 +41,16 @@ Template files contain only the body (below frontmatter). Frontmatter is generat
 - [ ] Works without templates directory (flag simply unavailable)
 - [ ] Templates are plain markdown (no variable interpolation needed for v1)
 
-# tkt new --template: predefined ticket body structures
-
-## What to build
-
-TBD
-
-## Acceptance criteria
-
-- [ ] TBD
 
 ## Pending close (2026-10-29)
 
 The 2026-10-29 scope review marked this for closure: `--template` is merged into #176's body-template work. With `allow_force = false` it
-stays open until #182 decides how to retire tickets whose criteria won't be met.
+stays open until #227 implements the accepted ADR 0004 cancellation mechanism.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:wontfix`; stream `cli`.
+
+Approved supersession by #176; await #227 cancellation with --by 176. Do not implement twice or check unfulfilled ACs.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

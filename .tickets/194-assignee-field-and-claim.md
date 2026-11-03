@@ -8,6 +8,7 @@ validation_criteria:
   - "Ticket struct has assignee: Option<AgentId>, parsed/serialized like spec"
   - "tkt claim sets assignee alongside in_progress; refuses an already-assigned ticket without --force"
   - "tkt ready excludes tickets assigned to another identity; query/ready surface assignee"
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # assignee field + claim-by-assignment + frontier honors it
@@ -33,3 +34,11 @@ Additive and optional: a solo serial workflow can ignore it.
 - [ ] Ticket struct has `assignee: Option<AgentId>`, parsed/serialized like `spec`
 - [ ] `tkt claim` sets `assignee` alongside `in_progress`; refuses an already-assigned ticket without `--force`
 - [ ] `tkt ready` excludes tickets assigned to another identity; `query`/`ready` surface `assignee`
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
+
+AgentId/eligibility shipped in #224; assignee ownership has not. Reuse invocation identity, preserve eligibility as a separate policy, and add ownership fixtures.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

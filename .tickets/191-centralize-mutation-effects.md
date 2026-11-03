@@ -9,7 +9,7 @@ validation_criteria:
   - "Dry run performs no persistent filesystem or Git mutation"
   - "The shared executor preserves atomic writes and push gating"
   - "Table-driven tests cover no-write dry-run behavior"
-tags: ["architecture", "integrity"]
+tags: ["architecture", "integrity", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Centralize command mutation effects and dry-run policy
@@ -33,3 +33,11 @@ route each mutating command through it while preserving the existing command con
 - [ ] The executor preserves `atomic_write` where appropriate and respects `push.enabled`
 - [ ] Existing command output and error contracts remain compatible
 - [ ] Table-driven tests cover every mutator's no-write dry-run behavior
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `architecture`.
+
+Deferred consolidation after completed #136. MutationContext and GitTransaction already exist; consolidate effects only where needed and preserve their distinct allocation/existing-ticket responsibilities.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

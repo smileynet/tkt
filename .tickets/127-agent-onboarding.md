@@ -7,6 +7,7 @@ priority: high
 validation_criteria:
   - "tkt --help includes a note pointing agents to tkt capabilities for structured discovery"
   - "tkt init output recommends adding skill and AGENTS.md guidance for maximum effectiveness"
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Improve agent discoverability: help nudge to capabilities, init recommends agent setup
@@ -37,7 +38,7 @@ When `tkt init` runs, after creating `.tickets/` and printing the workflow snipp
 Agent setup recommendations:
   • Add the tkt section to your AGENTS.md: tkt init --write
   • For deeper agent integration, install the tkt skill:
-    cargo install tkt  (includes skills/tkt/ for kiro/claude/codex)
+    Install the tkt plugin or workflow skills separately; cargo install installs only the CLI
   • Run tkt capabilities for machine-readable command schemas
 ```
 
@@ -57,3 +58,11 @@ This gives agents (and humans setting up for agents) a clear "what else should I
 - [ ] `tkt --help` includes a line pointing to `tkt capabilities`
 - [ ] `tkt init` output includes agent setup recommendations
 - [ ] Agents following the init recommendations get full tool effectiveness
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `guidance`.
+
+Keep real dependency #138. Replace the cargo-install-includes-skills example: Cargo.toml currently excludes skills. Describe plugin installation separately from the binary.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

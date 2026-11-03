@@ -6,7 +6,7 @@ blocked_by: []
 validation_criteria:
   - "tkt-work documents classified evidence with observable check output and unavailable checks"
   - "Skill validation and applicable guidance tests pass without adding non-tkt skill dependencies"
-tags: ["guidance"]
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Separate artifact, functionality and user-outcome evidence in ticket closure guidance
@@ -22,3 +22,11 @@ Read skills/tkt-work/SKILL.md, docs/agents/agent-guidance-surfaces.md and existi
 - [ ] tkt-work explains command/result evidence and explicit failure, skip and infrastructure limitation classifications.
 - [ ] Examples keep human-reported functionality separate from observed execution and user outcomes.
 - [ ] Applicable guidance fixtures/checks pass; no non-tkt skill dependency is introduced.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `guidance`.
+
+Own classified artifact/functionality/user-outcome evidence examples, including the evidence refinement previously appended to #177. No duplicate implementation in #177.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

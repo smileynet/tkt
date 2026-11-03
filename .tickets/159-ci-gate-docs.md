@@ -7,7 +7,7 @@ priority: low
 validation_criteria:
   - "README/AGENTS carry a CI snippet running tkt validate --strict and tkt lint --check"
   - "docs state client-side hooks are advisory; CI is the only unbypassable boundary for hand-editable .tickets/"
-tags: ["docs"]
+tags: ["docs", "guidance", "kind:enhancement", "triage:needs-info"]
 ---
 
 # Document CI recipe: tkt validate --strict / lint --check as the real enforcement gate
@@ -22,7 +22,7 @@ Add to README and/or AGENTS.md:
 
 ## Context
 
-- **Relevant files:** `README.md`, `AGENTS.md`, possibly `skills/tkt/references/commands.md`
+- **Relevant files:** `README.md`, `AGENTS.md`, possibly `skills/tkt-core/references/commands.md`
 - Research: `.scratch/subagent-raw/guardrail-warn-vs-block.md` (open question 2 — confirm projects actually wire CI, or blocks are advisory-only in practice)
 - Complements #157/#158 (which are the warn-layer); this documents where the block-layer actually lives.
 
@@ -35,3 +35,11 @@ Add to README and/or AGENTS.md:
 ## Out of scope
 
 - Implementing hooks (#157/#158)
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `guidance`.
+
+Old automatic-PR-CI prescription conflicts with current standing manual-dispatch-only verification rule. Propose optional consumer enforcement and accurate bypass limits; do not add hosted CI or describe it as universally unbypassable.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

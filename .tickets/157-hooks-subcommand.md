@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt hooks install writes a worktree-aware pre-commit shim that warns on staged status:done without Resolution"
   - "block and logging are opt-in via [hooks] config (both off by default); existing hooks chained via .legacy backup"
   - "Windows: LF-only shim, zero new deps, lossless tkt hooks uninstall"
-tags: ["contract"]
+tags: ["contract", "integrations", "kind:enhancement", "triage:needs-info"]
 ---
 
 # tkt hooks subcommand + pre-commit installer (warn-default, config block/log)
@@ -50,3 +50,11 @@ Add a `tkt hooks` subcommand that installs a git pre-commit hook enforcing the c
 
 - Per-agent write-nudge (#158)
 - CI gate docs (#159)
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
+
+Deferred opt-in product hook installer. Reconcile with #235 skipping git hooks and standing guidance against installing verification hooks; do not silently install hooks during this triage. Historical scratch research is not a dependency.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

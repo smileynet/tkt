@@ -7,7 +7,9 @@ priority: medium
 validation_criteria:
   - "tkt new writes a body with prompting section text instead of bare TBD (test: integration::new_body_template_prompts)"
   - "tkt new --body @file / --body - fills the body at creation (test: integration::new_body_from_input)"
+  - "new and batch support named body templates from .tickets/templates with clear missing-template errors"
   - "stub remains detectable by the stub-body finding when body is left unfilled (test: integration::new_body_still_detectable)"
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # new: clearer body template + --body flag to fill content at creation
@@ -39,15 +41,24 @@ Blocked by #174 (the detector must exist so "still detectable" AC is testable).
 - [ ] `tkt new` writes prompting section text instead of a bare `TBD` line
 - [ ] `tkt new --body @file` and `--body -` fill the body at creation
 - [ ] An unfilled body is still flagged by the `stub-body` finding (#174)
-- [ ] `batch` uses the same template
+- [ ] `new --template <name>` and `batch --template <name>` read `.tickets/templates/<name>.md`; missing templates fail clearly and default behavior works without that directory.
+- [ ] `batch` uses the same default template
 - [ ] Guidance surfaces updated per docs/agents/agent-guidance-surfaces.md
 - [ ] `mise run check` passes
 
 ## Absorbs #87 (2026-10-29)
 
 `tkt new --template` (#87) is merged into this ticket: a clearer default body and named
-templates are one feature. #87 waits on #182 to close.
+templates are one feature. #87 waits on #227 to cancel after ADR 0004.
 
 ## Field report — 2026-11-01
 
 Confirmed in philippines-trip: every `tkt new` left a "TBD" body that then needed a hand edit. A `--body`/`--body-file` flag would remove that step.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
+
+new --help has no body/template flags and creation still emits TBD. #87's named-template scope must be represented explicitly in ACs; keep #174 stub detection working.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

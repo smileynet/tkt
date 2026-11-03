@@ -8,7 +8,7 @@ validation_criteria:
   - "tkt-work's close step tells the agent to promote durable outputs, delete the ticket's scratch and build artifacts, and keep only items with a stated lifecycle scope"
   - "The Resolution names what was promoted, deleted or kept, and why anything kept is still needed"
   - "init snippets and tkt-reconcile carry the same rule without contradicting it"
-tags: ["guidance"]
+tags: ["guidance", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # tkt-work close step cleans up the ticket's scratch and build artifacts
@@ -34,3 +34,11 @@ snippets mention it in one line. Keep it guidance; no new command or ledger.
 - [ ] tkt-reconcile flags kept items whose lifecycle scope has ended
 - [ ] init snippets carry a one-line version consistent with the skill
 - [ ] Repository checks (`mise run check`) pass
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `guidance`.
+
+Close-artifact guidance remains portable standalone tkt scope. Sync work/reconcile/init wording; do not introduce a foreign-skill dependency or delete artifacts of unknown ownership.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

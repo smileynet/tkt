@@ -10,7 +10,7 @@ validation_criteria:
   - "validate errors on a cancelled ticket without a Cancellation section and on any blocked_by pointing at a cancelled ticket"
   - "ready and blocked exclude cancelled; query reports and filters it; capabilities, sync-plan and audit handle it"
   - "Integration tests cover each rule above, plus reopen and the push-gated commit"
-tags: ["cli"]
+tags: ["cli", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Add a cancelled status and tkt cancel/reopen per ADR 0004
@@ -45,3 +45,11 @@ ticket), because its checker rejects statuses it doesn't know.
 - [ ] `ready` and `blocked` exclude cancelled; `query` reports and filters it; `capabilities`, `sync-plan` and `audit` handle it
 - [ ] Integration tests cover each rule, the push-gated commit and `close.allow_force` unchanged
 - [ ] The stuck tickets listed above are cancelled or decided
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
+
+Accepted ADR 0004 defines cancellation; no cancelled status or cancel/reopen commands exist. Own honest retirement of #87/#94/#115/#161/#208; never bypass close gates to clear them.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

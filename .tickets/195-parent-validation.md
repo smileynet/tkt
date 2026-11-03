@@ -8,6 +8,7 @@ validation_criteria:
   - "check_dangling_parent flags a parent id with no matching ticket"
   - "check_parent_cycles detects a parent chain cycle; a ticket cannot be its own parent"
   - "Both checks wired into collect_findings and covered by tests mirroring check_cycles"
+tags: ["schema", "kind:bug", "triage:ready-for-agent"]
 ---
 
 # parent validation: dangling + cycle checks
@@ -29,3 +30,11 @@ checks `blocked_by`.
 - [ ] `check_dangling_parent` flags a `parent` id with no matching ticket
 - [ ] `check_parent_cycles` detects a parent-chain cycle; a ticket cannot be its own parent
 - [ ] Both checks wired into `collect_findings` and covered by tests mirroring `check_cycles`
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `schema`.
+
+Confirmed: parent: "999" on the sole valid ticket passes validate with zero findings. Typed parent storage exists from #192; add dangling/self/cycle findings in src/findings.rs.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

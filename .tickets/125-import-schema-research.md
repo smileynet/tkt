@@ -7,6 +7,7 @@ priority: medium
 validation_criteria:
   - "schema mappings documented for at least 3 external systems"
   - "migrate.toml templates exist for each researched system"
+tags: ["integrations", "kind:enhancement", "triage:needs-info"]
 ---
 
 # Research and build import schemas for Jira, Linear, Beads, GitLab, and other ticket systems
@@ -43,7 +44,7 @@ Dispatch subagents to research each system's data model, then produce `migrate.t
 ### Deliverables
 
 - `docs/agents/specs/import-schemas/` directory with one doc per system
-- `skills/tkt/references/` templates for agent-assisted import
+- `skills/tkt-core/references/` templates for agent-assisted import
 - Recommendations for which systems warrant built-in CLI adapters vs skill-assisted import
 
 ## Context
@@ -58,3 +59,11 @@ Dispatch subagents to research each system's data model, then produce `migrate.t
 - [ ] migrate.toml templates produced and validated against sample data
 - [ ] Recommendations documented: which warrant built-in adapters vs skill-only
 - [ ] Research findings stored in docs/agents/specs/import-schemas/
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `integrations`.
+
+Deferred research depends on an unimplemented --map interface: migrate --map example.toml exits 2. First choose adapter/mapping contract; no third-party schema facts were verified in this audit.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

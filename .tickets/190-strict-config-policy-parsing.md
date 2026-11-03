@@ -9,7 +9,7 @@ validation_criteria:
   - "Evidence, push, priority, and environment policies use typed parsed values"
   - "A typo cannot silently disable required evidence or publishing"
   - "Configuration compatibility cases are covered by tests"
-tags: ["config", "integrity"]
+tags: ["config", "integrity", "kind:bug", "triage:ready-for-agent"]
 ---
 
 # Parse known config keys into strict typed policies
@@ -35,3 +35,11 @@ ticket owns safe reading and interpretation.
 - [ ] A typo cannot silently disable required evidence, publishing, or a filter
 - [ ] Unknown-key compatibility behavior is documented and tested separately from known keys
 - [ ] User/project precedence and valid legacy values have regression coverage
+
+## Triage — 2026-11-02
+
+Disposition: `kind:bug`, `triage:ready-for-agent`; stream `config`.
+
+Confirmed: push.enabled="treu" followed by config --show exits 0 and reports push.enabled="false" (project). Parse at the config boundary; do not silently weaken policy.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

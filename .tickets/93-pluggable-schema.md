@@ -4,6 +4,9 @@ title: "Pluggable schema definitions with meta field + ai_context support"
 status: backlog
 blocked_by: []
 priority: low
+validation_criteria:
+  - "`.tickets/schema.toml` parsed on startup when present"
+tags: ["schema", "kind:enhancement", "triage:needs-info"]
 ---
 
 # Pluggable schema definitions with meta field + ai_context support
@@ -146,3 +149,11 @@ Agents discover the schema at runtime — no hardcoded knowledge needed.
 - [ ] Built-in fields unchanged by schema.toml presence
 - [ ] Zero behavior change when schema.toml absent
 - [ ] Documentation: how to define a project schema
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `schema`.
+
+Deferred design proposal, not an implementation brief: runtime CLI fields, schema migration and nested meta exceed the current narrow parser. Decide supported representation before building.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

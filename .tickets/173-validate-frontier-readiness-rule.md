@@ -8,6 +8,7 @@ validation_criteria:
   - "frontier ticket missing a Context section with >=1 path/link is flagged"
   - "frontier ticket with no acceptance-criteria checkbox is flagged"
   - "rule is warn-by-default, error under --strict; re-checks standing backlog not just creation"
+tags: ["quality", "kind:enhancement", "triage:needs-info"]
 ---
 
 # validate: frontier-scoped readiness rule (Definition of Ready gate)
@@ -66,3 +67,11 @@ hard-block work (false positives create friction; see the project's own enforcem
 ## Field report — 2026-11-01
 
 Related finding: `validate` doesn't flag an open ticket that can never start because a prerequisite is in backlog (philippines-trip #44 waited on backlog #38 and #43). Proposed advisory: "stuck" — open ticket with a transitive backlog prerequisite.
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:needs-info`; stream `quality`.
+
+Deferred readiness proposal overlaps #175 source-reference rule. Separate frontier readiness from transitive backlog-blocker advisory and decide strict-mode policy before adding duplicate findings.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.

@@ -3,6 +3,9 @@ id: "99"
 title: "Make update check interval configurable"
 status: backlog
 blocked_by: []
+validation_criteria:
+  - "`update_check.interval` accepted as a user config key"
+tags: ["config", "kind:enhancement", "triage:ready-for-agent"]
 ---
 
 # Make update check interval configurable
@@ -30,3 +33,11 @@ Parse duration from the config, replace the hardcoded `CHECK_INTERVAL_SECS` cons
 - [ ] Default remains 24h when unconfigured
 - [ ] `TKT_UPDATE_CHECK=0` still overrides config (env > config > default)
 - [ ] Existing tests pass unchanged
+
+## Triage — 2026-11-02
+
+Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `config`.
+
+Deferred enhancement. src/update_check.rs still hardcodes CHECK_INTERVAL_SECS=86400; define duration validation and env precedence without changing default behavior.
+
+This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
