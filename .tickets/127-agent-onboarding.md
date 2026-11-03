@@ -1,7 +1,7 @@
 ---
 id: "127"
 title: "Improve agent discoverability: help nudge to capabilities, init recommends agent setup"
-status: open
+status: in_progress
 blocked_by: ["138"]
 priority: high
 validation_criteria:
