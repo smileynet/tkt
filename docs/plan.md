@@ -67,7 +67,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 233 | tkt edit can set and clear tags | open |
 | 234 | Acceptance criteria can be marked moved to another ticket | open |
 | 235 | Ticket mutations skip heavy commit hooks and can defer the push | open |
-| 239 | Review historical closure warnings without fabricating evidence | in_progress |
+| 239 | Review historical closure warnings without fabricating evidence | ✅ done |
 | 240 | Show workstreams and decision/evidence gates in the ticket graph | in_progress |
 | 241 | Reject done status outside the close lifecycle | ✅ done |
 
