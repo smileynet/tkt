@@ -1,7 +1,7 @@
 ---
 id: "86"
 title: "tkt import --github: pull open issues into .tickets/"
-status: backlog
+status: open
 blocked_by: []
 priority: low
 validation_criteria:

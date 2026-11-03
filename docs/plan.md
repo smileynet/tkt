@@ -117,7 +117,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 | 69 | Define the focused remaining harness-integration scope | open |
 | 79 | tkt undo: revert last mutation | open |
 | 83 | Add a noninteractive ticket-note append operation | open |
-| 86 | tkt import --github: pull open issues into .tickets/ | backlog |
+| 86 | tkt import --github: pull open issues into .tickets/ | open |
 | 88 | tkt done --week: show-resolved report for standups | backlog |
 | 89 | Lifecycle hooks: on-new, on-claim, on-close scripts | backlog |
 | 90 | tkt open <id>: find URLs in ticket body and open in browser | backlog |
