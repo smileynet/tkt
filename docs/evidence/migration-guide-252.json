@@ -1,0 +1,25 @@
+{
+  "kind": "guidance-command-smoke",
+  "source": "skills/tkt-core/references/migration-assist.md",
+  "sha256": "5e571f8e9dbd49dcd2b6b3b440522624a6a1747998c9059813671623c5cbd089",
+  "adapter": "tk",
+  "commandsChecked": 8,
+  "previewNoWrite": true,
+  "backupExact": true,
+  "unsupportedRunnableFlags": false,
+  "nodeFixtures": {
+    "passed": 42,
+    "failed": 0,
+    "skipped": 1
+  },
+  "coverage": {
+    "units": 45,
+    "frozenLines": 355
+  },
+  "limits": [
+    "Private Windows fixture only; no actual project migration",
+    "Native pack installation checked separately at batch deployment"
+  ],
+  "critic": "Accepted final preview limitation wording, supported commands and recovery contract",
+  "publicationEvidence": "migration-publication-251.json"
+}

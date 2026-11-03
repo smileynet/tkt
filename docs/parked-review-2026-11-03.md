@@ -35,3 +35,7 @@ No ticket was closed by this review. Every closure requires fresh scoped checks 
 ## Evidence follow-up
 
 Current native hook research reactivated 158 after the initial review:21 of the original23 are now active or completed; only147 (missing reproduction) and184 (explicit deferral) remain parked. The independent critic verified current installed profiles and official advisory/trust contracts; see [the receipt](evidence/native-write-hooks-158.md). No native hook or trust was activated.
+
+## Execution update
+
+The table above records the initial reactivation assessment. Current ticket statuses and dependencies are in [the plan](plan.md) and dashboard. Eight reactivated tickets are now done after independent critic acceptance: #202, #99, #186, #125, #175, #173, #157 and #187. Three discovered repairs are also complete: #250, #251 and #252. #191 remains in progress; twelve original tickets remain open and ready. Only #147 and #184 remain parked. See [the execution receipt](evidence/parked-execution-2026-11-03.md) for verification and limits.
