@@ -1,13 +1,14 @@
 ---
 id: "248"
 title: "Compare plan lifecycle labels precisely without narrative parsing"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
   - "Integration fixtures verify exact lifecycle drift and compatible fix/advisory behavior"
   - "Independent critic accepts final code and full local gate passes"
 tags: ["kind:bug", "triage:ready-for-agent", "stream:quality"]
+assignee: "codex"
 ---
 ## Intent source
 
