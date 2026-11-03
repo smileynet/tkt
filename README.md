@@ -208,7 +208,7 @@ Tags are the primary way to scope work to a subsystem. Set `--tags` when you cre
 ```bash
 tkt validate             # check for cycles, broken refs, contract issues
 tkt validate --fix       # auto-repair fixable problems
-tkt lint                 # normalize frontmatter style + blocked_by id refs
+tkt lint                 # normalize frontmatter; backfill missing numeric IDs from filenames
 tkt lint --check         # CI mode: exit 1 if lint needed
 tkt doctor               # full health check
 tkt blocked              # show tasks stuck on dependencies

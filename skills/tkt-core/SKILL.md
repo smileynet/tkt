@@ -175,7 +175,7 @@ tkt close 05 --check-all \
 | `tkt audit` | Closure quality — unchecked ACs, TBD resolutions, stale WIP |
 | `tkt sync-plan` | Plan drift — ticket status vs plan document (advisory; `--check` gates CI) |
 | `tkt doctor` | Setup verification — current project or multi-project scan |
-| `tkt lint --check` | Style — frontmatter quoting and field order |
+| `tkt lint --check` | Preview style and missing numeric-ID repairs without writing; bare `tkt lint` applies them |
 
 Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` to auto-repair (validate and sync-plan). Full options in [commands.md](references/commands.md).
 

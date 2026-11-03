@@ -4,7 +4,7 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use crate::core::{self, TicketFile};
+use crate::core::{self, Ticket, TicketFile};
 
 /// Canonical field order for frontmatter.
 const CANONICAL_ORDER: &[&str] = &[
@@ -45,7 +45,8 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
     let mut errors = 0u32;
 
     for path in &files {
-        let tf = match TicketFile::parse(path) {
+        let original = std::fs::read_to_string(path)?;
+        let tf = match parse_for_lint(&original, path) {
             Ok(tf) => tf,
             Err(e) => {
                 eprintln!("  skip {}: {}", path.display(), e);
@@ -54,7 +55,6 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
             }
         };
 
-        let original = std::fs::read_to_string(path)?;
         let canonical = render_canonical(&tf, &index);
 
         if original != canonical {
@@ -93,6 +93,45 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
         }
         Ok(0)
     }
+}
+
+fn parse_for_lint(content: &str, path: &Path) -> Result<TicketFile> {
+    match TicketFile::parse_str(content, path) {
+        Ok(file) => Ok(file),
+        Err(error) if error.to_string().ends_with("missing required field: id") => {
+            let id = filename_id(path).ok_or(error)?;
+            let newline = content.find('\n').ok_or_else(|| {
+                anyhow::anyhow!("{}: missing opening frontmatter line", path.display())
+            })?;
+            let line_ending = if newline > 0 && content.as_bytes()[newline - 1] == b'\r' {
+                "\r\n"
+            } else {
+                "\n"
+            };
+            let candidate = format!(
+                "{}id: \"{}\"{}{}",
+                &content[..=newline],
+                id,
+                line_ending,
+                &content[newline + 1..]
+            );
+            let ticket = Ticket::parse_str(&candidate, path)?;
+            Ok(ticket.file)
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn filename_id(path: &Path) -> Option<&str> {
+    let name = path.file_name()?.to_str()?.strip_suffix(".md")?;
+    let (id, slug) = name.split_once('-')?;
+    if id.is_empty()
+        || !id.bytes().all(|byte| byte.is_ascii_digit())
+        || core::validate::validate_slug(slug).is_err()
+    {
+        return None;
+    }
+    Some(id)
 }
 
 /// Render a TicketFile in canonical format.

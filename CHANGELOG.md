@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `node tools/deploy.mjs` selects roots so installed Claude/Codex plugins count as the skill copy and refreshes local plugins. Audits identify unowned skill directories and duplicate loading across configured packs. The bash wrapper remains an alternative entry point; no extra deploy step is needed.
 
 ### Fixed
+- Hand-authored tickets missing an ID can be repaired with `tkt lint` when their numeric-prefix filename and remaining fields are valid.
 - Agents and automation can discover every command and flag through the capabilities manifest, including aliases, supported lifecycle values and modes that write files.
 - `node tools/deploy.mjs` removes dead skill links that point into this checkout, left by an earlier deploy of a skill since renamed or removed (such as the old `tkt` skill after the four-skill split). Other links, live or dead, are left alone.
 - Without the `agy` CLI, `node tools/deploy.mjs` no longer replaces an Antigravity plugin folder it didn't install: a same-named folder or link is refused (`--force` overrides), and its own copy is marked so later runs can update it. A copy left by an earlier run has no mark yet, so update it once with `--force`.
