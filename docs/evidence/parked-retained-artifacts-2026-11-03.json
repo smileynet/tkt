@@ -1,0 +1,103 @@
+{
+  "measurement": "Logical regular-file lengths, not allocated or reclaimable bytes",
+  "owner": "Maintainer for shared build/deploy outputs; unknown legacy owners preserved",
+  "lifecycle": {
+    "target": "Retain shared compiler cache for ongoing 191/frontier work; clean only through reviewed maintainer cache policy",
+    "nativeCaches": "Harness-managed while installed; replace/uninstall using harness manager",
+    "dist": "Current deployed payload or Kiro Crew staging; replace on next deployment",
+    "unknown": "Preserved pending independent ownership/disposition; this pass does not authorize removal",
+    "dashboard": "Retain supervised server state until the LAN server is stopped"
+  },
+  "retained": [
+    {
+      "path": "target",
+      "files": 19914,
+      "bytes": 4627938350
+    },
+    {
+      "path": "node_modules",
+      "files": 589,
+      "bytes": 3934146
+    },
+    {
+      "path": "dist/agy-plugin",
+      "files": 43,
+      "bytes": 361369
+    },
+    {
+      "path": "dist/kirocrew-app",
+      "files": 43,
+      "bytes": 361439
+    },
+    {
+      "path": ".crush",
+      "files": 3,
+      "bytes": 946727
+    },
+    {
+      "path": ".kiro/skills",
+      "files": 100,
+      "bytes": 348048
+    },
+    {
+      "path": ".references",
+      "files": 1,
+      "bytes": 1672
+    },
+    {
+      "path": ".scratch/research",
+      "files": 11,
+      "bytes": 148002
+    },
+    {
+      "path": ".scratch/review",
+      "files": 9,
+      "bytes": 80544
+    },
+    {
+      "path": ".scratch/review-input",
+      "files": 10,
+      "bytes": 85113
+    },
+    {
+      "path": ".scratch/review-output",
+      "files": 5,
+      "bytes": 43080
+    },
+    {
+      "path": ".scratch/subagent-input",
+      "files": 1,
+      "bytes": 2553
+    },
+    {
+      "path": ".scratch/subagent-raw",
+      "files": 9,
+      "bytes": 130827
+    },
+    {
+      "path": ".scratch/v050-proposal.md",
+      "files": 1,
+      "bytes": 5129
+    },
+    {
+      "path": ".scratch/dashboard-lan.json",
+      "files": 1,
+      "bytes": 290
+    },
+    {
+      "path": "C:/Users/uosmi/.codex/plugins/cache/tkt/tkt/0.4.0",
+      "files": 25841,
+      "bytes": 4655623782
+    },
+    {
+      "path": "C:/Users/uosmi/.claude/plugins/cache/tkt/tkt/0.4.0",
+      "files": 20520,
+      "bytes": 4506902767
+    },
+    {
+      "path": "C:/Users/uosmi/AppData/Local/Temp/.tickets.bak",
+      "files": 2,
+      "bytes": 127
+    }
+  ]
+}

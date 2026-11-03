@@ -1,0 +1,48 @@
+{
+  "sourceCommit": "4ac1c26",
+  "comparisons": [
+    {
+      "root": "C:/Users/uosmi/.codex/plugins/cache/tkt/tkt/0.4.0",
+      "skillFiles": 15,
+      "runtimeFiles": 24,
+      "byteHashesMatch": true
+    },
+    {
+      "root": "C:/Users/uosmi/.gemini/config/plugins/tkt",
+      "skillFiles": 15,
+      "runtimeFiles": 24,
+      "byteHashesMatch": true
+    },
+    {
+      "root": "dist/agy-plugin",
+      "skillFiles": 15,
+      "runtimeFiles": 24,
+      "byteHashesMatch": true
+    },
+    {
+      "root": "dist/kirocrew-app",
+      "skillFiles": 15,
+      "runtimeFiles": 24,
+      "byteHashesMatch": true
+    },
+    {
+      "root": "C:/Users/uosmi/.kiro/skills",
+      "skillFiles": 15,
+      "runtimeFiles": 24,
+      "byteHashesMatch": true
+    },
+    {
+      "root": "C:/Users/uosmi/.config/opencode/skills",
+      "skillFiles": 15,
+      "runtimeFiles": 24,
+      "byteHashesMatch": true
+    }
+  ],
+  "claude": {
+    "activeSource": "D:/code/tkt",
+    "strictManifest": "pass",
+    "skills": 4,
+    "sessionStartHooks": 1
+  },
+  "kiroCrew": "built only; CLI absent"
+}

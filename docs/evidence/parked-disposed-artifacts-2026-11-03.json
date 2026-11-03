@@ -1,0 +1,28 @@
+{
+  "privateFixtures": [
+    {
+      "path": "C:\\Users\\uosmi\\AppData\\Local\\Temp\\tkt-dry-debug-hTqlJo",
+      "visibleFileBytes": 120
+    },
+    {
+      "path": "C:\\Users\\uosmi\\AppData\\Local\\Temp\\tkt-migration-guide-jFPgy3",
+      "visibleFileBytes": 178
+    },
+    {
+      "path": "C:\\Users\\uosmi\\AppData\\Local\\Temp\\tkt-migration-guide-zCTlTz",
+      "visibleFileBytes": 178
+    }
+  ],
+  "status": "recycled",
+  "preserved": "Unknown-owned scratch directories/files, active LAN state, shared target, node_modules, managed native caches, dist packages and mixed system-temporary .tickets.bak were preserved; see retained inventory.",
+  "scratch": {
+    "bytes": 852801,
+    "scope": "D:\\code\\tkt\\.scratch",
+    "files": 130,
+    "patterns": [
+      "parked-*",
+      "effects-*"
+    ]
+  },
+  "fixtureMeasurement": "Visible regular-file length sum; hidden Git metadata was not included in this byte measurement. Entire named fixture directories were recycled."
+}

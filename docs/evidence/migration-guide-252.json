@@ -21,5 +21,11 @@
     "Native pack installation checked separately at batch deployment"
   ],
   "critic": "Accepted final preview limitation wording, supported commands and recovery contract",
-  "publicationEvidence": "migration-publication-251.json"
+  "publicationEvidence": "migration-publication-251.json",
+  "installedSmoke": {
+    "version": "tkt 0.4.0 (95b71b9)",
+    "commands": 8,
+    "previewNoWrite": true,
+    "backupExact": true
+  }
 }
