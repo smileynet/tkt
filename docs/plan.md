@@ -64,7 +64,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 230 | Separate artifact, functionality and user-outcome evidence in ticket closure guidance | ✅ done |
 | 231 | tkt query outputs every frontmatter field, including tags | open |
 | 232 | Frontier output distinguishes unfinished blockers from finished ones | open |
-| 233 | tkt edit can set and clear tags | open |
+| 233 | tkt edit can set and clear tags | in_progress |
 | 234 | Acceptance criteria can be marked moved to another ticket | open |
 | 235 | Ticket mutations skip heavy commit hooks and can defer the push | open |
 | 239 | Review historical closure warnings without fabricating evidence | ✅ done |

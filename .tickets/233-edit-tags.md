@@ -1,7 +1,7 @@
 ---
 id: "233"
 title: "tkt edit can set and clear tags"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
