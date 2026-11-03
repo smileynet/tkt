@@ -1,7 +1,7 @@
 ---
 id: "200"
 title: "tkt ready --parent <id>: frontier scoped to one epic/map"
-status: open
+status: in_progress
 blocked_by: ["196", "197"]
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Works with the interim epic convention too (filter by epic:<slug> tag) OR documented as parent-only; decision recorded"
   - "Driving use case (wayfinder: a session resolves the ready frontier of one map) noted in the ticket"
 tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:relations"]
+assignee: "codex"
 ---
 
 # tkt ready --parent <id>: frontier scoped to one epic/map
