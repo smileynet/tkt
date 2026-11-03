@@ -38,7 +38,7 @@ cargo fmt                      # format (must produce no diff)
 ```bash
 mise run check   # release-tool fixtures + Rust gate, PATH-order-independent
 # equivalent raw form:
-node --test tools/release-tools.test.mjs tools/release-ci.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+node --test tools/release-tools.test.mjs tools/release-ci.test.mjs tools/check-binary-fresh.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 ```
 
 Maintainer verification needs Node 22+ and `npm ci --ignore-scripts`; these pinned
@@ -275,7 +275,7 @@ file; alternate plans use explicit sync-plan.
 - cargo-dist binary name is `dist` (not `cargo dist`) — `cargo dist --version` will fail; use `dist --version`
 - New mutation commands MUST route push through a push-gated path (GitTransaction respects `push.enabled`; direct `git::push_with_retry` calls must check `pcfg.push_enabled` first)
 - Windows (this machine): `CARGO_HOME=D:\dev-tools\cargo`, `RUSTUP_HOME=D:\dev-tools\rustup` (relocated off C:). Bare `cargo` resolves to the mise shim first, then to the rustup proxies in `D:\dev-tools\cargo\bin\` (Windows symlinks → `rustup.exe`). Prefer `mise run check` for the gate — it is PATH-order-independent. **Failure mode (seen 2026-08-31):** if `cargo fmt` dies with `os error 193` ("not a valid Win32 application"), the `cargo-fmt.exe`/`rustfmt.exe` proxy symlinks in `D:\dev-tools\cargo\bin\` have been corrupted into 0-byte regular files (cross-drive relocation / AV). `cargo build/test/clippy` still work (clippy's proxy stayed intact, and build bypasses proxies), which masks the break. Repair: delete the 0-byte files and recreate them as symlinks to `rustup.exe` (Developer Mode is on, so no elevation needed), or run `rustup-init --default-toolchain=none -y --no-modify-path`. If corruption recurs, add `D:\dev-tools` to Defender exclusions (needs an elevated shell). Verified working 2026-08-31 after symlink repair.
-- After any code change, run `cargo install --path .` BEFORE end-to-end testing with the installed `tkt` binary — `tkt --version` git hash must match HEAD, or you are testing a stale binary (validated 2026-08-26: closed #131 against a stale binary that still reproduced the bug)
+- Validate product changes with `cargo test` integration tests, which rebuild and exercise the current `target/` binary; do not use the PATH-installed `tkt` to validate code changes. Use the installed binary for deployment and real-repository use. When specifically testing the install/deploy path, run `tools/check-binary-fresh.sh` to compare its embedded git hash with HEAD.
 - Windows: use `git commit -F <file>` for multi-line or bracket/quote-containing commit messages — inline `-m` gets mangled by PowerShell quoting
 - crates.io name availability: use `cargo search <name>`, NOT raw `curl` to the API (returns 403 "violation of API data access policy" for automated requests); a 404 on the web page also confirms availability
 - Release CI is generated through `node tools/generate-release-workflow.mjs --write` using cargo-dist 0.32.0. Never hand-edit `.github/workflows/release.yml`; `mise run check` checks real generation. See `docs/release-staging.md`. Staging is build-only; the separate manual `publish.yml` owns reviewed publication. Final candidate/install/audit/staging gates remain open.
