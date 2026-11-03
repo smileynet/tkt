@@ -1,7 +1,7 @@
 ---
 id: "99"
 title: "Make update check interval configurable"
-status: backlog
+status: open
 blocked_by: []
 validation_criteria:
   - "`update_check.interval` accepted as a user config key"
