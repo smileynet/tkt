@@ -1,7 +1,7 @@
 ---
 id: "230"
 title: "Separate artifact, functionality and user-outcome evidence in ticket closure guidance"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "tkt-work documents classified evidence with observable check output and unavailable checks"
