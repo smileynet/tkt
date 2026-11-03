@@ -70,6 +70,10 @@ backlog → open → in_progress → done
 
 Only `tkt close` reaches `done`; new, batch and edit reject that status so closure gates run.
 
+Hierarchy uses optional `--parent ID` on new/batch/edit, separate from prerequisites;
+edit `--parent ''` clears it, and query `--parent ID` selects children. Invalid
+parent targets and introduced cycles are rejected.
+
 ---
 
 ## Backlog workflow
@@ -181,8 +185,9 @@ tkt close 05 --check-all \
 
 Validation checks parent targets/cycles separately from prerequisites. Project
 label namespaces declare `single_select` and a single-line double-quoted `values`
-array; malformed declarations fail configuration loading. See the command
-reference for the narrow configuration syntax; tag enforcement is separate.
+array; malformed declarations fail configuration loading. Validation enforces
+declared values and single-select cardinality; undeclared tags remain free-form.
+See the command reference for the narrow configuration syntax.
 
 Use `--strict` to treat warnings as errors, `--brief` for short output, `--fix` to auto-repair (validate and sync-plan). Full options in [commands.md](references/commands.md).
 

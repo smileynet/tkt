@@ -53,6 +53,7 @@ fn capabilities_describes_supported_values_aliases_and_mutating_modes() {
         serde_json::from_str(&cli(&["capabilities", "-o", "json"])).unwrap();
     for name in ["new", "batch"] {
         let properties = &manifest["commands"][name]["inputSchema"]["properties"];
+        assert_eq!(properties["parent"]["type"], "string");
         for field in ["tags", "requires", "blocked_by", "validation", "vc"] {
             assert_eq!(properties[field]["type"], "array", "{name}.{field}");
         }
@@ -69,6 +70,11 @@ fn capabilities_describes_supported_values_aliases_and_mutating_modes() {
         );
     }
     let edit = &manifest["commands"]["edit"]["inputSchema"]["properties"];
+    assert_eq!(edit["parent"]["type"], "string");
+    assert!(edit["parent"]["description"]
+        .as_str()
+        .unwrap()
+        .contains("clear"));
     assert_eq!(
         edit["status"]["enum"],
         serde_json::json!(["open", "in_progress", "backlog"])
@@ -114,6 +120,10 @@ fn capabilities_describes_supported_values_aliases_and_mutating_modes() {
     assert_eq!(
         manifest["commands"]["query"]["output"]["default"],
         "json_lines"
+    );
+    assert_eq!(
+        manifest["commands"]["query"]["inputSchema"]["properties"]["parent"]["type"],
+        "string"
     );
     assert_eq!(
         manifest["global_flags"]["agent"]["environment"],

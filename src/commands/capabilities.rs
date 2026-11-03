@@ -220,5 +220,9 @@ fn argument_schema(command: &str, arg: &Arg) -> Value {
     if command == "edit" && arg.get_id() == "status" {
         field["description"] = json!("Supported lifecycle edits; use close for done so resolution and evidence gates are enforced");
     }
+    if command == "edit" && arg.get_id() == "parent" {
+        field["description"] =
+            json!("Set the parent ticket id, or pass an empty value to clear it");
+    }
     field
 }

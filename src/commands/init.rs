@@ -40,6 +40,8 @@ tkt validate --brief                              # check for issues
 New work defaults to `open`. Use `--status backlog` only for work deliberately deferred out of this cycle — not for discovered work that's actually actionable.
 
 Reach `done` only via `tkt close`; new, batch and edit reject done. Never hand-edit done (it skips the close gates).
+Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
+Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 
 ### Workflow
 
@@ -72,6 +74,8 @@ Edit: edit <id> --status backlog (park deferred work), --status open (unpark)
 Status: open (frontier, the default) → in_progress → done; backlog = parked, hidden from ready
 New work defaults to open. Use --status backlog only for deliberately deferred work, not actionable discovered work.
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
+Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
+Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: what was shipped"
 For shared repos: tkt ready → claim <id> → work → close <id> --check-all --resolution "..."
@@ -99,6 +103,8 @@ Command discovery: `tkt capabilities -o json` lists every command, flag and supp
 open (frontier-eligible, the default) → in_progress → done; backlog = parked, invisible to ready
 New work defaults to open. Use --status backlog only for deliberately deferred work.
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
+Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
+Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 
 ## Commands
 - `tkt ready` — see unblocked tickets (frontier)
@@ -136,6 +142,8 @@ When .tickets/ exists, work the frontier.
 open (frontier, the default) → in_progress → done; backlog = parked, hidden from ready
 New work defaults to open. Use --status backlog only for deliberately deferred work.
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
+Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
+Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 
 ## Commands
 tkt ready              # frontier (open + deps done + env match)
@@ -174,6 +182,8 @@ Command discovery: `tkt capabilities -o json` lists every command, flag and supp
 Status: open (frontier, the default) → in_progress → done; backlog = parked, hidden from ready
 New work defaults to open. Use --status backlog only for deliberately deferred work.
 Reach done only via `tkt close`; new, batch and edit reject done. Never hand-edit done (skips close gates).
+Before close: promote durable outputs, trash only your disposable scratch/builds (including outside the repo), and record kept items with a reason and lifecycle scope in the Resolution. Record check commands/results and unavailable checks; distinguish observed behavior, human reports and user outcomes.
+Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "..." (--evidence: 1 per criterion), validate --brief
 Create: new <slug> --title "..." [--tags stream] [--blocked-by N,N]  (defaults to open)

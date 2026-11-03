@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- New, batch and edit can set a parent; edit can clear it, and query can select children. Invalid parent targets and cycles are rejected before writes.
+- Validation enforces declared label values and single-select namespaces while leaving undeclared tags unrestricted.
 - Project configuration can declare label namespaces with a single-select policy and a closed value list; invalid declarations report configuration errors.
 - Help and initialization guide agents to complete command schemas, project instructions and separately installed workflow skills.
 - Tickets can allow or exclude named agents independently of tags and machine capabilities. Identify invocations with `--agent` or `TKT_AGENT`; discovery and claims share the policy, with `claim --force` as an explicit override.
@@ -19,12 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `/plugin install tkt@tkt`
 
 ### Changed
+- Closure guidance distinguishes observed checks, attributed reports and user outcomes, and records artifact promotion, cleanup and scoped retention.
 - Claiming, closing, and editing ticket status keep existing default plan rows current in the same commit. Plan repair also adds missing tickets.
 - **Breaking:** compiling tkt now requires Rust 1.85.0 or newer. Update Rust with
   `rustup update stable`, or use a pre-built binary.
 - `node tools/deploy.mjs` selects roots so installed Claude/Codex plugins count as the skill copy and refreshes local plugins. Audits identify unowned skill directories and duplicate loading across configured packs. The bash wrapper remains an alternative entry point; no extra deploy step is needed.
 
 ### Fixed
+- Enabling debug through user configuration defaults to the log file, keeping stderr clean unless a format is explicitly selected.
 - Parent validation catches missing targets, self-parent references and cycles independently of prerequisite links.
 - Config output and help show the actual user configuration path for the active environment.
 - Generic creation and status-edit commands reject `done`, keeping completion behind the close gates.

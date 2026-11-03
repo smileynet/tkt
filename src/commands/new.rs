@@ -12,6 +12,7 @@ pub fn run(
     slug: &str,
     title: Option<&str>,
     spec: Option<&str>,
+    parent: Option<&str>,
     env: Option<&str>,
     priority: Option<&str>,
     status: Option<&str>,
@@ -34,6 +35,11 @@ pub fn run(
     if let Some(s) = spec {
         if let Err(e) = validate::validate_free_text(s, "spec", 100) {
             domain_bail!("{}", e);
+        }
+    }
+    if let Some(parent) = parent {
+        if let Err(e) = validate::validate_id(parent) {
+            domain_bail!("--parent: {}", e);
         }
     }
     if let Some(e) = env {
@@ -69,6 +75,12 @@ pub fn run(
         }
     }
     let dir = tickets_dir()?;
+    let corpus = core::load_corpus(&dir)?;
+    if let Some(parent) = parent {
+        if !corpus.iter().any(|ticket| ticket.id == parent) {
+            domain_bail!(NotFound, "parent ticket {} not found", parent);
+        }
+    }
     let agent_eligibility = if !agents.is_empty() {
         core::AgentEligibility::allow(agents).map_err(|error| {
             crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
@@ -114,6 +126,11 @@ pub fn run(
 
     let names = txn.scan_names()?;
     let (tid, _width) = GitTransaction::next_id(&names);
+    if let Some(parent) = parent {
+        if let Err(e) = validate::validate_parent_ref(&tid, parent) {
+            domain_bail!("{}", e);
+        }
+    }
 
     let dep_strs: Vec<&str> = blocked_by.iter().map(|s| s.as_str()).collect();
     if let Err(e) = validate::validate_no_self_dep(&tid, &dep_strs) {
@@ -135,6 +152,9 @@ pub fn run(
         if !blocked_by.is_empty() {
             println!("  blocked_by: {:?}", blocked_by);
         }
+        if let Some(parent) = parent {
+            println!("  parent: {}", parent);
+        }
         if !validation_criteria.is_empty() {
             println!("  validation_criteria: {} items", validation_criteria.len());
         }
@@ -155,6 +175,7 @@ pub fn run(
         requires,
         agent_eligibility: &agent_eligibility,
     });
+    let content = add_parent(content, parent, &path)?;
     crate::core::atomic_write(&path, &content)?;
 
     let rel_path = format!(".tickets/{}", filename);
@@ -196,6 +217,7 @@ pub fn run(
                 requires,
                 agent_eligibility: &agent_eligibility,
             });
+            let content2 = add_parent(content2, parent, &path2)?;
             crate::core::atomic_write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;
@@ -215,6 +237,15 @@ pub fn run(
             Ok(0)
         }
     }
+}
+
+fn add_parent(content: String, parent: Option<&str>, path: &std::path::Path) -> Result<String> {
+    let Some(parent) = parent else {
+        return Ok(content);
+    };
+    let mut file = core::TicketFile::parse_str(&content, path)?;
+    file.set_parent(parent);
+    Ok(file.serialize())
 }
 
 /// Emit the `created` success line, routing an optional advisory nudge: human

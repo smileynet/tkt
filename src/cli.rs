@@ -101,6 +101,9 @@ enum Commands {
         title: Option<String>,
         #[arg(long)]
         spec: Option<String>,
+        /// Parent ticket id
+        #[arg(long)]
+        parent: Option<String>,
         #[arg(long)]
         env: Option<String>,
         #[arg(long)]
@@ -131,6 +134,9 @@ enum Commands {
         items: Vec<String>,
         #[arg(long)]
         spec: Option<String>,
+        /// Parent ticket id
+        #[arg(long)]
+        parent: Option<String>,
         #[arg(long)]
         env: Option<String>,
         #[arg(long)]
@@ -198,6 +204,9 @@ enum Commands {
         title: Option<String>,
         #[arg(long)]
         blocked_by: Option<String>,
+        /// Set or clear the parent ticket id (empty clears)
+        #[arg(long)]
+        parent: Option<String>,
         #[arg(long)]
         env: Option<String>,
         #[arg(long)]
@@ -258,6 +267,9 @@ enum Commands {
         /// Filter by priority (urgent, high, medium, low)
         #[arg(long)]
         priority: Option<String>,
+        /// Filter by parent ticket id
+        #[arg(long)]
+        parent: Option<String>,
     },
     /// Show blocked tickets with their blockers
     Blocked,
@@ -407,6 +419,7 @@ pub fn run() -> i32 {
                 slug,
                 title,
                 spec,
+                parent,
                 env,
                 priority,
                 status,
@@ -420,6 +433,7 @@ pub fn run() -> i32 {
                 &slug,
                 title.as_deref(),
                 spec.as_deref(),
+                parent.as_deref(),
                 env.as_deref(),
                 priority.as_deref(),
                 status.as_deref(),
@@ -433,6 +447,7 @@ pub fn run() -> i32 {
             Commands::Batch {
                 items,
                 spec,
+                parent,
                 env,
                 priority,
                 status,
@@ -445,6 +460,7 @@ pub fn run() -> i32 {
             } => crate::commands::batch::run(
                 &items,
                 spec.as_deref(),
+                parent.as_deref(),
                 env.as_deref(),
                 priority.as_deref(),
                 status.as_deref(),
@@ -482,6 +498,7 @@ pub fn run() -> i32 {
                 id,
                 title,
                 blocked_by,
+                parent,
                 env,
                 spec,
                 priority,
@@ -494,6 +511,7 @@ pub fn run() -> i32 {
                 &id,
                 title.as_deref(),
                 blocked_by.as_deref(),
+                parent.as_deref(),
                 env.as_deref(),
                 spec.as_deref(),
                 priority.as_deref(),
@@ -531,9 +549,15 @@ pub fn run() -> i32 {
                     crate::commands::validate::run(strict, brief)
                 }
             }
-            Commands::Query { status, priority } => {
-                crate::commands::query::run(status.as_deref(), priority.as_deref())
-            }
+            Commands::Query {
+                status,
+                priority,
+                parent,
+            } => crate::commands::query::run(
+                status.as_deref(),
+                priority.as_deref(),
+                parent.as_deref(),
+            ),
             Commands::Blocked => crate::commands::blocked::run(),
             Commands::Capabilities => crate::commands::capabilities::run(),
             Commands::Rebase { dry_run } => crate::commands::rebase::run(
@@ -660,6 +684,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
 
     match cmd {
         Commands::New {
+            parent,
             spec,
             env,
             priority,
@@ -675,6 +700,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if env.is_some() {
                 flags.push("env");
+            }
+            if parent.is_some() {
+                flags.push("parent");
             }
             if priority.is_some() {
                 flags.push("priority");
@@ -696,6 +724,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
         }
         Commands::Batch {
+            parent,
             spec,
             env,
             priority,
@@ -711,6 +740,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if env.is_some() {
                 flags.push("env");
+            }
+            if parent.is_some() {
+                flags.push("parent");
             }
             if priority.is_some() {
                 flags.push("priority");
@@ -762,6 +794,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         Commands::Edit {
             title,
             blocked_by,
+            parent,
             env,
             spec,
             priority,
@@ -778,6 +811,9 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
             if env.is_some() {
                 flags.push("env");
+            }
+            if parent.is_some() {
+                flags.push("parent");
             }
             if priority.is_some() {
                 flags.push("priority");
@@ -823,7 +859,14 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
                 flags.push("strict");
             }
         }
-        Commands::Query { status, priority } => {
+        Commands::Query {
+            status,
+            priority,
+            parent,
+        } => {
+            if parent.is_some() {
+                flags.push("parent");
+            }
             if priority.is_some() {
                 flags.push("priority");
             }

@@ -5,7 +5,11 @@ use anyhow::Result;
 use crate::commands::common::tickets_dir;
 use crate::core;
 
-pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result<i32> {
+pub fn run(
+    status_filter: Option<&str>,
+    priority_filter: Option<&str>,
+    parent_filter: Option<&str>,
+) -> Result<i32> {
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
     let ctx = crate::context::load(&dir);
@@ -24,6 +28,11 @@ pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result
             match t.priority {
                 Some(p) if p.as_str() == pf => {}
                 _ => continue,
+            }
+        }
+        if let Some(parent) = parent_filter {
+            if t.parent.as_deref() != Some(parent) {
+                continue;
             }
         }
 
@@ -59,6 +68,12 @@ pub fn run(status_filter: Option<&str>, priority_filter: Option<&str>) -> Result
         }
         if let Some(ref spec) = t.spec {
             fields.push(format!("\"spec\":\"{}\"", core::json_string_escape(spec)));
+        }
+        if let Some(ref parent) = t.parent {
+            fields.push(format!(
+                "\"parent\":\"{}\"",
+                core::json_string_escape(parent)
+            ));
         }
 
         fields.push(format!(

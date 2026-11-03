@@ -190,8 +190,14 @@ tkt close 03 --check-all --evidence "unit tests pass" --evidence "deployed to st
 tkt edit 02 --title "New title"
 tkt edit 02 --blocked-by 01,03
 tkt edit 02 --priority high
+tkt edit 02 --parent 01           # hierarchy, independent of prerequisites
+tkt edit 02 --parent ''           # clear parent
 tkt edit 02 --status backlog       # pull from frontier
 ```
+
+New and batch also accept `--parent ID`. Query emits the stored parent and
+`tkt query --parent ID` filters children. Invalid parent targets and introduced
+parent cycles are rejected before writing.
 
 ### Tags & context
 
@@ -303,8 +309,8 @@ values = ["needs-info", "ready-for-agent"]
 ```
 
 Label namespace declarations are parsed as project configuration; malformed or
-unknown namespace fields are configuration errors. Tag enforcement is separate
-work. The existing narrow configuration syntax requires a single-line,
+unknown namespace fields are configuration errors. Validation checks declared
+tag values and rejects multiple tags in single-select namespaces. The existing narrow configuration syntax requires a single-line,
 double-quoted JSON-style string array for `values` (no trailing comma); it is not
 a full TOML parser. `tkt validate` also checks parent references for missing targets and cycles.
 `tkt config` and `tkt config --help` show the actual user configuration path,
@@ -364,6 +370,9 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 | `TKT_DEBUG=1\|true\|log\|file` | Debug output to the local debug log |
 | `TKT_DEBUG=stderr\|human` | Human-readable debug output to stderr |
 | `TKT_DEBUG=json` | Debug output as JSON Lines on stderr |
+
+User configuration `debug = true` also defaults to the log file. Set
+`debug.format = "human"` or `"json"` explicitly for stderr output.
 
 ## Contributing
 

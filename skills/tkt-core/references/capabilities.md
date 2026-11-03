@@ -50,8 +50,8 @@ declare `flag`, `short`, `position`, `description`, `enum` and `default`.
 - Built-in help takes an optional `command` path, as in `tkt help new`.
 
 Schemas describe supported workflow values, including empty strings for fields
-that can be cleared. Creation advertises open/backlog. Edit advertises
+that can be cleared. Creation advertises open/backlog/in_progress. Edit advertises
 open/in_progress/backlog; use `close` for done so resolution, acceptance and
-evidence gates run. A permissive raw/status write is not a supported closure.
+evidence gates run. Generic status mutations reject done.
 Project policy, existing ticket state and filesystem/Git conditions still require
 runtime validation even when an input conforms to the schema.

@@ -13,6 +13,7 @@ use crate::transaction::{GitTransaction, PublishResult};
 pub fn run(
     items: &[String],
     spec: Option<&str>,
+    parent: Option<&str>,
     env: Option<&str>,
     priority: Option<&str>,
     status: Option<&str>,
@@ -26,6 +27,11 @@ pub fn run(
     if let Some(s) = spec {
         if let Err(e) = validate::validate_free_text(s, "spec", 100) {
             domain_bail!("{}", e);
+        }
+    }
+    if let Some(parent) = parent {
+        if let Err(e) = validate::validate_id(parent) {
+            domain_bail!("--parent: {}", e);
         }
     }
     if let Some(e) = env {
@@ -82,6 +88,12 @@ pub fn run(
     }
 
     let dir = tickets_dir()?;
+    let corpus = core::load_corpus(&dir)?;
+    if let Some(parent) = parent {
+        if !corpus.iter().any(|ticket| ticket.id == parent) {
+            domain_bail!(NotFound, "parent ticket {} not found", parent);
+        }
+    }
     let agent_eligibility = if !agents.is_empty() {
         core::AgentEligibility::allow(agents).map_err(|error| {
             crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
@@ -119,6 +131,16 @@ pub fn run(
 
     let txn = GitTransaction::new(&dir)?;
     let names = txn.scan_names()?;
+    if let Some(parent) = parent {
+        let first_id = core::max_id(&names) + 1;
+        let width = core::id_width(&names);
+        for offset in 0..parsed.len() {
+            let own_id = format!("{:0>width$}", first_id + offset as u64, width = width);
+            if let Err(error) = validate::validate_parent_ref(&own_id, parent) {
+                domain_bail!("{}", error);
+            }
+        }
+    }
 
     let allocate_and_commit =
         |names: &[String], parsed: &[(&str, String)]| -> Result<(u64, usize)> {
@@ -142,6 +164,7 @@ pub fn run(
                     requires,
                     agent_eligibility: &agent_eligibility,
                 });
+                let content = add_parent(content, parent, &path)?;
                 crate::core::atomic_write(&path, &content)?;
                 files.push(format!(".tickets/{}", filename));
             }
@@ -200,4 +223,13 @@ pub fn run(
         }
     }
     Ok(0)
+}
+
+fn add_parent(content: String, parent: Option<&str>, path: &std::path::Path) -> Result<String> {
+    let Some(parent) = parent else {
+        return Ok(content);
+    };
+    let mut file = core::TicketFile::parse_str(&content, path)?;
+    file.set_parent(parent);
+    Ok(file.serialize())
 }

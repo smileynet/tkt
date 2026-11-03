@@ -13,6 +13,7 @@ pub fn run(
     id: &str,
     title: Option<&str>,
     blocked_by: Option<&str>,
+    parent: Option<&str>,
     env: Option<&str>,
     spec: Option<&str>,
     priority: Option<&str>,
@@ -63,6 +64,15 @@ pub fn run(
         }
         file.set_blocked_by(&deps);
         changed.push("blocked_by");
+    }
+    if let Some(parent) = parent {
+        if parent.is_empty() {
+            file.remove_parent();
+        } else {
+            validate_parent_assignment(parent, id, &ctx.corpus)?;
+            file.set_parent(parent);
+        }
+        changed.push("parent");
     }
     if let Some(env_val) = env {
         if env_val.is_empty() {
@@ -205,4 +215,36 @@ pub fn run(
         );
     }
     Ok(0)
+}
+
+fn validate_parent_assignment(parent: &str, own_id: &str, corpus: &[core::Ticket]) -> Result<()> {
+    if let Err(error) = core::validate::validate_id(parent) {
+        domain_bail!("--parent: {}", error);
+    }
+    if let Err(error) = core::validate::validate_parent_ref(own_id, parent) {
+        domain_bail!("{}", error);
+    }
+    if !corpus.iter().any(|ticket| ticket.id == parent) {
+        domain_bail!(NotFound, "parent ticket {} not found", parent);
+    }
+
+    let existing = crate::findings::check_parent_cycles(corpus);
+    let mut prospective = corpus.to_vec();
+    let ticket = prospective
+        .iter_mut()
+        .find(|ticket| ticket.id == own_id)
+        .expect("the edited ticket is present in the mutation context");
+    ticket.parent = Some(parent.to_string());
+    if let Some(cycle) = crate::findings::check_parent_cycles(&prospective)
+        .into_iter()
+        .find(|finding| {
+            finding.rule == "parent-cycle"
+                && !existing
+                    .iter()
+                    .any(|old| old.rule == finding.rule && old.message == finding.message)
+        })
+    {
+        domain_bail!(Validation, "{}", cycle.message);
+    }
+    Ok(())
 }

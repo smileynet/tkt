@@ -78,6 +78,23 @@ When a ticket's acceptance criteria are all met:
    Where review is required, verify its recorded source/capture identities still
    match the implementation being closed. Record the accepted identity and review
    result in the evidence; a prior pass covers its prior source, not later edits.
+   Record each command, observed output and classification: pass, assertion failure,
+   skip, infrastructure error, timeout or survivor. Exit 0 alone is not a pass.
+   Distinguish artifact correctness (for example schema/links), tool-observed
+   functionality, human-reported functionality and user outcomes. A schema pass
+   does not prove the interface works; a human report is attributed separately
+   from tool execution; neither establishes outcomes such as learning effectiveness.
+   An unavailable browser check stays unavailable with its reason, not passed.
+   For example: a schema check passes its data contract; rendering is unavailable;
+   a person reports the page opens; learning effectiveness remains unmeasured.
+   Name the actual project-specific checks in evidence.
+   Before closing, promote durable outputs into tracked files; send your disposable
+   scratch, builds and work directories (including outside `.scratch`) to OS trash.
+   Never delete artifacts of unknown ownership. Keep only items with a stated
+   lifecycle scope: which ticket/release/shared purpose still needs them and when
+   that need ends. Retain a reasonably sized attempt history where useful, not
+   every intermediate file. Record promoted/deleted/kept items in the Resolution,
+   including why kept artifacts are still needed.
 2. Close with evidence: `tkt close <id> --check-all --evidence "..." --resolution "what was done"`. All projects enforce:
    - Acceptance criteria must be checked (`require_checked_acs`)
    - Validation criteria must exist (`require_validation_criteria`)
@@ -90,6 +107,10 @@ When a ticket's acceptance criteria are all met:
 6. If the completed ticket was the last one: report "All tickets done for this spec"
 
 ## Creating Tickets
+
+Use `--parent ID` on new/batch for hierarchy independently of `--blocked-by`.
+Edit sets the same field (`--parent ''` clears it); missing/self/cyclic references
+are rejected. Query emits parent and accepts `--parent ID` to select its children.
 
 Ticket creation is a race when 2+ sessions work the same repo (observed twice: archwright 005 pair, crew-research 12/13 collision — both required reconciliation merges).
 

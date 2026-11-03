@@ -146,13 +146,13 @@ tkt --version                                     # print version
 tkt ready [--json]                                # frontier: open + deps done + env match
 tkt context [TAGS...] [--clear]                   # set/show/clear active tag context for scoped work
 tkt migrate [--from FORMAT] [--detect] [--confirm] # convert foreign ticket schemas (tk → tkt; preview first)
-tkt new <slug> --title "..." [--spec S] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
-tkt batch <slug[:title]>... [--spec S] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
+tkt new <slug> --title "..." [--spec S] [--parent ID] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
+tkt batch <slug[:title]>... [--spec S] [--parent ID] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
 tkt claim <id>                                    # status→in_progress, pushed
 tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..." (repeatable: one per validation criterion, or N=text)]
-tkt edit <id> [--title T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
+tkt edit <id> [--title T] [--parent ID] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
-tkt query [--status S] [--priority P]             # full corpus as JSON Lines (filterable)
+tkt query [--status S] [--priority P] [--parent ID]             # full corpus as JSON Lines (filterable)
 tkt blocked                                       # open tickets with unsatisfied deps
 tkt capabilities                                  # machine-readable JSON feature manifest
 tkt rebase [--dry-run]                            # resolve ID collisions with upstream
@@ -214,7 +214,7 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
   - `[new]` default_priority
   - `[push]` enabled (set false for local-only repos)
   - `[machine]` capabilities (comma-separated canonical eligibility set for `requires` matching)
-  - `[labels.<namespace>]` single_select boolean and values string list. The narrow config reader requires a single-line JSON-style double-quoted array without a trailing comma; malformed/unknown label fields are Validation errors. Tag enforcement is separate work.
+  - `[labels.<namespace>]` single_select boolean and values string list. The narrow config reader requires a single-line JSON-style double-quoted array without a trailing comma; malformed/unknown label fields are Validation errors. Validate enforces closed values and single-select cardinality; undeclared namespaces remain free-form.
 
 ### Environment variables
 

@@ -48,6 +48,12 @@ For every open/in_progress ticket, check for real drift:
 - **Superseded work** — the plan changed and this ticket no longer reflects what's needed (→ close or rewrite)
 - **Scope creep** — ticket grew during discussion but wasn't split
 - **Missing/wrong tag** — in a multi-stream project, the ticket has no work-stream tag or the wrong one (see step 5)
+- **Expired retained artifacts** — inspect kept scratch, build outputs and work
+  directories inside and outside the repo against their recorded ticket/release/shared
+  lifecycle scope. Promote durable results, trash only your disposable artifacts,
+  remove retained owned disposable items whose scope has ended, and record kept
+  items with their reason and end condition. Report unknown-owner
+  artifacts with size; do not delete them.
 
 For each issue: fix in place (edit frontmatter/body), or if the ticket is no longer relevant, close it with a note or move to `status: backlog`.
 

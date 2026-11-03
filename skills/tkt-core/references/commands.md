@@ -103,6 +103,7 @@ When a context is active:
 | `--status S` | `open` (default), `backlog` (deferred out of cycle), `in_progress`; `done` is rejected (use close) | `open` |
 | `--priority P` | `urgent`, `high`, `medium`, `low` | `medium` |
 | `--blocked-by N,N` | IDs that must be done first | none |
+| `--parent ID` | Existing parent ticket (hierarchy, independent of prerequisites) | none |
 | `--env E` | Environment filter (`corp`, `personal`) | none |
 | `--spec S` | Originating spec slug | none |
 | `--tags T,T` | Work-stream / categorization tags — the primary scoping mechanism for `ready`/`context`. Set at creation (one tag is the norm in multi-stream projects); also auto-applied from active context. NOTE: `tkt edit` has NO `--tags` flag — to retag an existing ticket, edit its frontmatter `tags:` line directly (or set at creation / via `tkt context`). | none |
@@ -121,6 +122,7 @@ before validating an open ticket; otherwise `stub-body` warns. Creation has no
 | `--status S` | Change status (`open`, `backlog`, `in_progress`). `done` is rejected; use `tkt close` so closure gates run |
 | `--priority P` | Change priority (pass `''` to clear) |
 | `--blocked-by N,N` | Replace dependencies |
+| `--parent ID` | Set parent; pass `''` to clear. Missing, self and cyclic parents are rejected |
 | `--env E` | Set environment (pass `''` to clear) |
 | `--spec S` | Set spec link (pass `''` to clear) |
 | `--ac N,N` | Check acceptance criteria boxes (1-based) |
@@ -171,6 +173,7 @@ shared project settings. Config output/help show the loader's actual user path.
 Project `[labels.<namespace>]` tables accept `single_select = true/false` and
 `values = ["value", "other"]`. Invalid/unknown namespace fields are errors;
 use a single-line JSON-style double-quoted array without a trailing comma, as the
-configuration reader supports a narrow syntax rather than full TOML. Tag enforcement
-is separate. Validation also flags dangling parents, self-parent
+configuration reader supports a narrow syntax rather than full TOML. Validation
+enforces declared values and single-select cardinality; undeclared namespaces
+remain free-form. Validation also flags dangling parents, self-parent
 references and parent-chain cycles independently of blocked-by edges.
