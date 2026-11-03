@@ -5,6 +5,7 @@ explicit deferral; statuses are projections checked by `tkt sync-plan`.
 
 Initially triaged 2026-11-02 at `62c8226`; reconciled again 2026-11-03 after
 the unblocked maintenance queue. See [current evidence](evidence/frontier-maintenance-2026-11-03.md).
+See [current deployment and limits](evidence/guidance-deployment-247.md).
 See [full-board triage](agents/ticket-triage-2026-11-02.md) for per-ticket evidence,
 readiness and unknowns. There is no active tag context. Dashboard work (#228 and #240) is in progress; rendered verification remains unavailable.
 
@@ -30,7 +31,7 @@ laptop/phone acceptance remains unverified under the existing browser restrictio
 LAN hosting is active under completed #244; see [the hosting guide](dashboard-lan.md)
 for its address, served-file scope and supervised-process lifecycle.
 
-The earlier maintenance batch closed 32 tickets and cancelled six obsolete items. The current batch has completed #197, #234, #199, #200 and #159 with independent critic review. The independently discovered plan-comparison repair #248 is also complete; narrative parsing remains deferred. Guidance reference preparation (#245) and conditional extraction (#246) are complete; final audit/deployment (#247) remains. The three dashboard tickets retain unavailable rendered acceptance; all 22 backlog items remain deliberately deferred.
+The earlier maintenance batch closed 32 tickets and cancelled six obsolete items. This execution batch completed #197, #234, #199, #200, #159, #248 and the approved guidance stages #245–#247, each after independent critic acceptance. The frontier is empty. Three dashboard tickets retain unavailable rendered acceptance, and 23 backlog tickets remain deliberately deferred, including the owner-added optional pre-push proposal #249. The CLI and workflow pack are deployed; optional Kiro Crew activation is unavailable without its CLI. The wider inventory audit still reports unrelated unowned/legacy Kiro roots, which were preserved.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -84,7 +85,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 
 ## Native relations and label namespaces
 
-Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 reuses completed #224. #197 now implements the approved computed-progress contract with explicit close-gated stored status; automatic done is excluded. #199 is the final combined documentation/example pass. ADR 0004 cancellation is implemented by #227; obsolete items below are explicitly cancelled.
+Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 reuses completed #224. #197 now implements the approved computed-progress contract with explicit close-gated stored status; automatic done is excluded. #199 completed the combined documentation/example pass. ADR 0004 cancellation is implemented by #227; obsolete items below are explicitly cancelled.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -100,7 +101,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 
 ## Tooling and verification decisions
 
-#66 is complete with the pinned dist configuration migration verified. #159 has approval for optional consumer CI guidance with explicit limits and the standing local verification policy preserved. No new hosted workflow is authorized by this plan.
+#66 is complete with the pinned dist configuration migration verified. #159 documents optional consumer CI guidance with explicit limits and the standing local verification policy preserved. The owner removed automatic CI; #249 parks a possible opt-in local pre-push hook. No new hosted workflow is authorized by this plan.
 
 | ID | Work | Status |
 |---:|---|---|
