@@ -3787,3 +3787,77 @@ fn test_historical_fixture_contract() {
     assert_eq!(rows[0]["spec"], "my-spec");
     assert_eq!(rows[1]["title"], "Fix \"ready\" command's edge cases");
 }
+#[test]
+fn validate_source_ref_union_and_explicit_gate() {
+    let (_tmp, clone) = setup_repo();
+    let path = clone.join(".tickets/02-source.md");
+    let base = "---\nid: \"02\"\ntitle: \"Source\"\nstatus: open\nblocked_by: []\n---\n\n## What to build\n\nImplement a bounded source check.\n\n## Acceptance criteria\n\n- [ ] Reports absent provenance.\n";
+    std::fs::write(&path, base).unwrap();
+    let (code, out) = run_tkt(&clone, &["validate", "--strict"]);
+    assert_eq!(code, 0, "{out}");
+    let result: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert!(result["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|f| f["rule"] == "no-source-reference" && f["severity"] == "info"));
+    for (field, body) in [
+        ("spec: \"design\"\n", ""),
+        ("blocked_by: [\"01\"]\n", ""),
+        ("parent: \"01\"\n", ""),
+        ("", "See #01."),
+        ("", "See docs/design.md."),
+        ("", "See `.memory/decision.md`."),
+        ("", "See specs/feature.md."),
+        ("", "See https://example.com/source."),
+    ] {
+        let replacement = if field.starts_with("blocked_by:") {
+            field.to_string()
+        } else {
+            format!("blocked_by: []\n{field}")
+        };
+        let text = base.replace("blocked_by: []\n", &replacement);
+        std::fs::write(&path, format!("{text}\n{body}\n")).unwrap();
+        let (code, out) = run_tkt(&clone, &["validate"]);
+        assert_eq!(code, 0, "{out}");
+        let result: serde_json::Value = serde_json::from_str(&out).unwrap();
+        assert!(
+            !result["findings"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|f| f["rule"] == "no-source-reference"),
+            "{field} {body}: {out}"
+        );
+    }
+    std::fs::write(
+        &path,
+        format!("{base}\n```md\n#01 docs/example.md https://example.com\n```\n"),
+    )
+    .unwrap();
+    let (_, out) = run_tkt(&clone, &["validate"]);
+    assert!(out.contains("no-source-reference"), "{out}");
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[validate]\nrequire_source_reference = true\n",
+    )
+    .unwrap();
+    let (code, out) = run_tkt(&clone, &["validate"]);
+    assert_eq!(code, 1, "{out}");
+    assert!(out.contains("no-source-reference"), "{out}");
+    assert!(out.contains("\"severity\":\"error\""), "{out}");
+    for status in ["backlog", "done", "cancelled"] {
+        let mut text = base.replace("status: open", &format!("status: {status}"));
+        if status == "done" {
+            text.push_str(
+                "\n## Resolution\n\nDelivered the bounded check with isolated fixture evidence.\n",
+            );
+        }
+        if status == "cancelled" {
+            text.push_str("\n## Cancellation\n\n- Reason: obsolete\n\nRetired this old design.\n");
+        }
+        std::fs::write(&path, text).unwrap();
+        let (_, out) = run_tkt(&clone, &["validate"]);
+        assert!(!out.contains("no-source-reference"), "{status}: {out}");
+    }
+}

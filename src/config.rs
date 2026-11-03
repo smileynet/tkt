@@ -18,6 +18,7 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
     ("close.require_validation_evidence", "warn"),
     ("close.allow_force", "true"),
     ("validate.strict", "false"),
+    ("validate.require_source_reference", "false"),
     ("validate.missing_resolution_before_id", ""),
     ("ready.default_env", ""),
     ("priority.warn_unknown", "true"),
@@ -48,6 +49,7 @@ pub struct ProjectConfig {
     pub close_require_validation_evidence: EvidencePolicy,
     pub close_allow_force: bool,
     pub validate_strict: bool,
+    pub validate_require_source_reference: bool,
     /// Suppress missing-resolution findings for numeric IDs below this project ratchet.
     pub validate_missing_resolution_before_id: Option<u64>,
     pub ready_default_env: Option<crate::core::Env>,
@@ -78,6 +80,7 @@ impl Default for ProjectConfig {
             close_require_validation_evidence: EvidencePolicy::Warn,
             close_allow_force: true,
             validate_strict: false,
+            validate_require_source_reference: false,
             validate_missing_resolution_before_id: None,
             ready_default_env: None,
             priority_warn_unknown: true,
@@ -201,6 +204,10 @@ impl ProjectConfig {
             ),
             ("close.allow_force", self.close_allow_force.to_string()),
             ("validate.strict", self.validate_strict.to_string()),
+            (
+                "validate.require_source_reference",
+                self.validate_require_source_reference.to_string(),
+            ),
             (
                 "validate.missing_resolution_before_id",
                 self.validate_missing_resolution_before_id
@@ -376,6 +383,7 @@ fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> Result<bool, 
         }
         "close.allow_force" => cfg.close_allow_force = boolean()?,
         "validate.strict" => cfg.validate_strict = boolean()?,
+        "validate.require_source_reference" => cfg.validate_require_source_reference = boolean()?,
         "validate.missing_resolution_before_id" => {
             cfg.validate_missing_resolution_before_id = parse_optional_id(value)?
         }
@@ -815,6 +823,7 @@ fn config_literal(key: &str, value: &str) -> String {
             | "close.require_validation_evidence"
             | "close.allow_force"
             | "validate.strict"
+            | "validate.require_source_reference"
             | "priority.warn_unknown"
             | "push.enabled"
             | "debug"

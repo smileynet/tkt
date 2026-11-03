@@ -110,6 +110,10 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     } else {
         all_findings.extend(check_label_namespaces(&corpus, &cfg));
     }
+    all_findings.extend(check_source_references(
+        &corpus,
+        cfg.validate_require_source_reference,
+    ));
     let cutoff = cfg.validate_missing_resolution_before_id;
     let legacy_ids: HashSet<String> = cutoff
         .map(|cutoff| {
@@ -135,6 +139,22 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
 }
 
 // --- Rules ---
+
+pub fn has_source_reference(ticket: &Ticket) -> bool {
+    ticket.spec.as_ref().is_some_and(|s| !s.trim().is_empty())
+        || !ticket.blocked_by.is_empty()
+        || ticket.parent.as_ref().is_some_and(|p| !p.trim().is_empty())
+        || crate::renumber::body_has_source_reference(&ticket.body)
+}
+
+pub fn check_source_references(corpus: &[Ticket], required: bool) -> Vec<Finding> {
+    corpus.iter().filter(|t| matches!(t.status, Status::Open | Status::InProgress))
+        .filter(|t| !has_source_reference(t)).map(|t| Finding {
+            file: filename(t), rule: "no-source-reference".into(),
+            message: "add a spec, prerequisite, parent, local ticket citation, documentation path or HTTP(S) source link".into(),
+            severity: if required { "error" } else { "info" }.into(),
+        }).collect()
+}
 
 pub fn check_ac_transfers(corpus: &[Ticket]) -> Vec<Finding> {
     core::ac_transfer::transfer_errors(corpus)

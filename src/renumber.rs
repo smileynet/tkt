@@ -400,25 +400,7 @@ fn body_cites_id(body: &str, id: &str) -> bool {
 /// code, URLs and `owner/repo#id` references from another corpus.
 pub fn body_ticket_citations(body: &str) -> Vec<BodyCitation> {
     let mut citations = Vec::new();
-    let mut fence: Option<(char, usize)> = None;
-    for (line_index, line) in body.lines().enumerate() {
-        let trimmed = line.trim_start();
-        if let Some((marker, length)) = fence {
-            let close_length = trimmed.chars().take_while(|c| *c == marker).count();
-            if close_length >= length && trimmed[close_length..].trim().is_empty() {
-                fence = None;
-            }
-            continue;
-        }
-        let marker = trimmed.chars().next();
-        let fence_length = marker
-            .filter(|marker| matches!(marker, '`' | '~'))
-            .map(|marker| trimmed.chars().take_while(|c| *c == marker).count());
-        if let (Some(marker), Some(length)) = (marker, fence_length.filter(|length| *length >= 3)) {
-            fence = Some((marker, length));
-            continue;
-        }
-
+    for (line_index, line) in prose_lines(body) {
         let inline_code = inline_code_ranges(line);
         let urls: Vec<_> = RE_URL.find_iter(line).map(|m| m.range()).collect();
         let external_markdown_links: Vec<_> = RE_EXTERNAL_MARKDOWN_LINK
@@ -465,6 +447,42 @@ pub fn body_ticket_citations(body: &str) -> Vec<BodyCitation> {
         }
     }
     citations
+}
+
+pub fn body_has_source_reference(body: &str) -> bool {
+    static LINKS: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r"(?i)https?://[^\s<>]+|\b(?:docs|specs)/[^\s)]+|\.memory/[^\s)]+").unwrap()
+    });
+    !body_ticket_citations(body).is_empty()
+        || prose_lines(body)
+            .iter()
+            .any(|(_, line)| LINKS.is_match(line))
+}
+
+fn prose_lines(body: &str) -> Vec<(usize, &str)> {
+    let mut lines = Vec::new();
+    let mut fence: Option<(char, usize)> = None;
+    for (line_index, line) in body.lines().enumerate() {
+        let trimmed = line.trim_start();
+        if let Some((marker, length)) = fence {
+            let close_length = trimmed.chars().take_while(|c| *c == marker).count();
+            if close_length >= length && trimmed[close_length..].trim().is_empty() {
+                fence = None;
+            }
+            continue;
+        }
+        let marker = trimmed.chars().next();
+        let fence_length = marker
+            .filter(|marker| matches!(marker, '`' | '~'))
+            .map(|marker| trimmed.chars().take_while(|c| *c == marker).count());
+        if let (Some(marker), Some(length)) = (marker, fence_length.filter(|length| *length >= 3)) {
+            fence = Some((marker, length));
+            continue;
+        }
+
+        lines.push((line_index, line));
+    }
+    lines
 }
 
 pub fn numeric_id_eq(left: &str, right: &str) -> bool {
