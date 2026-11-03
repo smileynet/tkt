@@ -94,7 +94,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 | 196 | parent CLI + query/capabilities surface | ✅ done |
 | 197 | Show computed parent progress with explicit closure | ✅ done |
 | 198 | label-namespace validation: single-select + closed-set | ✅ done |
-| 199 | docs, capabilities, CHANGELOG for parent/assignee/labels | open |
+| 199 | docs, capabilities, CHANGELOG for parent/assignee/labels | in_progress |
 | 200 | tkt ready --parent <id>: frontier scoped to one epic/map | open |
 | 227 | Add a cancelled status and tkt cancel/reopen per ADR 0004 | ✅ done |
 

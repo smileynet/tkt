@@ -1,7 +1,7 @@
 ---
 id: "199"
 title: "docs, capabilities, CHANGELOG for parent/assignee/labels"
-status: open
+status: in_progress
 blocked_by: ["196", "197", "198", "194"]
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "README and CHANGELOG describe the new fields/config as additive and backward compatible"
   - "An end-to-end test exercises an epic with children plus a single-select label namespace"
 tags: ["guidance", "kind:enhancement", "triage:ready-for-agent", "stream:relations"]
+assignee: "codex"
 ---
 
 # docs, capabilities, CHANGELOG for parent/assignee/labels
