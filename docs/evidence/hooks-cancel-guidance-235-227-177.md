@@ -64,8 +64,8 @@ this does not establish the separate catalog safety/policy review.
 
 Each approved retirement was previewed, then applied with `tkt cancel`: #208 as
 duplicate of #138, #87 as superseded by #176, #115/#161 obsolete and #94 wontfix.
-All had zero dependents. Source control comparison verified each original body
-is preserved byte-for-byte before the appended Cancellation section; each commit
+All had zero dependents. Source control comparison verified each original body's
+content is preserved before Cancellation (the append normalizes trailing whitespace); each commit
 contains only its ticket and existing plan. No AC was checked or Resolution
 invented. #142 was also retired as wontfix after a fresh bounded fixture returned
 plain/either tickets 01/02 and correctly excluded GPU-required 03 under
