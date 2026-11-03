@@ -185,7 +185,7 @@ impl MutationContext {
 /// Load project config with unknown-key warnings.
 fn load_project_config(tickets_dir: &Path) -> Result<ProjectConfig> {
     let cfg = ProjectConfig::load(tickets_dir);
-    cfg.validate_label_namespaces()?;
+    cfg.validate()?;
     for key in &cfg.unknown_keys {
         eprintln!(
             "warning: unknown config key {:?} in .tickets/config.toml",

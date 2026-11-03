@@ -116,8 +116,10 @@ pub fn run(
         tags
     };
 
-    let priority = if priority.is_none() && !pcfg.new_default_priority.is_empty() {
-        Some(pcfg.new_default_priority.as_str())
+    let priority = if priority.is_none() {
+        pcfg.new_default_priority
+            .map(|value| value.as_str())
+            .or(priority)
     } else {
         priority
     };

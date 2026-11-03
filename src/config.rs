@@ -40,25 +40,23 @@ pub struct ProjectConfig {
     pub close_require_resolution: bool,
     pub close_require_checked_acs: bool,
     pub close_require_validation_criteria: bool,
-    /// "false" | "warn" | "true"
-    pub close_require_validation_evidence: String,
+    pub close_require_validation_evidence: EvidencePolicy,
     pub close_allow_force: bool,
     pub validate_strict: bool,
     /// Suppress missing-resolution findings for numeric IDs below this project ratchet.
-    pub validate_missing_resolution_before_id: String,
-    pub ready_default_env: String,
+    pub validate_missing_resolution_before_id: Option<u64>,
+    pub ready_default_env: Option<crate::core::Env>,
     pub priority_warn_unknown: bool,
-    pub new_default_priority: String,
+    pub new_default_priority: Option<crate::core::Priority>,
     pub push_enabled: bool,
     /// Machine capabilities declared by this workstation (for requires matching).
     pub machine_capabilities: Vec<String>,
     /// Grandfather cutoff for audit resolution-quality rules: done tickets with a
-    /// numeric ID below this value are exempt from `missing-resolution` /
-    /// `tbd-resolution` (ADR 0003). Empty = no exemption. Raw string so the audit
-    /// command can surface a structured error on a malformed (non-numeric) value.
-    pub audit_resolution_baseline_id: String,
+    /// numeric ID below this value are exempt from resolution-quality audit rules.
+    pub audit_resolution_baseline_id: Option<u64>,
     pub label_namespaces: BTreeMap<String, LabelNamespace>,
     pub label_namespace_errors: Vec<String>,
+    pub config_errors: Vec<String>,
     /// Unknown keys found in the config file (for warning).
     pub unknown_keys: Vec<String>,
     /// Track which keys came from which source for --show.
@@ -71,18 +69,19 @@ impl Default for ProjectConfig {
             close_require_resolution: false,
             close_require_checked_acs: true,
             close_require_validation_criteria: false,
-            close_require_validation_evidence: "warn".to_string(),
+            close_require_validation_evidence: EvidencePolicy::Warn,
             close_allow_force: true,
             validate_strict: false,
-            validate_missing_resolution_before_id: String::new(),
-            ready_default_env: String::new(),
+            validate_missing_resolution_before_id: None,
+            ready_default_env: None,
             priority_warn_unknown: true,
-            new_default_priority: String::new(),
+            new_default_priority: None,
             push_enabled: true,
             machine_capabilities: Vec::new(),
-            audit_resolution_baseline_id: String::new(),
+            audit_resolution_baseline_id: None,
             label_namespaces: BTreeMap::new(),
             label_namespace_errors: Vec::new(),
+            config_errors: Vec::new(),
             unknown_keys: Vec::new(),
             sources: BTreeMap::new(),
         }
@@ -122,35 +121,47 @@ impl ProjectConfig {
             sources.insert(key.to_string(), Source::Default);
         }
 
-        // Layer 1: user config (lowest priority)
-        if let Some(ref user_vals) = user_values {
-            for (key, value) in user_vals {
-                if apply_value(&mut cfg, key, value) {
-                    sources.insert(key.clone(), Source::User);
-                }
-            }
-        }
-
-        // Layer 2: project config (overrides user)
         if let Some(ref proj_vals) = project_values {
-            for (key, value) in proj_vals {
-                if key.starts_with("labels.") {
-                    continue;
-                }
-                if apply_value(&mut cfg, key, value) {
-                    sources.insert(key.clone(), Source::ProjectConfig);
-                } else {
+            for key in proj_vals.keys() {
+                if !key.starts_with("labels.")
+                    && !PROJECT_KEYS.iter().any(|(known, _)| known == key)
+                {
                     unknown.push(key.clone());
                 }
             }
         }
 
-        // Layer 3: env vars (overrides project)
         for &(key, _) in PROJECT_KEYS {
             let env_name = format!("TKT_{}", key.replace('.', "_").to_uppercase());
-            if let Ok(val) = std::env::var(&env_name) {
-                apply_value(&mut cfg, key, &val);
-                sources.insert(key.to_string(), Source::Env);
+            let (value, source) = if let Ok(value) = std::env::var(&env_name) {
+                (Some(value), Source::Env)
+            } else if let Some(value) = project_values.as_ref().and_then(|values| values.get(key)) {
+                (Some(value.clone()), Source::ProjectConfig)
+            } else if let Some(value) = user_values.as_ref().and_then(|values| values.get(key)) {
+                (Some(value.clone()), Source::User)
+            } else {
+                (None, Source::Default)
+            };
+            if let Some(value) = value {
+                match apply_value(&mut cfg, key, &value) {
+                    Ok(true) => {
+                        sources.insert(key.to_string(), source);
+                    }
+                    Ok(false) => unreachable!("PROJECT_KEYS contains only known policy keys"),
+                    Err(reason) => cfg.config_errors.push(config_value_error(
+                        key,
+                        &value,
+                        &config_source_description(&source, key, &project_path),
+                        &reason,
+                    )),
+                }
+            }
+        }
+
+        if let Some(ref user_vals) = user_values {
+            if std::env::var_os("TKT_DEBUG").is_none() {
+                cfg.config_errors
+                    .extend(validate_user_debug_values(user_vals));
             }
         }
 
@@ -179,25 +190,39 @@ impl ProjectConfig {
             ),
             (
                 "close.require_validation_evidence",
-                self.close_require_validation_evidence.clone(),
+                self.close_require_validation_evidence.as_str().to_string(),
             ),
             ("close.allow_force", self.close_allow_force.to_string()),
             ("validate.strict", self.validate_strict.to_string()),
             (
                 "validate.missing_resolution_before_id",
-                self.validate_missing_resolution_before_id.clone(),
+                self.validate_missing_resolution_before_id
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
             ),
-            ("ready.default_env", self.ready_default_env.clone()),
+            (
+                "ready.default_env",
+                self.ready_default_env
+                    .map(|value| value.as_str().to_string())
+                    .unwrap_or_default(),
+            ),
             (
                 "priority.warn_unknown",
                 self.priority_warn_unknown.to_string(),
             ),
-            ("new.default_priority", self.new_default_priority.clone()),
+            (
+                "new.default_priority",
+                self.new_default_priority
+                    .map(|value| value.as_str().to_string())
+                    .unwrap_or_default(),
+            ),
             ("push.enabled", self.push_enabled.to_string()),
             ("machine.capabilities", self.machine_capabilities.join(",")),
             (
                 "audit.resolution_baseline_id",
-                self.audit_resolution_baseline_id.clone(),
+                self.audit_resolution_baseline_id
+                    .map(|value| value.to_string())
+                    .unwrap_or_default(),
             ),
         ];
 
@@ -224,15 +249,29 @@ impl ProjectConfig {
         entries
     }
 
-    pub fn validate_label_namespaces(&self) -> Result<(), crate::DomainError> {
-        if self.label_namespace_errors.is_empty() {
+    pub fn validate(&self) -> Result<(), crate::DomainError> {
+        let errors: Vec<_> = self
+            .config_errors
+            .iter()
+            .chain(self.label_namespace_errors.iter())
+            .collect();
+        if errors.is_empty() {
             return Ok(());
         }
+        let description = if self.label_namespace_errors.is_empty() {
+            "invalid configuration"
+        } else {
+            "invalid .tickets/config.toml label namespace configuration"
+        };
         Err(crate::DomainError::new(
             crate::ErrorKind::Validation,
             format!(
-                "invalid .tickets/config.toml label namespace configuration: {}",
-                self.label_namespace_errors.join("; ")
+                "{description}: {}",
+                errors
+                    .into_iter()
+                    .map(|error| error.as_str())
+                    .collect::<Vec<_>>()
+                    .join("; ")
             ),
         ))
     }
@@ -242,6 +281,23 @@ impl ProjectConfig {
 pub struct LabelNamespace {
     pub single_select: bool,
     pub values: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EvidencePolicy {
+    Disabled,
+    Warn,
+    Required,
+}
+
+impl EvidencePolicy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Disabled => "false",
+            Self::Warn => "warn",
+            Self::Required => "true",
+        }
+    }
 }
 
 fn parse_label_namespaces(
@@ -280,25 +336,48 @@ fn parse_label_namespaces(
 }
 
 /// Apply a key-value pair to the config struct. Returns true if the key was recognized.
-fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> bool {
+fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> Result<bool, String> {
+    let boolean =
+        || parse_bool(value).ok_or_else(|| "expected true, false, 1, 0, yes, or no".to_string());
     match key {
-        "close.require_resolution" => cfg.close_require_resolution = is_truthy(value),
-        "close.require_checked_acs" => cfg.close_require_checked_acs = is_truthy(value),
-        "close.require_validation_criteria" => {
-            cfg.close_require_validation_criteria = is_truthy(value)
-        }
+        "close.require_resolution" => cfg.close_require_resolution = boolean()?,
+        "close.require_checked_acs" => cfg.close_require_checked_acs = boolean()?,
+        "close.require_validation_criteria" => cfg.close_require_validation_criteria = boolean()?,
         "close.require_validation_evidence" => {
-            cfg.close_require_validation_evidence = value.to_string()
+            cfg.close_require_validation_evidence = match value {
+                "false" => EvidencePolicy::Disabled,
+                "warn" => EvidencePolicy::Warn,
+                "true" => EvidencePolicy::Required,
+                _ => return Err("expected true, warn, or false".to_string()),
+            }
         }
-        "close.allow_force" => cfg.close_allow_force = is_truthy(value),
-        "validate.strict" => cfg.validate_strict = is_truthy(value),
+        "close.allow_force" => cfg.close_allow_force = boolean()?,
+        "validate.strict" => cfg.validate_strict = boolean()?,
         "validate.missing_resolution_before_id" => {
-            cfg.validate_missing_resolution_before_id = value.to_string()
+            cfg.validate_missing_resolution_before_id = parse_optional_id(value)?
         }
-        "ready.default_env" => cfg.ready_default_env = value.to_string(),
-        "priority.warn_unknown" => cfg.priority_warn_unknown = is_truthy(value),
-        "new.default_priority" => cfg.new_default_priority = value.to_string(),
-        "push.enabled" => cfg.push_enabled = is_truthy(value),
+        "ready.default_env" => {
+            cfg.ready_default_env = if value.is_empty() {
+                None
+            } else {
+                Some(
+                    crate::core::Env::parse(value)
+                        .map_err(|_| "expected corp, personal, or either".to_string())?,
+                )
+            }
+        }
+        "priority.warn_unknown" => cfg.priority_warn_unknown = boolean()?,
+        "new.default_priority" => {
+            cfg.new_default_priority = if value.is_empty() {
+                None
+            } else {
+                Some(
+                    crate::core::Priority::parse(value)
+                        .ok_or_else(|| "expected urgent, high, medium, or low".to_string())?,
+                )
+            }
+        }
+        "push.enabled" => cfg.push_enabled = boolean()?,
         "machine.capabilities" => {
             cfg.machine_capabilities = value
                 .split(',')
@@ -306,14 +385,90 @@ fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> bool {
                 .filter(|s| !s.is_empty())
                 .collect();
         }
-        "audit.resolution_baseline_id" => cfg.audit_resolution_baseline_id = value.to_string(),
-        _ => return false,
+        "audit.resolution_baseline_id" => {
+            cfg.audit_resolution_baseline_id = parse_optional_id(value)?
+        }
+        _ => return Ok(false),
     }
-    true
+    Ok(true)
 }
 
-fn is_truthy(s: &str) -> bool {
-    matches!(s, "true" | "1" | "yes")
+fn parse_bool(s: &str) -> Option<bool> {
+    match s {
+        "true" | "1" | "yes" => Some(true),
+        "false" | "0" | "no" => Some(false),
+        _ => None,
+    }
+}
+
+fn parse_optional_id(value: &str) -> Result<Option<u64>, String> {
+    if value.is_empty() {
+        return Ok(None);
+    }
+    value
+        .parse::<u64>()
+        .map(Some)
+        .map_err(|_| "expected a numeric ticket id or empty value".to_string())
+}
+
+fn config_source_description(source: &Source, key: &str, project_path: &Path) -> String {
+    match source {
+        Source::Env => format!(
+            "environment variable TKT_{}",
+            key.replace('.', "_").to_uppercase()
+        ),
+        Source::ProjectConfig => format!("project config {}", project_path.display()),
+        Source::User | Source::ConfigFile => config_file_path()
+            .map(|path| format!("user config {}", path.display()))
+            .unwrap_or_else(|| "user configuration".to_string()),
+        Source::Default => "built-in default".to_string(),
+    }
+}
+
+fn config_value_error(key: &str, value: &str, source: &str, reason: &str) -> String {
+    format!("invalid config {key}={value:?} in {source}: {reason}")
+}
+
+fn validate_user_debug_values(values: &BTreeMap<String, String>) -> Vec<String> {
+    let mut errors = Vec::new();
+    let debug_overridden = std::env::var_os("TKT_DEBUG").is_some();
+    if !debug_overridden {
+        if let Some(value) = values.get("debug") {
+            if parse_bool(value).is_none() {
+                errors.push(config_value_error(
+                    "debug",
+                    value,
+                    &config_file_path()
+                        .map(|p| format!("user config {}", p.display()))
+                        .unwrap_or_else(|| "user configuration".to_string()),
+                    "expected true, false, 1, 0, yes, or no",
+                ));
+            }
+        }
+    }
+    if !debug_overridden {
+        if let Some(value) = std::env::var("TKT_DEBUG_FORMAT")
+            .ok()
+            .or_else(|| values.get("debug.format").cloned())
+        {
+            if !matches!(value.as_str(), "log" | "file" | "human" | "stderr" | "json") {
+                let source = if std::env::var_os("TKT_DEBUG_FORMAT").is_some() {
+                    "environment variable TKT_DEBUG_FORMAT".to_string()
+                } else {
+                    config_file_path()
+                        .map(|path| format!("user config {}", path.display()))
+                        .unwrap_or_else(|| "user configuration".to_string())
+                };
+                errors.push(config_value_error(
+                    "debug.format",
+                    &value,
+                    &source,
+                    "expected log, file, human, stderr, or json",
+                ));
+            }
+        }
+    }
+    errors
 }
 
 /// Parse a TOML-like config with [sections].
@@ -354,6 +509,7 @@ fn read_sectioned_config(path: &Path) -> Option<BTreeMap<String, String>> {
 #[derive(Debug)]
 pub struct Config {
     values: BTreeMap<String, String>,
+    errors: Vec<String>,
 }
 
 impl Config {
@@ -364,12 +520,18 @@ impl Config {
         if std::env::var("TKT_NO_USER_CONFIG").as_deref() == Ok("1") {
             return Config {
                 values: BTreeMap::new(),
+                errors: Vec::new(),
             };
         }
         let values = config_file_path()
             .and_then(|p| read_sectioned_config(&p))
             .unwrap_or_default();
-        Config { values }
+        let errors = if std::env::var_os("TKT_DEBUG").is_none() {
+            validate_user_debug_values(&values)
+        } else {
+            Vec::new()
+        };
+        Config { values, errors }
     }
 
     /// Get a value with precedence: env > config > default.
@@ -390,7 +552,17 @@ impl Config {
 
     /// Get a value as bool (true/1/yes are truthy).
     pub fn get_bool(&self, key: &str) -> bool {
-        matches!(self.get(key).as_str(), "true" | "1" | "yes")
+        parse_bool(&self.get(key)).unwrap_or(false)
+    }
+
+    pub fn validate(&self) -> Result<(), crate::DomainError> {
+        if self.errors.is_empty() {
+            return Ok(());
+        }
+        Err(crate::DomainError::new(
+            crate::ErrorKind::Validation,
+            format!("invalid user configuration: {}", self.errors.join("; ")),
+        ))
     }
 
     /// Set a key in the user config file. Creates the file if it doesn't exist.
@@ -644,11 +816,28 @@ mod tests {
         assert!(!cfg.close_require_resolution);
         assert!(cfg.close_require_checked_acs);
         assert!(!cfg.validate_strict);
-        assert!(cfg.ready_default_env.is_empty());
+        assert_eq!(cfg.ready_default_env, None);
         assert!(cfg.priority_warn_unknown);
-        assert!(cfg.new_default_priority.is_empty());
+        assert_eq!(cfg.new_default_priority, None);
         assert!(cfg.push_enabled);
         assert!(cfg.unknown_keys.is_empty());
+    }
+
+    #[test]
+    fn known_boolean_spellings_are_strict_and_keep_legacy_aliases() {
+        for (value, expected) in [
+            ("true", true),
+            ("1", true),
+            ("yes", true),
+            ("false", false),
+            ("0", false),
+            ("no", false),
+        ] {
+            assert_eq!(parse_bool(value), Some(expected));
+        }
+        for value in ["", "off", "treu", "maybe"] {
+            assert_eq!(parse_bool(value), None);
+        }
     }
 
     #[test]
@@ -671,7 +860,7 @@ foo = "bar"
         let cfg = ProjectConfig::load_inner(dir.path(), true);
         assert!(cfg.close_require_resolution);
         assert!(!cfg.push_enabled);
-        assert_eq!(cfg.ready_default_env, "corp");
+        assert_eq!(cfg.ready_default_env, Some(crate::core::Env::Corp));
         assert_eq!(cfg.unknown_keys, vec!["mystery.foo"]);
     }
 
@@ -684,7 +873,7 @@ foo = "bar"
         )
         .unwrap();
         let cfg = ProjectConfig::load_inner(dir.path(), true);
-        assert_eq!(cfg.audit_resolution_baseline_id, "36");
+        assert_eq!(cfg.audit_resolution_baseline_id, Some(36));
         assert!(cfg.unknown_keys.is_empty());
     }
 
@@ -692,7 +881,7 @@ foo = "bar"
     fn test_audit_resolution_baseline_id_default_empty() {
         let dir = tempfile::tempdir().unwrap();
         let cfg = ProjectConfig::load_inner(dir.path(), true);
-        assert!(cfg.audit_resolution_baseline_id.is_empty());
+        assert_eq!(cfg.audit_resolution_baseline_id, None);
     }
 
     #[test]
@@ -721,11 +910,11 @@ foo = "bar"
         let mut cfg = ProjectConfig::default();
         // Apply user first
         for (key, value) in &user_vals {
-            apply_value(&mut cfg, key, value);
+            apply_value(&mut cfg, key, value).unwrap();
         }
         // Then project overrides
         for (key, value) in &proj_vals {
-            apply_value(&mut cfg, key, value);
+            apply_value(&mut cfg, key, value).unwrap();
         }
 
         // allow_force from user (not overridden by project)

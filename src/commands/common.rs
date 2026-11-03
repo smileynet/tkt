@@ -63,7 +63,7 @@ pub(crate) fn tickets_dir() -> Result<PathBuf> {
 /// Warns on unknown keys. Returns defaults if file is missing.
 pub(crate) fn project_config(tickets_dir: &Path) -> Result<crate::config::ProjectConfig> {
     let cfg = crate::config::ProjectConfig::load(tickets_dir);
-    cfg.validate_label_namespaces()?;
+    cfg.validate()?;
     for key in &cfg.unknown_keys {
         eprintln!(
             "warning: unknown config key {:?} in .tickets/config.toml",

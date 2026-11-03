@@ -96,7 +96,7 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     all_findings.extend(check_unchecked_acs(&corpus));
     all_findings.extend(check_stub_body(&corpus));
     let cfg = crate::config::ProjectConfig::load(dir);
-    if let Err(error) = cfg.validate_label_namespaces() {
+    if let Err(error) = cfg.validate() {
         all_findings.push(Finding {
             file: "config.toml".to_string(),
             rule: "label-config".to_string(),
@@ -106,10 +106,7 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
     } else {
         all_findings.extend(check_label_namespaces(&corpus, &cfg));
     }
-    let cutoff = cfg
-        .validate_missing_resolution_before_id
-        .parse::<u64>()
-        .ok();
+    let cutoff = cfg.validate_missing_resolution_before_id;
     let legacy_ids: HashSet<String> = cutoff
         .map(|cutoff| {
             corpus

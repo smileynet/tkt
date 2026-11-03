@@ -5,6 +5,7 @@ use anyhow::Result;
 use crate::commands::common::{
     domain_bail, is_dry_run, is_quiet, print_success, slug_from_filename,
 };
+use crate::config::EvidencePolicy;
 use crate::core::{self, AcSelection, Status};
 use crate::mutation::MutationContext;
 
@@ -65,7 +66,7 @@ pub fn run(
             );
             remedies.push("tkt edit <id> --validation \"...\"");
         }
-        if ctx.config.close_require_validation_evidence == "true"
+        if ctx.config.close_require_validation_evidence == EvidencePolicy::Required
             && !criteria.is_empty()
             && evidence.is_empty()
         {
@@ -114,7 +115,7 @@ pub fn run(
     }
 
     // Non-blocking advisory: evidence recommended but config is "warn", not "true".
-    if ctx.config.close_require_validation_evidence == "warn"
+    if ctx.config.close_require_validation_evidence == EvidencePolicy::Warn
         && !criteria.is_empty()
         && evidence.is_empty()
         && !force
@@ -147,8 +148,8 @@ pub fn run(
             .join(", ");
         // Singular/plural guard (English-only): one missing slot reads "criterion".
         let criteria_word = if gap == 1 { "criterion" } else { "criteria" };
-        match ctx.config.close_require_validation_evidence.as_str() {
-            "true" => {
+        match ctx.config.close_require_validation_evidence {
+            EvidencePolicy::Required => {
                 return Err(crate::DomainError::with_hint(
                     crate::ErrorKind::GateFailed,
                     format!(
@@ -162,7 +163,7 @@ pub fn run(
                 )
                 .into());
             }
-            "warn" => {
+            EvidencePolicy::Warn => {
                 eprintln!(
                     "  {} {} evidence items for {} criteria ({} unevidenced)",
                     crate::color::sym_warn(),
@@ -171,7 +172,7 @@ pub fn run(
                     gap
                 );
             }
-            _ => {}
+            EvidencePolicy::Disabled => {}
         }
     }
 

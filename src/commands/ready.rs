@@ -12,7 +12,11 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
     let legacy_env = std::env::var("CREW_ENV")
         .ok()
         .filter(|value| !value.is_empty())
-        .unwrap_or_else(|| pcfg.ready_default_env.clone());
+        .or_else(|| {
+            pcfg.ready_default_env
+                .map(|value| value.as_str().to_string())
+        })
+        .unwrap_or_default();
     let mut capabilities = pcfg.machine_capabilities.clone();
     if !legacy_env.is_empty() && !capabilities.contains(&legacy_env) {
         capabilities.push(legacy_env);

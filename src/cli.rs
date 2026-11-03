@@ -392,6 +392,9 @@ pub fn run() -> i32 {
     // Extract notable flags before dispatch (command is moved into match)
     let flags = notable_flags(&cli.command);
     let result = (|| -> anyhow::Result<i32> {
+        if !matches!(&cli.command, Commands::Config { .. }) {
+            crate::config::Config::load().validate()?;
+        }
         let current_agent =
             crate::core::AgentId::resolve(cli.agent.as_deref()).map_err(|error| {
                 crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
