@@ -103,6 +103,8 @@ pub fn collect_corpus_findings(dir: &std::path::Path) -> anyhow::Result<Vec<Find
             message: error.to_string(),
             severity: "error".to_string(),
         });
+    } else {
+        all_findings.extend(check_label_namespaces(&corpus, &cfg));
     }
     let cutoff = cfg
         .validate_missing_resolution_before_id
@@ -230,6 +232,50 @@ pub fn check_dangling_deps(corpus: &[Ticket]) -> Vec<Finding> {
                     message: format!("ref {:?} has no ticket", dep),
                     severity: "error".into(),
                 });
+            }
+        }
+    }
+    findings
+}
+
+/// Check namespaced tags against configured value sets and selection rules.
+pub fn check_label_namespaces(
+    corpus: &[Ticket],
+    config: &crate::config::ProjectConfig,
+) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for (name, namespace) in &config.label_namespaces {
+        let prefix = format!("{name}:");
+        for ticket in corpus {
+            let matching: Vec<(&str, &str)> = ticket
+                .tags
+                .iter()
+                .filter_map(|tag| tag.strip_prefix(&prefix).map(|value| (tag.as_str(), value)))
+                .collect();
+            if namespace.single_select && matching.len() > 1 {
+                findings.push(Finding {
+                    file: filename(ticket),
+                    rule: "label-namespace-single-select".into(),
+                    message: format!(
+                        "single-select namespace {:?} appears {} times",
+                        name,
+                        matching.len()
+                    ),
+                    severity: "error".into(),
+                });
+            }
+            for (tag, value) in matching {
+                if !namespace.values.iter().any(|allowed| allowed == value) {
+                    findings.push(Finding {
+                        file: filename(ticket),
+                        rule: "label-namespace-value".into(),
+                        message: format!(
+                            "tag {:?} is not an allowed value for namespace {:?}",
+                            tag, name
+                        ),
+                        severity: "error".into(),
+                    });
+                }
             }
         }
     }
