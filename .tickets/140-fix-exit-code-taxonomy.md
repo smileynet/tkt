@@ -1,7 +1,7 @@
 ---
 id: "140"
 title: "Fix exit code taxonomy leaks: config errors exit 2 instead of 1"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:

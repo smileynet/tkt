@@ -37,7 +37,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 
 | ID | Work | Status |
 |---:|---|---|
-| 140 | Fix exit code taxonomy leaks: config errors exit 2 instead of 1 | open |
+| 140 | Fix exit code taxonomy leaks: config errors exit 2 instead of 1 | in_progress |
 | 143 | Fix -q + -o json emits bare non-JSON output inconsistently | open |
 | 144 | Context silently narrows query (full corpus claim violated) | open |
 | 145 | Fix update_check ignores DO_NOT_TRACK | open |
