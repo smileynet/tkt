@@ -4,8 +4,8 @@ Read when changing modules, ticket parsing, Git transactions, telemetry, errors,
 terminal output, dependencies or facade exports. These are implementation
 constraints; recorded domain decisions remain in [the ADRs](../adr/).
 
-Prepared under ticket 245. Original text is duplicated during the bounded
-transition; ticket 246 removes the extracted source from AGENTS.md.
+Prepared under ticket 245 and activated by ticket 246. The extracted source
+now lives here; AGENTS.md keeps operational rules and conditional read pointers.
 
 <a id="rule-18"></a>
 

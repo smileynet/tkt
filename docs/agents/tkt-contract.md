@@ -7,8 +7,8 @@ reference is [commands.md](../../skills/tkt-core/references/commands.md). The
 reference examples below preserve the contributor contract; they are not a
 replacement for the complete generated manifest.
 
-Prepared under ticket 245. Original text is duplicated during the bounded
-transition; ticket 246 removes the extracted source from AGENTS.md.
+Prepared under ticket 245 and activated by ticket 246. The extracted source
+now lives here; AGENTS.md keeps operational rules and conditional read pointers.
 
 <a id="rule-10"></a>
 

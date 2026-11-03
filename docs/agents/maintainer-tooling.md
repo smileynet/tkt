@@ -2,10 +2,11 @@
 
 Read when inspecting cargo-dist, checking crate-name availability or changing
 generated release workflows. [Release guidance](../releasing.md) controls
-staging/publication authorization; this reference grants none.
+staging/publication authorization; this reference grants none. Read
+[release staging](../release-staging.md) for the generated workflow contract.
 
-Prepared under ticket 245. Original text is duplicated during the bounded
-transition; ticket 246 removes the extracted source from AGENTS.md.
+Prepared under ticket 245 and activated by ticket 246. The extracted source
+now lives here; AGENTS.md keeps operational rules and conditional read pointers.
 
 <a id="rule-35"></a>
 

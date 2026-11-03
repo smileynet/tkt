@@ -9,10 +9,12 @@ the already-existing verification rule. This map covers the migration baseline;
 it does not certify future edits without review. User-level standing rules remain
 untouched and continue to override local guidance.
 
-Transition: ticket 245 prepares homes without extracting AGENTS text. Ticket 246
-applies conditional pointers and ends that temporary duplication. The full local
+Migration status: ticket 245 prepared homes without extraction; ticket 246 now
+applies conditional pointers and ends the temporary duplication. The full local
 gate, current hosted-run authorization and separate publication boundary remain
-unchanged. Current CLI usage is reached through commands.md/capabilities; the deep
+unchanged. Maintainer-tooling deliberately groups cargo-dist and generation traps
+with other tool rules and links release-staging for the authoritative workflow
+contract; this refines the proposal home without changing its policy. Current CLI usage is reached through commands.md/capabilities; the deep
 contract keeps exact compatibility details previously held in AGENTS.md.
 
 | Unit | Source lines | Rule or section | Final home | Read trigger |

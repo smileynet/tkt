@@ -5,8 +5,8 @@ changing plugins or diagnosing marketplace/cache ownership. Release version
 changes still follow [release guidance](../releasing.md). One skill loads once
 per harness.
 
-Prepared under ticket 245. Original text is duplicated during the bounded
-transition; ticket 246 removes the extracted source from AGENTS.md.
+Prepared under ticket 245 and activated by ticket 246. The extracted source
+now lives here; AGENTS.md keeps operational rules and conditional read pointers.
 
 <a id="rule-07"></a>
 

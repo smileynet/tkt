@@ -456,5 +456,6 @@
       "sha256": "e80c1e24fbff0116c32e69cade63f7b7d17091e459fcce695ec46a3272652bf2",
       "normalization": "relative-links"
     }
-  ]
+  ],
+  "phase": "final"
 }

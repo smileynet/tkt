@@ -30,7 +30,7 @@ cargo install --path .         # deploy to PATH (shows git hash in --version)
 cargo test                     # all tests
 cargo test -- --nocapture      # with output
 cargo clippy                   # lint (must be 0 warnings)
-cargo fmt                      # format (must produce no diff)
+cargo fmt --check              # format (must produce no diff)
 ```
 
 ### Verification gate (run before every commit)
@@ -70,29 +70,6 @@ opt-in; they do not authorize hosted runs or publication in this repository.
   they do not require rebuilding Rust. Commit + push each completed unit and deploy
   once when skills or guidance changed.
 
-### Deploy (run after pulling or making changes)
-
-```bash
-cargo install --path .     # when Rust code changed
-node tools/deploy.mjs     # once after skill/guidance/plugin changes
-```
-
-`node tools/deploy.mjs` verifies Claude reads this checkout directly and refreshes the
-enabled Codex plugin, then packages Antigravity when `~/.gemini` exists. `bash tools/deploy-skills.sh` is a compatibility
-entry point to the same command; run either once after skill or guidance changes.
-The engine is vendored from grey-matter's `scripts/deploy.mjs`; change harness behavior
-there and copy it here. Pack-specific forbidden skill references live in
-`.claude-plugin/plugin.json` under `metadata.deploy.forbidRefs`.
-
-The harness table chooses roots so each harness sees a skill once, including installed
-plugins. Only manifest-owned copies are pruned. Use `--dry-run`, `list`, `audit`, and
-`check` to inspect deployment. `check` rejects native manifest/content warnings;
-`check --profile directory` also rejects catalog blockers and warnings. Native checks
-are skipped with a message when Claude is absent. Run `check` before installation;
-the install command checks skill lint and ownership. `--allow-dual` is an explicit duplicate override.
-Codex must use this checkout as its local marketplace. A plugin refresh failure stops
-deployment before existing skill copies are removed. Start a new chat after refresh.
-
 ### Releases
 
 Read [release guidance](docs/releasing.md) before preparing, staging, publishing or
@@ -101,254 +78,62 @@ The manual `.github/workflows/publish.yml` is the sole GitHub publisher; the gen
 dist workflow only builds staging artifacts. Local tooling dispatches/observes CI and
 must not create a second release. Current authorization stops at staged candidates.
 
-### Claude Code plugin (keep it current)
-
-The Claude-only SessionStart hook adds the launch project's frontier and in-progress
-tickets to context when `.tickets/` and the `tkt` executable exist. It runs on each
-SessionStart event, including resume and compact, and emits no partial context on
-failure. It targets Claude 2.1.310+ and Node 22+. Private hook config/scripts live in
-`.claude-plugin/` and `metadata.deploy.claudeFiles`; never put them in shared
-`runtimeFiles` or Markdown resource links. Codex explicitly selects no hooks, and
-release packaging ships these private files only in the Claude archive.
-
-tkt is also a Claude Code plugin: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`,
-with skills from the default `skills/` dir. grey-matter's plugin depends on it as
-`tkt@tkt` (this marketplace), so keep the plugin and marketplace name `tkt`. When a change touches skills or
-the CLI surface the skills describe:
-
-- **New or changed skill under `skills/`:** no manifest edit. The plugin picks it up as is.
-- **Existing cached Claude installs need a version bump.** New installs from a
-  main-backed marketplace can receive current main; version fields do not snapshot
-  source. Stable/pinned delivery follows the [release contract](docs/releasing.md).
-  Local preparation updates Cargo/lock and all plugin manifests from one approved version.
-  `tests/plugin_manifests.rs` fails the gate if any drift from `Cargo.toml`. Never
-  hand-edit `version` outside a release.
-- **Refresh this machine's install** as part of Deploy. Use a marketplace added from the
-  local checkout (`claude plugin marketplace add <path-to-tkt>`, once). Deploy verifies
-  the enabled CLI row's `readFromFolder` and `folderVersion` match this checkout; update
-  Claude/register the correct marketplace if that observation fails. Current Claude
-  loads the folder directly, so reload plugins or start a new session after edits.
-  Audit uses that active folder rather than a historical cache. For a GitHub
-  install, run `claude plugin marketplace update tkt`, then `claude plugin update tkt@tkt`
-  (cached updates depend on the manifest version; new default-ref installs can
-  receive unreleased files).
-- **One install path per harness (guarded).** A skill must never load twice in one harness.
-  With the plugin installed, `tools/deploy.mjs` skips every root Claude Code reads (any
-  `.claude/skills`, and a project `.agents/skills`). It also removes copies it put there
-  earlier and never touches foreign dirs. `--allow-dual` overrides this; don't use it in a
-  normal deploy. Any new deploy path, or a new harness root that Claude Code reads, must keep
-  this guard (`tests/deploy_skills.rs` covers it).
-- **Check a manifest or skill change** with `claude plugin validate .claude-plugin/plugin.json --strict`
-  and `claude --plugin-dir . plugin details tkt` (lists the skills, no model call).
-
-All three gate checks must pass with zero warnings before presenting work as done.
-
-## tkt CLI (the product)
-
-```bash
-tkt --version                                     # print version
-tkt ready [--json]                                # frontier: open + deps done + env match
-tkt context [TAGS...] [--clear]                   # set/show/clear active tag context for scoped work
-tkt migrate [--from FORMAT] [--detect] [--confirm] # convert foreign ticket schemas (tk → tkt; preview first)
-tkt new <slug> --title "..." [--body TEXT|@FILE|- | --template NAME] [--spec S] [--parent ID] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
-tkt batch <slug[:title]>... [--template NAME] [--spec S] [--parent ID] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
-tkt claim <id>                                    # status→in_progress, pushed
-tkt cancel <id> --reason R --note "why" [--by ID] [--repoint|--drop-edges]
-tkt reopen <id>                                   # cancelled→open, keeps history
-tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..." (repeatable: one per validation criterion, or N=text)]
-tkt edit <id> [--title T] [--parent ID] [--tags T] [--add-tag T] [--remove-tag T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
-tkt renumber <old> <new> [--file NAME]            # birth-window only
-tkt query [--status S] [--priority P] [--parent ID] [--all-context] # context-scoped JSON Lines; bypass context explicitly
-tkt blocked                                       # open tickets with unsatisfied deps
-tkt capabilities                                  # machine-readable JSON feature manifest
-tkt rebase [--dry-run]                            # resolve ID collisions with upstream
-tkt audit [--strict] [--brief] [--deep]           # closure quality check; --deep adds evidence/template analysis
-tkt sync-plan [--strict] [--brief] [plan]         # report drift (advisory, exit 0)
-tkt sync-plan --check [--strict] [--brief] [plan]  # CI gate: exit 1 on drift
-tkt sync-plan --fix [--dry-run] [--brief] [plan]  # fix derivable columns (default plan: docs/plan.md)
-tkt validate [--strict] [--brief] [--fix [--dry-run]]  # contract + cycle + decay findings
-tkt lint [--check] [IDs...]                       # normalize frontmatter style + blocked_by id refs
-tkt doctor [<path>] [--strict] [--fix]                    # health check (single or cross-project)
-tkt init [--target T] [--all] [--write [FILE]] [--agent-only]  # scaffold project + agent instructions
-tkt config [--set K=V] [--get K] [--unset K] [--project] [--list] [--show]  # user + project config
-tkt telemetry [--enable|--disable|--status|--show [--all]|--clear]  # manage local telemetry
-```
-
-`capabilities` derives command/flag inventory from Clap and adds supported domain
-values, aliases, mutation modes and default output formats. See
-[manifest semantics](skills/tkt-core/references/capabilities.md). Schemas describe
-the supported workflow; use `close` for done and obey project close policy.
-Top-level help and normal `init` output point to that inventory. Init recommends
-project instructions and separately installed workflow skills; `--agent-only`
-remains snippet-only and quiet writes omit recommendation chatter.
-
-### Global flags
-
-| Flag | Effect |
-|------|--------|
-| `-q` / `--quiet` | Suppress confirmations, emit only essential data |
-| `--no-push` | Commit ticket work locally without fetching or pushing |
-| `-o json` / `--output=json` | Structured JSON output (success to stdout, errors to stderr) |
-| `--dry-run` | Preview mutations without writing |
-| `--color=always\|never\|auto` | Control ANSI color output (default: auto) |
-
-### Priority levels
-
-`urgent` > `high` > `medium` (default) > `low`. Frontier sorts by priority bucket then ID.
-
-### Status values
-
-`cancelled` is terminal retirement, separate from done, reached only through
-`tkt cancel`; `tkt reopen` returns it to open. It does not satisfy prerequisites.
-Duplicate/superseded require a replacement; active dependents require explicit
-edge disposition. Terminal stale prerequisite edges are dropped and named.
-
-`backlog` (parked, excluded from frontier) → `open` → `in_progress` → `done`
-
-Reach `done` only via `tkt close`; new, batch and edit reject done. Editing a ticket's `status` to `done` by hand bypasses the close gates (ACs, resolution, evidence) and is flagged by `tkt validate`.
-
-New tickets default to `open` (frontier-eligible); reserve `--status backlog` for work deliberately deferred out of the current cycle. Set `--tags <stream>` at creation in multi-stream projects — tags are the primary scoping mechanism for `tkt ready`/`tkt context`.
-
-### Query output
-
-Query includes typed known frontmatter fields (id, title, status, blocked_by, env,
-priority, spec, parent, tags, validation_criteria, requires, agents and assignee)
-and unknown or unparsed stored keys as raw strings under `frontmatter`. Query and ready JSON
-add `pending_blockers` for missing/non-done prerequisites; `blocked_by` retains
-completed history. Cancelled prerequisites remain pending. Query preserves tag
-context by default, reports actual narrowing on stderr, and accepts `--all-context`
-without changing context. `-o json` remains structured with `-q`.
-
-### Agent eligibility
-
-Claim records invocation identity as optional typed `assignee`. Another owner
-requires `--force`; ready hides other owners and hides owned work when no identity
-is supplied. Anonymous forced claims preserve the prior owner. Eligibility and
-ownership are distinct; query/ready expose both.
-
-Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; the flag wins and identity is never stored in config. `ready` and `claim` apply ticket agent eligibility. Missing identity sees unrestricted work only; `ready` reports hidden restricted work on stderr. Use `claim <id> --force` only as an explicit scheduling override.
-
-Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.
-
-### Configuration
-
-Ticket commits skip commit hooks by default (`commit.hooks = "run"` opts in);
-pre-push hooks remain active. Commits include only affected ticket/plan paths.
-`--no-push` is invocation-local; push.enabled=false remains persistent. Deferred
-ID collisions must be resolved with tkt rebase before a later push.
-
-Set/unset default to user scope; `--project` writes shared project configuration
-with typed values and atomic replacement, without a Git commit. Detached-HEAD
-project writes warn. New bodies accept literal text, @file or stdin `-`; new/batch
-templates are verbatim files under `.tickets/templates/`. Default prompts remain
-detectable as unfilled work.
-
-Known effective policy values are parsed strictly with key/value/source errors;
-boolean aliases true/false/1/0/yes/no remain valid. Unknown keys retain warnings.
-Corpus skip diagnostics use stderr JSONL warnings under `-o json` and `sym_warn`
-otherwise; valid rows and successful exit semantics are preserved.
-
-- **User config**: `~/.config/tkt/config.toml` — debug mode, format preferences
-- **Project config**: `.tickets/config.toml` — committed to repo, shared by contributors
-  - `[close]` require_resolution, require_checked_acs, require_validation_criteria, require_validation_evidence, allow_force
-  - `[validate]` strict, missing_resolution_before_id (project-specific legacy ratchet)
-  - `[ready]` default_env (legacy single capability; prefer `[machine] capabilities`)
-  - `[priority]` warn_unknown
-  - `[new]` default_priority
-  - `[push]` enabled (set false for local-only repos)
-  - `[machine]` capabilities (comma-separated canonical eligibility set for `requires` matching)
-  - `[labels.<namespace>]` single_select boolean and values string list. The narrow config reader requires a single-line JSON-style double-quoted array without a trailing comma; malformed/unknown label fields are Validation errors. Validate enforces closed values and single-select cardinality; undeclared namespaces remain free-form.
-
-### Environment variables
-
-| Var | Effect |
-|-----|--------|
-| `TKT_DEBUG=1\|true\|log\|file` | Debug output to the local debug log (stderr remains clean) |
-| `TKT_DEBUG=stderr\|human` | Human-readable debug output to stderr |
-| `TKT_DEBUG=json` | Debug output as JSON Lines on stderr |
-| `TKT_ASCII=1` | ASCII-only symbols (✓→[ok], ✗→[err], ⚠→[warn]) |
-| `NO_COLOR=1` | Disable ANSI color |
-| `TKT_ADVICE=0` | Disable advisory hints (e.g. the batch nudge); `off`/`false` also accepted |
-| `CREW_ENV` | Filter frontier by env (corp/personal) |
-| `DO_NOT_TRACK=1` | Disable telemetry and update-check requests/cache refresh |
-| `TKT_NO_USER_CONFIG=1` | Skip user config file (for testing — prevents ambient config leaking into child processes) |
-
-## Architecture Decisions
-
-- **Shell out to git** (not libgit2): full SSH/HTTPS auth compat, matches gh CLI pattern, simplest v1
-- **TicketFile + Ticket split**: TicketFile owns raw frontmatter for surgical edits; Ticket provides typed, validated fields (Status enum, zero-cost &str access). Mutations go through `.file`, reads use typed fields directly.
-- **Custom frontmatter parser**: line-based key:value parsing with raw preservation. Supports YAML double-quoted scalar escaping (encode on write, decode on read). Not a full YAML parser — deliberately supports a narrow, round-trip-safe subset.
-- **No async**: all operations are sequential (fetch → scan → write → commit → push)
-- **Local-only telemetry**: opt-in JSONL file sink, per-project segmentation, session-aware rotation, never blocks CLI
-- **LazyLock regex statics**: fixed patterns compiled once via `std::sync::LazyLock`
-- **No color crate**: raw ANSI codes + `std::io::IsTerminal` — zero additional dependencies
-- **Structured errors**: `DomainError { kind: ErrorKind, message, hint }` with 8-variant `ErrorKind` enum. `domain_bail!(Kind, "msg")` or `domain_bail!(Kind, "msg", hint: "fix")` or `domain_bail!("msg")` (defaults to Validation). JSON envelope emitted to stderr when `-o json`.
-- **Facade re-exports**: only re-export types from `core/mod.rs` that callers name directly; types returned by methods but never named (e.g., `AcStats`) stay unexported from the facade to avoid unused-import warnings
-
-## Contract
-
-The deep-audit template rule checks actual intent/acceptance sections, ignoring quoted template
-examples. Empty/default prompts and real placeholder ACs remain warnings even
-when checked after closure; historical evidence omissions are not waived.
-Open/in-progress stub detection retains its sole-placeholder policy.
-
-Rebase reports candidate stale body citations (path/line/old-new mapping) without
-rewriting prose. Validation warns on missing unqualified local #NNN/ticket NNN
-citations; qualify external issues or link them and quote code examples.
-
-Body AC checkboxes map to `--check-all` / `--ac`; frontmatter validation_criteria
-maps 1:1 by index to --evidence. The counts are independent. Fill body prompts at
-creation and link the intent source (--spec or a durable body reference).
-
-Claim, close, and status-changing edit synchronize existing `docs/plan.md` rows in
-the same commit. Commit or stash plan edits first. Missing rows remain warnings
-until `sync-plan --fix` appends them under Unplanned tickets. No plan means no new
-file; alternate plans use explicit sync-plan.
-
-- Files are the database: `.tickets/{NN}-{slug}.md` with YAML frontmatter
-- Tool never manages specification prose (body is user-owned; close appends a Resolution section)
-- Push-to-claim: pushed commit = claimed id (race detection on push rejection)
-- Exit codes: 0=success, 1=domain failure (not found, conflict, drift), 2=operational crash (I/O, git, parse)
-- Output: JSON by default for validate/sync-plan; human by default for ready/new/claim/close/edit (use --json for ready)
-- Spike branches: closing from `spike/*` auto-appends branch name to resolution
-- Worktree-aware: works from git worktrees (`.tickets/` is part of the checked-out tree)
-
 ## Constraints
 
+- Load each skill once per harness. Keep deployment root/ownership guards intact;
+  refresh the workflow pack after relevant skill or CLI-surface changes.
+
 - Do NOT change the frontmatter contract without updating the tkt-work skill
+
 - Distributed skills (`skills/<name>/`) MUST be self-sufficient for a tkt-only adopter (someone who has tkt but NOT grey-matter or any other skill set): reference only `tkt` commands and sibling `tkt-*` skills, never a non-tkt skill by name (`frontier-work`, `read-handoff`, `to-tickets`, …). tkt is the standalone tool; grey-matter is an opinionated layer that *wraps* tkt's skills. `tools/deploy-skills.sh` lint enforces this (fails the deploy on a foreign-skill reference).
+
 - Do NOT change CLI flags or agent-facing behavior without updating all guidance surfaces (see `docs/agents/agent-guidance-surfaces.md` for checklist — init snippets, skill, steering, AGENTS.md, README)
+
 - Do NOT implement computed sort overrides for the frontier — priority+ID ordering is intentional and gives explicit control over agent work sequence
+
 - Do NOT add dependencies beyond what's in Cargo.toml without justification
+
 - Do NOT use libgit2/gix for v1 — shell out to git binary
+
 - Do NOT suggest releasing with open tickets — all tickets ship first, or the user explicitly defers them
+
 - Maintain CLI compatibility (same commands, flags, output)
+
 - `cargo clippy` must produce 0 warnings; `cargo fmt --check` must produce no diff
+
 - Integration tests MUST set `DO_NOT_TRACK=1` on child processes (prevents ambient env pollution)
+
 - Unit tests must NOT assert specific consent state (result depends on ambient env vars)
-- Windows: `std::fs::rename` replaces an existing file on supported filesystems (verified on this Windows/MSVC environment; Rust uses `MoveFileExW` with a `SetFileInformationByHandle` fallback). Do not delete a destination before an atomic replacement: that would reintroduce a missing-file window. The source and destination must remain on the same filesystem.
+
 - Ticket writes go through `core::atomic_write` (temp-file + rename) so a failed/interrupted write never leaves a torn ticket file; a failed write surfaces as `DomainError { Io }` with a hint (`cannot write <path>: <errno>`), exit 2. `crash: writing …` (now shows the errno) is an fs/permission error (read-only file, locked, read-only worktree) — NOT a validation bug; never hand-edit `status: done` to work around it (that bypasses the close gates — the exact anti-pattern #178/#179 fixed)
-- Codex review dispatch: `codex exec --dangerously-bypass-approvals-and-sandbox` (bwrap namespace restriction on this machine; `codex review --base <SHA>` cannot combine --base with custom prompt)
-- cargo-dist binary name is `dist` (not `cargo dist`) — `cargo dist --version` will fail; use `dist --version`
+
 - New mutation commands MUST route push through a push-gated path (GitTransaction respects `push.enabled`; direct `git::push_with_retry` calls must check `pcfg.push_enabled` first)
-- Windows (this machine): `CARGO_HOME=D:\dev-tools\cargo`, `RUSTUP_HOME=D:\dev-tools\rustup` (relocated off C:). Bare `cargo` resolves to the mise shim first, then to the rustup proxies in `D:\dev-tools\cargo\bin\` (Windows symlinks → `rustup.exe`). Prefer `mise run check` for the gate — it is PATH-order-independent. **Failure mode (seen 2026-08-31):** if `cargo fmt` dies with `os error 193` ("not a valid Win32 application"), the `cargo-fmt.exe`/`rustfmt.exe` proxy symlinks in `D:\dev-tools\cargo\bin\` have been corrupted into 0-byte regular files (cross-drive relocation / AV). `cargo build/test/clippy` still work (clippy's proxy stayed intact, and build bypasses proxies), which masks the break. Repair: delete the 0-byte files and recreate them as symlinks to `rustup.exe` (Developer Mode is on, so no elevation needed), or run `rustup-init --default-toolchain=none -y --no-modify-path`. If corruption recurs, add `D:\dev-tools` to Defender exclusions (needs an elevated shell). Verified working 2026-08-31 after symlink repair.
+
 - Validate product changes with `cargo test` integration tests, which rebuild and exercise the current `target/` binary; do not use the PATH-installed `tkt` to validate code changes. Use the installed binary for deployment and real-repository use. When specifically testing the install/deploy path, run `tools/check-binary-fresh.sh` to compare its embedded git hash with HEAD.
-- Windows: use `git commit -F <file>` for multi-line or bracket/quote-containing commit messages — inline `-m` gets mangled by PowerShell quoting
-- crates.io name availability: use `cargo search <name>`, NOT raw `curl` to the API (returns 403 "violation of API data access policy" for automated requests); a 404 on the web page also confirms availability
-- Release CI is generated through `node tools/generate-release-workflow.mjs --write` using cargo-dist 0.32.0. Never hand-edit `.github/workflows/release.yml`; `mise run check` checks real generation. See `docs/release-staging.md`. Staging is build-only; the separate manual `publish.yml` owns reviewed publication. Final candidate/install/audit/staging gates remain open.
 
-### Parent progress
+## Ticket mutation workflow
 
-Parents with any direct children are containers, excluded from ready. Use `tkt children ID` for full-corpus direct-child progress (done/total includes cancelled in total, with cancelled separate); `-o json` emits one object and `-q` lists child IDs. Progress never changes stored status: close parents explicitly with normal AC/evidence gates.
+Ticket files are the database and body/specification prose remains user-owned.
+Use `tkt close` to reach done, with actual acceptance and evidence; never hand-edit
+done or use a generic status edit. Explicit criterion transfers record moved work,
+not implemented work. Claim, close and status-changing edits synchronize existing
+`docs/plan.md` rows in the same commit: commit or stash plan edits first. Use
+`sync-plan --fix` for missing rows; no plan is created by lifecycle mutations.
+New mutation commands must use the existing push-gated transaction paths.
+Push-to-claim: the pushed commit establishes the claim; push rejection participates
+in race detection. Report a durable local commit separately from publication.
 
-### Transferring acceptance criteria
+## Read by task
 
-Move an unchecked body criterion with `tkt move-ac SOURCE --ac N --to DEST` (N counts all top-level single-line body ACs, including checked/moved). The source uses `[>]` plus a destination marker; the receiver gets an unchecked copy with a source back-reference. This records transfer, not completion. Validation criteria and evidence remain independent and unchanged; supply truthful proof for every retained validation criterion at close. Retry the same transfer after interruption; inspect conflicts instead of editing link identities.
+User-level standing rules remain in force. These pointers disclose reference
+material; they do not relax the inline verification, safety or release rules.
 
-### Parent-scoped frontier
-
-Use `tkt ready --parent ID` for ready direct children of an existing parent, preserving priority/ID order, capability matching, invocation eligibility/ownership and tag context (including its existing untagged-ticket behavior). Human in-progress context is parent-scoped too. JSON rows include stored parent when present. This is native-parent-only; no epic-tag alias is added. Legacy tag groups can continue using `tkt context epic:slug` with normal ready.
-
-### Plan lifecycle comparison
-
-Plan tables compare all five lifecycle labels exactly. Both `done` and canonical `✅ done` are recognized; cancellation rows retain their reason. Unknown status cells are findings rather than silently treated as open. Plain sync-plan remains advisory for derivable drift; --check or --strict fails, while --fix regenerates cells without managing narrative prose.
+| Before this work | Read |
+|---|---|
+| Using or documenting CLI commands, flags, configuration, lifecycle, ownership, eligibility, query output, parent progress, criterion transfers or plan projection | `tkt capabilities -o json`, [command workflows](skills/tkt-core/references/commands.md), [manifest semantics](skills/tkt-core/references/capabilities.md), and [the ticket/CLI contract](docs/agents/tkt-contract.md) |
+| Changing modules, parser/storage, Git transactions, telemetry, errors, terminal output, dependencies or facade exports | [Architecture reference](docs/agents/architecture-reference.md), plus applicable recorded ADRs |
+| Installing the CLI, refreshing/auditing skills/plugins, changing manifests/hooks, or diagnosing marketplace/cache/root ownership | [Plugin maintenance](docs/agents/plugin-maintenance.md); install Rust changes with `cargo install --path .`, refresh pack changes once with `node tools/deploy.mjs` |
+| Building, formatting, installing or composing commits on Windows; changing atomic replacement/filesystem behavior on any platform | [Windows maintenance](docs/agents/windows-maintenance.md) |
+| Inspecting cargo-dist, checking crate names, or regenerating release workflows | [Maintainer tooling](docs/agents/maintainer-tooling.md) and [release staging](docs/release-staging.md); the release authorization boundary above still applies |
+| Dispatching a Codex review or inventorying reference checkouts | [Session operations](docs/agents/session-operations.md) |
+| Changing CLI/agent-facing behavior or guidance layout | [Guidance surface checklist](docs/agents/agent-guidance-surfaces.md) and [migration coverage](docs/agents/guidance-coverage.md); verify coverage with `node tools/check-guidance-coverage.mjs --final` |

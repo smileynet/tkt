@@ -4,8 +4,8 @@ Read before building, formatting, installing or composing Git commits on Windows
 and when changing atomic replacement/filesystem behavior or repairing toolchain
 proxies. Environment changes requiring elevation remain explicit operations.
 
-Prepared under ticket 245. Original text is duplicated during the bounded
-transition; ticket 246 removes the extracted source from AGENTS.md.
+Prepared under ticket 245 and activated by ticket 246. The extracted source
+now lives here; AGENTS.md keeps operational rules and conditional read pointers.
 
 <a id="rule-32"></a>
 
