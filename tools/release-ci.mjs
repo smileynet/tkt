@@ -25,7 +25,7 @@ export function sealStage({ repo, input, output, env = process.env }) {
   if (plan.dist_version !== "0.32.0" || plan.announcement_tag !== identity.tag || plan.releases?.length !== 1 || plan.releases[0].app_name !== "tkt" || plan.releases[0].app_version !== identity.version) throw new ReleaseError("dist plan identity differs from the CI candidate");
   const names = plan.releases[0].artifacts;
   if (!Array.isArray(names) || !names.length || new Set(names).size !== names.length || names.some((name) => typeof name !== "string" || basename(name) !== name || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name) || !Object.hasOwn(plan.artifacts ?? {}, name))) throw new ReleaseError("invalid dist asset inventory");
-  const configured = parseToml(readFileSync(join(repo, "Cargo.toml"), "utf8")).workspace.metadata.dist.targets;
+  const configured = parseToml(readFileSync(join(repo, "dist-workspace.toml"), "utf8")).dist.targets;
   const targets = names.flatMap((name) => plan.artifacts[name].kind === "executable-zip" ? plan.artifacts[name].target_triples : []);
   if (JSON.stringify([...targets].sort()) !== JSON.stringify([...configured].sort()) || Object.keys(plan.artifacts).sort().join("\n") !== [...names].sort().join("\n")) throw new ReleaseError("dist plan omits or duplicates configured release assets/targets");
   const crate = `tkt-${identity.version}.crate`, expected = new Set([...names, crate]);

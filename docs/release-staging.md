@@ -14,7 +14,8 @@ node tools/generate-release-workflow.mjs
 mise run check
 ```
 
-Edit the generator wrapper or Cargo configuration, then regenerate with
+Release settings live in `dist-workspace.toml`; Cargo.toml retains build/package
+configuration. Edit the generator wrapper or dist configuration, then regenerate with
 `node tools/generate-release-workflow.mjs --write`. Never hand-edit
 `.github/workflows/release.yml`. The gate runs the real pinned generator twice,
 checks deterministic output and tests candidate/file identity failures. CI installs

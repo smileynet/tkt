@@ -71,11 +71,12 @@ export function generateStageWorkflow(source = repo) {
   // cargo-dist cannot discover workspaces through Windows 8.3 path aliases.
   const temp = realpathSync.native(mkdtempSync(join(tmpdir(), "tkt dist generation ")));
   try {
-    for (const file of ["Cargo.toml", "Cargo.lock", "build.rs", "src", "README.md", "CHANGELOG.md", "LICENSE"]) cpSync(join(source, file), join(temp, file), { recursive: true });
-    const config = parseToml(readFileSync(join(temp, "Cargo.toml"), "utf8"));
-    if (config.package.name !== "tkt" || config.workspace.metadata.dist["cargo-dist-version"] !== "0.32.0") throw new ReleaseError("unreviewed product or dist version");
-    config.workspace.metadata.dist["allow-dirty"] = [];
-    writeFileSync(join(temp, "Cargo.toml"), toml(config));
+    for (const file of ["Cargo.toml", "dist-workspace.toml", "Cargo.lock", "build.rs", "src", "README.md", "CHANGELOG.md", "LICENSE"]) cpSync(join(source, file), join(temp, file), { recursive: true });
+    const cargo = parseToml(readFileSync(join(temp, "Cargo.toml"), "utf8"));
+    const config = parseToml(readFileSync(join(temp, "dist-workspace.toml"), "utf8"));
+    if (cargo.package.name !== "tkt" || config.dist["cargo-dist-version"] !== "0.32.0") throw new ReleaseError("unreviewed product or dist version");
+    config.dist["allow-dirty"] = [];
+    writeFileSync(join(temp, "dist-workspace.toml"), toml(config));
     const git = (...args) => execFileSync("git", ["-C", temp, ...args], { env: gitEnvironment(), stdio: "pipe" });
     git("init"); git("remote", "add", "origin", "https://github.com/smileynet/tkt.git"); git("add", ".");
     git("-c", "user.name=Generation fixture", "-c", "user.email=fixture@example.invalid", "-c", `core.hooksPath=${join(temp, "no-hooks")}`, "commit", "-m", "Generation inputs");

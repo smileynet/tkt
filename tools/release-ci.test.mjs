@@ -13,7 +13,7 @@ const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "tkt CI seal ")), repo = join(root, "repo"), input = join(root, "input"), output = join(root, "output");
   mkdirSync(repo); mkdirSync(input);
-  for (const file of ["Cargo.toml", "Cargo.lock", ".claude-plugin", ".codex-plugin", "plugin.json"]) cpSync(new URL(`../${file}`, import.meta.url), join(repo, file), { recursive: true });
+  for (const file of ["Cargo.toml", "dist-workspace.toml", "Cargo.lock", ".claude-plugin", ".codex-plugin", "plugin.json"]) cpSync(new URL(`../${file}`, import.meta.url), join(repo, file), { recursive: true });
   const git = (...args) => execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
   git("init"); git("add", "."); git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", `core.hooksPath=${join(root, "no-hooks")}`, "commit", "-m", "Candidate");
   const env = { EXPECTED_CANDIDATE_SHA: git("rev-parse", "HEAD"), GITHUB_SHA: git("rev-parse", "HEAD"), GITHUB_REPOSITORY: "smileynet/tkt", GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "2" };
