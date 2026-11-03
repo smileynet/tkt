@@ -42,6 +42,8 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 1. Claim it: `tkt claim <id>` (pushes visible WIP; a lost claim race names the winner — pick the next frontier ticket instead)
 2. Read the ticket file (or issue body) completely
 3. Read referenced context (files, specs, ADRs listed in the ticket)
+   Use `tkt capabilities -o json` for command/flag discovery and `tkt <command> --help`
+   for invocation details; project instructions and workflow plugins install separately.
 4. If `Reporter: Codex` and `Confirmation status: unconfirmed`, independently
    reproduce every finding before editing. Mark each confirmed, rejected, or
    obsolete with evidence; never accept Codex's diagnosis or remedy on authority.

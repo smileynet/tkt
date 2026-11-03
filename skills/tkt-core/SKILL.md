@@ -8,6 +8,10 @@ compatibility: Requires git
 
 Track tasks as markdown files in your git repo. One file per ticket in `.tickets/`, with status and dependencies in YAML frontmatter. tkt computes what's ready to work on next.
 
+Agent setup: `tkt init` recommends project instructions (`tkt init --write`),
+separately installed workflow skills/plugins, and `tkt capabilities -o json` for
+command discovery. Installing the CLI alone does not install the workflow skills.
+
 ## Jobs to be done
 
 | When I'm... | I want to... | Command |

@@ -14,6 +14,7 @@ const fn version_string() -> &'static str {
     name = "tkt",
     about = "Git-native ticket CLI (.tickets/ contract)",
     version = version_string(),
+    after_help = "For machine-readable command schemas: tkt capabilities -o json",
 )]
 pub(crate) struct Cli {
     /// Suppress confirmations, emit only essential data

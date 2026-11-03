@@ -313,6 +313,12 @@ tkt config --set push.enabled=false
 
 ## AI Agent Integration
 
+`tkt --help` points to the complete command-schema inventory. `tkt init` prints
+agent setup recommendations: persist project instructions with `tkt init --write`,
+then install workflow skills separately through the [Codex plugin](#codex-plugin),
+[Claude/Antigravity plugins](#claude-code-and-antigravity), or `node tools/deploy.mjs`
+from a source checkout. Installing the CLI alone does not install workflow skills.
+
 Works with **Kiro**, **OpenCode**, **Claude Code**, **Codex**, **Cursor**, **Copilot**, and **Windsurf**.
 
 Add to your project's AGENTS.md (or use `tkt init --write` to inject automatically):

@@ -172,6 +172,9 @@ tkt telemetry [--enable|--disable|--status|--show [--all]|--clear]  # manage loc
 values, aliases, mutation modes and default output formats. See
 [manifest semantics](skills/tkt-core/references/capabilities.md). Schemas describe
 the supported workflow; use `close` for done and obey project close policy.
+Top-level help and normal `init` output point to that inventory. Init recommends
+project instructions and separately installed workflow skills; `--agent-only`
+remains snippet-only and quiet writes omit recommendation chatter.
 
 ### Global flags
 
