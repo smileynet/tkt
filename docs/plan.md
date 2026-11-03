@@ -23,7 +23,7 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-Discovery and the first integrity/configuration repairs are complete, including parent controls #196, label enforcement #198 and debug defaults #237. Closure guidance #229/#230 and historical warning review #239 are complete. Current parallel work is #190 (strict typed configuration) and #233 (editable tags). Each implementation requires independent critic acceptance and the local gate before closure. Dashboard work remains in progress outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
+Discovery and the first integrity/configuration repairs are complete, including typed policies #190, editable tags #233, structured corpus diagnostics #151 and dist configuration #66. The guidance proposal #226 is complete; restructuring remains unapplied pending approval. Current parallel work is #165 (project config writes), #194 (assignee ownership) and #176 (creation body/templates). Each implementation requires independent critic acceptance and the local gate before closure. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
 
 | ID | Work | Status |
 |---:|---|---|
