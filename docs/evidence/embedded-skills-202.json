@@ -1,0 +1,193 @@
+{
+  "kind": "design-input-inventory",
+  "format": "tkt-workflow-assets/v1",
+  "productVersion": "0.4.0",
+  "runtimeImplemented": false,
+  "files": [
+    {
+      "path": "skills/tkt-core/LICENSE",
+      "bytes": 1056,
+      "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685"
+    },
+    {
+      "path": "skills/tkt-core/SKILL.md",
+      "bytes": 17263,
+      "sha256": "484db2000e0b53c09db9f2d3b3c3a5fc04d05200a826e0b4651e4644f7a711bd"
+    },
+    {
+      "path": "skills/tkt-core/references/audit-quality.md",
+      "bytes": 7896,
+      "sha256": "7f9061f028a8a1949747ea11afaab70236b4c1886f28471b45d174acdd54c543"
+    },
+    {
+      "path": "skills/tkt-core/references/capabilities.md",
+      "bytes": 3398,
+      "sha256": "9fe751034b79965a18b421f4884eb1ca3fbc79dc35fdb12494235311a1016fa9"
+    },
+    {
+      "path": "skills/tkt-core/references/commands.md",
+      "bytes": 19233,
+      "sha256": "b3794803c41543ff32771bd287928f59d3970d0b33d2e8758424f1bf3b1d8a4e"
+    },
+    {
+      "path": "skills/tkt-core/references/migration-assist.md",
+      "bytes": 4961,
+      "sha256": "41bfd4d686b1a77a0751eac600bbdb01a1e3fa24db518fade96513c0bbbd9626"
+    },
+    {
+      "path": "skills/tkt-core/references/ticket-format.md",
+      "bytes": 4739,
+      "sha256": "7775c6cfa5db504d150bad2e62351f600106ce141310e2eb7e25ca27b0fabb73"
+    },
+    {
+      "path": "skills/tkt-core/references/ticket-standards.md",
+      "bytes": 5810,
+      "sha256": "92c6af491ca4bbcd5e6fce0947b100cd2cf2c5876806ddbbd5a5c3a60dc8f8aa"
+    },
+    {
+      "path": "skills/tkt-core/references/wide-refactors.md",
+      "bytes": 1594,
+      "sha256": "ff7abe65a60f753eb3fe68853a5667327e9a6b2600519fcf37483a9c0f21fe99"
+    },
+    {
+      "path": "skills/tkt-orient/LICENSE",
+      "bytes": 1056,
+      "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685"
+    },
+    {
+      "path": "skills/tkt-orient/SKILL.md",
+      "bytes": 7807,
+      "sha256": "67346a95ac5c26335fbeabea348379f336d921237a2eb73f00c889d3607409dd"
+    },
+    {
+      "path": "skills/tkt-reconcile/LICENSE",
+      "bytes": 1056,
+      "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685"
+    },
+    {
+      "path": "skills/tkt-reconcile/SKILL.md",
+      "bytes": 10346,
+      "sha256": "94e0b9563f2304e7b2a6fb00d0bbe713330630ccb61ba0847fb1e028f54def3d"
+    },
+    {
+      "path": "skills/tkt-work/LICENSE",
+      "bytes": 1056,
+      "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685"
+    },
+    {
+      "path": "skills/tkt-work/SKILL.md",
+      "bytes": 17610,
+      "sha256": "8b67bf132d4e058e97ededed53da1696726e6b26f70aa53c94979289dcff20d9"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "fresh",
+      "operation": "install",
+      "expected": "exact assets and owned receipt",
+      "observed": false
+    },
+    {
+      "name": "identical",
+      "operation": "install",
+      "expected": "no-op without writes",
+      "observed": false
+    },
+    {
+      "name": "same-version-new-digest",
+      "operation": "install",
+      "expected": "upgrade by content identity",
+      "observed": false
+    },
+    {
+      "name": "foreign-same-name",
+      "operation": "install",
+      "expected": "conflict, preserve bytes",
+      "observed": false
+    },
+    {
+      "name": "modified-owned",
+      "operation": "install",
+      "expected": "conflict before asset writes",
+      "observed": false
+    },
+    {
+      "name": "foreign-addition",
+      "operation": "install",
+      "expected": "conflict before asset writes",
+      "observed": false
+    },
+    {
+      "name": "repository-deployer-owned",
+      "operation": "install",
+      "expected": "conflict without takeover",
+      "observed": false
+    },
+    {
+      "name": "compatibility-duplicate",
+      "operation": "install",
+      "expected": "conflict naming visible paths",
+      "observed": false
+    },
+    {
+      "name": "unknown-native-visibility",
+      "operation": "install",
+      "expected": "unsupported duplicate inspection",
+      "observed": false
+    },
+    {
+      "name": "absent-root-dry-run",
+      "operation": "install --dry-run",
+      "expected": "no persistent effects",
+      "observed": false
+    },
+    {
+      "name": "interrupted-journal",
+      "operation": "install retry",
+      "expected": "recover coherent bundle at every injected failure",
+      "observed": false
+    },
+    {
+      "name": "owned-backup",
+      "operation": "install --rollback",
+      "expected": "restore exact previous identity",
+      "observed": false
+    },
+    {
+      "name": "modified-backup",
+      "operation": "install --rollback",
+      "expected": "conflict, preserve bytes",
+      "observed": false
+    },
+    {
+      "name": "unsafe-path",
+      "operation": "install",
+      "expected": "reject traversal, symlink and case collision",
+      "observed": false
+    },
+    {
+      "name": "unsupported-target-or-home",
+      "operation": "install",
+      "expected": "explicit error without fallback",
+      "observed": false
+    },
+    {
+      "name": "checkout-absent-offline",
+      "operation": "export",
+      "expected": "exact linked assets and licenses",
+      "observed": false
+    },
+    {
+      "name": "concurrent-first-install-and-mutations",
+      "operation": "install/remove/rollback",
+      "expected": "canonical parent/root OS lock serializes application; busy operation conflicts without asset changes",
+      "observed": false
+    },
+    {
+      "name": "crash-and-stale-lock-marker",
+      "operation": "recovery",
+      "expected": "acquire released OS lock before journal recovery; no timestamp/PID lock stealing",
+      "observed": false
+    }
+  ]
+}
