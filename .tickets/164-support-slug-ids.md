@@ -1,7 +1,7 @@
 ---
 id: "164"
 title: "validate: recognize slug ids as canonical (stop false id-filename-mismatch)"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -38,11 +38,11 @@ Fix:
 
 ## Acceptance criteria
 
-- [ ] when `id` equals the filename stem, validate does NOT emit id-filename-mismatch
-- [ ] numeric-id corpuses still flag genuine id/filename mismatches
-- [ ] slug-id projects (codex_runner, catalyst-mono) validate without the mismatch noise
-- [ ] ADR records whether non-numeric ids are officially supported
-- [ ] regression test (validate::slug_id_canonical)
+- [x] when `id` equals the filename stem, validate does NOT emit id-filename-mismatch
+- [x] numeric-id corpuses still flag genuine id/filename mismatches
+- [x] slug-id projects (codex_runner, catalyst-mono) validate without the mismatch noise
+- [x] ADR records whether non-numeric ids are officially supported
+- [x] regression test (validate::slug_id_canonical)
 
 ## Triage — 2026-11-02
 
@@ -51,3 +51,12 @@ Disposition: `kind:bug`, `triage:ready-for-agent`; stream `compliance`.
 Confirmed: id slug-key in slug-key.md produces id-filename-mismatch, exit 1. Preserve numeric mismatch detection; record supported-ID decision as part of the fix.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Exact filename-stem IDs no longer receive false mismatch findings; numeric mismatches preserved; ADR0005 limits compatibility scope. Representative CLI fixtures passed; historical corpuses unavailable. Independent critic accepted; docs/evidence/lifecycle-identifiers-config-241-164-140.md.
+
+### Verification
+1. ✓ when id equals the filename stem (slug id), validate does NOT emit id-filename-mismatch (test: validate::slug_id_canonical) — "slug_id_canonical public CLI fixture red before and green after."
+2. ✓ numeric-id corpuses still flag genuine mismatches — "numeric_id_mismatch_still_fails_validation public fixture passes."
+3. ✓ ADR records the decision on whether non-numeric ids are officially supported — "ADR0005 records imported exact-stem validation support and allocator/mutation limits."
