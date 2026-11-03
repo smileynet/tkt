@@ -1,7 +1,7 @@
 ---
 id: "234"
 title: "Acceptance criteria can be marked moved to another ticket"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -30,9 +30,9 @@ Sam moved one unticked criterion from philippines-trip #78 to #99 and closed #78
 
 ## Acceptance criteria
 
-- [ ] Moved criteria are distinct from done, resolve correctly in close/validate/audit, and require an existing destination
-- [ ] The receiving criterion has a source back-reference and source/destination evidence mapping is explicit
-- [ ] Retries are idempotent and interrupted multi-file transfers have tested recovery without losing or duplicating criteria
+- [x] Moved criteria are distinct from done, resolve correctly in close/validate/audit, and require an existing destination
+- [x] The receiving criterion has a source back-reference and source/destination evidence mapping is explicit
+- [x] Retries are idempotent and interrupted multi-file transfers have tested recovery without losing or duplicating criteria
 
 ## Triage — 2026-11-02
 
@@ -50,3 +50,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Implementation
 ## What to build
 
 Represent transferred criteria with a distinct moved marker and destination link. Add the receiving criterion with a source back-reference. Close, validate and audit recognize transfer without claiming implementation. Check the destination and evidence mapping, define deterministic retry identity, and prove recovery across interrupted multi-file writes. Final marker/flag spelling is an implementation design detail to document and test, not another pending owner-policy decision.
+
+## Resolution (2026-11-03)
+
+Added move-ac linked transfers, distinct moved markers and strict link validation without claiming implementation. Independent critic accepted final code/test identities; evidence promoted to docs/evidence/ac-transfer-234.md. Disposable logs/helpers released to trash; shared target retained for ongoing CLI work.
+
+### Verification
+1. ✓ Moved criteria are distinct from done, resolve correctly in close/validate/audit, and require an existing destination — "Explicit moved state and symmetric links checked by validate/audit/close; eight integration cases; docs/evidence/ac-transfer-234.md"
+2. ✓ The receiving criterion has a source back-reference and source/destination evidence mapping is explicit — "Receiving back-reference and unchanged independent VC/evidence scope documented and tested; critic accepted final hashes"
+3. ✓ Retries are idempotent and interrupted multi-file transfers have tested recovery without losing or duplicating criteria — "Destination-first recovery, repeat no-op, remote push and no-push verified; final mise run check passes 395 Rust tests plus 42 Node fixtures, one existing skip"

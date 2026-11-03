@@ -76,7 +76,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 | 231 | tkt query outputs every frontmatter field, including tags | ✅ done |
 | 232 | Frontier output distinguishes unfinished blockers from finished ones | ✅ done |
 | 233 | tkt edit can set and clear tags | ✅ done |
-| 234 | Acceptance criteria can be marked moved to another ticket | in_progress |
+| 234 | Acceptance criteria can be marked moved to another ticket | ✅ done |
 | 235 | Ticket mutations skip heavy commit hooks and can defer the push | ✅ done |
 | 239 | Review historical closure warnings without fabricating evidence | ✅ done |
 | 240 | Show workstreams and decision/evidence gates in the ticket graph | in_progress |
