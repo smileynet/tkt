@@ -3728,3 +3728,62 @@ fn test_update_interval_user_config_contract() {
         run_tkt_with_config(&clone, &["config", "--get", "update_check.interval"], &home);
     assert_eq!(out.trim(), "24h");
 }
+#[test]
+fn test_historical_fixture_contract() {
+    let (_tmp, clone) = setup_repo();
+    std::fs::remove_file(clone.join(".tickets/01-seed.md")).unwrap();
+    for (name, text) in [
+        (
+            "01-basic.md",
+            include_str!("parity/fixtures/.tickets/01-basic.md"),
+        ),
+        (
+            "02-with-deps.md",
+            include_str!("parity/fixtures/.tickets/02-with-deps.md"),
+        ),
+        (
+            "03-adversarial.md",
+            include_str!("parity/fixtures/.tickets/03-adversarial.md"),
+        ),
+    ] {
+        std::fs::write(clone.join(".tickets").join(name), text).unwrap();
+    }
+    let query = Command::new(tkt_bin())
+        .arg("query")
+        .current_dir(&clone)
+        .env("DO_NOT_TRACK", "1")
+        .env("TKT_NO_USER_CONFIG", "1")
+        .output()
+        .unwrap();
+    assert!(query.status.success(), "{query:?}");
+    let rows: Vec<serde_json::Value> = String::from_utf8(query.stdout)
+        .unwrap()
+        .lines()
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    assert_eq!(rows.len(), 3);
+    let quoted = rows.iter().find(|row| row["id"] == "03").unwrap();
+    assert_eq!(quoted["title"], "Fix \"ready\" command's edge cases");
+    let ready = Command::new(tkt_bin())
+        .args(["ready", "--json"])
+        .current_dir(&clone)
+        .env("DO_NOT_TRACK", "1")
+        .env("TKT_NO_USER_CONFIG", "1")
+        .env("CREW_ENV", "personal")
+        .output()
+        .unwrap();
+    assert!(ready.status.success(), "{ready:?}");
+    let rows: Vec<serde_json::Value> = String::from_utf8(ready.stdout)
+        .unwrap()
+        .lines()
+        .map(|line| serde_json::from_str(line).unwrap())
+        .collect();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0]["id"], "02");
+    assert_eq!(rows[0]["blocked_by"], serde_json::json!(["01"]));
+    assert_eq!(rows[0]["pending_blockers"], serde_json::json!([]));
+    assert_eq!(rows[0]["env"], "personal");
+    assert_eq!(rows[0]["priority"], "high");
+    assert_eq!(rows[0]["spec"], "my-spec");
+    assert_eq!(rows[1]["title"], "Fix \"ready\" command's edge cases");
+}

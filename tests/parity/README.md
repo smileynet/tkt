@@ -1,35 +1,13 @@
-# Parity Test Harness
+# Historical fixture corpus
 
-Compares Rust `tkt` output against the Python `tkt` implementation for read-only commands.
+The unsupported Rust-versus-Python comparison runner was retired under ticket 186.
+There is no supported Python reference implementation in this repository, and no
+parity comparison is part of the current verification gate.
 
-## Running
+The three small fixture files remain as inputs to the maintained Rust integration
+test `test_historical_fixture_contract`. It checks completed-prerequisite readiness,
+full JSON fields and quote escaping against the current product contract. It does
+not compare implementation output to Python or preserve obsolete output schemas.
 
-```bash
-# Both tools on PATH
-tests/parity/run.sh
-
-# Custom paths
-TKT_RUST=./target/release/tkt TKT_PYTHON="python tools/tkt/tkt/cli.py" tests/parity/run.sh
-```
-
-## What's compared
-
-| Command | Notes |
-|---------|-------|
-| `ready` | Frontier output (human format) |
-| `ready --json` | JSON Lines row schema |
-| `validate --brief` | Human-readable findings |
-| `validate` | JSON findings |
-| `query` | Full corpus JSON Lines |
-
-## Known intentional divergences
-
-- `ready --json` — Rust currently emits simplified rows (id, title, status). Python emits full rows with all fields. This will be fixed before release.
-- Cycle detection output ordering may differ if Python uses a different traversal order.
-
-## Fixtures
-
-`fixtures/.tickets/` contains a curated corpus:
-- `01-basic.md` — minimal done ticket
-- `02-with-deps.md` — all optional fields set
-- `03-adversarial.md` — quotes in title (tests escaping)
+Run the maintained gate with `mise run check`. For this fixture regression alone,
+run `cargo test --test integration test_historical_fixture_contract`.

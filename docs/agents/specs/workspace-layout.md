@@ -22,7 +22,7 @@ src/
 └── git.rs           — git subprocess wrapper (fetch, commit, push, remote scanning)
 tests/
 ├── integration.rs   — integration tests (tempdir repos, race scenarios, telemetry, debug)
-└── parity/          — historical Python parity comparison harness
+└── parity/          — historical fixture inputs, exercised by Rust integration tests (no Python runner)
 skills/                — cross-harness skills (deployed as copy to ~/.{kiro,codex,claude,agents}/skills/ and packaged into ~/.gemini/config/plugins/tkt/)
   tkt-core/            — agentskills.io skill: tkt CLI jobs-to-be-done + references
   tkt-orient/          — session-start: read reconciled plan, propose next pick
