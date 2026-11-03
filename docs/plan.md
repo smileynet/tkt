@@ -133,7 +133,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 175 | validate: advisory no-source-reference finding (union of spec/#NN/parent/link) | ✅ done |
 | 184 | Implement sync-plan narrative PLAN.md support (PlanFormat/PlanState) per ADR 0002 | backlog |
 | 186 | Reconcile or retire the historical Python parity harness | ✅ done |
-| 187 | Generate a derived sync-plan projection from the ticket corpus | open |
+| 187 | Generate a derived sync-plan projection from the ticket corpus | in_progress |
 | 191 | Centralize command mutation effects and dry-run policy | open |
 | 202 | Design versioned embedded skills for binary-only installs | ✅ done |
 

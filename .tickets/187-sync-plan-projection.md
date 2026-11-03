@@ -1,7 +1,7 @@
 ---
 id: "187"
 title: "Generate a derived sync-plan projection from the ticket corpus"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Generated output is written atomically and respects global dry-run"
   - "The command preserves or clearly separates any non-derivable human narrative"
 tags: ["planning", "sync-plan", "kind:enhancement", "triage:ready-for-agent", "stream:quality"]
+assignee: "codex"
 ---
 
 # Generate a derived sync-plan projection from the ticket corpus
