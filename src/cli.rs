@@ -15,7 +15,7 @@ const fn version_string() -> &'static str {
     about = "Git-native ticket CLI (.tickets/ contract)",
     version = version_string(),
 )]
-struct Cli {
+pub(crate) struct Cli {
     /// Suppress confirmations, emit only essential data
     #[arg(short, long, global = true)]
     quiet: bool,

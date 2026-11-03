@@ -11,6 +11,10 @@ A git-native ticket tracker where tasks are markdown files and `git push` is the
 
 ## Quick Start
 
+Agents and scripts can discover every command and flag with `tkt capabilities
+-o json`, including input schemas, aliases, mutation modes and output formats.
+See the [manifest reference](skills/tkt-core/references/capabilities.md).
+
 ```bash
 cargo install tkt
 

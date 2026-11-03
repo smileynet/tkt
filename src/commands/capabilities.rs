@@ -1,169 +1,60 @@
 //! `tkt capabilities` — machine-readable feature manifest with JSON Schema inputs.
 
 use anyhow::Result;
+use clap::{Arg, ArgAction, Command, CommandFactory};
+use serde_json::{json, Map, Value};
 
 pub fn run() -> Result<i32> {
     let version = env!("CARGO_PKG_VERSION");
+    let mut cli = crate::cli::Cli::command();
+    cli.build();
+    let mut commands = Map::new();
+    for command in cli
+        .get_subcommands()
+        .filter(|command| !command.is_hide_set())
+    {
+        let (effects, behavior, format) = match command.get_name() {
+            "new" | "batch" => ("non_idempotent", "Allocate tickets, commit and optionally push; dry-run previews without writing", "text"),
+            "claim" | "close" | "edit" | "renumber" => ("idempotent", "Change tickets, commit and optionally push; dry-run previews without writing", "text"),
+            "init" => ("idempotent", "Create project files or write snippets; without --write the snippet is printed; dry-run previews", "text"),
+            "doctor" => ("idempotent", "Read-only unless --fix applies safe setup repairs", "text"),
+            "lint" => ("idempotent", "Normalize files by default; --check reports without writing", "text"),
+            "migrate" => ("idempotent", "Preview or detect by default; --confirm applies a reviewed migration", "text"),
+            "context" => ("idempotent", "No arguments shows context; tags or --clear change local context", "text"),
+            "sync-plan" => ("idempotent", "Report drift by default; --check gates it; --fix updates the plan", "json"),
+            "validate" => ("idempotent", "Read-only unless --fix repairs ticket files; --brief uses text", "json"),
+            "rebase" => ("idempotent", "Fetch, renumber collisions and commit locally; --dry-run reads cached remote state without writing", "text"),
+            "config" => ("idempotent", "Read-only except --set and --unset write user configuration", "text"),
+            "telemetry" => ("idempotent", "Read-only except --enable/--disable change consent and --clear deletes local events", "text"),
+            "ready" | "blocked" => ("read_only", "Read-only report; ready also supports JSON Lines", "text"),
+            "help" => ("read_only", "Print help for an optional command path, such as help new", "text"),
+            "audit" => ("read_only", "JSON findings by default; --brief uses text", "json"),
+            "query" => ("read_only", "JSON Lines; active tag context filters the corpus", "json_lines"),
+            "capabilities" => ("read_only", "One JSON feature manifest regardless of output flags", "json"),
+            _ => ("unspecified", "Command behavior must be classified before advertising it", "text"),
+        };
+        commands.insert(
+            command.get_name().to_string(),
+            json!({
+                "description": command.get_about().map(ToString::to_string).unwrap_or_default(),
+                "effects": effects,
+                "effects_description": behavior,
+                "inputSchema": input_schema(command),
+                "output": {"default": format, "description": behavior}
+            }),
+        );
+    }
     let json = serde_json::json!({
         "version": version,
-        "global_flags": {"agent": {"flag": "--agent", "type": "string", "environment": "TKT_AGENT", "description": "Invocation identity; CLI overrides environment; lowercase slug; never stored in config"}},
-        "commands": {
-            "ready": {
-                "description": "Show frontier (unblocked tickets)",
-                "effects": "read_only",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "json": { "type": "boolean", "description": "Output as JSON Lines" }
-                    }
-                }
-            },
-            "new": {
-                "description": "Create and claim a new ticket",
-                "effects": "non_idempotent",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "agents": {"type": "string", "description": "Comma-separated allow list; mutually exclusive with --exclude-agents"},
-                        "exclude_agents": {"type": "string", "description": "Comma-separated exclude list; mutually exclusive with --agents"},
-                        "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "URL-safe ticket slug" },
-                        "title": { "type": "string", "description": "Human-readable title" },
-                        "blocked_by": { "type": "string", "description": "Comma-separated ticket IDs" },
-                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] },
-                        "env": { "type": "string", "enum": ["corp", "personal", "either"] },
-                        "spec": { "type": "string", "description": "Originating spec slug" },
-                        "status": { "type": "string", "enum": ["open", "backlog"], "default": "open" },
-                        "vc": { "type": "string", "description": "Validation criterion (repeatable)" }
-                    },
-                    "required": ["slug"]
-                }
-            },
-            "batch": {
-                "description": "Create multiple tickets in one push",
-                "effects": "non_idempotent",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "agents": {"type": "string", "description": "Allow list; mutually exclusive with --exclude-agents; edit accepts empty to clear"},
-                        "exclude_agents": {"type": "string", "description": "Exclude list; mutually exclusive with --agents; edit accepts empty to clear"},
-                        "items": { "type": "array", "items": { "type": "string" }, "description": "slug[:title] pairs" },
-                        "blocked_by": { "type": "string", "description": "Comma-separated ticket IDs" },
-                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] },
-                        "env": { "type": "string", "enum": ["corp", "personal", "either"] },
-                        "spec": { "type": "string" }
-                    },
-                    "required": ["items"]
-                }
-            },
-            "claim": {
-                "description": "Mark ticket in_progress (pushed WIP)",
-                "effects": "idempotent",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "force": {"type": "boolean", "description": "Explicit scheduling override of agent eligibility"},
-                        "id": { "type": "string", "description": "Ticket ID to claim" }
-                    },
-                    "required": ["id"]
-                }
-            },
-            "close": {
-                "description": "Mark ticket done with resolution",
-                "effects": "idempotent",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "id": { "type": "string", "description": "Ticket ID to close" },
-                        "resolution": { "type": "string", "description": "What was done (alias: --note)" },
-                        "ac": { "type": "string", "description": "Comma-separated AC indices to check" },
-                        "check_all": { "type": "boolean", "description": "Check all acceptance criteria" },
-                        "evidence": { "type": "array", "items": { "type": "string" }, "description": "Evidence strings mapped to validation criteria" }
-                    },
-                    "required": ["id"]
-                }
-            },
-            "edit": {
-                "description": "Surgical field corrections",
-                "effects": "idempotent",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "agents": {"type": "string", "description": "Allow list; mutually exclusive with --exclude-agents; edit accepts empty to clear"},
-                        "exclude_agents": {"type": "string", "description": "Exclude list; mutually exclusive with --agents; edit accepts empty to clear"},
-                        "id": { "type": "string", "description": "Ticket ID to edit" },
-                        "title": { "type": "string" },
-                        "blocked_by": { "type": "string", "description": "Comma-separated IDs (or '' to clear)" },
-                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low", ""], "description": "Set or clear priority" },
-                        "env": { "type": "string", "enum": ["corp", "personal", "either", ""], "description": "Set or clear env" },
-                        "spec": { "type": "string", "description": "Set or clear spec" },
-                        "status": { "type": "string", "enum": ["open", "in_progress", "done", "backlog"] },
-                        "ac": { "type": "string", "description": "Comma-separated AC indices to check" },
-                        "vc": { "type": "string", "description": "Validation criterion (repeatable, replaces list)" }
-                    },
-                    "required": ["id"]
-                }
-            },
-            "query": {
-                "description": "Dump all tickets as JSON Lines",
-                "effects": "read_only",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "status": { "type": "string", "enum": ["open", "in_progress", "done", "backlog"] },
-                        "priority": { "type": "string", "enum": ["urgent", "high", "medium", "low"] }
-                    }
-                }
-            },
-            "validate": {
-                "description": "Check for cycles, dangling deps, contract issues",
-                "effects": "read_only",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "strict": { "type": "boolean", "description": "Treat warnings as errors" },
-                        "brief": { "type": "boolean", "description": "Short human output" },
-                        "fix": { "type": "boolean", "description": "Auto-repair fixable issues" }
-                    }
-                }
-            },
-            "lint": {
-                "description": "Normalize ticket frontmatter style",
-                "effects": "idempotent",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "check": { "type": "boolean", "description": "Report without fixing (exit 1 if changes needed)" },
-                        "ids": { "type": "array", "items": { "type": "string" }, "description": "Specific ticket IDs to lint" }
-                    }
-                }
-            },
-            "config": {
-                "description": "Manage user/project configuration",
-                "effects": "idempotent",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "set": { "type": "string", "description": "Set key=value" },
-                        "get": { "type": "string", "description": "Get value by key" },
-                        "unset": { "type": "string", "description": "Remove key" },
-                        "list": { "type": "boolean", "description": "List user config" },
-                        "show": { "type": "boolean", "description": "Show resolved project config" }
-                    }
-                }
-            },
-            "capabilities": {
-                "description": "Machine-readable feature manifest with JSON Schema",
-                "effects": "read_only",
-                "inputSchema": { "type": "object", "properties": {} }
-            }
-        },
+        "global_flags": input_schema(&cli)["properties"],
+        "commands": commands,
         "workflows": {
             "single_agent": "ready \u{2192} close <id> --check-all --resolution '...'",
             "shared_repo": "ready \u{2192} claim <id> \u{2192} [work] \u{2192} close <id> --check-all --resolution '...'",
             "scripting": "ready --json | jq '.id' | xargs tkt claim"
         },
         "config": {
-            "user": "~/.config/tkt/config.toml",
+            "user": crate::config::config_file_path().map(|path| path.to_string_lossy().into_owned()),
             "project": ".tickets/config.toml",
             "cascade": "CLI flag > env var > project > user > default"
         },
@@ -187,4 +78,147 @@ pub fn run() -> Result<i32> {
     });
     println!("{}", serde_json::to_string_pretty(&json).unwrap());
     Ok(0)
+}
+
+fn input_schema(command: &Command) -> Value {
+    // Clap handles its built-in help path before ordinary argument parsing.
+    if command.get_name() == "help" {
+        return json!({"type": "object", "properties": {"command": {"type": "array", "items": {"type": "string"}, "position": 1}}, "additionalProperties": false});
+    }
+    let mut properties = Map::new();
+    let mut required = Vec::new();
+    for arg in command.get_arguments().filter(|arg| !arg.is_hide_set()) {
+        let key = arg
+            .get_long()
+            .unwrap_or(arg.get_id().as_str())
+            .replace('-', "_");
+        let mut field = argument_schema(command.get_name(), arg);
+        let conflicts: Vec<_> = command
+            .get_arg_conflicts_with(arg)
+            .into_iter()
+            .map(|other| {
+                other
+                    .get_long()
+                    .unwrap_or(other.get_id().as_str())
+                    .replace('-', "_")
+            })
+            .collect();
+        if !conflicts.is_empty() {
+            field["conflicts_with"] = json!(conflicts);
+        }
+        if arg.is_required_set() {
+            required.push(key.clone());
+        }
+        for alias in arg.get_all_aliases().unwrap_or_default() {
+            let mut alias_field = field.clone();
+            alias_field["flag"] = json!(format!("--{alias}"));
+            alias_field["alias_of"] = json!(key);
+            properties.insert(alias.replace('-', "_"), alias_field);
+        }
+        properties.insert(key, field);
+    }
+    let mut schema =
+        json!({"type": "object", "properties": properties, "additionalProperties": false});
+    if !required.is_empty() {
+        schema["required"] = json!(required);
+    }
+    schema
+}
+
+fn argument_schema(command: &str, arg: &Arg) -> Value {
+    let takes_value = arg.get_action().takes_values();
+    let mut value = if !takes_value {
+        json!({"type": "boolean"})
+    } else if arg.get_value_parser().type_id() == std::any::TypeId::of::<u32>() {
+        json!({"type": "integer", "minimum": 1})
+    } else {
+        json!({"type": "string"})
+    };
+    let possible: Vec<_> = arg
+        .get_possible_values()
+        .into_iter()
+        .filter(|value| !value.is_hide_set())
+        .map(|value| value.get_name().to_owned())
+        .collect();
+    if takes_value && !possible.is_empty() {
+        value["enum"] = json!(possible);
+    }
+    match arg.get_id().as_str() {
+        "priority" => {
+            let mut choices = vec!["urgent", "high", "medium", "low"];
+            if command == "edit" {
+                choices.push("");
+            }
+            value["enum"] = json!(choices);
+        }
+        "env" => {
+            let mut choices = crate::core::ENV_VALUES.to_vec();
+            if command == "edit" {
+                choices.push("");
+            }
+            value["enum"] = json!(choices);
+        }
+        "status" if matches!(command, "new" | "batch") => {
+            value["enum"] = json!(["open", "backlog"])
+        }
+        "status" if command == "edit" => value["enum"] = json!(["open", "in_progress", "backlog"]),
+        "status" if command == "query" => value["enum"] = json!(crate::core::STATUS_VALUES),
+        "slug" => {
+            value["pattern"] = json!("^[a-z0-9][a-z0-9-]*$");
+            value["maxLength"] = json!(100);
+        }
+        "agent" => {
+            value["pattern"] = json!("^[a-z0-9][a-z0-9-]*$");
+            value["environment"] = json!("TKT_AGENT");
+        }
+        "color" => value["enum"] = json!(["always", "never", "auto"]),
+        "output_format" => value["enum"] = json!(["json", "text"]),
+        "from" if command == "migrate" => value["enum"] = json!(["tk"]),
+        _ => {}
+    }
+    let mut field = if matches!(arg.get_action(), ArgAction::Append) {
+        json!({"type": "array", "items": value, "repeatable": true})
+    } else if takes_value
+        && arg
+            .get_num_args()
+            .is_some_and(|range| range.min_values() == 0)
+    {
+        value["type"] = json!(["string", "boolean"]);
+        value["value_optional"] = json!(true);
+        value
+    } else {
+        value
+    };
+    if let Some(help) = arg.get_help() {
+        field["description"] = json!(help.to_string());
+    }
+    if let Some(long) = arg.get_long() {
+        field["flag"] = json!(format!("--{long}"));
+    }
+    if let Some(short) = arg.get_short() {
+        field["short"] = json!(format!("-{short}"));
+    }
+    if let Some(index) = arg.get_index() {
+        field["position"] = json!(index);
+    }
+    if let Some(delimiter) = arg.get_value_delimiter() {
+        field["value_delimiter"] = json!(delimiter.to_string());
+    }
+    if let Some(aliases) = arg.get_all_aliases() {
+        field["aliases"] = json!(aliases
+            .into_iter()
+            .map(|alias| format!("--{alias}"))
+            .collect::<Vec<_>>());
+    }
+    if let Some(default) = arg.get_default_values().first() {
+        field["default"] = if takes_value {
+            json!(default.to_string_lossy())
+        } else {
+            json!(default == "true")
+        };
+    }
+    if command == "edit" && arg.get_id() == "status" {
+        field["description"] = json!("Supported lifecycle edits; use close for done so resolution and evidence gates are enforced");
+    }
+    field
 }

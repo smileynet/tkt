@@ -168,6 +168,11 @@ tkt config [--set K=V] [--get K] [--unset K] [--list] [--show]  # user + project
 tkt telemetry [--enable|--disable|--status|--show [--all]|--clear]  # manage local telemetry
 ```
 
+`capabilities` derives command/flag inventory from Clap and adds supported domain
+values, aliases, mutation modes and default output formats. See
+[manifest semantics](skills/tkt-core/references/capabilities.md). Schemas describe
+the supported workflow; use `close` for done and obey project close policy.
+
 ### Global flags
 
 | Flag | Effect |

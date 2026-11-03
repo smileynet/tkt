@@ -1,5 +1,9 @@
 # tkt Command Reference
 
+For the complete machine-readable command/flag inventory, use `tkt capabilities
+-o json`. See [manifest fields and semantics](capabilities.md) for schemas,
+aliases, mutation modes and default output formats.
+
 ## Agent eligibility
 
 Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; the flag wins and identity is never stored in config. `ready` and `claim` apply ticket agent eligibility. Missing identity sees unrestricted work only; `ready` reports hidden restricted work on stderr. Use `claim <id> --force` only as an explicit scheduling override.

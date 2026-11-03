@@ -62,3 +62,22 @@ Disposition: `kind:bug`, `triage:ready-for-agent`; stream `tooling`.
 Confirmed: capabilities lists 11 commands including config, but omits context/blocked/audit/sync-plan/renumber/init/doctor/migrate/rebase/telemetry. Own command/flag completeness; #208 is its duplicate.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Implementation evidence — 2026-11-02
+
+The manifest now derives its complete command/flag inventory from Clap: 21 product
+commands plus built-in help. Domain overlays describe the supported lifecycle,
+aliases, numeric/array inputs, optional-value flags, conflicts, mutation modes and
+default output formats. Help has a special command-path schema because Clap's
+built-in help dispatcher does not parse ordinary subcommand flags.
+
+Fresh public CLI tests compare every command's help flags against the manifest,
+and check representative domain values, aliases and modes. Full `mise run check`
+passed after correcting one test-only regex-in-loop Clippy failure: 38 Node tests
+passed, one existing Windows relative-link fixture skipped; fmt check passed,
+Clippy had no warnings, and 307 Rust tests passed. No hosted CI was requested.
+
+Observed gap: edit currently accepts done without close gates. The manifest follows
+the supported close-only contract; #241 owns the independently reproduced runtime
+fix. #127 still owns the top-level help/init recommendations; the manifest is ready
+for those pointers. No runtime mutation behavior was changed by #138.

@@ -12,6 +12,7 @@ Track tasks as markdown files in your git repo. One file per ticket in `.tickets
 
 | When I'm... | I want to... | Command |
 |---|---|---|
+| Discovering CLI commands and flags | read the complete structured inventory | `tkt capabilities -o json` ([schema reference](references/capabilities.md)) |
 | Routing tickets to agents | allow either named agent or exclude named agents | `tkt new <slug> --agents codex,claude` / `--exclude-agents antigravity` |
 | Starting a work session | see what's unblocked and prioritized | `tkt ready` |
 | Planning future work | create tickets without them cluttering the frontier | `tkt new <slug> --title "..." --status backlog` |
