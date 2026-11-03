@@ -42,6 +42,12 @@ Model and source checks pass; rendered workstream layout remains unverified whil
 
 ## Implementation evidence — 2026-11-02
 
+The 2026-11-03 renderer also distinguishes cancelled work from completed work in
+the filter, terminal context and counts. Canonical source/model tests passed (53
+tests) and the isolated dashboard change was published as grey-matter `0604d8d`.
+Both local packs were refreshed. The existing rendered acceptance also covers
+these new cancelled-state controls and remains unchecked while browser use is disabled.
+
 Canonical contract fixtures pass (38 tests, no skips). The adopter model audit passes
 with 240 tickets, 67 unique unfinished workstream memberships, 18 actual dependency
 edges and the unchanged 30-ID CLI frontier. Its exclusive buckets are 26 unblocked,

@@ -23,7 +23,7 @@ including the #197 parent-status decision upstream of #199 and #200.
 
 ## Current maintenance frontier
 
-Project configuration #165, ownership #194 and full creation bodies/templates #176 are complete alongside earlier integrity repairs. The guidance proposal #226 remains unapplied pending approval. Current parallel work is #235 (commit hooks/deferred push), #227 (cancellation lifecycle) and #177 (remaining content-guidance alignment). Each implementation requires independent critic acceptance and the local gate before closure. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
+Project configuration, ownership, full creation bodies/templates, commit hooks/deferred push, cancellation and content guidance are complete. Six obsolete items were cancelled without claiming completion. The guidance proposal #226 remains unapplied pending approval. Current implementation verification covers #145 (updater privacy) and #238 (body-reference diagnostics). The next claimed work is #143 (quiet JSON mutation output), #144 (visible and bypassable query context), #231 (complete query fields) and #232 (pending blockers). Each requires independent critic acceptance and the local gate before closure. Dashboard rendering remains unavailable outside this queue. Sequencing does not invent dependency edges; the mechanical frontier still sorts priority then ID. Parent rollup #197 remains gated on its recorded decision.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -33,7 +33,7 @@ Project configuration #165, ownership #194 and full creation bodies/templates #1
 
 ## Post-v0.4.0 configuration and correctness
 
-All rows here remain open investigations or implementations. `triage:needs-info` means the report names missing reproduction/design evidence; it is not a verified implementation brief. #140 is restored to open after its distinct malformed-input crash was reproduced. #165 owns writing configuration; #190 owns interpreting it.
+Rows record completed repairs alongside remaining investigations and implementations. `triage:needs-info` means the report names missing reproduction/design evidence; it is not a verified implementation brief. The reproduced malformed-config crash in #140 is repaired. #165 owns writing configuration; #190 owns interpreting it.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -52,7 +52,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 
 ## Agent workflow and guidance
 
-#176 includes the named-template scope absorbed from #87. #177 waits on #176 and #233, while #230 owns classified evidence guidance. #226 is proposal-only; #228 owns the dashboard renderer migration. #235 extends existing push-disable and failure-reporting behavior rather than replacing it. #239 tracks historical audit limitations without fabricating proof.
+#176 includes the named-template scope absorbed from cancelled #87. #177 and #230 complete the content and classified evidence guidance. #226 is proposal-only; #228 owns the dashboard renderer migration. #235 extends existing push-disable and failure-reporting behavior. #239 records historical audit limitations without fabricating proof.
 
 | ID | Work | Status |
 |---:|---|---|
@@ -73,7 +73,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 
 ## Native relations and label namespaces
 
-Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 reuses completed #224. #197 requires a decision about computed progress versus close-gated stored status before implementation; automatic done is not approved here. #199 is the final combined documentation/example pass. ADR 0004 already decides cancellation; #227 implements it and then retires the five pending tickets below.
+Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 reuses completed #224. #197 requires a decision about computed progress versus close-gated stored status before implementation; automatic done is not approved here. #199 is the final combined documentation/example pass. ADR 0004 cancellation is implemented by #227; obsolete items below are explicitly cancelled.
 
 | ID | Work | Status |
 |---:|---|---|
