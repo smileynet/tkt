@@ -29,11 +29,11 @@ the dashboard snapshot is a projection, not a second planning database.
 
 ## Acceptance criteria
 
-- [ ] Workstream lanes partition all remaining tickets without hiding cross-stream edges.
-- [ ] Decision/evidence gates have specific ticket-owned reasons and are not reported as unblocked work.
-- [ ] Ticket dependencies, completed blockers, deferred work and lifecycle status keep their distinct meanings.
-- [ ] Snapshot regeneration preserves all entries and includes every ticket.
-- [ ] Graph fixtures, dashboard checker, strict ticket validation and plan checks pass.
+- [x] Workstream lanes partition all remaining tickets without hiding cross-stream edges.
+- [x] Decision/evidence gates have specific ticket-owned reasons and are not reported as unblocked work.
+- [x] Ticket dependencies, completed blockers, deferred work and lifecycle status keep their distinct meanings.
+- [x] Snapshot regeneration preserves all entries and includes every ticket.
+- [x] Graph fixtures, dashboard checker, strict ticket validation and plan checks pass.
 - [ ] Rendered laptop/phone layout and interactions are inspected when a permitted browser is available.
 
 ## Planning gate
