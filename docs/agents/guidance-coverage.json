@@ -1,0 +1,460 @@
+{
+  "source": {
+    "commit": "9e944bda0dbc79361976907730564b969aa033d0",
+    "path": "AGENTS.md",
+    "lines": 355,
+    "sha256": "4d04f80acc5f4f9a1bbaf36f1d4c1a7a52039dded108e82623e01384ff36948b"
+  },
+  "rules": [
+    {
+      "id": "rule-01",
+      "title": "AGENTS.md",
+      "sourceStart": 1,
+      "sourceEnd": 2,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "204aa1e75dc7abd78c37fb0bbf9d946d41ff6f0ce819c299be2b5f903665f8d3",
+      "normalization": null
+    },
+    {
+      "id": "rule-02",
+      "title": "Project",
+      "sourceStart": 3,
+      "sourceEnd": 8,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "1a6525c1e75565fbc2c5527de711ddbe134e25f8a82e801df9652d50c3e633cb",
+      "normalization": null
+    },
+    {
+      "id": "rule-03",
+      "title": "Workspace Layout",
+      "sourceStart": 9,
+      "sourceEnd": 23,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "587848f50fb4016971575c555de95556646fc62f1d6841a528cd5adfac47112f",
+      "normalization": null
+    },
+    {
+      "id": "rule-04",
+      "title": "Commands",
+      "sourceStart": 24,
+      "sourceEnd": 35,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "839c5a264f31d2f80bc285d832d167af5ea4e76fcc22ac76a51913ef85b84082",
+      "normalization": "format-check"
+    },
+    {
+      "id": "rule-05",
+      "title": "Verification gate (run before every commit)",
+      "sourceStart": 36,
+      "sourceEnd": 56,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "259b81e3109bf05899c7079dcefe6a2ac7d38cedddb493b0835087f233ecd0b7",
+      "normalization": null
+    },
+    {
+      "id": "rule-06",
+      "title": "Session workflow (commit + push + deploy cadence)",
+      "sourceStart": 57,
+      "sourceEnd": 72,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "c053ca6fc083408b092da1918e846aa376ecea71f1439d0d8d9b03d53025a23e",
+      "normalization": null
+    },
+    {
+      "id": "rule-07",
+      "title": "Deploy (run after pulling or making changes)",
+      "sourceStart": 73,
+      "sourceEnd": 95,
+      "home": "docs/agents/plugin-maintenance.md",
+      "trigger": "CLI/pack installation, plugin changes or deployment diagnosis",
+      "sha256": "cdf23b22e4d14a3fcdd786317b073193da2b7651d9228398ad8b2cfd9d51bc22",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-08",
+      "title": "Releases",
+      "sourceStart": 96,
+      "sourceEnd": 103,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "691fbb06fdab44db072c1544ec9a74e14dd33ecfe4c7c8956282f7cb200b9ae4",
+      "normalization": null
+    },
+    {
+      "id": "rule-09",
+      "title": "Claude Code plugin (keep it current)",
+      "sourceStart": 104,
+      "sourceEnd": 145,
+      "home": "docs/agents/plugin-maintenance.md",
+      "trigger": "CLI/pack installation, plugin changes or deployment diagnosis",
+      "sha256": "d1533183c3d85d392a39387c622976dd20ee914a206020d36b540911465c229e",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-10",
+      "title": "tkt CLI (the product)",
+      "sourceStart": 146,
+      "sourceEnd": 184,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "6ea507b25f7526a375fe1f0daf9c37e4352966474ec3d23f2e06f872ecd3d34d",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-11",
+      "title": "Global flags",
+      "sourceStart": 185,
+      "sourceEnd": 194,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "de8e78adf8f7b0c7678b30db9b456e0a12525c82a9d3106b2487535e7d5aa96f",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-12",
+      "title": "Priority levels",
+      "sourceStart": 195,
+      "sourceEnd": 198,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "9540a89352fc6edf609e3cccbf4921a7e8470572ecd5ae0b25c3c38454325cd8",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-13",
+      "title": "Status values",
+      "sourceStart": 199,
+      "sourceEnd": 211,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "a797eb7734d37d16bdef926d0c4851fbd2ddefb2d028a18553ed605084db3b27",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-14",
+      "title": "Query output",
+      "sourceStart": 212,
+      "sourceEnd": 221,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "a038e50ad71d1473103d1f8a012cefd96416aafcbac3bd0c12234ac2ef0b21f8",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-15",
+      "title": "Agent eligibility",
+      "sourceStart": 222,
+      "sourceEnd": 232,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "7a311fc2d0ea501356888b41d1dd0968d5ad0cbc3153aef97a17229dd34d8830",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-16",
+      "title": "Configuration",
+      "sourceStart": 233,
+      "sourceEnd": 261,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "34dcf8e9d0454ac6d64dc8289bf79f3faca68549f0c7841bf725457b37001acf",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-17",
+      "title": "Environment variables",
+      "sourceStart": 262,
+      "sourceEnd": 275,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "b9ce6ba19b96105481e3c873f261e1495b4a3a1a0ddeb36b715c0e2df45ad746",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-18",
+      "title": "Architecture Decisions",
+      "sourceStart": 276,
+      "sourceEnd": 287,
+      "home": "docs/agents/architecture-reference.md",
+      "trigger": "Architecture/module/parser/Git/telemetry/error/output changes",
+      "sha256": "4d37ddd520488349486feff0d9fbe021f4070b8bb881d80535d2b89e333d3532",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-19",
+      "title": "Contract",
+      "sourceStart": 288,
+      "sourceEnd": 315,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "05ce224fdb7c304abd90b1066e1709b7e79a9fe76ada034ceae14c5c1ed1c540",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-20",
+      "title": "Constraints",
+      "sourceStart": 316,
+      "sourceEnd": 317,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "7c9dcab419cdfb7a37acd2e64f63fec1b8f14ae04ecfa078d8ab826ae9f9f923",
+      "normalization": null
+    },
+    {
+      "id": "rule-21",
+      "title": "Do NOT change the frontmatter contract without updating the tkt-work skill",
+      "sourceStart": 318,
+      "sourceEnd": 318,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "62cea86c99f6748727366f17f63b42aecc53fe2b01120106f177750330010058",
+      "normalization": null
+    },
+    {
+      "id": "rule-22",
+      "title": "Distributed skills (`skills/<name>/`) MUST be self-sufficient for a tkt-only adopter (someone who has tkt but NOT grey-matter or any other skill set): reference only `tkt` commands and sibling `tkt-*` skills, never a non-tkt skill by name (`frontier-work`, `read-handoff`, `to-tickets`, …). tkt is the standalone tool; grey-matter is an opinionated layer that *wraps* tkt's skills. `tools/deploy-skills.sh` lint enforces this (fails the deploy on a foreign-skill reference).",
+      "sourceStart": 319,
+      "sourceEnd": 319,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "cec97475cf10e331286573d708d2fecb418166a44d9f5f552c70cea10468445f",
+      "normalization": null
+    },
+    {
+      "id": "rule-23",
+      "title": "Do NOT change CLI flags or agent-facing behavior without updating all guidance surfaces (see `docs/agents/agent-guidance-surfaces.md` for checklist — init snippets, skill, steering, AGENTS.md, README)",
+      "sourceStart": 320,
+      "sourceEnd": 320,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "f229742d752f26dbdf55cba137868cc72b104873481058590452ee384a412627",
+      "normalization": null
+    },
+    {
+      "id": "rule-24",
+      "title": "Do NOT implement computed sort overrides for the frontier — priority+ID ordering is intentional and gives explicit control over agent work sequence",
+      "sourceStart": 321,
+      "sourceEnd": 321,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "869be574e4e1896d00df7fd5408062ce27ca4d5a706befb9d88848bba28a55b8",
+      "normalization": null
+    },
+    {
+      "id": "rule-25",
+      "title": "Do NOT add dependencies beyond what's in Cargo.toml without justification",
+      "sourceStart": 322,
+      "sourceEnd": 322,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "8a01e6f50ac5d28ba12670a753bccf2d2c6e5256763724a09e525b59004670f3",
+      "normalization": null
+    },
+    {
+      "id": "rule-26",
+      "title": "Do NOT use libgit2/gix for v1 — shell out to git binary",
+      "sourceStart": 323,
+      "sourceEnd": 323,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "2ac41bc3e1747a3251907078878123b345f8e8003be3905f9038ca05f353dc1c",
+      "normalization": null
+    },
+    {
+      "id": "rule-27",
+      "title": "Do NOT suggest releasing with open tickets — all tickets ship first, or the user explicitly defers them",
+      "sourceStart": 324,
+      "sourceEnd": 324,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "be35c34550b315995ff1d8b359b019c8a5cd524a55df6ae705f3145f109dd14d",
+      "normalization": null
+    },
+    {
+      "id": "rule-28",
+      "title": "Maintain CLI compatibility (same commands, flags, output)",
+      "sourceStart": 325,
+      "sourceEnd": 325,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "89a43f6946ee702c8f443232e4a566d239356ba1e33f2b565765d15a943b86ad",
+      "normalization": null
+    },
+    {
+      "id": "rule-29",
+      "title": "`cargo clippy` must produce 0 warnings; `cargo fmt --check` must produce no diff",
+      "sourceStart": 326,
+      "sourceEnd": 326,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "d0c6a79d6ebdc51c03c48f4d1344d07c4c71673cae9dd72f11c165af2ffd415d",
+      "normalization": null
+    },
+    {
+      "id": "rule-30",
+      "title": "Integration tests MUST set `DO_NOT_TRACK=1` on child processes (prevents ambient env pollution)",
+      "sourceStart": 327,
+      "sourceEnd": 327,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "f9aabb6abe2db6f8c54f6c2ff664f021d8864c71386704ec7d653cbd63d2a0e7",
+      "normalization": null
+    },
+    {
+      "id": "rule-31",
+      "title": "Unit tests must NOT assert specific consent state (result depends on ambient env vars)",
+      "sourceStart": 328,
+      "sourceEnd": 328,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "eb842a228d1ba2c3ad90da27aa7f6667b6f065cb10af0a8859ec90f04ae7f8be",
+      "normalization": null
+    },
+    {
+      "id": "rule-32",
+      "title": "Windows: `std::fs::rename` replaces an existing file on supported filesystems (verified on this Windows/MSVC environment; Rust uses `MoveFileExW` with a `SetFileInformationByHandle` fallback). Do not delete a destination before an atomic replacement: that would reintroduce a missing-file window. The source and destination must remain on the same filesystem.",
+      "sourceStart": 329,
+      "sourceEnd": 329,
+      "home": "docs/agents/windows-maintenance.md",
+      "trigger": "Windows build/format/install/commit or atomic replacement changes",
+      "sha256": "5ff4690c23c7440a59d6842683f2986c978304df55661175d6dbb9de712811b9",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-33",
+      "title": "Ticket writes go through `core::atomic_write` (temp-file + rename) so a failed/interrupted write never leaves a torn ticket file; a failed write surfaces as `DomainError { Io }` with a hint (`cannot write <path>: <errno>`), exit 2. `crash: writing …` (now shows the errno) is an fs/permission error (read-only file, locked, read-only worktree) — NOT a validation bug; never hand-edit `status: done` to work around it (that bypasses the close gates — the exact anti-pattern #178/#179 fixed)",
+      "sourceStart": 330,
+      "sourceEnd": 330,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "208f0e56887f9d8d34c96286519431fd574697c00b6dfab66ba089418126913c",
+      "normalization": null
+    },
+    {
+      "id": "rule-34",
+      "title": "Codex review dispatch: `codex exec --dangerously-bypass-approvals-and-sandbox` (bwrap namespace restriction on this machine; `codex review --base <SHA>` cannot combine --base with custom prompt)",
+      "sourceStart": 331,
+      "sourceEnd": 331,
+      "home": "docs/agents/session-operations.md",
+      "trigger": "Codex review dispatch",
+      "sha256": "86b682b56127dbd2843b163b83c7dbfa0a9183651aaba5491f2c425485d44815",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-35",
+      "title": "cargo-dist binary name is `dist` (not `cargo dist`) — `cargo dist --version` will fail; use `dist --version`",
+      "sourceStart": 332,
+      "sourceEnd": 332,
+      "home": "docs/agents/maintainer-tooling.md",
+      "trigger": "Release tooling/generation or crate-name lookup",
+      "sha256": "2025c4b3035f709511bfac16caf0b16b6793cbc0cc6046a16f38b881e69644ef",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-36",
+      "title": "New mutation commands MUST route push through a push-gated path (GitTransaction respects `push.enabled`; direct `git::push_with_retry` calls must check `pcfg.push_enabled` first)",
+      "sourceStart": 333,
+      "sourceEnd": 333,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "97881c80ee5f492355d9080808cfc86a4877ab1ec5308a376b71d05fe542e999",
+      "normalization": null
+    },
+    {
+      "id": "rule-37",
+      "title": "Windows (this machine): `CARGO_HOME=D:\\dev-tools\\cargo`, `RUSTUP_HOME=D:\\dev-tools\\rustup` (relocated off C:). Bare `cargo` resolves to the mise shim first, then to the rustup proxies in `D:\\dev-tools\\cargo\\bin\\` (Windows symlinks → `rustup.exe`). Prefer `mise run check` for the gate — it is PATH-order-independent. **Failure mode (seen 2026-08-31):** if `cargo fmt` dies with `os error 193` (\"not a valid Win32 application\"), the `cargo-fmt.exe`/`rustfmt.exe` proxy symlinks in `D:\\dev-tools\\cargo\\bin\\` have been corrupted into 0-byte regular files (cross-drive relocation / AV). `cargo build/test/clippy` still work (clippy's proxy stayed intact, and build bypasses proxies), which masks the break. Repair: delete the 0-byte files and recreate them as symlinks to `rustup.exe` (Developer Mode is on, so no elevation needed), or run `rustup-init --default-toolchain=none -y --no-modify-path`. If corruption recurs, add `D:\\dev-tools` to Defender exclusions (needs an elevated shell). Verified working 2026-08-31 after symlink repair.",
+      "sourceStart": 334,
+      "sourceEnd": 334,
+      "home": "docs/agents/windows-maintenance.md",
+      "trigger": "Windows build/format/install/commit or atomic replacement changes",
+      "sha256": "f068ecb8ea3d4d29913594803e24fe6be7474fb11b39b4ea0ac070576c501bba",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-38",
+      "title": "Validate product changes with `cargo test` integration tests, which rebuild and exercise the current `target/` binary; do not use the PATH-installed `tkt` to validate code changes. Use the installed binary for deployment and real-repository use. When specifically testing the install/deploy path, run `tools/check-binary-fresh.sh` to compare its embedded git hash with HEAD.",
+      "sourceStart": 335,
+      "sourceEnd": 335,
+      "home": "AGENTS.md",
+      "trigger": "Always loaded",
+      "sha256": "4edf86fa500549baab67a90ec34cf082c4462f8efa51d71e142a7d9f18bd11bd",
+      "normalization": null
+    },
+    {
+      "id": "rule-39",
+      "title": "Windows: use `git commit -F <file>` for multi-line or bracket/quote-containing commit messages — inline `-m` gets mangled by PowerShell quoting",
+      "sourceStart": 336,
+      "sourceEnd": 336,
+      "home": "docs/agents/windows-maintenance.md",
+      "trigger": "Windows build/format/install/commit or atomic replacement changes",
+      "sha256": "e41416dd7ab71d867ad96a7546c71d95bdbc39846e250e333d611721b7f7af12",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-40",
+      "title": "crates.io name availability: use `cargo search <name>`, NOT raw `curl` to the API (returns 403 \"violation of API data access policy\" for automated requests); a 404 on the web page also confirms availability",
+      "sourceStart": 337,
+      "sourceEnd": 337,
+      "home": "docs/agents/maintainer-tooling.md",
+      "trigger": "Release tooling/generation or crate-name lookup",
+      "sha256": "cee8fc3b41e3a24e6d28f56ecae0a3011369b6ab2a6c8fe88846ffe722fa1136",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-41",
+      "title": "Release CI is generated through `node tools/generate-release-workflow.mjs --write` using cargo-dist 0.32.0. Never hand-edit `.github/workflows/release.yml`; `mise run check` checks real generation. See `docs/release-staging.md`. Staging is build-only; the separate manual `publish.yml` owns reviewed publication. Final candidate/install/audit/staging gates remain open.",
+      "sourceStart": 338,
+      "sourceEnd": 339,
+      "home": "docs/agents/maintainer-tooling.md",
+      "trigger": "Release tooling/generation or crate-name lookup",
+      "sha256": "dc218655fb554ad2d29eac680581901612662cd9ac9cecb80b62c4eb5345cbb6",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-42",
+      "title": "Parent progress",
+      "sourceStart": 340,
+      "sourceEnd": 343,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "604e08dcc1ba573a948271a47ad88012db880efb6e1122d158877d6e134cacd3",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-43",
+      "title": "Transferring acceptance criteria",
+      "sourceStart": 344,
+      "sourceEnd": 347,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "74ee3d7a6561b0a60b8b30980ca87bc8f282518ce693a5dc04f0de8e7b1c1c6d",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-44",
+      "title": "Parent-scoped frontier",
+      "sourceStart": 348,
+      "sourceEnd": 351,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "f4cf9b0e82e38b41f0d9a34e67acdb6fdcc6fc4bd0de858c47bdd5bff158d0f1",
+      "normalization": "relative-links"
+    },
+    {
+      "id": "rule-45",
+      "title": "Plan lifecycle comparison",
+      "sourceStart": 352,
+      "sourceEnd": 355,
+      "home": "docs/agents/tkt-contract.md",
+      "trigger": "CLI/storage/lifecycle/configuration/plan compatibility changes",
+      "sha256": "e80c1e24fbff0116c32e69cade63f7b7d17091e459fcce695ec46a3272652bf2",
+      "normalization": "relative-links"
+    }
+  ]
+}
