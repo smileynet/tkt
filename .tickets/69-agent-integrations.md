@@ -1,7 +1,7 @@
 ---
 id: "69"
 title: "Define the focused remaining harness-integration scope"
-status: backlog
+status: open
 blocked_by: ["68"]
 priority: low
 validation_criteria:

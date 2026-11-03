@@ -114,7 +114,7 @@ These are deliberately deferred, not release commitments. Triage notes distingui
 
 | ID | Work | Status |
 |---:|---|---|
-| 69 | Define the focused remaining harness-integration scope | backlog |
+| 69 | Define the focused remaining harness-integration scope | open |
 | 79 | tkt undo: revert last mutation | backlog |
 | 83 | Add a noninteractive ticket-note append operation | backlog |
 | 86 | tkt import --github: pull open issues into .tickets/ | backlog |
