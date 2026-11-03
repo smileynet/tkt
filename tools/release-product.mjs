@@ -33,7 +33,7 @@ export function verifyProduct({ repo, sha, out, execute = false, progress = () =
   const tracked = new Set(git(repo, ["ls-tree", "-r", "--name-only", "-z", sha]).split("\0"));
   const identity = inspectVersions((file) => git(repo, ["show", `${sha}:${file}`]), (file) => tracked.has(file));
   let commands;
-  if (identity.name === "grey-matter") commands = [[process.execPath, "scripts/check-repo.mjs", "--require-tools"]];
+  if (identity.name === "grey-matter") commands = [[process.execPath, "scripts/gate.mjs", "pre-release"]];
   else if (identity.name === "tkt" && tracked.has("Cargo.toml")) commands = [["mise", "run", "check"]];
   else throw new ReleaseError(`no product release gate for ${identity.name}`);
   const result = { schema: 1, status: "not-run", mode: execute ? "product-evidence" : "dry-run", publishable: false, candidateSha: sha, product: identity.name, version: identity.version, platform: { os: platform(), release: release(), arch: arch(), node: process.version }, commands, checks: [], pending: ["native", "scope", "compatibility", "remaining-platforms"] };
