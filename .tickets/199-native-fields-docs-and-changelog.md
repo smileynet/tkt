@@ -1,7 +1,7 @@
 ---
 id: "199"
 title: "docs, capabilities, CHANGELOG for parent/assignee/labels"
-status: in_progress
+status: done
 blocked_by: ["196", "197", "198", "194"]
 priority: high
 validation_criteria:
@@ -29,9 +29,9 @@ Closes out the native gap-closure (grey-matter proposal 01c).
 
 ## Acceptance criteria
 
-- [ ] `tkt capabilities` and the `init` agent snippet document `parent`, `assignee`, and `[labels.*]`
-- [ ] README and CHANGELOG describe the new fields/config as additive and backward compatible
-- [ ] An end-to-end test exercises an epic with children plus a single-select label namespace
+- [x] `tkt capabilities` and the `init` agent snippet document `parent`, `assignee`, and `[labels.*]`
+- [x] README and CHANGELOG describe the new fields/config as additive and backward compatible
+- [x] An end-to-end test exercises an epic with children plus a single-select label namespace
 
 ## Triage — 2026-11-02
 
@@ -40,3 +40,12 @@ Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `guidance`.
 Keep #194/#196/#197/#198 dependencies. This is the final combined walkthrough, not permission to defer each feature's own required guidance updates.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Published native relations walkthrough and discovery metadata, all instruction targets and additive compatibility notes. Independent critic accepted; durable proof in docs/evidence/native-relations-199.md. Disposable logs trashed; shared target retained for ongoing CLI work.
+
+### Verification
+1. ✓ tkt capabilities and the init agent snippet document parent, assignee, and [labels.*] — "Manifest native metadata and all six generated instruction files verified by E2E; docs/evidence/native-relations-199.md"
+2. ✓ README and CHANGELOG describe the new fields/config as additive and backward compatible — "Combined guide, README and changelog describe optional additive fields with unchanged policy; independent critic accepted final source hashes"
+3. ✓ An end-to-end test exercises an epic with children plus a single-select label namespace — "Combined epic/child/claim/close/label-policy E2E passes; final mise run check passes 396 Rust tests and 42 Node fixtures, one existing skip"
