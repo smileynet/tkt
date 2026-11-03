@@ -17,6 +17,12 @@ tags: ["contract", "integrations", "kind:enhancement", "stream:guidance", "triag
 
 Current native advisory support is verified; see [the evidence](../docs/evidence/native-write-hooks-158.md). Implement explicit owned config generation for Claude Edit|Write and Codex apply_patch, with bounded file-path/patch parsing and model-visible additionalContext only. Do not change deny/permission policies, user settings, workspace trust or hook trust; emit reviewable project config only through explicit opt-in. Preserve foreign config and ownership, honor dry-run, and document interactive versus automation trust, incomplete tool coverage and unknown exact minimum versions. The locally observed profiles are Codex0.166.0 and Claude2.1.316, not claimed minimums. Git hook157 does not supply a shared native config dependency. This supersedes old nonexistent init flags, strict-deny and unsupported/silent-hook assumptions below. Native execution requires its own observed evidence or an explicit unverified limit.
 
+## Acceptance criteria
+
+- [ ] Explicit native config generation preserves foreign settings, owned content and dry-run; no hook or trust change happens implicitly
+- [ ] Claude Edit|Write path and Codex apply_patch command detection are bounded, advisory context only, with no deny or arbitrary shell/MCP coverage claim
+- [ ] Observed profiles, unknown minimum versions, trust and tool-coverage limits are documented; schema/merge/parser fixtures and native execution evidence limits are explicit
+
 ## What to build
 
 Extend `tkt init --<agent>` to install a per-agent nudge that steers frontmatter mutations through the `tkt` CLI instead of direct file writes. Decided policy (#155): warn by default, hard deny opt-in only.
@@ -37,7 +43,7 @@ Extend `tkt init --<agent>` to install a per-agent nudge that steers frontmatter
 - Research: `.scratch/subagent-raw/agent-hook-mechanisms.md`, `codex-applypatch-hook.md`
 - **Zero new deps** — serde_json already present for settings.json/hooks.json
 
-## Acceptance criteria
+## Historical acceptance proposal (superseded)
 
 - [ ] `tkt init --claude` writes a `.claude/settings.json` PreToolUse warn-nudge (Edit matcher) toward `tkt edit`/`close`
 - [ ] `tkt init --codex` installs an apply_patch PreToolUse hook, version-gated with a clear caveat

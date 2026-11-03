@@ -17,7 +17,7 @@ The owner requested review and execution of actionable parked work. All 23 ticke
 | 147 | Parked, evidence | Original cross-session command/environment sequence is missing. Isolated consent precedence investigation may narrow the report; do not change consent from an unreproduced hypothesis. |
 | 148 | Open | Examples distinguish invocation identity, eligibility, assignee, tags and machine capabilities. |
 | 157 | Open | Optional advisory project hook installer, foreign-hook preservation, ownership, portability and recovery. No hook enabled here. |
-| 158 | Parked, evidence; depends on 157 | Pin and verify current Claude/Codex write-tool hook contracts, trust and supported versions before implementing. Existing private SessionStart support is not evidence of write-hook support. Current official documentation may permit this; do not treat historical absence as proof of impossibility. |
+| 158 | Open, evidence cleared | Current native PreToolUse advisory contracts verified; generate explicit owned project config without deny/trust/permission changes. Drop the stale 157 shared-config dependency. Exact minimum versions remain unknown. See the evidence follow-up below. |
 | 168 | Open, measurement only | Sample repository/history evidence without enabling telemetry; assess demand, no new runtime nudge. |
 | 173 | Open, blocked by 175 | Bounded advisory frontier readiness reuses source-reference predicate; no ordering or eligibility change. |
 | 175 | Open | Shared source-reference union and explicit severity/config contract; default advisory. |
@@ -31,3 +31,7 @@ The owner requested review and execution of actionable parked work. All 23 ticke
 Execution queue: 202 (high priority design), 99 (medium configuration), 186 (retirement), 125 (adapter design), 175 (shared validation predicate), then other independent ready work. Dependencies encode required outputs, not preferred sequencing. The broad 191 audit comes after concrete feature work to avoid premature abstraction.
 
 No ticket was closed by this review. Every closure requires fresh scoped checks and independent critic acceptance. UI tickets 228, 240 and 243 retain their existing rendered-acceptance limitation separately from this parked cohort.
+
+## Evidence follow-up
+
+Current native hook research reactivated 158 after the initial review:21 of the original23 are now active or completed; only147 (missing reproduction) and184 (explicit deferral) remain parked. The independent critic verified current installed profiles and official advisory/trust contracts; see [the receipt](evidence/native-write-hooks-158.md). No native hook or trust was activated.
