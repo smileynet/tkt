@@ -39,7 +39,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 |---:|---|---|
 | 140 | Fix exit code taxonomy leaks: config errors exit 2 instead of 1 | ✅ done |
 | 143 | Fix -q + -o json emits bare non-JSON output inconsistently | ✅ done |
-| 144 | Context silently narrows query (full corpus claim violated) | in_progress |
+| 144 | Context silently narrows query (full corpus claim violated) | ✅ done |
 | 145 | Fix update_check ignores DO_NOT_TRACK | ✅ done |
 | 151 | load_corpus ejection is stderr-only, bypasses JSON envelope and TKT_ASCII/sym_warn | ✅ done |
 | 163 | lint: backfill missing id from filename prefix | ✅ done |

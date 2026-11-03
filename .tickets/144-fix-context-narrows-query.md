@@ -1,7 +1,7 @@
 ---
 id: "144"
 title: "Context silently narrows query (full corpus claim violated)"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -30,10 +30,10 @@ context is set; it would pass the bypass flag instead.
 
 ## Acceptance criteria
 
-- [ ] `tkt query --help` says the active tag context filters results and names the bypass flag
-- [ ] With a context set, the bypass flag returns every ticket; without it, output is unchanged
-- [ ] When a context narrows the output, a notice goes to stderr only, never into JSON stdout
-- [ ] An integration test covers context plus bypass, and the tkt-reconcile context flow still passes
+- [x] `tkt query --help` says the active tag context filters results and names the bypass flag
+- [x] With a context set, the bypass flag returns every ticket; without it, output is unchanged
+- [x] When a context narrows the output, a notice goes to stderr only, never into JSON stdout
+- [x] An integration test covers context plus bypass, and the tkt-reconcile context flow still passes
 
 ## Triage — 2026-11-02
 
@@ -42,3 +42,10 @@ Disposition: `kind:bug`, `triage:ready-for-agent`; stream `cli`.
 Confirmed: TKT_CONTEXT=other query hides an ink-tagged ticket and retains an untagged ticket, with no stderr notice. Keep existing scoped default; add/document bypass.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Query preserves scoped default, reports actual narrowing, and offers all-context bypass without changing context. Guidance synchronized and independent critic accepted. Evidence promoted; shared build cache retained and temporary helpers expire at dashboard publication.
+
+### Verification
+1. ✓ tkt query ignores context or documents the filtering — "Context/bypass integration tests passed with JSONL stderr notice and clean stdout; final gate and installed all-context query cover all 241 tickets. See docs/evidence/quiet-json-context-143-144.md."
