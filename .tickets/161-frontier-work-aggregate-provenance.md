@@ -1,7 +1,7 @@
 ---
 id: "161"
 title: "frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex"
-status: backlog
+status: cancelled
 blocked_by: ["227"]
 validation_criteria:
   - "frontier-work.md step 4 triggers verify-before-edit for Reporter: Codex AND Reporter: aggregate (...); single-reviewer behavior unchanged"
@@ -60,3 +60,9 @@ Disposition: `kind:enhancement`, `triage:wontfix`; stream `guidance`.
 Approved obsolete steering/consumer work; #207 retired the steering surface. Await #227 cancellation; do not recreate frontier-work.md.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Cancellation
+
+- Reason: obsolete
+- Note: Approved retirement: the referenced legacy tooling was retired during the convention cutover.
+- Date: 2026-11-03

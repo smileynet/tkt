@@ -135,7 +135,7 @@ Approved dispositions remain parked until #227 exists: #87 superseded by #176; #
 | 87 | tkt new --template: predefined ticket body structures | cancelled (superseded) |
 | 94 | Test VC flag | backlog |
 | 115 | Review recall telemetry and debug functionality for useful patterns | cancelled (obsolete) |
-| 161 | frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex | backlog |
+| 161 | frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex | cancelled (obsolete) |
 | 208 | tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...) | cancelled (duplicate) |
 
 ## Completed release, maintenance and decision context
