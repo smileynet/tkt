@@ -80,7 +80,7 @@ Work from roots to dependents: #193 → #198; #195 → #196 → #197/#200; #194 
 | 193 | [labels.*] config: parse single-select + closed-value namespaces | ✅ done |
 | 194 | assignee field + claim-by-assignment + frontier honors it | open |
 | 195 | parent validation: dangling + cycle checks | ✅ done |
-| 196 | parent CLI + query/capabilities surface | in_progress |
+| 196 | parent CLI + query/capabilities surface | ✅ done |
 | 197 | parent rollup + frontier semantics | open |
 | 198 | label-namespace validation: single-select + closed-set | in_progress |
 | 199 | docs, capabilities, CHANGELOG for parent/assignee/labels | open |
