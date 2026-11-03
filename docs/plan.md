@@ -136,7 +136,7 @@ Approved dispositions remain parked until #227 exists: #87 superseded by #176; #
 | 94 | Test VC flag | backlog |
 | 115 | Review recall telemetry and debug functionality for useful patterns | backlog |
 | 161 | frontier-work: match aggregate/multi-reviewer Reporter, not just Reporter: Codex | backlog |
-| 208 | tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...) | backlog |
+| 208 | tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...) | cancelled (duplicate) |
 
 ## Completed release, maintenance and decision context
 

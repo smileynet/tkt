@@ -1,7 +1,7 @@
 ---
 id: "208"
 title: "tkt capabilities -o json is incomplete: omits flags (--tags, --vc, --requires) and commands (context, blocked, audit, ...)"
-status: backlog
+status: cancelled
 blocked_by: ["227"]
 priority: medium
 validation_criteria:
@@ -70,3 +70,10 @@ Disposition: `kind:bug`, `triage:wontfix`; stream `tooling`.
 Approved duplicate of #138; await #227 cancellation with --by 138. Do not implement a second manifest fix; the earlier statement that #208 was already closed was inaccurate.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Cancellation
+
+- Reason: duplicate
+- By: 138
+- Note: Approved duplicate retirement; complete command manifest work is recorded in ticket138.
+- Date: 2026-11-03
