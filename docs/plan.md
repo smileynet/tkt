@@ -48,7 +48,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 190 | Parse known config keys into strict typed policies | ✅ done |
 | 236 | tkt config shows the wrong user-config path on macOS | ✅ done |
 | 237 | debug = true in config prints to stderr instead of the log file | ✅ done |
-| 238 | Renumbering leaves stale ID references in ticket bodies | open |
+| 238 | Renumbering leaves stale ID references in ticket bodies | in_progress |
 
 ## Agent workflow and guidance
 

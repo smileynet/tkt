@@ -1,12 +1,13 @@
 ---
 id: "238"
 title: "Renumbering leaves stale ID references in ticket bodies"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "tkt rebase reports, or rewrites, body references to renumbered IDs"
   - "tkt validate warns on #NNN / ticket NNN references to IDs that do not exist"
 tags: ["cli", "kind:bug", "triage:needs-info", "stream:workflow", "gate:evidence"]
+assignee: "codex"
 ---
 
 # Renumbering leaves stale ID references in ticket bodies
