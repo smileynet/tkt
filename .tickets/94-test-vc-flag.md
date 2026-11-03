@@ -1,7 +1,7 @@
 ---
 id: "94"
 title: "Test VC flag"
-status: backlog
+status: cancelled
 blocked_by: ["227"]
 priority: low
 validation_criteria:
@@ -32,3 +32,9 @@ Disposition: `kind:enhancement`, `triage:wontfix`; stream `quality`.
 Approved retirement of an empty test ticket; await #227 cancellation with reason wontfix. Preserve history rather than manufacturing completed checks.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Cancellation
+
+- Reason: wontfix
+- Note: Approved retirement of an empty test ticket with no implementation purpose.
+- Date: 2026-11-03
