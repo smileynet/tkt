@@ -66,7 +66,7 @@ All rows here remain open investigations or implementations. `triage:needs-info`
 | 232 | Frontier output distinguishes unfinished blockers from finished ones | open |
 | 233 | tkt edit can set and clear tags | ✅ done |
 | 234 | Acceptance criteria can be marked moved to another ticket | open |
-| 235 | Ticket mutations skip heavy commit hooks and can defer the push | in_progress |
+| 235 | Ticket mutations skip heavy commit hooks and can defer the push | ✅ done |
 | 239 | Review historical closure warnings without fabricating evidence | ✅ done |
 | 240 | Show workstreams and decision/evidence gates in the ticket graph | in_progress |
 | 241 | Reject done status outside the close lifecycle | ✅ done |

@@ -1,7 +1,7 @@
 ---
 id: "235"
 title: "Ticket mutations skip heavy commit hooks and can defer the push"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -36,9 +36,9 @@ Owner request on 2026-11-01 from a tagalog-helper session ("file and push ticket
 
 ## Acceptance criteria
 
-- [ ] Fixture repo with a slow and a failing pre-commit hook: `tkt new` completes quickly and commits only affected ticket and existing plan files.
-- [ ] `--no-push` and `push = false` leave the commit local; a later push renumbers safely on collision.
-- [ ] Fixture with a failing pre-push hook: the exit code and message distinguish "created, not pushed".
+- [x] Fixture repo with a slow and a failing pre-commit hook: `tkt new` completes quickly and commits only affected ticket and existing plan files.
+- [x] `--no-push` and `push = false` leave the commit local; a later push renumbers safely on collision.
+- [x] Fixture with a failing pre-push hook: the exit code and message distinguish "created, not pushed".
 
 ## Triage — 2026-11-02
 
@@ -47,3 +47,12 @@ Disposition: `kind:enhancement`, `triage:ready-for-agent`; stream `cli`.
 Confirmed git::commit invokes git commit -qm (hooks run), and new lacks --no-push. push.enabled=false already works; MutationContext already reports local durable commit on push failure. Extend missing behavior rather than rebuild those parts; preserve plan-file changes in mutation commits.
 
 This assessment supersedes conflicting historical planning notes above. Evidence, remaining unknowns and board coverage: [full-board triage](../docs/agents/ticket-triage-2026-11-02.md). Historical `.scratch` references are optional provenance, not required implementation inputs; use the durable inline contract and current tracked sources.
+
+## Resolution (2026-11-03)
+
+Ticket commits skip commit hooks locally with run opt-in, preserve unrelated index paths and support no-push; push hooks and collision recovery remain active. Critic accepted source and seven public fixtures. Source/evidence promoted, fixtures self-clean/shared target retained for queue. docs/evidence/hooks-cancel-guidance-235-227-177.md.
+
+### Verification
+1. ✓ tkt new, claim, edit and close commit only the affected ticket and existing plan files and do not run a consumer repo's heavy pre-commit gate (documented opt-in to keep hooks) — "Mutation hooks tests verify bypass/opt-in and --only ticket+plan commits preserving unrelated staged/untracked data."
+2. ✓ A --no-push flag and a push=false config let a ticket be created or edited locally, with the later push still collision-safe — "No-push skips fetch/push; deferred ID collision recovers through rebase and safe later push."
+3. ✓ A rejected push from a consumer pre-push hook is reported with the local commit id and a retry instruction, never silently left ahead — "Pre-push failures report commit SHA/output/retry; final gate375Rust42Nodepass1skip, performance cause for slow integration run unknown."
