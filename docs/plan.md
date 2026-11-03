@@ -122,7 +122,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 89 | Lifecycle hooks: on-new, on-claim, on-close scripts | open |
 | 90 | tkt open <id>: find URLs in ticket body and open in browser | open |
 | 93 | Pluggable schema definitions with meta field + ai_context support | open |
-| 99 | Make update check interval configurable | open |
+| 99 | Make update check interval configurable | in_progress |
 | 125 | Design the first external-system import adapter contract | open |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
 | 148 | Support primary-agent role pattern via init snippets and documentation | open |
