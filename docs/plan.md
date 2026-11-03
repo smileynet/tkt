@@ -68,7 +68,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 | 177 | guidance: state evidence↔validation_criteria rule, tag editing, fill-body-at-new, link-the-source | ✅ done |
 | 226 | Propose AGENTS.md restructuring while preserving guidance coverage | ✅ done |
 | 245 | Prepare approved guidance reference homes and current coverage map | ✅ done |
-| 246 | Apply approved conditional guidance pointers and update coverage matrix | in_progress |
+| 246 | Apply approved conditional guidance pointers and update coverage matrix | ✅ done |
 | 247 | Verify and deploy the staged guidance restructuring | open |
 | 228 | Migrate status dashboard to the current Plan-tab contract | in_progress |
 | 229 | tkt-work close step cleans up the ticket's scratch and build artifacts | ✅ done |
