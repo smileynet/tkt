@@ -1,7 +1,7 @@
 ---
 id: "175"
 title: "validate: advisory no-source-reference finding (union of spec/#NN/parent/link)"
-status: backlog
+status: open
 blocked_by: ["174"]
 priority: medium
 validation_criteria:
