@@ -45,6 +45,16 @@ documents' scratch citations; that shared branch also contains other unpublished
 work. Its push/deployment is held without modifying or publishing those paths.
 No waiver or fabricated pass is recorded.
 
+That publication blocker was then resolved by an isolated worktree based on
+origin/main: only the nine reviewed dashboard paths were committed as `0604d8d`.
+Its pre-merge checks passed (2/2) and pre-push checks passed (6/6 selected),
+including doc-links. The isolated commit was pushed to grey-matter main without
+the other workstream's commits. It was merged back into the shared checkout;
+the sole content difference was generated snapshot time, verified equivalent
+after removing that metadata field. Skill source/manifests match published main,
+and local deployment check/refresh passed. Original unrelated research history
+was neither rewritten nor published by this task.
+
 ## Installed and live-board acceptance
 
 `cargo install --path . --locked` passed; the freshness wrapper reported JSON
