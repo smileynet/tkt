@@ -1,12 +1,13 @@
 ---
 id: "243"
 title: "Collect dashboard decisions with recommendations and chat export"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Recommended radio choices and notes export deterministically with clipboard fallback"
   - "Canonical checks and complete snapshot preservation pass; unavailable rendered checks remain explicit"
 tags: ["dashboard", "kind:enhancement", "triage:ready-for-agent", "stream:quality", "gate:evidence"]
+assignee: "codex"
 ---
 # Dashboard decisions tab
 
