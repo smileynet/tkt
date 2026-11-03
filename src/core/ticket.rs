@@ -452,6 +452,16 @@ impl TicketFile {
         self.set_field("status", status.as_str());
     }
 
+    pub fn set_assignee(&mut self, assignee: Option<&AgentId>) {
+        match assignee {
+            Some(agent) => self.set_field(
+                "assignee",
+                &format!("\"{}\"", yaml_scalar_escape(agent.as_str())),
+            ),
+            None => self.remove_field("assignee"),
+        }
+    }
+
     /// Set the blocked_by array (handles YAML formatting internally).
     pub fn set_blocked_by(&mut self, ids: &[impl AsRef<str>]) {
         let formatted = ids
@@ -631,6 +641,7 @@ pub struct Ticket {
     pub spec: Option<String>,
     #[allow(dead_code)] // Consumed by parent validation and CLI follow-ups.
     pub parent: Option<String>,
+    pub assignee: Option<AgentId>,
     pub validation_criteria: Vec<String>,
     pub tags: Vec<String>,
     /// Machine capability requirements. Ticket only appears on frontier
@@ -686,6 +697,14 @@ impl Ticket {
 
         let spec = file.get("spec").map(yaml_scalar_decode);
         let parent = file.get("parent").map(yaml_scalar_decode);
+        let assignee = file
+            .get("assignee")
+            .map(yaml_scalar_decode)
+            .map(|value| {
+                AgentId::parse(&value)
+                    .map_err(|error| anyhow::anyhow!("{}: assignee: {}", path_display, error))
+            })
+            .transpose()?;
 
         let validation_criteria =
             parse_validation_criteria(file.get("validation_criteria").unwrap_or(""));
@@ -716,6 +735,7 @@ impl Ticket {
             priority,
             spec,
             parent,
+            assignee,
             validation_criteria,
             tags,
             requires,
@@ -1174,10 +1194,15 @@ pub fn json_string_escape(s: &str) -> String {
     out
 }
 
+pub const DEFAULT_INTENT_PROMPT: &str =
+    "Describe the change, why it is needed, and link its source (--spec or a #NN reference).";
+pub const DEFAULT_AC_PROMPT: &str = "Define an observable result and how to verify it.";
+
 /// Parameters for creating a new ticket file.
 pub struct NewTicketParams<'a> {
     pub id: &'a str,
     pub title: &'a str,
+    pub body: Option<&'a str>,
     pub blocked_by: &'a [String],
     pub env: Option<&'a str>,
     pub spec: Option<&'a str>,
@@ -1246,10 +1271,12 @@ pub fn new_ticket_text(p: &NewTicketParams) -> String {
             .join(", ");
         fm_lines.push(format!("agents: [{}]", value));
     }
-    let body = format!(
-        "\n# {}\n\n## What to build\n\nTBD\n\n## Acceptance criteria\n\n- [ ] TBD\n",
-        p.title
-    );
+    let body = p.body.map(str::to_string).unwrap_or_else(|| {
+        format!(
+            "\n# {}\n\n## What to build\n\n{}\n\n## Acceptance criteria\n\n- [ ] {}\n",
+            p.title, DEFAULT_INTENT_PROMPT, DEFAULT_AC_PROMPT
+        )
+    });
     format!("---\n{}\n---\n{}", fm_lines.join("\n"), body)
 }
 
@@ -1615,6 +1642,7 @@ spec: regex \d+
         let text = new_ticket_text(&NewTicketParams {
             id: "01",
             title: "Fix \"ready\" command",
+            body: None,
             blocked_by: &[],
             env: None,
             spec: None,

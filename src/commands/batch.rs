@@ -12,6 +12,7 @@ use crate::transaction::{GitTransaction, PublishResult};
 #[allow(clippy::too_many_arguments)]
 pub fn run(
     items: &[String],
+    template: Option<&str>,
     spec: Option<&str>,
     parent: Option<&str>,
     env: Option<&str>,
@@ -108,6 +109,7 @@ pub fn run(
 
     // Enforce validation_criteria at creation if configured
     let pcfg = project_config(&dir)?;
+    let body = super::creation_body::load(&dir, None, template)?;
     if pcfg.close_require_validation_criteria && validation_criteria.is_empty() {
         return Err(crate::DomainError::with_hint(
             crate::ErrorKind::GateFailed,
@@ -154,6 +156,7 @@ pub fn run(
                 let content = core::new_ticket_text(&core::NewTicketParams {
                     id: &tid,
                     title,
+                    body: body.as_deref(),
                     blocked_by,
                     env,
                     spec,

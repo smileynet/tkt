@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Creation accepts full body text, files or stdin and named body templates; default prompts still trigger unfilled-ticket validation.
+- Claims record optional agent ownership and the frontier hides work assigned to other identities.
+- Configuration can write and unset shared project settings with native typed values and atomic replacement.
 - Edit can replace, clear, add and remove tags without hand-editing ticket files or changing active context.
 - New, batch and edit can set a parent; edit can clear it, and query can select children. Invalid parent targets and cycles are rejected before writes.
 - Validation enforces declared label values and single-select namespaces while leaving undeclared tags unrestricted.

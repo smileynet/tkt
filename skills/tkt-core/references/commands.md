@@ -12,6 +12,10 @@ recommends `tkt init --write` and separate workflow skill/plugin installation.
 
 Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; the flag wins and identity is never stored in config. `ready` and `claim` apply ticket agent eligibility. Missing identity sees unrestricted work only; `ready` reports hidden restricted work on stderr. Use `claim <id> --force` only as an explicit scheduling override.
 
+Claim records optional `assignee` ownership separately from eligibility. Other
+owners block claim unless forced; ready hides them. Unidentified ready hides any
+owned ticket, and an anonymous forced claim preserves the existing owner.
+
 Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.
 
 ## Task lifecycle
@@ -100,6 +104,8 @@ When a context is active:
 | Flag | Effect | Default |
 |------|--------|---------|
 | `--title "..."` | Human-readable title | Required |
+| `--body TEXT\|@FILE\|-` | Full body text, UTF-8 file, or stdin (`new` only); conflicts with template | prompted default |
+| `--template NAME` | Verbatim body from `.tickets/templates/NAME.md` (new/batch) | prompted default |
 | `--status S` | `open` (default), `backlog` (deferred out of cycle), `in_progress`; `done` is rejected (use close) | `open` |
 | `--priority P` | `urgent`, `high`, `medium`, `low` | `medium` |
 | `--blocked-by N,N` | IDs that must be done first | none |
@@ -110,9 +116,12 @@ When a context is active:
 | `--validation "..."` | Validation criteria (repeatable). Alias: `--vc` | none |
 | `--requires R,R` | Machine capabilities required (e.g., `gpu,linux,corp`) | none |
 
-**After creation:** replace the generated `TBD` body and acceptance placeholders
-before validating an open ticket; otherwise `stub-body` warns. Creation has no
-`--body` or `--body-file` flag. Do not hide actionable work in backlog to silence it.
+**At creation:** supply a complete body with `--body @file`, `--body -`, literal
+text, or a named template. An initial `@` means a file; use stdin/file input for
+literal text starting with `@`. Bodies/templates replace the entire body verbatim;
+templates do not interpolate fields. Fill the default prompts before validating
+open work; unfilled prompts still trigger `stub-body`. Do not park actionable work
+to hide that warning.
 
 ## Edit flags
 
@@ -181,8 +190,11 @@ These settings control what `tkt close` requires:
 | `new.default_priority` | priority enum | Default priority for new tickets |
 | `machine.capabilities` | comma-separated string | Capabilities this workstation provides (matched against ticket `requires` field) |
 
-`tkt config --set` writes user configuration; edit `.tickets/config.toml` for
-shared project settings. Config output/help show the loader's actual user path.
+`tkt config --set` / `--unset` default to user configuration; add `--project` to
+write `.tickets/config.toml`. Project writes validate values, use native boolean
+syntax and do not commit automatically. Detached-HEAD writes warn. `--get`/`--list`
+read user settings; `--show` reads effective project settings. Config output/help
+show the loader's actual user path.
 Project `[labels.<namespace>]` tables accept `single_select = true/false` and
 `values = ["value", "other"]`. Invalid/unknown namespace fields are errors;
 use a single-line JSON-style double-quoted array without a trailing comma, as the

@@ -44,6 +44,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 ### Workflow
 
@@ -80,6 +82,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 Workflow: tkt ready → close <id> --check-all --resolution "done: what was shipped"
 For shared repos: tkt ready → claim <id> → work → close <id> --check-all --resolution "..."
@@ -111,6 +115,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 ## Commands
 - `tkt ready` — see unblocked tickets (frontier)
@@ -152,6 +158,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 ## Commands
 tkt ready              # frontier (open + deps done + env match)
@@ -194,6 +202,8 @@ Before close: promote durable outputs, trash only your disposable scratch/builds
 Hierarchy: new/batch/edit --parent ID; edit --parent "" clears. Query --parent ID selects children; hierarchy is separate from blocked_by prerequisites.
 Retag with edit: --tags replaces (empty clears), then --add-tag adds unique values, then --remove-tag removes last; repeat flags as needed. Edit preserves context.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
+Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
+Claim records --agent ownership; ready hides other owners, and claim --force overrides ownership. Config --set/--unset default to user scope; --project writes shared settings without committing.
 
 Commands: ready, claim <id>, close <id> --check-all --evidence "..." --resolution "..." (--evidence: 1 per criterion), validate --brief
 Create: new <slug> --title "..." [--tags stream] [--blocked-by N,N]  (defaults to open)

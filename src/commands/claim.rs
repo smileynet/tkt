@@ -25,6 +25,16 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
     if t.status != Status::Open {
         domain_bail!(AlreadyDone, "{} is {}, not open", t.id, t.status.as_str());
     }
+    if let Some(owner) = t.assignee.as_ref() {
+        if Some(owner) != agent && !force {
+            domain_bail!(
+                Conflict,
+                "cannot claim {}: assigned to {} (use --force for an explicit scheduling override)",
+                id,
+                owner.as_str()
+            );
+        }
+    }
     if !force {
         if let Err(reason) = t.agent_eligibility.check(agent) {
             let detail = match reason {
@@ -53,6 +63,9 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
 
     let mut file = t.file.clone();
     file.set_status(Status::InProgress);
+    if agent.is_some() {
+        file.set_assignee(agent);
+    }
     let plan_changed = super::sync_plan::update_status(&ctx.repo, &t.id, Status::InProgress)?;
     file.write()?;
 

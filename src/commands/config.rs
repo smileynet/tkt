@@ -8,9 +8,18 @@ pub fn run(
     set: Option<&str>,
     get: Option<&str>,
     unset: Option<&str>,
+    project: bool,
     list: bool,
     show: bool,
 ) -> Result<i32> {
+    if project && set.is_none() && unset.is_none() {
+        return Err(crate::DomainError::new(
+            crate::ErrorKind::Validation,
+            "--project is valid only with --set or --unset".to_string(),
+        )
+        .into());
+    }
+
     if let Some(pair) = set {
         let (key, value) = pair.split_once('=').ok_or_else(|| {
             crate::DomainError::new(
@@ -21,10 +30,21 @@ pub fn run(
         let key = key.trim();
         let value = value.trim();
         if is_dry_run() {
-            println!("Would set {} = {:?}", key, value);
+            println!(
+                "Would set {} = {:?} ({})",
+                key,
+                value,
+                if project { "project" } else { "user" }
+            );
             return Ok(0);
         }
-        crate::config::Config::set(key, value)?;
+        if project {
+            let dir = tickets_dir()?;
+            warn_if_detached_project_write(&dir);
+            crate::config::set_project_config(&dir, key, value)?;
+        } else {
+            crate::config::Config::set(key, value)?;
+        }
         if !is_quiet() {
             println!("{} {} = {:?}", crate::color::sym_ok(), key, value);
         }
@@ -39,10 +59,20 @@ pub fn run(
 
     if let Some(key) = unset {
         if is_dry_run() {
-            println!("Would unset {:?}", key);
+            println!(
+                "Would unset {:?} ({})",
+                key,
+                if project { "project" } else { "user" }
+            );
             return Ok(0);
         }
-        let existed = crate::config::Config::unset(key)?;
+        let existed = if project {
+            let dir = tickets_dir()?;
+            warn_if_detached_project_write(&dir);
+            crate::config::unset_project_config(&dir, key)?
+        } else {
+            crate::config::Config::unset(key)?
+        };
         if !is_quiet() {
             if existed {
                 println!(
@@ -101,4 +131,13 @@ pub fn run(
         }
     }
     Ok(0)
+}
+
+fn warn_if_detached_project_write(tickets_dir: &std::path::Path) {
+    let repo = tickets_dir.parent().unwrap_or(tickets_dir);
+    if crate::git::current_branch(repo).is_ok_and(|branch| branch.is_empty()) {
+        eprintln!(
+            "warning: writing .tickets/config.toml from detached HEAD; the change stays in this worktree and is not committed automatically"
+        );
+    }
 }

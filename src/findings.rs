@@ -594,10 +594,10 @@ fn section_content<'a>(body: &'a str, heading: &str) -> Option<&'a str> {
 }
 
 /// True when the body is an unfilled `tkt new` template stub: the intent section
-/// is empty/`TBD`, or the acceptance-criteria section's only checkbox is `- [ ] TBD`.
+/// is empty or contains the old/new prompt, or its only checkbox is a prompt.
 fn is_stub_body(body: &str) -> bool {
     let intent_stub = section_content(body, "## What to build")
-        .map(|c| c.is_empty() || c == "TBD")
+        .map(|c| c.is_empty() || c == "TBD" || c == core::ticket::DEFAULT_INTENT_PROMPT)
         .unwrap_or(false);
 
     let ac_stub = section_content(body, "## Acceptance criteria")
@@ -608,6 +608,7 @@ fn is_stub_body(body: &str) -> bool {
                 .filter(|l| l.starts_with("- ["))
                 .collect();
             checkboxes == ["- [ ] TBD"]
+                || checkboxes == [format!("- [ ] {}", core::ticket::DEFAULT_AC_PROMPT)]
         })
         .unwrap_or(false);
 

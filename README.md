@@ -175,6 +175,16 @@ tkt batch "api:Build API" "docs:Write docs" "tests:Add tests" --blocked-by 01
 
 ### Claim and close
 
+Create a complete ticket body with `tkt new example --body @brief.md`, `--body -`
+for stdin, or literal text. New/batch accept `--template NAME` to read the whole
+body verbatim from `.tickets/templates/NAME.md`; no interpolation is applied.
+Default section prompts remain detectable as unfilled work by validation.
+
+Claims record the invocation's agent identity as `assignee` when provided.
+Ownership is separate from eligibility: another owner blocks claiming unless
+`--force`, and ready hides other owners (or all owned tickets when unidentified).
+An anonymous forced claim preserves the recorded owner. Query/ready expose ownership.
+
 ```bash
 tkt claim 03             # mark in-progress (visible to collaborators)
 tkt close 03 --note "Deployed to prod"
@@ -317,6 +327,12 @@ double-quoted JSON-style string array for `values` (no trailing comma); it is no
 a full TOML parser. `tkt validate` also checks parent references for missing targets and cycles.
 `tkt config` and `tkt config --help` show the actual user configuration path,
 respecting `XDG_CONFIG_HOME` and the operating system's configuration directory.
+
+Use `tkt config --project --set close.require_resolution=true` or
+`--project --unset close.require_resolution` for shared settings. Writes validate
+known values, serialize native booleans and replace atomically; they do not create
+a Git commit. Detached-HEAD project writes warn. Without `--project`, writes keep
+the user scope; `--get`/`--list` inspect user values and `--show` inspects project values.
 
 `requires` is the canonical eligibility field. Existing `env: corp` or `env: personal`
 tickets remain compatible: tkt treats that value as one required capability. Do not combine

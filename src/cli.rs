@@ -99,6 +99,12 @@ enum Commands {
         slug: String,
         #[arg(long)]
         title: Option<String>,
+        /// Ticket body text, @file, or - for stdin
+        #[arg(long, conflicts_with = "template")]
+        body: Option<String>,
+        /// Body template from .tickets/templates/<name>.md
+        #[arg(long)]
+        template: Option<String>,
         #[arg(long)]
         spec: Option<String>,
         /// Parent ticket id
@@ -132,6 +138,9 @@ enum Commands {
     Batch {
         #[arg(required = true)]
         items: Vec<String>,
+        /// Body template from .tickets/templates/<name>.md
+        #[arg(long)]
+        template: Option<String>,
         #[arg(long)]
         spec: Option<String>,
         /// Parent ticket id
@@ -300,18 +309,21 @@ enum Commands {
         #[arg(long)]
         deep: bool,
     },
-    /// Manage user configuration and inspect project configuration
+    /// Read and write user or project configuration
     #[command(after_long_help = config_path_help())]
     Config {
-        /// Set a config value: tkt config --set key=value
+        /// Set a config value in the user config, or project config with --project
         #[arg(long)]
         set: Option<String>,
         /// Get a config value: tkt config --get key
         #[arg(long)]
         get: Option<String>,
-        /// Remove a config value (revert to default): tkt config --unset key
+        /// Remove a config value (revert to default) from the selected scope
         #[arg(long)]
         unset: Option<String>,
+        /// Write with --set or --unset to .tickets/config.toml instead of user config
+        #[arg(long)]
+        project: bool,
         /// List all config values with sources
         #[arg(long)]
         list: bool,
@@ -346,7 +358,7 @@ fn config_path_help() -> String {
     let path = crate::config::config_file_path()
         .map(|path| path.display().to_string())
         .unwrap_or_else(|| "unavailable".to_string());
-    format!("User configuration file: {path}\nRespects XDG_CONFIG_HOME; otherwise uses the operating system configuration directory.")
+    format!("User configuration file: {path}\nRespects XDG_CONFIG_HOME; otherwise uses the operating system configuration directory.\n\n--set and --unset default to user config. Add --project to write .tickets/config.toml. --get and --list read user config; --show reads project config. Writes are not committed automatically; detached HEAD writes emit a warning.")
 }
 
 pub fn run() -> i32 {
@@ -430,6 +442,8 @@ pub fn run() -> i32 {
             Commands::New {
                 slug,
                 title,
+                body,
+                template,
                 spec,
                 parent,
                 env,
@@ -444,6 +458,8 @@ pub fn run() -> i32 {
             } => crate::commands::new::run(
                 &slug,
                 title.as_deref(),
+                body.as_deref(),
+                template.as_deref(),
                 spec.as_deref(),
                 parent.as_deref(),
                 env.as_deref(),
@@ -458,6 +474,7 @@ pub fn run() -> i32 {
             ),
             Commands::Batch {
                 items,
+                template,
                 spec,
                 parent,
                 env,
@@ -471,6 +488,7 @@ pub fn run() -> i32 {
                 exclude_agents,
             } => crate::commands::batch::run(
                 &items,
+                template.as_deref(),
                 spec.as_deref(),
                 parent.as_deref(),
                 env.as_deref(),
@@ -590,12 +608,14 @@ pub fn run() -> i32 {
                 set,
                 get,
                 unset,
+                project,
                 list,
                 show,
             } => crate::commands::config::run(
                 set.as_deref(),
                 get.as_deref(),
                 unset.as_deref(),
+                project,
                 list,
                 show,
             ),

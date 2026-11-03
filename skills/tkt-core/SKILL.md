@@ -35,8 +35,9 @@ command discovery. Installing the CLI alone does not install the workflow skills
 
 For full flags and options, see [commands.md](references/commands.md).
 
-**Creation/edit traps:** `tkt new` seeds a `TBD` body; fill its intent and acceptance
-criteria before validating an open ticket. Use backlog only for genuinely deferred
+**Creation/edit traps:** `tkt new` supplies section prompts; use `--body` with text,
+`@file` or stdin `-`, or new/batch `--template NAME`, to provide a complete body.
+Fill intent/acceptance prompts before validating open work. Use backlog only for genuinely deferred
 work. `tkt edit --blocked-by` replaces the whole list: read the existing blockers,
 combine them with the new IDs, and pass the complete set.
 
@@ -54,6 +55,11 @@ Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; 
 Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.
 
 ## Status lifecycle
+
+Claim records the invocation identity as optional `assignee`; ready hides other
+owners and hides owned work when unidentified. `--force` overrides ownership
+checks; anonymous forced claims preserve the recorded owner. This is independent
+of allow/exclude eligibility.
 
 ```
 backlog → open → in_progress → done

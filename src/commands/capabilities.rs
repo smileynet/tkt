@@ -26,10 +26,10 @@ pub fn run() -> Result<i32> {
             "rebase" => ("idempotent", "Fetch, renumber collisions and commit locally; --dry-run reads cached remote state without writing", "text"),
             "config" => ("idempotent", "Read-only except --set and --unset write user configuration", "text"),
             "telemetry" => ("idempotent", "Read-only except --enable/--disable change consent and --clear deletes local events", "text"),
-            "ready" | "blocked" => ("read_only", "Read-only report; ready also supports JSON Lines", "text"),
+            "ready" | "blocked" => ("read_only", "Read-only report; ready also supports JSON Lines and hides tickets assigned to another agent", "text"),
             "help" => ("read_only", "Print help for an optional command path, such as help new", "text"),
             "audit" => ("read_only", "JSON findings by default; --brief uses text", "json"),
-            "query" => ("read_only", "JSON Lines; active tag context filters the corpus", "json_lines"),
+            "query" => ("read_only", "JSON Lines; active tag context filters the corpus; includes assignee", "json_lines"),
             "capabilities" => ("read_only", "One JSON feature manifest regardless of output flags", "json"),
             _ => ("unspecified", "Command behavior must be classified before advertising it", "text"),
         };

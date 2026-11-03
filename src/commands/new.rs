@@ -11,6 +11,8 @@ use crate::transaction::{GitTransaction, PublishResult};
 pub fn run(
     slug: &str,
     title: Option<&str>,
+    body: Option<&str>,
+    template: Option<&str>,
     spec: Option<&str>,
     parent: Option<&str>,
     env: Option<&str>,
@@ -93,6 +95,7 @@ pub fn run(
         core::AgentEligibility::Any
     };
     let pcfg = project_config(&dir)?;
+    let body = super::creation_body::load(&dir, body, template)?;
 
     // Enforce validation_criteria at creation if configured
     if pcfg.close_require_validation_criteria && validation_criteria.is_empty() {
@@ -167,6 +170,7 @@ pub fn run(
     let content = core::new_ticket_text(&core::NewTicketParams {
         id: &tid,
         title,
+        body: body.as_deref(),
         blocked_by,
         env,
         spec,
@@ -209,6 +213,7 @@ pub fn run(
             let content2 = core::new_ticket_text(&core::NewTicketParams {
                 id: &tid2,
                 title,
+                body: body.as_deref(),
                 blocked_by,
                 env,
                 spec,

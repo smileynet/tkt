@@ -80,6 +80,13 @@ pub fn run(
             "\"agents\":{}",
             serde_json::to_string(&t.agent_eligibility.signed_values())?
         ));
+        fields.push(format!(
+            "\"assignee\":{}",
+            t.assignee
+                .as_ref()
+                .map(|owner| format!("\"{}\"", core::json_string_escape(owner.as_str())))
+                .unwrap_or_else(|| "null".to_string())
+        ));
         println!("{{{}}}", fields.join(","));
     }
     crate::RESULT_COUNT.store(count as i32, std::sync::atomic::Ordering::Relaxed);

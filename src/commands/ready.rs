@@ -30,9 +30,24 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
         .iter()
         .filter(|ticket| ticket.agent_eligibility.check(agent).is_err())
         .count();
+    let hidden_assigned = scoped
+        .iter()
+        .filter(|ticket| {
+            ticket
+                .assignee
+                .as_ref()
+                .is_some_and(|owner| Some(owner) != agent)
+        })
+        .count();
     let front: Vec<&Ticket> = scoped
         .into_iter()
         .filter(|ticket| ticket.agent_eligibility.check(agent).is_ok())
+        .filter(|ticket| {
+            ticket
+                .assignee
+                .as_ref()
+                .is_none_or(|owner| Some(owner) == agent)
+        })
         .collect();
 
     // Record frontier size for telemetry
@@ -61,6 +76,19 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
 
     if hidden_restricted > 0 && agent.is_none() {
         eprintln!("Hidden: {} agent-restricted ticket(s). Identify this invocation with --agent <id> or TKT_AGENT.", hidden_restricted);
+    }
+    if hidden_assigned > 0 {
+        if agent.is_none() {
+            eprintln!(
+                "Hidden: {} ticket(s) have an assignee; identify this invocation to see tickets assigned to you.",
+                hidden_assigned
+            );
+        } else {
+            eprintln!(
+                "Hidden: {} ticket(s) assigned to another agent.",
+                hidden_assigned
+            );
+        }
     }
     if json {
         for t in &front {
@@ -101,6 +129,13 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
                 .collect::<Vec<_>>()
                 .join(",");
             fields.push(format!("\"agents\":[{}]", agents));
+            fields.push(format!(
+                "\"assignee\":{}",
+                t.assignee
+                    .as_ref()
+                    .map(|owner| format!("\"{}\"", core::json_string_escape(owner.as_str())))
+                    .unwrap_or_else(|| "null".to_string())
+            ));
             println!("{{{}}}", fields.join(","));
         }
     } else if is_quiet() {
@@ -125,7 +160,12 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
                 } else {
                     format!("  [agents: {}]", agents.join(", "))
                 };
-                println!("  {}  {}{}{}", t.id, t.title, flag, policy);
+                let assignee = t
+                    .assignee
+                    .as_ref()
+                    .map(|owner| format!("  [assignee: {}]", owner.as_str()))
+                    .unwrap_or_default();
+                println!("  {}  {}{}{}{}", t.id, t.title, flag, policy, assignee);
             }
         }
 
@@ -136,7 +176,12 @@ pub fn run(json: bool, agent: Option<&AgentId>) -> Result<i32> {
         if !wip.is_empty() {
             println!("\nIn progress ({}):", wip.len());
             for t in &wip {
-                println!("  {}  {}", t.id, t.title);
+                let assignee = t
+                    .assignee
+                    .as_ref()
+                    .map(|owner| format!("  [assignee: {}]", owner.as_str()))
+                    .unwrap_or_default();
+                println!("  {}  {}{}", t.id, t.title, assignee);
             }
         }
     }

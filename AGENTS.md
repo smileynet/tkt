@@ -146,8 +146,8 @@ tkt --version                                     # print version
 tkt ready [--json]                                # frontier: open + deps done + env match
 tkt context [TAGS...] [--clear]                   # set/show/clear active tag context for scoped work
 tkt migrate [--from FORMAT] [--detect] [--confirm] # convert foreign ticket schemas (tk → tkt; preview first)
-tkt new <slug> --title "..." [--spec S] [--parent ID] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
-tkt batch <slug[:title]>... [--spec S] [--parent ID] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
+tkt new <slug> --title "..." [--body TEXT|@FILE|- | --template NAME] [--spec S] [--parent ID] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
+tkt batch <slug[:title]>... [--template NAME] [--spec S] [--parent ID] [--blocked-by IDS] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
 tkt claim <id>                                    # status→in_progress, pushed
 tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..." (repeatable: one per validation criterion, or N=text)]
 tkt edit <id> [--title T] [--parent ID] [--tags T] [--add-tag T] [--remove-tag T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
@@ -164,7 +164,7 @@ tkt validate [--strict] [--brief] [--fix [--dry-run]]  # contract + cycle + deca
 tkt lint [--check] [IDs...]                       # normalize frontmatter style + blocked_by id refs
 tkt doctor [<path>] [--strict] [--fix]                    # health check (single or cross-project)
 tkt init [--target T] [--all] [--write [FILE]] [--agent-only]  # scaffold project + agent instructions
-tkt config [--set K=V] [--get K] [--unset K] [--list] [--show]  # user + project config
+tkt config [--set K=V] [--get K] [--unset K] [--project] [--list] [--show]  # user + project config
 tkt telemetry [--enable|--disable|--status|--show [--all]|--clear]  # manage local telemetry
 ```
 
@@ -199,11 +199,22 @@ New tickets default to `open` (frontier-eligible); reserve `--status backlog` fo
 
 ### Agent eligibility
 
+Claim records invocation identity as optional typed `assignee`. Another owner
+requires `--force`; ready hides other owners and hides owned work when no identity
+is supplied. Anonymous forced claims preserve the prior owner. Eligibility and
+ownership are distinct; query/ready expose both.
+
 Identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT`; the flag wins and identity is never stored in config. `ready` and `claim` apply ticket agent eligibility. Missing identity sees unrestricted work only; `ready` reports hidden restricted work on stderr. Use `claim <id> --force` only as an explicit scheduling override.
 
 Create or replace eligibility with mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on `new`, `batch`, and `edit`; `edit --agents ''` or `edit --exclude-agents ''` clears it. Frontmatter stores one optional signed `agents` list: `["codex", "claude"]` allows either, `["!antigravity"]` excludes that agent, omission allows everyone. Lists must be nonempty, homogeneous in sign, duplicate-free, and contain lowercase alphanumeric/hyphen slugs. Serialization sorts names. `ready` human/JSON and `query` JSON expose the policy (`agents: []` in JSON means unrestricted). `query` honors tag context but never filters by current agent. Tags scope work streams; `requires` remains all-of machine capabilities; eligibility is separate from ownership after claim.
 
 ### Configuration
+
+Set/unset default to user scope; `--project` writes shared project configuration
+with typed values and atomic replacement, without a Git commit. Detached-HEAD
+project writes warn. New bodies accept literal text, @file or stdin `-`; new/batch
+templates are verbatim files under `.tickets/templates/`. Default prompts remain
+detectable as unfilled work.
 
 Known effective policy values are parsed strictly with key/value/source errors;
 boolean aliases true/false/1/0/yes/no remain valid. Unknown keys retain warnings.

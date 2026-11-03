@@ -489,13 +489,19 @@ fn read_sectioned_config(path: &Path) -> Option<BTreeMap<String, String>> {
         }
         if let Some((key, value)) = trimmed.split_once('=') {
             let key = key.trim();
-            let value = value.trim().trim_matches('"');
+            let raw_value = value.trim();
+            let value = if raw_value.starts_with('"') && raw_value.ends_with('"') {
+                serde_json::from_str::<String>(raw_value)
+                    .unwrap_or_else(|_| raw_value.trim_matches('"').to_string())
+            } else {
+                raw_value.to_string()
+            };
             let full_key = if current_section.is_empty() {
                 key.to_string()
             } else {
                 format!("{}.{}", current_section, key)
             };
-            map.insert(full_key, value.to_string());
+            map.insert(full_key, value);
         }
     }
     Some(map)
@@ -566,7 +572,7 @@ impl Config {
     }
 
     /// Set a key in the user config file. Creates the file if it doesn't exist.
-    pub fn set(key: &str, value: &str) -> std::io::Result<()> {
+    pub fn set(key: &str, value: &str) -> anyhow::Result<()> {
         let path = config_file_path().ok_or_else(|| {
             std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory")
         })?;
@@ -577,7 +583,7 @@ impl Config {
     }
 
     /// Remove a key from the user config file (revert to default).
-    pub fn unset(key: &str) -> std::io::Result<bool> {
+    pub fn unset(key: &str) -> anyhow::Result<bool> {
         let path = config_file_path().ok_or_else(|| {
             std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory")
         })?;
@@ -696,19 +702,17 @@ fn default_for(key: &str) -> &str {
 }
 
 /// Write config file with sections. Groups keys by prefix (before the dot).
-fn write_config_file(path: &Path, values: &BTreeMap<String, String>) -> std::io::Result<()> {
+fn write_config_file(path: &Path, values: &BTreeMap<String, String>) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
 
-    let mut content = String::from(
-        "# tkt user configuration\n# Cascade: env > project config > this file > default\n\n",
-    );
+    let mut content = String::from("# tkt configuration\n\n");
 
     // Group by section
     let mut sections: BTreeMap<String, Vec<(String, String)>> = BTreeMap::new();
     for (key, value) in values {
-        if let Some((section, field)) = key.split_once('.') {
+        if let Some((section, field)) = key.rsplit_once('.') {
             sections
                 .entry(section.to_string())
                 .or_default()
@@ -724,7 +728,7 @@ fn write_config_file(path: &Path, values: &BTreeMap<String, String>) -> std::io:
     // Write unsectioned keys first
     if let Some(flat_keys) = sections.remove("") {
         for (key, value) in &flat_keys {
-            content.push_str(&format!("{} = \"{}\"\n", key, value));
+            content.push_str(&format!("{} = {}\n", key, config_literal(key, value)));
         }
         if !flat_keys.is_empty() {
             content.push('\n');
@@ -735,31 +739,78 @@ fn write_config_file(path: &Path, values: &BTreeMap<String, String>) -> std::io:
     for (section, fields) in &sections {
         content.push_str(&format!("[{}]\n", section));
         for (field, value) in fields {
-            content.push_str(&format!("{} = \"{}\"\n", field, value));
+            let key = format!("{section}.{field}");
+            content.push_str(&format!("{} = {}\n", field, config_literal(&key, value)));
         }
         content.push('\n');
     }
 
-    std::fs::write(path, content)
+    crate::core::atomic_write(path, &content)
+}
+
+fn config_literal(key: &str, value: &str) -> String {
+    if key.starts_with("labels.")
+        && key.ends_with(".values")
+        && serde_json::from_str::<Vec<String>>(value).is_ok()
+    {
+        return value.to_string();
+    }
+    let boolean_key = matches!(
+        key,
+        "close.require_resolution"
+            | "close.require_checked_acs"
+            | "close.require_validation_criteria"
+            | "close.require_validation_evidence"
+            | "close.allow_force"
+            | "validate.strict"
+            | "priority.warn_unknown"
+            | "push.enabled"
+            | "debug"
+    ) || (key.starts_with("labels.") && key.ends_with(".single_select"));
+    if boolean_key && matches!(value, "true" | "false") {
+        value.to_string()
+    } else {
+        format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
+    }
 }
 
 /// Set a key in the project config file.
-#[allow(dead_code)]
-pub fn set_project_config(tickets_dir: &Path, key: &str, value: &str) -> std::io::Result<()> {
+pub fn set_project_config(tickets_dir: &Path, key: &str, value: &str) -> anyhow::Result<()> {
     let path = tickets_dir.join("config.toml");
     let mut values = read_sectioned_config(&path).unwrap_or_default();
     values.insert(key.to_string(), value.to_string());
+    validate_project_values(&values, &path)?;
     write_config_file(&path, &values)
 }
 
 /// Remove a key from the project config file.
-#[allow(dead_code)]
-pub fn unset_project_config(tickets_dir: &Path, key: &str) -> std::io::Result<bool> {
+pub fn unset_project_config(tickets_dir: &Path, key: &str) -> anyhow::Result<bool> {
     let path = tickets_dir.join("config.toml");
     let mut values = read_sectioned_config(&path).unwrap_or_default();
     let existed = values.remove(key).is_some();
     write_config_file(&path, &values)?;
     Ok(existed)
+}
+
+fn validate_project_values(values: &BTreeMap<String, String>, path: &Path) -> anyhow::Result<()> {
+    let mut config = ProjectConfig::default();
+    for (key, value) in values {
+        if PROJECT_KEYS.iter().any(|(known, _)| known == key) {
+            if let Err(reason) = apply_value(&mut config, key, value) {
+                config.config_errors.push(config_value_error(
+                    key,
+                    value,
+                    &format!("project config {}", path.display()),
+                    &reason,
+                ));
+            }
+        }
+    }
+    let (namespaces, errors) = parse_label_namespaces(values);
+    config.label_namespaces = namespaces;
+    config.label_namespace_errors = errors;
+    config.validate()?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -936,7 +987,7 @@ foo = "bar"
         write_config_file(&path, &values).unwrap();
         let content = std::fs::read_to_string(&path).unwrap();
         assert!(content.contains("[close]"));
-        assert!(content.contains("allow_force = \"false\""));
+        assert!(content.contains("allow_force = false"));
         assert!(content.contains("[push]"));
 
         // Roundtrip

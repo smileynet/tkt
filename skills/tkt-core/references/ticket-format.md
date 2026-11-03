@@ -58,7 +58,7 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `id` | quoted string | Must match filename prefix: `"07"` → `07-slug.md` |
+| `id` | quoted string | Numeric filename prefix (`"07"` → `07-slug.md`); imported exact-stem IDs are also accepted by validation, without promising every mutation scheme |
 | `title` | quoted string | Human-readable, appears in `tkt ready` output |
 | `status` | enum | `open \| backlog \| in_progress \| done` (default: `open`) |
 | `blocked_by` | array of quoted strings | `["01", "03"]` — IDs that must be `done` first |
@@ -70,6 +70,7 @@ Avoid file paths and line numbers (they go stale). Reference interfaces, types, 
 | `priority` | enum | `urgent > high > medium > low` (default: medium) |
 | `env` | enum | `corp \| personal \| either` — filters `tkt ready` via `CREW_ENV` |
 | `spec` | string | Links to originating spec slug |
+| `assignee` | agent slug | Optional claim owner using the same grammar as `--agent`; eligibility remains separate |
 | `validation_criteria` | string array | Machine-checkable criteria for agent close gate |
 | `tags` | string array | Work-stream / categorization tags — the primary scoping mechanism for `tkt ready` and `tkt context`. Set via `--tags` at creation (recommended) or auto-applied from `tkt context`. |
 | `agents` | signed string array | Optional agent eligibility: `["codex", "claude"]` allows either; `["!antigravity"]` excludes. Omit for any agent. Empty, mixed-sign, duplicate, and invalid slug lists are errors; serialized names sort deterministically. |

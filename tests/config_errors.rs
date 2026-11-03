@@ -49,5 +49,5 @@ fn valid_config_set_still_writes() {
         .unwrap();
     assert!(output.status.success());
     let config = std::fs::read_to_string(dir.path().join("tkt/config.toml")).unwrap();
-    assert!(config.contains("debug = \"false\""));
+    assert!(config.contains("debug = false"));
 }

@@ -112,6 +112,12 @@ Resolve or record skipped files before claiming the whole corpus was checked.
 
 ## Creating Tickets
 
+Prefer a complete body at creation: new `--body @file`, `--body -` (stdin), or
+literal text. New/batch `--template NAME` loads `.tickets/templates/NAME.md`
+verbatim. Default prompts must be filled and link the intent source; they remain
+stub findings until replaced. Claim records the current agent as optional assignee;
+other owners require an explicit force override, independently of eligibility.
+
 To adjust existing tags, edit applies `--tags` replacement (empty clears), then
 `--add-tag` unique additions, then `--remove-tag` removals. These are repeatable;
 context is preserved and is not inherited by edits.
