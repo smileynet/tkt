@@ -533,20 +533,52 @@ function kirocrewDeploy(pack, args) {
   const kc = (...a) => spawnSync("kirocrew", ["app", ...a], { encoding: "utf8", windowsHide: true });
   const probe = kc("list");
   if (probe.error?.code === "ENOENT") { console.log("  kirocrew not on PATH; built only. Install: kirocrew app install " + out); return; }
-  const installed = kc("info", pack.name).status === 0;
-  // The gateway installs only for its verified local owner, so a sandboxed agent is refused.
-  // That is not a deploy failure: the build is done, and the owner finishes it by hand.
-  const manual = `${installed ? `kirocrew app uninstall ${pack.name} && ` : ""}kirocrew app install ${out} && kirocrew app enable ${pack.name}`;
-  const steps = [...(installed ? [["uninstall", pack.name]] : []), ["install", out], ["enable", pack.name]];
-  for (const step of steps) {
+  const info = kc("info", pack.name);
+  let state = null;
+  if (info.status === 0) { try { state = JSON.parse(info.stdout.slice(info.stdout.indexOf("{"))); } catch { state = {}; } }
+  const current = state && sameAppContent(out, join(KIROCREW_HOME(), "apps", pack.name));
+  if (current && state.enabled) { console.log(`  app ${pack.name} is up to date and enabled`); return; }
+  // An unchanged install only needs enabling; a changed one is replaced (app data is kept).
+  const steps = [
+    ...(state && !current ? [["uninstall", pack.name]] : []),
+    ...(current ? [] : [["install", out]]),
+    ["enable", pack.name],
+  ];
+  for (const [i, step] of steps.entries()) {
     const r = kc(...step);
     if (r.status === 0) continue;
-    const why = `${r.stdout}${r.stderr}`.split(/\r?\n/).filter((l) => /refused|error|failed|❌/i.test(l)).join(" ").trim();
-    console.log(`  warning: kirocrew app ${step[0]} did not finish${why ? ` (${why})` : ""}`);
-    console.log(`  run it yourself from a terminal on this machine:\n    ${manual}`);
+    kirocrewRefusal(pack, step, `${r.stdout}\n${r.stderr}`, steps.slice(i));
     return;
   }
-  console.log(`  ${installed ? "reinstalled" : "installed"} and enabled app ${pack.name} (app data kept)`);
+  console.log(`  ${current ? "enabled" : state ? "reinstalled and enabled" : "installed and enabled"} app ${pack.name} (app data kept)`);
+}
+
+// The installed copy matches the build when every built file is there byte for byte and the
+// copy has no other packaged files. The gateway adds its own runtime state beside them.
+const KIROCREW_RUNTIME = new Set([".app_secret", "approved-grants.json", "installed.json", "data"]);
+export function sameAppContent(built, installed) {
+  if (!isDir(installed)) return false;
+  const files = (root) => readdirSync(root, { recursive: true, withFileTypes: true })
+    .filter((e) => e.isFile())
+    .map((e) => relative(root, join(e.parentPath ?? e.path, e.name)))
+    .filter((rel) => !KIROCREW_RUNTIME.has(rel.split(sep)[0]))
+    .sort();
+  const a = files(built), b = files(installed);
+  if (a.length !== b.length || a.some((rel, i) => rel !== b[i])) return false;
+  return a.every((rel) => readFileSync(join(built, rel)).equals(readFileSync(join(installed, rel))));
+}
+
+// Two refusals need the owner, not a retry: the gateway installs only for its verified local
+// owner (a sandboxed agent is refused), and runs third-party app code only once trusted.
+function kirocrewRefusal(pack, step, output, remaining) {
+  const lines = output.split(/\r?\n/).filter((l) => l.trim() && !/^\s*(Ignoring |\d\d:\d\d:\d\d WARNING )/.test(l));
+  const why = lines.filter((l) => /refused|error|failed|blocked|❌/i.test(l)).join(" ").replace(/\s+/g, " ").trim();
+  const cmd = remaining.map((s) => `kirocrew app ${s.join(" ")}`).join(" && ");
+  console.log(`  warning: kirocrew app ${step[0]} did not finish${why ? ` (${why})` : ""}`);
+  if (/execution policy|third-party app/i.test(why)) {
+    console.log(`  trust ${pack.name} first: Settings -> Security -> Third-party apps, add "${pack.name}" (leave "Trust every third-party app" off)`);
+  }
+  console.log(`  then run it yourself from a terminal on this machine:\n    ${cmd}`);
 }
 
 // Manifests agree with disk, with each other, and with the latest release tag.
