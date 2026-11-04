@@ -28,6 +28,8 @@ fn run_tkt(dir: &Path, args: &[&str]) -> (i32, String) {
         .env("DO_NOT_TRACK", "1")
         .env("TKT_NO_USER_CONFIG", "1")
         .env_remove("TKT_DEBUG")
+        .env_remove("TKT_DEBUG_FORMAT")
+        .env("XDG_STATE_HOME", dir.join("private-state"))
         .output()
         .expect("failed to execute tkt");
     let code = output.status.code().unwrap_or(1);
@@ -1268,11 +1270,9 @@ fn test_push_failure_after_commit_preserves_local_state() {
 fn run_tkt_env(dir: &Path, args: &[&str], env: &[(&str, &str)]) -> (i32, String, String) {
     let mut cmd = Command::new(tkt_bin());
     cmd.args(args).current_dir(dir);
-    // Default: suppress telemetry unless caller explicitly overrides
-    if !env.iter().any(|(k, _)| *k == "DO_NOT_TRACK") {
-        cmd.env("DO_NOT_TRACK", "1");
-    }
     cmd.env_remove("TKT_DEBUG");
+    cmd.env_remove("TKT_DEBUG_FORMAT");
+    cmd.env("XDG_STATE_HOME", dir.join("private-state"));
     cmd.env("TKT_NO_USER_CONFIG", "1");
     for (k, v) in env {
         if v.is_empty() {
@@ -1281,7 +1281,10 @@ fn run_tkt_env(dir: &Path, args: &[&str], env: &[(&str, &str)]) -> (i32, String,
             cmd.env(k, v);
         }
     }
-    let output = cmd.output().expect("failed to execute tkt");
+    let output = cmd
+        .env("DO_NOT_TRACK", "1")
+        .output()
+        .expect("failed to execute tkt");
     let code = output.status.code().unwrap_or(1);
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
@@ -1352,51 +1355,6 @@ fn test_debug_mode_json_format() {
         let _: serde_json::Value = serde_json::from_str(line)
             .unwrap_or_else(|e| panic!("invalid JSON in debug output: {} — line: {}", e, line));
     }
-}
-
-#[test]
-fn test_telemetry_enable_disable_cycle() {
-    let (_tmp, clone) = setup_repo();
-
-    // Clear any inherited telemetry env vars for a clean test
-    let clean_env: &[(&str, &str)] = &[("TKT_TELEMETRY", ""), ("DO_NOT_TRACK", ""), ("CI", "")];
-
-    // First disable to reset any persisted state from prior runs
-    let (code, _, _) = run_tkt_env(&clone, &["telemetry", "--disable"], clean_env);
-    assert_eq!(code, 0);
-
-    // Status: should now show disabled
-    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--status"], clean_env);
-    assert_eq!(code, 0);
-    assert!(out.contains("disabled"), "should be disabled: {}", out);
-
-    // Enable
-    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--enable"], clean_env);
-    assert_eq!(code, 0);
-    assert!(out.contains("enabled"), "should confirm enable: {}", out);
-
-    // Status: now enabled
-    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--status"], clean_env);
-    assert_eq!(code, 0);
-    assert!(
-        out.contains("enabled") && out.contains("consent.toml"),
-        "should show enabled via config: {}",
-        out
-    );
-
-    // Disable again
-    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--disable"], clean_env);
-    assert_eq!(code, 0);
-    assert!(out.contains("disabled"), "should confirm disable: {}", out);
-
-    // Status: disabled
-    let (code, out, _) = run_tkt_env(&clone, &["telemetry", "--status"], clean_env);
-    assert_eq!(code, 0);
-    assert!(
-        out.contains("disabled"),
-        "should be disabled again: {}",
-        out
-    );
 }
 
 #[test]
@@ -1927,6 +1885,7 @@ fn run_tkt_with_config(dir: &Path, args: &[&str], config_home: &Path) -> (i32, S
         .env_remove("TKT_DEBUG")
         .env_remove("TKT_DEBUG_FORMAT")
         .env("XDG_CONFIG_HOME", config_home)
+        .env("XDG_STATE_HOME", config_home.join("state"))
         .output()
         .expect("failed to execute tkt");
     let code = output.status.code().unwrap_or(1);
@@ -1962,6 +1921,7 @@ fn test_config_set_get_list() {
         .env_remove("TKT_DEBUG")
         .env_remove("TKT_DEBUG_FORMAT")
         .env("XDG_CONFIG_HOME", &config_dir)
+        .env("XDG_STATE_HOME", config_dir.join("state"))
         .output()
         .expect("failed to execute tkt");
     assert_eq!(output.status.code().unwrap_or(1), 0);
@@ -2007,6 +1967,8 @@ fn test_config_env_overrides_config_file() {
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_DEBUG", "1")
         .env("XDG_CONFIG_HOME", &config_dir)
+        .env("XDG_STATE_HOME", config_dir.join("state"))
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .expect("failed to execute tkt");
     let out = String::from_utf8_lossy(&output.stdout).to_string();
@@ -2035,6 +1997,8 @@ fn test_config_debug_with_explicit_human_format_enables_stderr_output() {
         .env_remove("TKT_NO_USER_CONFIG")
         .env_remove("TKT_DEBUG")
         .env("XDG_CONFIG_HOME", &config_dir)
+        .env("XDG_STATE_HOME", config_dir.join("state"))
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .expect("failed to execute tkt");
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();

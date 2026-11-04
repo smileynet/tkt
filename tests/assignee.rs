@@ -8,6 +8,8 @@ fn run(dir: &Path, args: &[&str], agent: Option<&str>) -> Output {
         .current_dir(dir)
         .args(args)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env_remove("TKT_AGENT")
         .env_remove("CREW_ENV");

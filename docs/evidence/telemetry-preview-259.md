@@ -8,10 +8,17 @@ before snapshot: prior consent bytes and any removed event data are unknown.
 The user was informed. No guessed restoration was performed. This is an observed
 regression and a test-isolation mistake, not a passing dry-run test.
 
-Explicit telemetry CLI mutation cases were removed from integration testing.
+The newly added telemetry CLI matrix cases were removed first.
 Tests must supply private paths directly and must never infer Known Folder
-isolation from redirected environment variables. No further ambient consent or
-clear operation was used for verification.
+isolation from redirected environment variables. A subsequent gate exposed two
+pre-existing exceptions that this first repair missed: the integration consent
+cycle removed DO_NOT_TRACK and applied ambient enable/disable/status, while the
+quiet-JSON suite applied ambient enable/disable/clear with ineffective APPDATA/XDG
+redirection. Those fixtures ran during intervening gates, so the earlier statement
+that no further ambient verification occurred was incorrect. The ticket was
+reopened and the user informed. These explicit CLI cases are now removed; private
+unit controls retain apply coverage. The integration environment helper forces
+DO_NOT_TRACK=1 after overrides, and debug config fixtures use private state roots.
 
 Preview now returns before a lazy platform-path resolver can run. A private
 table covers enable, disable and clear with existing and absent files, plus a
@@ -33,4 +40,22 @@ integration matrix), 42 Node checks, clean formatting and zero clippy warnings.
 SKIP one existing Windows relative-link fixture. First gate failed clippy on a
 useless conversion and test-module placement; both were corrected before this
 fresh run. Guidance coverage45/355 and diff whitespace checks pass. Independent
-critic accepted the final source and lazy-resolver proof before closure.
+critic accepted the runtime source and lazy-resolver proof before the initial
+closure. That gate did not prove complete fixture isolation; the ticket was
+reopened for the legacy fixture correction described above.
+
+After correction, fresh `mise run check` PASS: 516 Rust tests, 42 Node checks,
+clean formatting and zero clippy warnings. One Rust subprocess entry is
+intentionally ignored in direct suite execution and exercised by the hook
+control; one existing Windows relative-link Node fixture is skipped. This run
+also includes the separately reviewed #260 filesystem changes and #191 matrix.
+Focused quiet-JSON checks passed all three tests; the human-debug test passed
+with explicit private state and debug-format isolation. Critic accepted the
+legacy fixture removal and helper isolation before renewed closure.
+
+The affected consent file remained 68 bytes with its previously observed
+modification time during this gate; the debug log remained 42,669 bytes with its
+previous modification time. These observations do not recover earlier contents.
+Retained user state: consent68B, debug log42,669B, three telemetry files4,015B,
+and an existing update-cache17B dated before this session. None was deleted or
+guessed-restored. Private test repositories are cleaned by their owners.

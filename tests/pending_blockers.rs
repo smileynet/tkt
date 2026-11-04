@@ -13,6 +13,8 @@ fn git(root: &Path, args: &[&str]) {
         .args(["-C", root.to_str().unwrap()])
         .args(args)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .unwrap();
     assert!(output.status.success(), "git {args:?}: {output:?}");
@@ -23,6 +25,8 @@ fn cli(root: &Path, args: &[&str]) -> Output {
         .args(args)
         .current_dir(root)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_UPDATE_CHECK", "0")
         .env_remove("TKT_CONTEXT")

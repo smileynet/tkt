@@ -11,7 +11,9 @@ fn isolated_command(program: &str) -> Command {
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .env_remove("GIT_CONFIG_COUNT")
         .env_remove("GIT_CONFIG_PARAMETERS")
-        .env("DO_NOT_TRACK", "1");
+        .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT");
     command
 }
 
@@ -21,6 +23,8 @@ fn git(root: &Path, args: &[&str]) -> String {
         .arg(root)
         .args(args)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .unwrap();
     assert!(out.status.success(), "{args:?}: {out:?}");
@@ -48,6 +52,8 @@ fn cli(root: &Path, args: &[&str]) -> Output {
         .args(args)
         .current_dir(root)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_UPDATE_CHECK", "0")
         .output()
@@ -164,6 +170,8 @@ fn shared_worktree_install_and_advisory_git_commit() {
         .args(["commit", "-qm", "advisory permits commit"])
         .env("PATH", std::env::join_paths(paths).unwrap())
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .output()
         .unwrap();

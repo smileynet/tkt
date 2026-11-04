@@ -21,6 +21,8 @@ fn git(dir: &Path, args: &[&str]) -> String {
         .args(["-C", &dir.to_string_lossy()])
         .args(args)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .expect("git failed");
     assert!(
@@ -35,6 +37,8 @@ fn git_blob_hash(dir: &Path, bytes: &[u8]) -> String {
     let mut child = Command::new("git")
         .args(["-C", &dir.to_string_lossy(), "hash-object", "--stdin"])
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .spawn()
@@ -65,6 +69,8 @@ fn collision_rebase_preserves_local_body_citations() {
         .args(["init", "--bare", "-q", "-b", "main"])
         .arg(&remote)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .status()
         .unwrap();
     for clone in [&a, &b] {
@@ -73,6 +79,8 @@ fn collision_rebase_preserves_local_body_citations() {
             .arg(&remote)
             .arg(clone)
             .env("DO_NOT_TRACK", "1")
+            .env("TKT_DEBUG", "0")
+            .env_remove("TKT_DEBUG_FORMAT")
             .status()
             .unwrap();
         git(clone, &["config", "user.email", "test@test"]);
@@ -105,6 +113,8 @@ fn collision_rebase_preserves_local_body_citations() {
         .args(["query", "-o", "json"])
         .current_dir(&b)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_UPDATE_CHECK", "0")
         .output()
@@ -121,6 +131,8 @@ fn collision_rebase_preserves_local_body_citations() {
         .args(["--dry-run", "rebase"])
         .current_dir(&b)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_UPDATE_CHECK", "0")
         .output()
@@ -142,6 +154,8 @@ fn collision_rebase_preserves_local_body_citations() {
         .arg("rebase")
         .current_dir(&b)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_UPDATE_CHECK", "0")
         .output()
@@ -171,6 +185,8 @@ fn collision_rebase_preserves_local_body_citations() {
         .args(["validate", "-o", "json"])
         .current_dir(&b)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_UPDATE_CHECK", "0")
         .output()

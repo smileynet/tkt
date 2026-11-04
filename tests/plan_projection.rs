@@ -6,6 +6,8 @@ fn cli(root: &Path, args: &[&str]) -> Output {
         .args(args)
         .current_dir(root)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env("TKT_UPDATE_CHECK", "0")
         .env("GIT_CONFIG_NOSYSTEM", "1")
@@ -22,6 +24,8 @@ fn fixture() -> tempfile::TempDir {
         .args(["init", "-q"])
         .arg(temp.path())
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .unwrap();
     assert!(out.status.success(), "{out:?}");

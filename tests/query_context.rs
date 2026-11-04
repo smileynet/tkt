@@ -35,6 +35,8 @@ fn git(root: &Path, args: &[&str]) -> String {
         .args(["-C", root.to_str().unwrap()])
         .args(args)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .unwrap();
     assert!(output.status.success(), "git {args:?}: {output:?}");
@@ -47,6 +49,8 @@ fn query(root: &Path, args: &[&str], context: Option<&str>) -> Output {
         .args(args)
         .current_dir(root)
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env("TKT_NO_USER_CONFIG", "1")
         .env_remove("TKT_UPDATE_CHECK")
         .env_remove("TKT_CONTEXT");
@@ -105,6 +109,8 @@ fn query_help_explains_context_filter_and_bypass() {
     let output = Command::new(env!("CARGO_BIN_EXE_tkt"))
         .args(["query", "--help"])
         .env("DO_NOT_TRACK", "1")
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .output()
         .unwrap();
     assert!(output.status.success());

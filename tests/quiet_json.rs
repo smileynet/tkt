@@ -55,6 +55,9 @@ fn cli(root: &Path, data_home: &Path, args: &[&str]) -> Output {
         .env("APPDATA", data_home)
         .env("XDG_CONFIG_HOME", data_home)
         .env("XDG_DATA_HOME", data_home)
+        .env("XDG_STATE_HOME", data_home.join("state"))
+        .env("TKT_DEBUG", "0")
+        .env_remove("TKT_DEBUG_FORMAT")
         .env_remove("TKT_UPDATE_CHECK")
         .env_remove("TKT_CONTEXT")
         .env_remove("TKT_AGENT")
@@ -100,9 +103,6 @@ fn write_commands_keep_one_json_success_object_in_quiet_mode() {
         "validate-fix",
         "sync-plan-fix",
         "migrate",
-        "telemetry-enable",
-        "telemetry-disable",
-        "telemetry-clear",
         "rebase",
     ];
 
@@ -196,9 +196,6 @@ fn write_commands_keep_one_json_success_object_in_quiet_mode() {
                 .unwrap();
                 cli(&root, &data_home, &["migrate", "--from", "tk", "--confirm"])
             }
-            "telemetry-enable" => cli(&root, &data_home, &["telemetry", "--enable"]),
-            "telemetry-disable" => cli(&root, &data_home, &["telemetry", "--disable"]),
-            "telemetry-clear" => cli(&root, &data_home, &["telemetry", "--clear"]),
             "rebase" => {
                 let remote = temp.path().join("remote.git");
                 std::fs::create_dir(&remote).unwrap();
