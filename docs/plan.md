@@ -209,4 +209,4 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 251 | Preserve migration sources and foreign destinations | ✅ done |
 | 252 | Remove unsupported migration-map guidance | ✅ done |
 | 253 | Plan and apply local configuration context and init effects | ✅ done |
-| 254 | Restrict undo close checkbox recognition to the acceptance section | open |
+| 254 | Restrict undo close checkbox recognition to the acceptance section | in_progress |

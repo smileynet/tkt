@@ -1,7 +1,7 @@
 ---
 id: "254"
 title: "Restrict undo close checkbox recognition to the acceptance section"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -10,6 +10,7 @@ validation_criteria:
   - "Fresh full gate and independent critic review accept final source"
 tags: ["stream:quality", "kind:bug", "triage:ready-for-agent"]
 parent: "191"
+assignee: "codex"
 ---
 # Match undo recognition to the actual acceptance section
 
