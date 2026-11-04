@@ -1,7 +1,7 @@
 ---
 id: "258"
 title: "Keep undo snapshots independent of background Git maintenance"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Undo fixtures and the standard mise run check pass on macOS without a custom Git template or ignored assertions."
