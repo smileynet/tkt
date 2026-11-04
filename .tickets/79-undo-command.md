@@ -1,12 +1,13 @@
 ---
 id: "79"
 title: "tkt undo: revert last mutation"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
   - "`tkt undo` reverts last tkt-generated commit"
 tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
+assignee: "codex"
 ---
 
 # tkt undo: revert last mutation
