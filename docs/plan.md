@@ -124,7 +124,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 79 | tkt undo: revert last mutation | ✅ done |
 | 83 | Add a noninteractive ticket-note append operation | ✅ done |
 | 86 | tkt import --github: pull open issues into .tickets/ | ✅ done |
-| 88 | tkt done --week: show-resolved report for standups | open |
+| 88 | tkt done --week: show-resolved report for standups | in_progress |
 | 89 | Lifecycle hooks: on-new, on-claim, on-close scripts | open |
 | 90 | tkt open <id>: find URLs in ticket body and open in browser | open |
 | 93 | Pluggable schema definitions with meta field + ai_context support | open |

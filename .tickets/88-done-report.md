@@ -1,7 +1,7 @@
 ---
 id: "88"
 title: "tkt done --week: show-resolved report for standups"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Missing/shallow/ambiguous history is explicitly unknown without a fabricated date or new completion field"
   - "Window/timezone and cancelled-versus-done behavior are documented and tested"
 tags: ["cli", "kind:enhancement", "stream:workflow", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # tkt done --week: show-resolved report for standups
