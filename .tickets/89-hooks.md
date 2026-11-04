@@ -1,7 +1,7 @@
 ---
 id: "89"
 title: "Lifecycle hooks: on-new, on-claim, on-close scripts"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Portable invocation, bounded execution and failure/retry behavior are explicit and tested"
   - "No configuration preserves current behavior and existing verification policy"
 tags: ["integrations", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Lifecycle hooks: on-new, on-claim, on-close scripts
