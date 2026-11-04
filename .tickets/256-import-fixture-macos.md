@@ -1,7 +1,7 @@
 ---
 id: "256"
 title: "Make import failure fixtures deterministic on macOS"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "Git maintenance cannot race byte snapshots and missing-gh fixtures produce an execution error on macOS and Windows."
