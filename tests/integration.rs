@@ -1238,7 +1238,7 @@ fn test_push_failure_after_commit_preserves_local_state() {
     );
     // Actionable, recoverable message — not a bare "crash".
     assert!(
-        out.contains("committed locally") && out.contains("push failed"),
+        out.contains("was created locally but was not pushed") && out.contains("push failed"),
         "must explain the change is committed locally and the push failed: {}",
         out
     );
