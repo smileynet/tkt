@@ -23,7 +23,7 @@ Neither changes status or invents a dependency. Backlog remains deferred even wh
 prerequisites are met. The graph shows gates on dependency-blocked tickets too.
 The owner settled all 17 published decisions on 2026-11-03; see [the decision record](decision-record-2026-11-03.md). The completed #197 implementation unblocks #199 and #200.
 
-Latest completed slices: #253 local file effects, #69 focused integration scope, #168 advisory measurement and #79 guarded undo ([receipt](evidence/undo-79.md)), followed by #254 recognition repair and #83 noninteractive notes ([receipt](evidence/note-83.md)). The [batch receipt](evidence/unblocked-batch-2026-11-03.json) records source, pack comparisons and artifact disposition; #191 and the remaining six-ticket implementation queue remain unfinished.
+Latest completed slices: #253 local file effects, #69 focused integration scope, #168 advisory measurement and #79 guarded undo ([receipt](evidence/undo-79.md)), followed by #254 recognition repair and #83 noninteractive notes ([receipt](evidence/note-83.md)). The [batch receipt](evidence/unblocked-batch-2026-11-03.json) records source, pack comparisons and artifact disposition; #191 and the remaining five-ticket implementation queue remain unfinished.
 
 ## Cross-project production evidence
 
@@ -145,7 +145,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 
 ### Current execution queue
 
-Continue #191 with remaining mutation families, prepared Git effects and the full no-write matrix; its all-mutator acceptance is incomplete. The GitHub importer #86 is complete after the 470-test gate and critic acceptance ([receipt](evidence/github-import-86.md)). Weekly report #88 is complete after the 482-test gate and critic acceptance ([receipt](evidence/done-report-88.md)). Lifecycle hooks #89 are in progress. The ready low-priority frontier remains #90, #93, #148, #158 and #249 in priority/ID order. #86 has its completed adapter contract; #158 has current advisory-hook evidence. This queue adds no dependency edges. Two tickets remain backlog: #147 needs its exact cross-session reproduction; #184 remains explicitly deferred. Three dashboard tickets (#228, #240, #243) retain unavailable rendered acceptance.
+Continue #191 with remaining mutation families, prepared Git effects and the full no-write matrix; its all-mutator acceptance is incomplete. The GitHub importer #86 is complete after the 470-test gate and critic acceptance ([receipt](evidence/github-import-86.md)). Weekly report #88 is complete after the 482-test gate and critic acceptance ([receipt](evidence/done-report-88.md)). Lifecycle hooks #89 are complete after the 496-test gate and critic acceptance ([receipt](evidence/lifecycle-hooks-89.md)). The ready low-priority frontier remains #90, #93, #148, #158 and #249 in priority/ID order. #86 has its completed adapter contract; #158 has current advisory-hook evidence. This queue adds no dependency edges. Two tickets remain backlog: #147 needs its exact cross-session reproduction; #184 remains explicitly deferred. Three dashboard tickets (#228, #240, #243) retain unavailable rendered acceptance.
 
 ## Recorded cancellations under ADR 0004
 
