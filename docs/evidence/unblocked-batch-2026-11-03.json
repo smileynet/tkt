@@ -158,7 +158,7 @@
   "verifiedAtCommit": "0e3b058af655e4a0eef7e0b6a2ecaee25cee99ba",
   "recycled": {
     "files": 7,
-    "logicalBytes": 14005.0,
+    "logicalBytes": 14005,
     "scope": "Own batch helpers and terminal logs only; useful results promoted; OS Recycle Bin"
   }
 }
