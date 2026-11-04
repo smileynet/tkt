@@ -34,6 +34,7 @@ fn git(root: &Path, args: &[&str]) -> String {
     String::from_utf8(out.stdout).unwrap().trim().into()
 }
 fn hook(path: &Path, text: &str) {
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     std::fs::write(path, text).unwrap();
     #[cfg(unix)]
     {
@@ -58,6 +59,9 @@ impl Fixture {
         let root = temp.path().join("repo");
         std::fs::create_dir(&root).unwrap();
         git(&root, &["init", "-q", "-b", "main"]);
+        // Byte snapshots must not race Git's background object maintenance.
+        git(&root, &["config", "maintenance.auto", "false"]);
+        git(&root, &["config", "gc.auto", "0"]);
         git(&root, &["config", "user.name", "Import fixture"]);
         git(&root, &["config", "user.email", "fixture@example.invalid"]);
         git(&root, &["config", "core.autocrlf", "false"]);
@@ -903,14 +907,36 @@ fn current_origin_and_missing_gh_have_explicit_public_behavior() {
     let f = Fixture::new();
     let path = f.bin.join(if cfg!(windows) { "gh.exe" } else { "gh" });
     std::fs::remove_file(&path).unwrap();
-    std::fs::write(&path, []).unwrap();
+    // An empty executable can run successfully through macOS's shell fallback.
+    std::fs::write(&path, b"#!/tkt-test-missing-interpreter\n").unwrap();
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
     }
     let before = snapshot(&f.root);
-    let out = f.import(&[]);
+    // Do not fall through to the owner's real gh after rejecting the fixture.
+    let git_name = if cfg!(windows) { "git.exe" } else { "git" };
+    let git_executable = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+        .map(|directory| directory.join(git_name))
+        .find(|path| path.is_file())
+        .unwrap();
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_file(git_executable, f.bin.join(git_name)).unwrap();
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(git_executable, f.bin.join(git_name)).unwrap();
+    let out = f
+        .cli(&[
+            "import",
+            "--github",
+            "--repo",
+            "owner/project",
+            "-o",
+            "json",
+        ])
+        .env("PATH", &f.bin)
+        .output()
+        .unwrap();
     assert!(!out.status.success(), "{out:?}");
     assert!(
         String::from_utf8_lossy(&out.stderr).contains("cannot execute gh"),

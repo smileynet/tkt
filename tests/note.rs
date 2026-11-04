@@ -48,6 +48,8 @@ fn fixture(status: &str, push: bool, hooks: bool) -> (tempfile::TempDir, PathBuf
     let root = temp.path().join("repo");
     std::fs::create_dir(&root).unwrap();
     git(&root, &["init", "-q", "-b", "main"]);
+    git(&root, &["config", "maintenance.auto", "false"]);
+    git(&root, &["config", "gc.auto", "0"]);
     git(&root, &["config", "user.name", "Note fixture"]);
     git(&root, &["config", "user.email", "fixture@example.invalid"]);
     std::fs::create_dir(root.join(".tickets")).unwrap();
@@ -243,7 +245,7 @@ fn file_stdin_preview_missing_invalid_and_reserved_inputs_have_explicit_effects(
 fn failed_commit_preserves_appended_note_for_explicit_recovery() {
     let (_temp, root, original) = fixture("open", false, true);
     let head = git(&root, &["rev-parse", "HEAD"]);
-    std::fs::write(root.join(".git/hooks/pre-commit"), "#!/bin/sh\nexit 1\n").unwrap();
+    hook(&root.join(".git/hooks/pre-commit"), "#!/bin/sh\nexit 1\n");
     let out = cli(
         &root,
         &["note", "01", "--append", "Retained after hook failure"],

@@ -11,6 +11,12 @@ tags: ["stream:tooling"]
 
 During grey-matter sync verification, mise run check failed in tests/github_import.rs: automatic Git maintenance created transient lock files, and an empty executable was accepted by macOS as a successful shell script. Keep the fixture isolated and use an explicitly unlaunchable executable. Source: tests/github_import.rs.
 
+Note-fixture follow-up: tests/note.rs had the same background-maintenance race and
+created a non-executable pre-commit hook on POSIX. Disable maintenance in its disposable
+repository and use the existing executable-hook helper. Missing-gh coverage also
+isolates PATH so a broken fixture cannot fall through to the owner's real CLI.
+Windows execution remains unverified on this Mac. No product code or host Git settings change.
+
 ## Acceptance criteria
 
 - [ ] Import fixtures pass on macOS without host Git config changes or skipped assertions.
