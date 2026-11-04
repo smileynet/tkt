@@ -1,0 +1,80 @@
+{
+  "sourceCommit": "f2a4f1c",
+  "cliInstall": "cargo install --path . --locked passed; freshness HEAD/installedf2a4f1c before closure metadata",
+  "pack": "node tools/deploy.mjs passed; native strict no warnings; Claude direct checkout verified",
+  "comparisons": [
+    {
+      "root": "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0\\skills",
+      "filesCompared": 16,
+      "mismatches": []
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.kiro\\skills",
+      "filesCompared": 16,
+      "mismatches": []
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.config\\opencode\\skills",
+      "filesCompared": 16,
+      "mismatches": []
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.gemini\\config\\plugins\\tkt\\skills",
+      "filesCompared": 16,
+      "mismatches": []
+    },
+    {
+      "root": "D:\\code\\tkt\\dist\\agy-plugin\\skills",
+      "filesCompared": 16,
+      "mismatches": []
+    },
+    {
+      "root": "D:\\code\\tkt\\dist\\kirocrew-app\\skills",
+      "filesCompared": 16,
+      "mismatches": []
+    }
+  ],
+  "limits": [
+    "Kiro Crew built only; CLI unavailable",
+    "Rendered laptop/phone checks unavailable; no dashboard asks"
+  ],
+  "preservedArtifacts": [
+    {
+      "path": ".scratch\\.gitkeep",
+      "bytes": 51
+    },
+    {
+      "path": ".scratch\\dashboard-lan.json",
+      "bytes": 298
+    },
+    {
+      "path": ".scratch\\research",
+      "bytes": 148002
+    },
+    {
+      "path": ".scratch\\review",
+      "bytes": 80544
+    },
+    {
+      "path": ".scratch\\review-input",
+      "bytes": 85113
+    },
+    {
+      "path": ".scratch\\review-output",
+      "bytes": 43080
+    },
+    {
+      "path": ".scratch\\subagent-input",
+      "bytes": 2553
+    },
+    {
+      "path": ".scratch\\subagent-raw",
+      "bytes": 130827
+    },
+    {
+      "path": ".scratch\\v050-proposal.md",
+      "bytes": 5129
+    }
+  ],
+  "retainedTargetBytes": 4958416460
+}
