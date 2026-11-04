@@ -1,7 +1,7 @@
 ---
 id: "263"
 title: "Scope Cargo identity and cargo-dist checks to affected work"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
