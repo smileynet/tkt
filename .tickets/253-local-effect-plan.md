@@ -1,7 +1,7 @@
 ---
 id: "253"
 title: "Plan and apply local configuration context and init effects"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -10,6 +10,7 @@ validation_criteria:
   - "Full local gate and independent critic review pass; parent all-mutator acceptance remains open"
 tags: ["stream:quality", "kind:enhancement", "triage:ready-for-agent"]
 parent: "191"
+assignee: "codex"
 ---
 # Plan local filesystem effects before applying them
 
