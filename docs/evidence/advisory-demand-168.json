@@ -1,0 +1,67 @@
+{
+  "kind": "bounded-corpus-measurement",
+  "aggregate": {
+    "projects": 78,
+    "withActive": 53,
+    "withUntaggedActive": 38,
+    "withBacklog": 31,
+    "total": 3482,
+    "active": 785,
+    "untaggedActive": 420,
+    "backlog": 258
+  },
+  "localSnapshot": {
+    "capturedClientDate": "2026-11-03",
+    "total": 253,
+    "untagged": 136,
+    "nonterminal": 17,
+    "backlog": 2,
+    "activeWithoutBacklog": 15,
+    "activeUntagged": 0
+  },
+  "decision": "No additional runtime nudge is justified by this sample",
+  "historicalBaseline": "Attributed ticket167 report; not a reproduced matched cohort",
+  "telemetry": "Existing27-event sample only; consent unchanged and no new collection",
+  "sources": [
+    {
+      "path": ".tickets/167-rebalance-backlog-tag-guidance.md",
+      "sha256": "a1d881aab5e96a2b4c95cbb9fc83508d317a933240128f0dd37df5bc90030d26"
+    },
+    {
+      "path": "docs/evidence/cross-project-review-2026-11-03.json",
+      "sha256": "6fc3ab1831038f8f1e7620aea4ac71b32cac5c3384a29a0b386d20a1acf5b7bf"
+    },
+    {
+      "path": "docs/parked-review-2026-11-03.md",
+      "sha256": "dd7fb0f0c005f027834391168d1d2c9cd6c5702da63341840218daa6ccbcde32"
+    },
+    {
+      "path": "D:/code/learning-library/.tickets/16-deepseek-superagent-guide.md",
+      "sha256": "652354f71d75230841c1170ab3380f479f3de8bf513e02604bacf67ab00af436"
+    },
+    {
+      "path": "D:/code/lacrosse-bosse-helper/.tickets/107-review-advisory-lint-findings.md",
+      "sha256": "b8edb316e66ecc98ee03f5e0529fdb12efcfaac5111bba5febb6237d6449d5c2"
+    },
+    {
+      "path": "src/commands/close.rs",
+      "sha256": "f0eaf7cf7909e7554846e9577f4faf05e9331795b61875c0fdac56a55307f2ca"
+    }
+  ],
+  "limits": [
+    "Cross-project counts frozen before later ticket changes",
+    "No stream-intent or harm labels",
+    "No causal before/after or advisory exposure study",
+    "One observed local over-parking episode is not independent recurring demand"
+  ],
+  "chronology": {
+    "reportTimezone": "America/Los_Angeles",
+    "clientDate": "2026-11-03",
+    "sourceResolutionDate": "2026-11-04",
+    "closeDateBasis": "UTC epoch days in close::chrono_date",
+    "fileModifiedUtc": "2026-11-04T00:38:03.940Z",
+    "fileModifiedLosAngeles": "11/3/26, 4:38:03 PM",
+    "interpretation": "Source UTC heading and client local date differ; aggregate snapshot is unchanged"
+  },
+  "critic": "Accepted aggregate arithmetic, bounded decision and reconciled UTC/local chronology"
+}
