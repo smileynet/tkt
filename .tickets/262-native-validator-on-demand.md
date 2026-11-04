@@ -1,7 +1,7 @@
 ---
 id: "262"
 title: "Separate native Claude validation from mandatory tooling fixtures"
-status: backlog
+status: open
 blocked_by: []
 validation_criteria:
   - "Routine tooling gates retain static and preservation checks without installed Claude; native fixture runs on explicit request."
