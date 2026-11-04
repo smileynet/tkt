@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-04",
+  "sourceCommit": "e7fa64e",
+  "cli": "cargo install --path . --locked passed; freshness HEAD/installede7fa64e before closure metadata",
+  "pack": "node tools/deploy.mjs passed; native strict zero warnings; Claude direct checkout verified",
+  "comparisons": [
+    {
+      "root": "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0\\skills",
+      "filesCompared": 17,
+      "mismatches": []
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.kiro\\skills",
+      "filesCompared": 17,
+      "mismatches": []
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.config\\opencode\\skills",
+      "filesCompared": 17,
+      "mismatches": []
+    },
+    {
+      "root": "C:\\Users\\uosmi\\.gemini\\config\\plugins\\tkt\\skills",
+      "filesCompared": 17,
+      "mismatches": []
+    },
+    {
+      "root": "D:\\code\\tkt\\dist\\agy-plugin\\skills",
+      "filesCompared": 17,
+      "mismatches": []
+    },
+    {
+      "root": "D:\\code\\tkt\\dist\\kirocrew-app\\skills",
+      "filesCompared": 17,
+      "mismatches": []
+    }
+  ],
+  "limits": [
+    "Kiro Crew CLI absent: payload built, activation unverified",
+    "Native hook dispatch/trust and rendered dashboard checks unverified; no asks added"
+  ],
+  "realRepositoryNativeFiles": {
+    ".claude/settings.json": false,
+    ".codex/hooks.json": false,
+    ".tickets/hooks/native-write-nudge.mjs": false,
+    ".tickets/hooks/native-write-nudge.json": false
+  },
+  "preservedArtifacts": [
+    {
+      "path": ".scratch\\.gitkeep",
+      "bytes": 51
+    },
+    {
+      "path": ".scratch\\dashboard-lan.json",
+      "bytes": 298
+    },
+    {
+      "path": ".scratch\\research",
+      "bytes": 148002
+    },
+    {
+      "path": ".scratch\\review",
+      "bytes": 80544
+    },
+    {
+      "path": ".scratch\\review-input",
+      "bytes": 85113
+    },
+    {
+      "path": ".scratch\\review-output",
+      "bytes": 43080
+    },
+    {
+      "path": ".scratch\\subagent-input",
+      "bytes": 2553
+    },
+    {
+      "path": ".scratch\\subagent-raw",
+      "bytes": 130827
+    },
+    {
+      "path": ".scratch\\v050-proposal.md",
+      "bytes": 5129
+    }
+  ],
+  "retainedTargetBytes": 6418887358
+}
