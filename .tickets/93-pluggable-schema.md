@@ -1,7 +1,7 @@
 ---
 id: "93"
 title: "Pluggable schema definitions with meta field + ai_context support"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria: 
@@ -157,9 +157,9 @@ Agents discover the schema at runtime — no hardcoded knowledge needed.
 
 These criteria describe the design and compatibility fixtures, not shipped runtime schema enforcement.
 
-- [ ] Supported extension values/representations and schema version boundaries are explicit and narrow
-- [ ] Define how a future optional schema preserves unknown raw values and existing ticket compatibility
-- [ ] Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support
+- [x] Supported extension values/representations and schema version boundaries are explicit and narrow
+- [x] Define how a future optional schema preserves unknown raw values and existing ticket compatibility
+- [x] Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support
 
 ## Historical acceptance criteria (superseded by the design-only contract)
 
@@ -195,3 +195,12 @@ By: codex
 
 <!-- tkt-note:v1 89364-1793774888422014200 -->
 Verified current premise: query already exposes unknown frontmatter as raw trimmed strings; it does not decode schema values. TicketFile preserves supported unknown entries and body during surgical edits, while duplicate/unparseable structure is rejected and lint/newline/BOM behavior is not a universal byte-preservation promise. The design-only contract supersedes the historical claim that unknown fields are invisible. Focused current-binary fixture passed for both proposed scalar representations; no runtime loader or migration was implemented.
+
+## Resolution (2026-11-04)
+
+Delivered design-only version1 optional scalar/enum extension contract, raw-preservation and migration boundaries, hash-bound review-only preview and compatibility fixtures. No runtime loader,enforcement,migration,dynamicflags or YAML expansion was implemented. Critic accepted clarified design-only ACs,actual codec boundary and fresh gate before closure.
+
+### Verification
+1. ✓ Supported extension values/representations and schema version boundaries are explicit and narrow — "docs/extension-schema-design.md specifies formatversion1,optional x_ fields,string/enum limits,exact decoded uniqueness and narrow codec-intersection escapes; current behavior separated from future requirements."
+2. ✓ Define how a future optional schema preserves unknown raw values and existing ticket compatibility — "Future schema enforcement rules preserve raw unknowns and builtin compatibility; public current-CLI fixture verifies raw query and surgical roundtrips with optional schema ignored. No runtime enforcement claim; historical checklist retained superseded."
+3. ✓ Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support — "Review-only rename-preview JSON binds exact schema/ticket bytes; before/after fixtures and current CLI no-write preview pass. Fresh mise check497Rust/42Node pass,1existingWindows skip,fmt clean,clippy0warnings; additional designNode2/2. Critic accepted beforeclose; docs/evidence/extension-schema-93.md."
