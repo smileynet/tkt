@@ -1,7 +1,7 @@
 ---
 id: "256"
 title: "Make import and note fixtures deterministic on macOS"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria: 
   - "Import and note failure fixtures pass on this macOS host without host configuration edits or skipped assertions; Windows coverage is reported separately."
@@ -19,4 +19,11 @@ Windows execution remains unverified on this Mac. No product code or host Git se
 
 ## Acceptance criteria
 
-- [ ] Import fixtures pass on macOS without host Git config changes or skipped assertions.
+- [x] Import fixtures pass on macOS without host Git config changes or skipped assertions.
+
+## Resolution (2026-11-04)
+
+done: isolated import and note fixture Git maintenance, executable hook creation and missing-gh PATH. No product code or host configuration changes. macOS full gate passed using a disposable Git template; Windows native execution remains unverified. Small verification logs are retained in the coordinating sync session until compact evidence is promoted.
+
+### Verification
+1. ✓ Import and note failure fixtures pass on this macOS host without host configuration edits or skipped assertions; Windows coverage is reported separately. — "Full mise run check with disposable GIT_TEMPLATE_DIR passed: 43 Node tests, cargo fmt --check, warning-free clippy and 467 Rust tests across 41 suites; zero failures or ignored Rust tests. Focused import19/19 and note7/7 passed without the template. Windows was not run on this Mac."
