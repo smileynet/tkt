@@ -46,6 +46,15 @@ Behavior:
 
 ## Acceptance criteria
 
+These criteria project the already approved Current executable contract above. The original proposal's conflicting checklist is retained below as unchecked historical context, rather than being claimed as implemented.
+
+- [ ] Import open issues from the current github.com origin or an explicit repository using authenticated read-only gh extraction
+- [ ] Bound complete extraction, preserve canonical source identity and raw snapshots, and isolate source text from local lifecycle sections
+- [ ] Support source-label filtering and explicit shared validation while honoring scoped commits, creation policy and push settings
+- [ ] Preserve local work through create-only replay and exact journal recovery, with public error, preview, concurrency and retry coverage
+
+## Historical acceptance criteria (superseded by current contract)
+
 - [ ] `tkt import --github` imports open issues from current repo
 - [ ] Requires `gh` CLI on PATH and authenticated
 - [ ] Maps issue title, body, and labels into ticket format
