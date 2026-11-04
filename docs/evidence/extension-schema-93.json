@@ -47,5 +47,81 @@
     "LF fixture compatibility, not arbitrary YAML/BOM/newline preservation",
     "Windows observed; Unix not executed"
   ],
-  "artifactDisposition": "Small text contract fixtures retained as reproducible source; owned logs recycled after compact evidence; shared target retained for remaining work; unrelated artifacts preserved"
+  "artifactDisposition": "Small text contract fixtures retained as reproducible source; owned logs recycled after compact evidence; shared target retained for remaining work; unrelated artifacts preserved",
+  "deployment": {
+    "pack": "node tools/deploy.mjs pass; native strict pass; unchanged owned skill payload up to date",
+    "skillComparisons": [
+      {
+        "root": "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0\\skills",
+        "filesCompared": 15,
+        "mismatches": []
+      },
+      {
+        "root": "C:\\Users\\uosmi\\.kiro\\skills",
+        "filesCompared": 15,
+        "mismatches": []
+      },
+      {
+        "root": "C:\\Users\\uosmi\\.config\\opencode\\skills",
+        "filesCompared": 15,
+        "mismatches": []
+      },
+      {
+        "root": "C:\\Users\\uosmi\\.gemini\\config\\plugins\\tkt\\skills",
+        "filesCompared": 15,
+        "mismatches": []
+      },
+      {
+        "root": "D:\\code\\tkt\\dist\\agy-plugin\\skills",
+        "filesCompared": 15,
+        "mismatches": []
+      },
+      {
+        "root": "D:\\code\\tkt\\dist\\kirocrew-app\\skills",
+        "filesCompared": 15,
+        "mismatches": []
+      }
+    ],
+    "cli": "Product Rust unchanged; installed lifecycle implementation5fa4793 retained. No freshness claim against documentation commits.",
+    "limits": "Kiro Crew built only; CLI absent"
+  },
+  "preservedArtifacts": [
+    {
+      "path": ".scratch\\.gitkeep",
+      "bytes": 51
+    },
+    {
+      "path": ".scratch\\dashboard-lan.json",
+      "bytes": 298
+    },
+    {
+      "path": ".scratch\\research",
+      "bytes": 148002
+    },
+    {
+      "path": ".scratch\\review",
+      "bytes": 80544
+    },
+    {
+      "path": ".scratch\\review-input",
+      "bytes": 85113
+    },
+    {
+      "path": ".scratch\\review-output",
+      "bytes": 43080
+    },
+    {
+      "path": ".scratch\\subagent-input",
+      "bytes": 2553
+    },
+    {
+      "path": ".scratch\\subagent-raw",
+      "bytes": 130827
+    },
+    {
+      "path": ".scratch\\v050-proposal.md",
+      "bytes": 5129
+    }
+  ],
+  "retainedTargetBytes": 4958918812
 }
