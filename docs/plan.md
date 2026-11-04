@@ -218,5 +218,5 @@ Maintenance integration: upstream #256–#258 fixture repairs are preserved. The
 
 Latest 2026-11-04 delivery: #86 GitHub import, #88 Git-derived completed-work reporting, #89 trusted advisory lifecycle notifications, #93 design-only optional scalar schema, #148 worker-role examples and #158 explicit native write-nudge generation are complete after critic acceptance. The installed CLI is `0cfa35d` after the completed #259 telemetry preview repair; the optional pre-push work #249 is complete; shared all-mutator work #191 remains actionable. #90 stays gated by the automatic implementation-policy rejection; dashboard rendering and the two historical backlog gates remain unchanged.
 | 259 | Prevent telemetry commands from mutating during dry-run | ✅ done |
-| 260 | Route remaining filesystem mutation families through typed effect phases | in_progress |
+| 260 | Route remaining filesystem mutation families through typed effect phases | ✅ done |
 | 261 | Route Git publication and process phases through the common effect dispatcher | open |
