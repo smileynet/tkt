@@ -180,3 +180,10 @@ Design a narrow optional extension schema within the supported frontmatter subse
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Note — 2026-11-04
+
+By: codex
+
+<!-- tkt-note:v1 89364-1793774888422014200 -->
+Verified current premise: query already exposes unknown frontmatter as raw trimmed strings; it does not decode schema values. TicketFile preserves supported unknown entries and body during surgical edits, while duplicate/unparseable structure is rejected and lint/newline/BOM behavior is not a universal byte-preservation promise. The design-only contract supersedes the historical claim that unknown fields are invisible. Focused current-binary fixture passed for both proposed scalar representations; no runtime loader or migration was implemented.
