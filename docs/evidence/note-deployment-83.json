@@ -1,0 +1,49 @@
+{
+  "sourceCommit": "3fdc054",
+  "verifiedAtCommit": "0c6a4a0",
+  "cliVersion": "tkt 0.4.0 (3fdc054)",
+  "sourceFreshness": "pass immediately after source install; later commits only ticket/plan/dashboard metadata",
+  "skills": [
+    {
+      "target": "codex",
+      "checked": 15,
+      "mismatches": []
+    },
+    {
+      "target": "kiro",
+      "checked": 15,
+      "mismatches": []
+    },
+    {
+      "target": "opencode",
+      "checked": 15,
+      "mismatches": []
+    },
+    {
+      "target": "agy",
+      "checked": 15,
+      "mismatches": []
+    },
+    {
+      "target": "staged-agy",
+      "checked": 15,
+      "mismatches": []
+    },
+    {
+      "target": "staged-kirocrew",
+      "checked": 15,
+      "mismatches": []
+    }
+  ],
+  "retainedLogicalBytes": {
+    "target": 4730968672,
+    "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0": 4759482492
+  },
+  "limits": [
+    "Claude reads checkout directly; reload/start a new chat",
+    "Kiro Crew payload built; CLI absent so activation not observed",
+    "Antigravity validation passed with existing generic-logo notice",
+    "Managed build and plugin caches retained for ongoing frontier, lifecycle rebuild/manager refresh",
+    "Unknown legacy artifacts preserved; no global cleanup claimed"
+  ]
+}
