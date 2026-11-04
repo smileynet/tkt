@@ -86,3 +86,7 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 Resolved by the owner's 2026-11-03 chat submission: **Keep narrative support deferred**.
 See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remains deliberately deferred.
+
+## Cross-project evidence review — 2026-11-03
+
+Crew Research ticket 149 and existing root PLAN.md files establish narrative-planning use, but not a bounded failure that the completed derived projection (#187) cannot serve. The owner deferral and ADR 0002 remain applicable; no parser implementation or dependency is activated from file popularity alone. Independent critic review found no reason to reactivate this ticket. See [the evidence review](../docs/evidence/cross-project-review-2026-11-03.md).

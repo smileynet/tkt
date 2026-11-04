@@ -75,3 +75,7 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Cross-project evidence review — 2026-11-03
+
+Current read-only queries across 78 other project boards parsed 3,482 tickets, including 785 open/in-progress tickets, 420 of those without tags, and 258 backlog tickets. Three malformed files were skipped with diagnostics. These are snapshots across mixed active/historical/example corpora, not demand frequency, unwanted backlog or proof that nudges improve behavior. Preserve the existing open measurement scope; compare historical guidance adoption and attributed friction before recommending any runtime advisory. No telemetry was enabled. See [per-project measurements](../docs/evidence/cross-project-review-2026-11-03.json) and [interpretation](../docs/evidence/cross-project-review-2026-11-03.md).

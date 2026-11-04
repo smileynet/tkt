@@ -32,3 +32,7 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Planning gate
 
 Capture platform, configuration paths and commands that demonstrate consent reverting.
+
+## Cross-project evidence review — 2026-11-03
+
+A read-only review of 78 other project boards and attributed operational reports found no enable/restart/config-path sequence proving a consent reset. Retained telemetry contains only 27 events and no consent-transition proof; it cannot establish historical absence. Keep backlog pending the exact reproduction, without changing consent. See [the evidence review](../docs/evidence/cross-project-review-2026-11-03.md).

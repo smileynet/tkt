@@ -67,3 +67,7 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Cross-project evidence review — 2026-11-03
+
+Grey Matter tickets 10 and 11 retain a concrete downstream tracker/triage use case for an issue import bridge. This supports the already-open implementation scope, not reopening the completed adapter design (#125) or claiming the importer exists. Keep the create-only identity/replay contract and explicit opt-in boundaries. See [the evidence review](../docs/evidence/cross-project-review-2026-11-03.md).

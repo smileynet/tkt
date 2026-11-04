@@ -1,0 +1,1494 @@
+{
+  "date": "2026-11-03",
+  "cli": "tkt 0.4.0 (35c6753)",
+  "scope": "Immediate D:/code projects with .tickets; excluded tkt itself, tkt-prefixed candidate copies, grey-windows, windows-, sharktank and release- staging families. Live checkout data and attributed reports, not independent production qualification.",
+  "commands": [
+    "validate --output json",
+    "query --all-context"
+  ],
+  "environment": {
+    "DO_NOT_TRACK": "1",
+    "TKT_UPDATE_CHECK": "0",
+    "TKT_DEBUG": "0"
+  },
+  "sources": [
+    {
+      "path": "D:/code/crew-research/.tickets/148-ticket-readiness-judgment-layer.md",
+      "sha256": "9570e51954e4cf41b0d6b38cdba389000f946fd3c618d9c8e4f1c91d1469fce1"
+    },
+    {
+      "path": "D:/code/crew-research/.tickets/149-slim-plan-narrative-retire-syncplan.md",
+      "sha256": "e12fd31c8abf935825d57cb4295834656eae93a51bbd4dae9872217017123496"
+    },
+    {
+      "path": "D:/code/teach-me/.tickets/263-agents-md-ticket-close-instruction.md",
+      "sha256": "de8e9908aab3a4d7466f1ea2672c4ca883aa9f81c8a0d7f69dfd0430d616868b"
+    },
+    {
+      "path": "D:/code/grey-matter/.tickets/98-sync-tkt-skills-ahead-of-cli.md",
+      "sha256": "78857cf6adb787db34651bdcb8f87940080759a99eaf4521d4427e4cc21ea73d"
+    },
+    {
+      "path": "D:/code/grey-matter/.tickets/84-host-resync-after-cutover.md",
+      "sha256": "d5f292cc3e2fd0df41ce33136e3e7536531eb6a2ac028604f1acf91b405e0756"
+    },
+    {
+      "path": "D:/code/grey-matter/.tickets/10-tracker-adapter-abstraction.md",
+      "sha256": "4f89b6d310c455edcdfbd21a81d5794a76b066fde000ddbf42ea0a1dafad7aa5"
+    },
+    {
+      "path": "D:/code/grey-matter/.tickets/11-revisit-triage-github-adapter.md",
+      "sha256": "81251492ad25b59f1b807490d35abffe6b849754251f5b567a806b2598021837"
+    },
+    {
+      "path": "D:/code/learning-library/.tickets/config.toml",
+      "sha256": "836f1ab00c52c3135944877d841ffe267538a9b149d452b282977bdc18b294f5"
+    }
+  ],
+  "projects": [
+    {
+      "project": "3d-printing",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 1,
+      "statuses": {
+        "open": 1
+      },
+      "activeUntagged": 0,
+      "active": 1,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "acp-gd",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 15,
+      "statuses": {
+        "backlog": 3,
+        "done": 4,
+        "open": 8
+      },
+      "activeUntagged": 0,
+      "active": 8,
+      "findings": {
+        "dangling-body-reference": 1,
+        "no-source-reference": 6,
+        "frontier-readiness": 6
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "agent-harness-research",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 60,
+      "statuses": {
+        "done": 59,
+        "open": 1
+      },
+      "activeUntagged": 0,
+      "active": 1,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "algorithms-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 7,
+      "statuses": {
+        "done": 7
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {
+        "unchecked-acs-on-done": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "archwright",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 90,
+      "statuses": {
+        "done": 82,
+        "open": 8
+      },
+      "activeUntagged": 8,
+      "active": 8,
+      "findings": {
+        "unchecked-acs-on-done": 29,
+        "no-source-reference": 6,
+        "frontier-readiness": 8,
+        "missing-resolution": 67
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "ascii-city-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 6,
+      "statuses": {
+        "done": 6
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "atomcraft-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 15,
+      "statuses": {
+        "done": 15
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "backstitch-test",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 6,
+      "statuses": {
+        "done": 3,
+        "open": 3
+      },
+      "activeUntagged": 0,
+      "active": 3,
+      "findings": {
+        "unchecked-acs-on-done": 3,
+        "frontier-readiness": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "baremetal-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 4,
+      "statuses": {
+        "done": 4
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "bigg-pi",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 34,
+      "statuses": {
+        "in_progress": 31,
+        "done": 3
+      },
+      "activeUntagged": 31,
+      "active": 31,
+      "findings": {
+        "missing-resolution": 3
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "blender-plugins",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 16,
+      "statuses": {
+        "open": 15,
+        "done": 1
+      },
+      "activeUntagged": 15,
+      "active": 15,
+      "findings": {
+        "no-source-reference": 12,
+        "frontier-readiness": 13
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "character-extraction",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 19,
+      "statuses": {
+        "done": 1,
+        "backlog": 18
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "chunky",
+      "validateExit": 1,
+      "queryExit": 0,
+      "parsedTickets": 7,
+      "statuses": {
+        "open": 7
+      },
+      "activeUntagged": 6,
+      "active": 7,
+      "findings": {
+        "unparseable": 1,
+        "dangling-body-reference": 13,
+        "no-source-reference": 1,
+        "frontier-readiness": 1
+      },
+      "errors": [
+        {
+          "file": "agy-findings-8539e59.md",
+          "rule": "unparseable",
+          "message": "D:/code/chunky\\.tickets\\agy-findings-8539e59.md: missing required field: id",
+          "severity": "error"
+        }
+      ],
+      "querySkipWarnings": [
+        "⚠ skipping agy-findings-8539e59.md: D:/code/chunky\\.tickets\\agy-findings-8539e59.md: missing required field: id"
+      ]
+    },
+    {
+      "project": "chunky-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 70,
+      "statuses": {
+        "done": 29,
+        "open": 39,
+        "backlog": 2
+      },
+      "activeUntagged": 0,
+      "active": 39,
+      "findings": {
+        "dangling-body-reference": 70,
+        "unchecked-acs-on-done": 5,
+        "no-source-reference": 2,
+        "frontier-readiness": 3,
+        "missing-resolution": 5
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "circuitra-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 5,
+      "statuses": {
+        "done": 5
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "clvgm-extract",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 13,
+      "statuses": {
+        "done": 13
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "co-escape-room",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 22,
+      "statuses": {
+        "backlog": 9,
+        "done": 4,
+        "open": 9
+      },
+      "activeUntagged": 0,
+      "active": 9,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "crew-research",
+      "validateExit": 1,
+      "queryExit": 0,
+      "parsedTickets": 139,
+      "statuses": {
+        "done": 101,
+        "open": 27,
+        "backlog": 8,
+        "in_progress": 3
+      },
+      "activeUntagged": 27,
+      "active": 30,
+      "findings": {
+        "unparseable": 2,
+        "dangling-body-reference": 15,
+        "unchecked-acs-on-done": 1,
+        "stub-body": 1,
+        "no-source-reference": 8,
+        "frontier-readiness": 20,
+        "missing-resolution": 2
+      },
+      "errors": [
+        {
+          "file": "100-deprecate-python-recall.md",
+          "rule": "unparseable",
+          "message": "D:/code/crew-research\\.tickets\\100-deprecate-python-recall.md: duplicate frontmatter key \"validation_criteria\" on line 15 (first declared on line 7)",
+          "severity": "error"
+        },
+        {
+          "file": "112-readme-guidance-review.md",
+          "rule": "unparseable",
+          "message": "D:/code/crew-research\\.tickets\\112-readme-guidance-review.md: duplicate frontmatter key \"validation_criteria\" on line 14 (first declared on line 7)",
+          "severity": "error"
+        }
+      ],
+      "querySkipWarnings": [
+        "⚠ skipping 100-deprecate-python-recall.md: D:/code/crew-research\\.tickets\\100-deprecate-python-recall.md: duplicate frontmatter key \"validation_criteria\" on line 15 (first declared on line 7)",
+        "⚠ skipping 112-readme-guidance-review.md: D:/code/crew-research\\.tickets\\112-readme-guidance-review.md: duplicate frontmatter key \"validation_criteria\" on line 14 (first declared on line 7)"
+      ]
+    },
+    {
+      "project": "dbdetective-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 10,
+      "statuses": {
+        "done": 10
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "decodation-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 5,
+      "statuses": {
+        "done": 5
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "domekeeper-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 13,
+      "statuses": {
+        "done": 13
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {
+        "dangling-body-reference": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "ebb-analyzer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 23,
+      "statuses": {
+        "open": 13,
+        "done": 8,
+        "backlog": 2
+      },
+      "activeUntagged": 1,
+      "active": 13,
+      "findings": {
+        "no-source-reference": 1,
+        "frontier-readiness": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "emudevz",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 11,
+      "statuses": {
+        "done": 6,
+        "open": 5
+      },
+      "activeUntagged": 5,
+      "active": 5,
+      "findings": {
+        "frontier-readiness": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "emudevz-sync-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 10,
+      "statuses": {
+        "done": 3,
+        "in_progress": 1,
+        "open": 6
+      },
+      "activeUntagged": 7,
+      "active": 7,
+      "findings": {
+        "stub-body": 6,
+        "no-source-reference": 3,
+        "frontier-readiness": 3
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "game-design-salon",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 15,
+      "statuses": {
+        "open": 5,
+        "backlog": 6,
+        "done": 4
+      },
+      "activeUntagged": 1,
+      "active": 5,
+      "findings": {
+        "dangling-body-reference": 1,
+        "no-source-reference": 2,
+        "frontier-readiness": 3
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "game-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 94,
+      "statuses": {
+        "done": 55,
+        "in_progress": 3,
+        "open": 29,
+        "backlog": 7
+      },
+      "activeUntagged": 27,
+      "active": 32,
+      "findings": {
+        "unchecked-acs-on-done": 11,
+        "no-source-reference": 5,
+        "frontier-readiness": 29,
+        "tbd-resolution": 19,
+        "missing-resolution": 7
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "game-workshop",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 47,
+      "statuses": {
+        "done": 36,
+        "open": 11
+      },
+      "activeUntagged": 11,
+      "active": 11,
+      "findings": {
+        "no-source-reference": 4,
+        "frontier-readiness": 9,
+        "missing-resolution": 36
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "gdhelper-cli",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 60,
+      "statuses": {
+        "done": 45,
+        "backlog": 15
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {
+        "dangling-body-reference": 13,
+        "missing-resolution": 12,
+        "tbd-resolution": 13
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "gdhelper-log",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 108,
+      "statuses": {
+        "done": 91,
+        "backlog": 15,
+        "open": 2
+      },
+      "activeUntagged": 2,
+      "active": 2,
+      "findings": {
+        "dangling-body-reference": 2,
+        "unchecked-acs-on-done": 1,
+        "frontier-readiness": 1,
+        "missing-resolution": 2
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "gdhelper-pipeline",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 109,
+      "statuses": {
+        "done": 47,
+        "open": 50,
+        "backlog": 8,
+        "in_progress": 4
+      },
+      "activeUntagged": 50,
+      "active": 54,
+      "findings": {
+        "dangling-body-reference": 30,
+        "no-source-reference": 4,
+        "frontier-readiness": 29,
+        "missing-resolution": 9
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "gk2-shader-review",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 32,
+      "statuses": {
+        "backlog": 1,
+        "done": 31
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "godot-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 208,
+      "statuses": {
+        "done": 154,
+        "open": 21,
+        "backlog": 33
+      },
+      "activeUntagged": 14,
+      "active": 21,
+      "findings": {
+        "dangling-body-reference": 32,
+        "unchecked-acs-on-done": 1,
+        "stub-body": 1,
+        "no-source-reference": 11,
+        "frontier-readiness": 15,
+        "tbd-resolution": 45,
+        "missing-resolution": 28
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "godot-knowledge",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 16,
+      "statuses": {
+        "backlog": 4,
+        "done": 2,
+        "open": 10
+      },
+      "activeUntagged": 0,
+      "active": 10,
+      "findings": {
+        "dangling-body-reference": 4,
+        "no-source-reference": 3,
+        "frontier-readiness": 3
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "graveyard-keeper-2-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 71,
+      "statuses": {
+        "done": 66,
+        "backlog": 3,
+        "open": 2
+      },
+      "activeUntagged": 0,
+      "active": 2,
+      "findings": {
+        "dangling-body-reference": 1,
+        "unchecked-acs-on-done": 12
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "grey-matter",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 209,
+      "statuses": {
+        "done": 160,
+        "open": 29,
+        "backlog": 18,
+        "cancelled": 1,
+        "in_progress": 1
+      },
+      "activeUntagged": 3,
+      "active": 30,
+      "findings": {
+        "dangling-body-reference": 4,
+        "unchecked-acs-on-done": 7,
+        "no-source-reference": 5,
+        "frontier-readiness": 11
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "gunsmith",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 14,
+      "statuses": {
+        "done": 6,
+        "open": 4,
+        "backlog": 4
+      },
+      "activeUntagged": 4,
+      "active": 4,
+      "findings": {
+        "dangling-body-reference": 1,
+        "frontier-readiness": 4
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "herdr",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 13,
+      "statuses": {
+        "in_progress": 4,
+        "open": 9
+      },
+      "activeUntagged": 1,
+      "active": 13,
+      "findings": {
+        "no-source-reference": 6,
+        "frontier-readiness": 2
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "herdr-flock",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 155,
+      "statuses": {
+        "done": 141,
+        "open": 14
+      },
+      "activeUntagged": 14,
+      "active": 14,
+      "findings": {
+        "dangling-body-reference": 3,
+        "unchecked-acs-on-done": 2,
+        "stub-body": 3,
+        "no-source-reference": 1,
+        "frontier-readiness": 14,
+        "missing-resolution": 29
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "hunter-manager",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 17,
+      "statuses": {
+        "open": 12,
+        "done": 5
+      },
+      "activeUntagged": 12,
+      "active": 12,
+      "findings": {
+        "dangling-body-reference": 15,
+        "unchecked-acs-on-done": 2,
+        "no-source-reference": 2,
+        "frontier-readiness": 6,
+        "missing-resolution": 5
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "ink-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 38,
+      "statuses": {
+        "done": 29,
+        "backlog": 4,
+        "open": 5
+      },
+      "activeUntagged": 0,
+      "active": 5,
+      "findings": {
+        "dangling-body-reference": 7,
+        "no-source-reference": 1,
+        "frontier-readiness": 5
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "kc2-mods",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 86,
+      "statuses": {
+        "done": 41,
+        "open": 43,
+        "backlog": 2
+      },
+      "activeUntagged": 43,
+      "active": 43,
+      "findings": {
+        "dangling-body-reference": 7,
+        "unchecked-acs-on-done": 7,
+        "no-source-reference": 15,
+        "frontier-readiness": 32,
+        "missing-resolution": 41
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "kc2-mods-manager",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 25,
+      "statuses": {
+        "done": 16,
+        "open": 9
+      },
+      "activeUntagged": 9,
+      "active": 9,
+      "findings": {
+        "dangling-body-reference": 7,
+        "unchecked-acs-on-done": 13,
+        "no-source-reference": 4,
+        "frontier-readiness": 8,
+        "missing-resolution": 15
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "kc2-ui-workshop",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 0,
+      "statuses": {},
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "lacrosse-bosse-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 131,
+      "statuses": {
+        "open": 58,
+        "done": 62,
+        "in_progress": 2,
+        "backlog": 9
+      },
+      "activeUntagged": 37,
+      "active": 60,
+      "findings": {
+        "dangling-body-reference": 111,
+        "no-source-reference": 12,
+        "frontier-readiness": 26,
+        "missing-resolution": 11,
+        "tbd-resolution": 7
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "learning-library",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 16,
+      "statuses": {
+        "done": 14,
+        "open": 1,
+        "in_progress": 1
+      },
+      "activeUntagged": 2,
+      "active": 2,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "lowlevelhero-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 4,
+      "statuses": {
+        "done": 4
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "meshtastic-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 67,
+      "statuses": {
+        "done": 32,
+        "backlog": 28,
+        "open": 7
+      },
+      "activeUntagged": 0,
+      "active": 7,
+      "findings": {
+        "unchecked-acs-on-done": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "mise-issue",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 2,
+      "statuses": {
+        "done": 1,
+        "open": 1
+      },
+      "activeUntagged": 1,
+      "active": 1,
+      "findings": {
+        "unchecked-acs-on-done": 1,
+        "missing-resolution": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "model-comparison",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 33,
+      "statuses": {
+        "open": 14,
+        "done": 14,
+        "in_progress": 1,
+        "backlog": 4
+      },
+      "activeUntagged": 0,
+      "active": 15,
+      "findings": {
+        "frontier-readiness": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "model-training",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 9,
+      "statuses": {
+        "done": 4,
+        "open": 5
+      },
+      "activeUntagged": 5,
+      "active": 5,
+      "findings": {
+        "unchecked-acs-on-done": 4,
+        "no-source-reference": 1,
+        "frontier-readiness": 3,
+        "missing-resolution": 4
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "noita-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 10,
+      "statuses": {
+        "done": 10
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "oni-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 19,
+      "statuses": {
+        "done": 19
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "overseer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 170,
+      "statuses": {
+        "done": 168,
+        "backlog": 2
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "performance-programming",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 2,
+      "statuses": {
+        "done": 2
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "philippines-trip",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 48,
+      "statuses": {
+        "done": 16,
+        "in_progress": 6,
+        "backlog": 14,
+        "open": 12
+      },
+      "activeUntagged": 0,
+      "active": 18,
+      "findings": {
+        "frontier-readiness": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "pnw-demo",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 53,
+      "statuses": {
+        "done": 26,
+        "open": 27
+      },
+      "activeUntagged": 1,
+      "active": 27,
+      "findings": {
+        "no-source-reference": 6,
+        "frontier-readiness": 14,
+        "missing-resolution": 4
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "pnw-mystical-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 28,
+      "statuses": {
+        "done": 11,
+        "open": 11,
+        "backlog": 6
+      },
+      "activeUntagged": 1,
+      "active": 11,
+      "findings": {
+        "frontier-readiness": 9
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "printscript-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 5,
+      "statuses": {
+        "done": 5
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "projectzomboid-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 12,
+      "statuses": {
+        "done": 12
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {
+        "unchecked-acs-on-done": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "recall",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 89,
+      "statuses": {
+        "done": 58,
+        "open": 29,
+        "backlog": 2
+      },
+      "activeUntagged": 29,
+      "active": 29,
+      "findings": {
+        "dangling-body-reference": 7,
+        "unchecked-acs-on-done": 1,
+        "no-source-reference": 7,
+        "frontier-readiness": 17,
+        "missing-resolution": 25
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "sandustry-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 8,
+      "statuses": {
+        "done": 8
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "seamless-clone",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 22,
+      "statuses": {
+        "open": 9,
+        "done": 13
+      },
+      "activeUntagged": 9,
+      "active": 9,
+      "findings": {
+        "dangling-body-reference": 3,
+        "no-source-reference": 4,
+        "frontier-readiness": 9,
+        "missing-resolution": 13
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "shader-library",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 31,
+      "statuses": {
+        "done": 28,
+        "open": 3
+      },
+      "activeUntagged": 3,
+      "active": 3,
+      "findings": {
+        "unchecked-acs-on-done": 28,
+        "frontier-readiness": 3,
+        "missing-resolution": 28
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "shadowrun-sega",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 0,
+      "statuses": {},
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "shepherdr",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 110,
+      "statuses": {
+        "done": 108,
+        "open": 2
+      },
+      "activeUntagged": 2,
+      "active": 2,
+      "findings": {
+        "dangling-body-reference": 2,
+        "frontier-readiness": 2
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "skald2-re",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 7,
+      "statuses": {
+        "done": 5,
+        "open": 2
+      },
+      "activeUntagged": 2,
+      "active": 2,
+      "findings": {
+        "no-source-reference": 1,
+        "frontier-readiness": 2,
+        "missing-resolution": 5
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "substack-scraper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 6,
+      "statuses": {
+        "open": 6
+      },
+      "activeUntagged": 6,
+      "active": 6,
+      "findings": {
+        "stub-body": 4,
+        "no-source-reference": 4,
+        "frontier-readiness": 5
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "system-health",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 6,
+      "statuses": {
+        "open": 4,
+        "backlog": 1,
+        "done": 1
+      },
+      "activeUntagged": 4,
+      "active": 4,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "tagalog-helper",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 68,
+      "statuses": {
+        "done": 42,
+        "backlog": 4,
+        "open": 22
+      },
+      "activeUntagged": 0,
+      "active": 22,
+      "findings": {
+        "unchecked-acs-on-done": 3,
+        "frontier-readiness": 3
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "teach-me",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 380,
+      "statuses": {
+        "done": 292,
+        "open": 65,
+        "backlog": 17,
+        "in_progress": 6
+      },
+      "activeUntagged": 0,
+      "active": 71,
+      "findings": {
+        "dangling-body-reference": 19,
+        "unchecked-acs-on-done": 11,
+        "no-source-reference": 20,
+        "frontier-readiness": 41,
+        "missing-resolution": 96,
+        "tbd-resolution": 17
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "terraria-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 8,
+      "statuses": {
+        "done": 8
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {
+        "dangling-body-reference": 4
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "titanops-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 5,
+      "statuses": {
+        "done": 5
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {
+        "unchecked-acs-on-done": 2,
+        "missing-resolution": 2
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "turing-complete-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 3,
+      "statuses": {
+        "open": 3
+      },
+      "activeUntagged": 3,
+      "active": 3,
+      "findings": {
+        "dangling-body-reference": 1,
+        "frontier-readiness": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "video-buddy",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 46,
+      "statuses": {
+        "done": 22,
+        "open": 19,
+        "in_progress": 1,
+        "backlog": 4
+      },
+      "activeUntagged": 6,
+      "active": 20,
+      "findings": {
+        "dangling-body-reference": 1,
+        "frontier-readiness": 1
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "web-puzzle-slicer",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 10,
+      "statuses": {
+        "done": 1,
+        "open": 9
+      },
+      "activeUntagged": 9,
+      "active": 9,
+      "findings": {
+        "stub-body": 7,
+        "frontier-readiness": 3
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "wezterm",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 14,
+      "statuses": {
+        "done": 8,
+        "open": 6
+      },
+      "activeUntagged": 0,
+      "active": 6,
+      "findings": {
+        "no-source-reference": 4,
+        "frontier-readiness": 5
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "writing",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 85,
+      "statuses": {
+        "done": 80,
+        "backlog": 5
+      },
+      "activeUntagged": 0,
+      "active": 0,
+      "findings": {},
+      "errors": [],
+      "querySkipWarnings": []
+    },
+    {
+      "project": "zero-parades-re",
+      "validateExit": 0,
+      "queryExit": 0,
+      "parsedTickets": 57,
+      "statuses": {
+        "done": 48,
+        "open": 9
+      },
+      "activeUntagged": 9,
+      "active": 9,
+      "findings": {
+        "frontier-readiness": 4,
+        "missing-resolution": 47
+      },
+      "errors": [],
+      "querySkipWarnings": []
+    }
+  ],
+  "teachMeUpstream": {
+    "localHead": "fc5335a57aab98fd08355202dbad1f82ce04c5d1",
+    "remoteHead": "bc4bd354b701262e91393aa7051b3e8e711ec387",
+    "ahead": 1170,
+    "behind": 1193,
+    "guidanceAlreadyCorrect": true,
+    "ticket263": "backlog",
+    "remoteAgentsSha256": "450720639791556d8e4c7a685167f2d77c53820beb115e4deaecff4f3e6b8d9b",
+    "fetch": "Initial ordinary fetch refused conflicting existing tags after updating main; targeted --no-tags fetch succeeded; tags/history/local work preserved"
+  },
+  "recommendation": {
+    "reopen": [],
+    "keepParked": [
+      "147",
+      "184"
+    ],
+    "existingOpenWork": [
+      "168",
+      "86"
+    ],
+    "critic": "Accepted no reactivation; withdrew Teach Me 263 recommendation after current upstream check",
+    "teachMe263": "Historical guidance is fixed upstream; optional future backlog reconciliation, not active implementation"
+  }
+}

@@ -23,6 +23,10 @@ Neither changes status or invents a dependency. Backlog remains deferred even wh
 prerequisites are met. The graph shows gates on dependency-blocked tickets too.
 The owner settled all 17 published decisions on 2026-11-03; see [the decision record](decision-record-2026-11-03.md). The completed #197 implementation unblocks #199 and #200.
 
+## Cross-project production evidence
+
+A subsequent [78-project review](evidence/cross-project-review-2026-11-03.md) found no verified tkt regression requiring terminal-ticket reopening. #147 still lacks a consent-reset reproduction; #184 remains deferred. Existing #168 now has a measured corpus baseline and #86 has corroborating downstream demand. Working-copy warnings are distinguished from product defects and stale local checkouts from current upstream guidance.
+
 ## Current maintenance frontier
 
 The newly requested Decisions tab is implemented under #243, with recommended
