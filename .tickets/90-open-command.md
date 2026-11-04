@@ -1,12 +1,13 @@
 ---
 id: "90"
 title: "tkt open <id>: find URLs in ticket body and open in browser"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
   - "`tkt open <id>` opens first URL found in ticket body"
 tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
+assignee: "codex"
 ---
 
 # tkt open: find URLs in ticket body and open in browser
