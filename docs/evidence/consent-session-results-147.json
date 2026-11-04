@@ -1,0 +1,82 @@
+{
+  "platform": "win32",
+  "source": "src/telemetry.rs",
+  "sha256": "5f1d7c0e53de350f7f99fef86c327261962cd7560056d7a0a222902f32c431d9",
+  "scope": "Exact current consent reader/precedence source in fresh processes; platform path resolver substituted with bounded private roots. Not the whole CLI or a historical reporter sequence. No product code or real user consent changed.",
+  "results": [
+    {
+      "name": "fresh-process-1",
+      "actual": "Enabled ConfigFile",
+      "unchanged": true
+    },
+    {
+      "name": "fresh-process-2",
+      "actual": "Enabled ConfigFile",
+      "unchanged": true
+    },
+    {
+      "name": "fresh-process-3",
+      "actual": "Enabled ConfigFile",
+      "unchanged": true
+    },
+    {
+      "name": "fresh-process-4",
+      "actual": "Enabled ConfigFile",
+      "unchanged": true
+    },
+    {
+      "name": "fresh-process-5",
+      "actual": "Enabled ConfigFile",
+      "unchanged": true
+    },
+    {
+      "name": "DNT override",
+      "actual": "Disabled DoNotTrack",
+      "unchanged": true
+    },
+    {
+      "name": "tool opt-out",
+      "actual": "Disabled EnvVar",
+      "unchanged": true
+    },
+    {
+      "name": "CI=true",
+      "actual": "Disabled CiDetected",
+      "unchanged": true
+    },
+    {
+      "name": "CI empty still present",
+      "actual": "Disabled CiDetected",
+      "unchanged": true
+    },
+    {
+      "name": "explicit on precedes CI",
+      "actual": "Enabled EnvVar",
+      "unchanged": true
+    },
+    {
+      "name": "DNT precedes explicit on",
+      "actual": "Disabled DoNotTrack",
+      "unchanged": true
+    },
+    {
+      "name": "alternate config root",
+      "actual": "Disabled Default",
+      "unchanged": true
+    },
+    {
+      "name": "original root still enabled",
+      "actual": "Enabled ConfigFile",
+      "unchanged": true
+    },
+    {
+      "name": "injected persistent reset",
+      "oracle": "rejected as expected"
+    },
+    {
+      "name": "restored private fixture",
+      "actual": "Enabled ConfigFile",
+      "unchanged": true
+    }
+  ]
+}
