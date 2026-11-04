@@ -1,7 +1,7 @@
 ---
 id: "158"
 title: "Generate optional advisory native write nudges"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria: 
@@ -20,9 +20,9 @@ Current native advisory support is verified; see [the evidence](../docs/evidence
 
 ## Acceptance criteria
 
-- [ ] Explicit native config generation preserves foreign settings, owned content and dry-run; no hook or trust change happens implicitly
-- [ ] Claude Edit|Write path and Codex apply_patch command detection are bounded, advisory context only, with no deny or arbitrary shell/MCP coverage claim
-- [ ] Observed profiles, unknown minimum versions, trust and tool-coverage limits are documented; schema/merge/parser fixtures and native execution evidence limits are explicit
+- [x] Explicit native config generation preserves foreign settings, owned content and dry-run; no hook or trust change happens implicitly
+- [x] Claude Edit|Write path and Codex apply_patch command detection are bounded, advisory context only, with no deny or arbitrary shell/MCP coverage claim
+- [x] Observed profiles, unknown minimum versions, trust and tool-coverage limits are documented; schema/merge/parser fixtures and native execution evidence limits are explicit
 
 ## What to build
 
@@ -68,3 +68,12 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Planning gate
 
 Resolved support research: current official references and observed Codex0.166.0/Claude2.1.316 profiles support the bounded advisory design. Exact historical minimums and actual native dispatch/trust behavior remain explicitly unverified; the current executable contract permits that stated evidence limit. See [the standalone implementation contract](../skills/tkt-core/references/native-hooks.md). The historical support-absence proposal below is superseded; no native hook or trust is enabled here.
+
+## Resolution (2026-11-04)
+
+Implemented explicit owned native advisory write-nudge generation/check/removal, bounded context-only helper and conservative configuration preservation. No default activation,deny,trust or user-setting changes. Critic accepted final duplicate/precision/output/link boundaries and fresh508-Rust gate. Installed CLI freshness passed ate7fa64e. Actual native harness dispatch remains explicitly unverified per the current acceptance contract.
+
+### Verification
+1. ✓ Explicit native config generation preserves foreign settings, owned content and dry-run; no hook or trust change happens implicitly — "Public generator fixtures preserve foreign JSON and exactownedcontent, refuse duplicate keys/lossynumbers/oversizedoutputs/unowned or modified collisions/links, and honor byte-preserving previews. Root-linked ticket-store RED/GREEN prevents selecting another repo. Ordinaryinit/--all neverinstall or change trust; FilePlan writes are per-fileatomic with explicit partial-recovery limits."
+2. ✓ Claude Edit|Write path and Codex apply_patch command detection are bounded, advisory context only, with no deny or arbitrary shell/MCP coverage claim — "Nodehelper4/4 coversClaude Edit/Write filepath andCodex canonicalapply_patch Add/Update/Delete/Move headers withbounds,negativehunkcontrols,malformed/oversize/timeout emptyJSON,Windowscase. FixedadditionalContext only; no deny/permissions/arbitraryshell/MCP coverage. Directgeneratedlaunchers testedfromnestedUnicode/spacesWindowsroot,notnativeharnessdispatch."
+3. ✓ Observed profiles, unknown minimum versions, trust and tool-coverage limits are documented; schema/merge/parser fixtures and native execution evidence limits are explicit — "ObservedCodex0.166.0,Claude2.1.316,Node22.22.3 profiles and unknownminimum/trust/helpermutability limits documented. Fresh mise508Rust/42Node pass,1existingWindows skip,fmt clean,clippy0warnings; native11/11,extraNode4/4,pack/nativeStrict/coveragepass,cratepayload includesasset. Critic accepted finalsource+gate beforeclose; nativeharnessdispatch/UI/Unix remainunverified."
