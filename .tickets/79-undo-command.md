@@ -1,7 +1,7 @@
 ---
 id: "79"
 title: "tkt undo: revert last mutation"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria: 
@@ -40,11 +40,11 @@ Edge cases:
 
 ## Acceptance criteria
 
-- [ ] `tkt undo` reverts last tkt-generated commit
-- [ ] Refuses to undo non-tkt commits (safe boundary)
-- [ ] Pushes the revert if push.enabled
-- [ ] Shows what was reverted in the confirmation message
-- [ ] Integration test covering undo of close, claim, and new
+- [x] `tkt undo` reverts last tkt-generated commit
+- [x] Refuses to undo non-tkt commits (safe boundary)
+- [x] Pushes the revert if push.enabled
+- [x] Shows what was reverted in the confirmation message
+- [x] Integration test covering undo of close, claim, and new
 
 
 ## Triage — 2026-11-02
@@ -63,3 +63,12 @@ The owner requested review of all parked work and execution of actionable ticket
 ## Recognized first-version boundary — 2026-11-03
 
 The implemented safe recognizer uses canonical versioned Git receipts for new/claim/close, binding full before/after trees, parent, path, blob and mode. Legacy/message-only and other operations remain unrecognized; this is structural provenance, not author authentication. Ordinary mutations remain compatible when not eligible for a receipt. Undo uses an exact staged inverse and checks the commit before a single push, without automatic rebase on rejection. Failed apply/commit states and durable local commits are retained for explicit inspection. See [the supported recovery contract](../docs/undo.md). This scope supersedes the historical trivial-prefix and repeated-undo proposal. Parent #191 remains incomplete for the broader all-mutator effect matrix.
+
+## Resolution (2026-11-04)
+
+Implemented receipt-bound Git revert for recognized new claim and close at clean HEAD, exact inverse checks and push-gated recovery without reset or automatic rebase. Final gate and independent critic accepted.
+
+### Verification
+1. ✓ Versioned receipts bind recognized new claim and close transitions to exact parent tree path blob and mode; arbitrary or unsupported history is refused — "Version1 binds actual parent and full trees plus each allowed path blob and mode; semantic operation and plan checks reject arbitrary, legacy, changed, duplicated or unsupported history. See docs/undo.md and docs/evidence/undo-79.json."
+2. ✓ Git revert preserves original history and exact prior ticket/plan state; dirty state conflicts hooks and push failures retain recoverable work without reset or automatic rebase — "Eight public tests verify exact tree restoration, retained original history, read-only preview, dirty/conflict states, Windows locked revert, hook failures, successful publication, durable failed pushes, no-push and upstream advance without automatic rebase. No real project history was reverted."
+3. ✓ Public integration and final local gate pass with standalone guidance and independent critic acceptance — "Final mise run check passed 443 Rust tests and 42 Node fixtures, clean fmt and zero clippy warnings; one existing Windows skip. Critic accepted final source after the empty-string validator lint correction. All guidance surfaces updated; artifacts promoted/recycled and shared outputs retained for ongoing work."

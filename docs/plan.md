@@ -121,7 +121,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | ID | Work | Status |
 |---:|---|---|
 | 69 | Define the focused remaining harness-integration scope | ✅ done |
-| 79 | tkt undo: revert last mutation | in_progress |
+| 79 | tkt undo: revert last mutation | ✅ done |
 | 83 | Add a noninteractive ticket-note append operation | open |
 | 86 | tkt import --github: pull open issues into .tickets/ | open |
 | 88 | tkt done --week: show-resolved report for standups | open |
