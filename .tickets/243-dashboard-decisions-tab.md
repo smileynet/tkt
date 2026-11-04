@@ -46,3 +46,10 @@ A fresh computer-use inventory confirms `Local browser use is disabled in Work
 settings`. No browser or native-browser fallback was attempted. Rendered
 laptop/phone checks and native clipboard behavior remain unverified; keep this
 ticket in progress without asking the owner to perform dashboard review.
+
+## Note — 2026-11-04
+
+By: anonymous
+
+<!-- tkt-note:v1 112960-1793793408569760300 -->
+2026-11-04 review: all17 decisions answered; actual rendering/clipboard acceptance remains pending. Inspect real answered history plus a controlled pending-decision fixture using the same renderer: recommended radios, alternative/text retention across tabs, exact export and denied-clipboard selectable fallback at laptop/phone widths. Fresh browser inventory still disabled; no bypass or feedback ask. See docs/evidence/remaining-six-review-2026-11-04.md.
