@@ -57,6 +57,29 @@ atomic writes, push gating, distinct transaction ownership, complete reviewed
 preview routing and unchanged stdout contracts. Acceptance depended on the fresh
 gate above; the earlier failed attempts were not used as completion evidence.
 
+## Deployment and reconciliation
+
+Source commit `e755765` was committed and pushed. `cargo install --path . --locked`
+passed (release build 1m15s); `bash tools/check-binary-fresh.sh` reported installed
+and HEAD `e755765` before closure-only metadata commits. `node tools/deploy.mjs`
+passed: four workflow skills refreshed, Claude checkout ownership verified,
+Codex plugin refreshed, Kiro/OpenCode copies updated and Antigravity plugin
+strictly validated and installed. KiroCrew was built only because its CLI is
+absent. No release, hosted CI, trust activation or project hook installation.
+
+Tickets 261 and parent 191 were closed explicitly through `tkt close`, with
+criterion-specific evidence after critic acceptance; closure commits were pushed.
+Parent body acceptance is 5/5. `tkt sync-plan` passes with no findings. `tkt validate`
+passes its error checks but retains eight pre-existing missing-resolution warnings
+on historical tickets 50,91,154,155,156,174,178,206; those were not rewritten.
+The refreshed dashboard checker reports 100 entries, 261 tickets, zero open asks,
+zero errors and zero warnings. The LAN endpoint returned HTTP200 and the current
+entry bytes. Rendering remains unverified; existing UI tickets stay open.
+
+No ready open ticket remains. Four WIP tickets retain their existing gates:
+90 (policy rejection), 228/240/243 (unavailable rendered acceptance).
+Backlog 147 requires its exact reproduction; 184 remains explicitly deferred.
+
 No hosted CI, real GitHub provider writes, rendered dashboard checks or native
 hook activation were exercised. Hooks remain trusted advisory external effects,
 not sandboxed or exactly-once delivery. File phases remain per-file atomic,
