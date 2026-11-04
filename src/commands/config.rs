@@ -41,6 +41,15 @@ pub fn run(
             }
             crate::config::parse_update_interval(value)?;
         }
+        if project {
+            let dir = tickets_dir()?;
+            if !is_dry_run() {
+                warn_if_detached_project_write(&dir);
+            }
+            crate::config::set_project_config(&dir, key, value)?;
+        } else {
+            crate::config::Config::set(key, value)?;
+        }
         if is_dry_run() {
             if is_quiet_json() {
                 print_quiet_json_success(&format!("would set {}", key));
@@ -53,13 +62,6 @@ pub fn run(
                 );
             }
             return Ok(0);
-        }
-        if project {
-            let dir = tickets_dir()?;
-            warn_if_detached_project_write(&dir);
-            crate::config::set_project_config(&dir, key, value)?;
-        } else {
-            crate::config::Config::set(key, value)?;
         }
         if is_quiet() {
             print_quiet_json_success(&format!("set {}", key));
@@ -76,6 +78,15 @@ pub fn run(
     }
 
     if let Some(key) = unset {
+        let existed = if project {
+            let dir = tickets_dir()?;
+            if !is_dry_run() {
+                warn_if_detached_project_write(&dir);
+            }
+            crate::config::unset_project_config(&dir, key)?
+        } else {
+            crate::config::Config::unset(key)?
+        };
         if is_dry_run() {
             if is_quiet_json() {
                 print_quiet_json_success(&format!("would unset {}", key));
@@ -88,13 +99,6 @@ pub fn run(
             }
             return Ok(0);
         }
-        let existed = if project {
-            let dir = tickets_dir()?;
-            warn_if_detached_project_write(&dir);
-            crate::config::unset_project_config(&dir, key)?
-        } else {
-            crate::config::Config::unset(key)?
-        };
         if is_quiet() {
             print_quiet_json_success(&format!(
                 "{} {}",

@@ -509,3 +509,9 @@ Dry-run diagnostics: file debug logging is suppressed for previews, including th
 Migration safety: tk preview and apply prepare readable source snapshots and reject destination or backup conflicts. New output/backups are published completely without overwriting arrivals; an original is removed only after its converted output succeeds. Backups remain .tickets.bak. This is per-file safety, not an atomic batch or external-editor lock; retain backups and inspect partial results on failure. Hard-link support is required for new-file publication.
 
 See [migration publication and recovery](docs/migration-publication.md).
+
+### Local configuration, context and initialization writes
+
+Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
+
+Preview performs no writes; existing command previews do not inspect every filesystem precondition. Coordinate external writers. `init --write FILE` retains explicit custom paths, including paths outside the checkout; it is not a path-containment boundary. Directory effects reject linked/non-directory targets, but ancestor paths are resolved by the filesystem. New-file publication requires hard-link support on the destination filesystem.

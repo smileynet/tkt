@@ -5,6 +5,7 @@ mod commands;
 mod config;
 mod context;
 mod core;
+mod effects;
 mod findings;
 mod fix;
 mod git;

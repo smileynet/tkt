@@ -1,0 +1,11 @@
+# Prepared local file effects
+
+Ticket #253 implements a concrete Directory/Write/Remove plan used by configuration, context and init. Both normal and preview commands prepare the same text operations. Preview executes no effects; invalid existing UTF-8 and unsafe final targets fail preparation rather than being replaced by empty content. Replacement compares the prepared snapshot, then uses atomic_write; missing targets use atomic_create without overwriting arrivals. Context clear removes the state entry without following a link and remains a no-op when absent.
+
+PASS: final mise run check ran 435 Rust tests and 42 Node fixtures, clean format and zero clippy warnings. SKIP: one existing Windows relative-link fixture. Four public tests cover eight full-tree preview rows, absent initialization, normal write/clear/idempotent marker controls, invalid UTF-8 in apply and preview, final-link preservation and actual Windows locked-replacement failure. Three effect tests cover preview, stale snapshots, non-directory conflicts, arrivals and preservation of earlier successful effects. Unix execution was not observed. Git fixture newline/empty-clone advisories are separate from the clean clippy stage.
+
+Independent critic first found that command guards bypassed the plan's Preview mode. Production config/context/init routing was corrected, invalid-text preview controls were added, the full gate was rerun, and critic accepted final source. An earlier test assumed an init default policy that is not shipped; the assertion was corrected to the actual default before the final gate. Source identities are in the companion JSON.
+
+No batch transaction, external-editor lock, full path containment or every-mutator completion is claimed. Snapshot comparison has a remaining external check/replace race; ancestor paths are resolved by the filesystem. Explicit custom init paths retain their prior scope. New-file publication needs hard-link support. Shared target and installed/staged workflow outputs remain maintainer-owned for ongoing #191/frontier work; disposable child helpers/logs are recycled after promotion.
+
+Recycled 6 disposable child files (97351 logical bytes) to the OS Recycle Bin after promoting evidence. The ongoing batch helper remains only until the remaining review/closure batch finishes.

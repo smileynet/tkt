@@ -4,6 +4,7 @@
 //! When updating them, also update the other agent guidance surfaces:
 //! see `docs/agents/agent-guidance-surfaces.md` for the full sync checklist.
 
+use crate::effects::{read_text, FileEffect, FilePlan, Mode};
 use anyhow::Result;
 
 use crate::color::{sym_ok, sym_warn};
@@ -75,6 +76,8 @@ If a claim push is rejected, someone else got there first — pick the next fron
 
 Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
+
+Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
 "#;
 
 // --- Per-agent variants ---
@@ -122,6 +125,8 @@ Tag new tickets with their work stream (--tags <stream>) in multi-stream project
 
 Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
+
+Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
 "#;
 
 const SNIPPET_CURSOR: &str = r#"---
@@ -184,6 +189,8 @@ Only use `--status backlog` for work you're deliberately deferring:
 
 Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
+
+Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
 "#;
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
@@ -239,6 +246,8 @@ Pick the first ticket `tkt ready` lists — it already applies priority sorting
 
 Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
+
+Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
 "#;
 
 const SNIPPET_WINDSURF: &str = r#"---
@@ -287,6 +296,8 @@ Tag new tickets with their work stream (--tags <stream>) in multi-stream project
 
 Agent eligibility: identify each invocation with global `--agent <lowercase-slug>` or `TKT_AGENT` (flag wins; never stored in config). Unidentified `ready` shows unrestricted work and reports hidden restricted tickets on stderr. `claim` enforces the same policy; `claim <id> --force` is an explicit scheduling override.
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
+
+Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
 "#;
 
 const DEFAULT_CONFIG: &str = r#"[push]
@@ -308,21 +319,7 @@ pub fn run(
     let repo_root = crate::git::repo_root_cwd()?;
 
     let writes = !agent_only || all || target.is_some() || write.is_some();
-    if writes && is_dry_run() {
-        if is_quiet_json() {
-            print_quiet_json_success("would initialize project");
-        } else {
-            println!("Would initialize tkt files in {}", repo_root.display());
-            if all {
-                println!("Would update all supported agent instruction targets");
-            } else if let Some(target) = target {
-                println!("Would update {} agent instructions", target);
-            } else if let Some(file) = write.as_ref().and_then(|file| file.as_ref()) {
-                println!("Would update {}", file);
-            }
-        }
-        return Ok(0);
-    }
+    let preview_file = write.as_ref().and_then(|file| file.clone());
 
     // Step 1: Project bootstrapping (unless --agent-only)
     if !agent_only {
@@ -338,23 +335,36 @@ pub fn run(
         let file = filename.unwrap_or_else(|| "AGENTS.md".to_string());
         let path = repo_root.join(&file);
         write_with_markers(&path, SNIPPET_AGENTS)?;
-        if !is_quiet() {
+        if !is_quiet() && !is_dry_run() {
             println!("  {} updated {} (tkt section)", sym_ok(), file);
         }
     } else {
         // Default: print to stdout
-        if !is_quiet() || !is_json_output() {
+        if (!writes || !is_dry_run()) && (!is_quiet() || !is_json_output()) {
             print!("{}", SNIPPET_AGENTS);
         }
     }
 
-    if !agent_only && !is_quiet() {
+    if !agent_only && !is_quiet() && !is_dry_run() {
         println!(
             "\nAgent setup recommendations:\n  - Project instructions: tkt init --write\n  - Workflow skills: install the tkt plugin separately, or run node tools/deploy.mjs from a source checkout.\n  - CLI installation does not include workflow skills.\n  - Command schemas: tkt capabilities -o json\n  - Setup guide: https://github.com/smileynet/tkt#ai-agent-integration"
         );
     }
 
-    if writes && is_quiet() {
+    if writes && is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success("would initialize project");
+        } else {
+            println!("Would initialize tkt files in {}", repo_root.display());
+            if all {
+                println!("Would update all supported agent instruction targets");
+            } else if let Some(target) = target {
+                println!("Would update {} agent instructions", target);
+            } else if let Some(file) = preview_file {
+                println!("Would update {}", file);
+            }
+        }
+    } else if writes && is_quiet() {
         print_quiet_json_success("initialized project");
     }
     Ok(0)
@@ -364,50 +374,53 @@ pub fn run(
 
 fn bootstrap_project(repo_root: &std::path::Path) -> Result<()> {
     let tickets_dir = repo_root.join(".tickets");
+    let existed = tickets_dir.exists();
+    FilePlan(vec![FileEffect::Directory(tickets_dir.clone())]).execute(Mode::current())?;
 
-    if tickets_dir.exists() {
-        if !is_quiet() {
+    if existed {
+        if !is_quiet() && !is_dry_run() {
             println!("  {} .tickets/ already exists", sym_ok());
         }
     } else {
-        std::fs::create_dir_all(&tickets_dir)?;
-        if !is_quiet() {
+        if !is_quiet() && !is_dry_run() {
             println!("  {} created .tickets/", sym_ok());
         }
     }
 
     let config_path = tickets_dir.join("config.toml");
-    if config_path.exists() {
-        if !is_quiet() {
+    if read_text(&config_path)?.is_some() {
+        if !is_quiet() && !is_dry_run() {
             println!("  {} .tickets/config.toml already exists", sym_ok());
         }
     } else {
-        std::fs::write(&config_path, DEFAULT_CONFIG)?;
-        if !is_quiet() {
+        FilePlan(vec![FileEffect::Write {
+            path: config_path,
+            before: None,
+            text: DEFAULT_CONFIG.into(),
+        }])
+        .execute(Mode::current())?;
+        if !is_quiet() && !is_dry_run() {
             println!("  {} created .tickets/config.toml", sym_ok());
         }
     }
 
     // Ensure .context is gitignored (session state, not committed)
     let gitignore_path = tickets_dir.join(".gitignore");
-    let needs_context_ignore = if gitignore_path.exists() {
-        let content = std::fs::read_to_string(&gitignore_path).unwrap_or_default();
-        !content.contains(".context")
-    } else {
-        true
-    };
+    let before = read_text(&gitignore_path)?;
+    let needs_context_ignore = !before.as_deref().unwrap_or_default().contains(".context");
     if needs_context_ignore {
-        let mut content = if gitignore_path.exists() {
-            std::fs::read_to_string(&gitignore_path).unwrap_or_default()
-        } else {
-            String::new()
-        };
+        let mut content = before.clone().unwrap_or_default();
         if !content.is_empty() && !content.ends_with('\n') {
             content.push('\n');
         }
         content.push_str(".context\n");
-        std::fs::write(&gitignore_path, content)?;
-        if !is_quiet() {
+        FilePlan(vec![FileEffect::Write {
+            path: gitignore_path,
+            before,
+            text: content,
+        }])
+        .execute(Mode::current())?;
+        if !is_quiet() && !is_dry_run() {
             println!("  {} .tickets/.gitignore (.context excluded)", sym_ok());
         }
     }
@@ -421,14 +434,14 @@ fn write_all_targets(repo_root: &std::path::Path) -> Result<()> {
     // AGENTS.md (markers)
     let agents_path = repo_root.join("AGENTS.md");
     write_with_markers(&agents_path, SNIPPET_AGENTS)?;
-    if !is_quiet() {
+    if !is_quiet() && !is_dry_run() {
         println!("  {} updated AGENTS.md (tkt section)", sym_ok());
     }
 
     // CLAUDE.md (markers)
     let claude_path = repo_root.join("CLAUDE.md");
     write_with_markers(&claude_path, SNIPPET_CLAUDE)?;
-    if !is_quiet() {
+    if !is_quiet() && !is_dry_run() {
         println!("  {} updated CLAUDE.md (tkt section)", sym_ok());
     }
 
@@ -443,13 +456,13 @@ fn write_all_targets(repo_root: &std::path::Path) -> Result<()> {
     if github_dir.exists() {
         let copilot_path = github_dir.join("copilot-instructions.md");
         write_with_markers(&copilot_path, SNIPPET_AGENTS)?;
-        if !is_quiet() {
+        if !is_quiet() && !is_dry_run() {
             println!(
                 "  {} updated .github/copilot-instructions.md (tkt section)",
                 sym_ok()
             );
         }
-    } else if !is_quiet() {
+    } else if !is_quiet() && !is_dry_run() {
         println!(
             "  {} skipped .github/copilot-instructions.md (.github/ doesn't exist)",
             sym_warn()
@@ -467,14 +480,14 @@ fn write_target(repo_root: &std::path::Path, target: &str) -> Result<()> {
         "agents" | "codex" | "opencode" => {
             let path = repo_root.join("AGENTS.md");
             write_with_markers(&path, SNIPPET_AGENTS)?;
-            if !is_quiet() {
+            if !is_quiet() && !is_dry_run() {
                 println!("  {} updated AGENTS.md (tkt section)", sym_ok());
             }
         }
         "claude" => {
             let path = repo_root.join("CLAUDE.md");
             write_with_markers(&path, SNIPPET_CLAUDE)?;
-            if !is_quiet() {
+            if !is_quiet() && !is_dry_run() {
                 println!("  {} updated CLAUDE.md (tkt section)", sym_ok());
             }
         }
@@ -489,13 +502,13 @@ fn write_target(repo_root: &std::path::Path, target: &str) -> Result<()> {
             if github_dir.exists() {
                 let path = github_dir.join("copilot-instructions.md");
                 write_with_markers(&path, SNIPPET_AGENTS)?;
-                if !is_quiet() {
+                if !is_quiet() && !is_dry_run() {
                     println!(
                         "  {} updated .github/copilot-instructions.md (tkt section)",
                         sym_ok()
                     );
                 }
-            } else if !is_quiet() {
+            } else if !is_quiet() && !is_dry_run() {
                 println!(
                     "  {} skipped .github/copilot-instructions.md (.github/ doesn't exist)",
                     sym_warn()
@@ -518,18 +531,26 @@ fn write_target(repo_root: &std::path::Path, target: &str) -> Result<()> {
 fn write_with_markers(path: &std::path::Path, content: &str) -> Result<()> {
     let wrapped = format!("{}\n{}{}\n", MARKER_BEGIN, content, MARKER_END);
 
-    if !path.exists() {
-        // Create parent dirs if needed
+    let before = read_text(path)?;
+    if before.is_none() {
+        let mut effects = Vec::new();
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
+            effects.push(FileEffect::Directory(parent.to_path_buf()));
         }
-        std::fs::write(path, &wrapped)?;
+        effects.push(FileEffect::Write {
+            path: path.to_path_buf(),
+            before,
+            text: wrapped,
+        });
+        FilePlan(effects).execute(Mode::current())?;
         return Ok(());
     }
 
-    let existing = std::fs::read_to_string(path)?;
+    let existing = before.as_ref().unwrap();
 
-    if let (Some(begin), Some(end)) = (existing.find(MARKER_BEGIN), existing.find(MARKER_END)) {
+    let result = if let (Some(begin), Some(end)) =
+        (existing.find(MARKER_BEGIN), existing.find(MARKER_END))
+    {
         // Replace between markers (inclusive)
         let end_of_marker = end + MARKER_END.len();
         // Skip trailing newline after end marker if present
@@ -542,17 +563,23 @@ fn write_with_markers(path: &std::path::Path, content: &str) -> Result<()> {
         result.push_str(&existing[..begin]);
         result.push_str(&wrapped);
         result.push_str(&existing[end_pos..]);
-        std::fs::write(path, result)?;
+        result
     } else {
         // Append with blank line separator
-        let mut result = existing;
+        let mut result = existing.clone();
         if !result.ends_with('\n') {
             result.push('\n');
         }
         result.push('\n');
         result.push_str(&wrapped);
-        std::fs::write(path, result)?;
-    }
+        result
+    };
+    FilePlan(vec![FileEffect::Write {
+        path: path.to_path_buf(),
+        before,
+        text: result,
+    }])
+    .execute(Mode::current())?;
 
     Ok(())
 }
@@ -560,12 +587,23 @@ fn write_with_markers(path: &std::path::Path, content: &str) -> Result<()> {
 /// Write a file that tkt fully owns (no markers needed). Creates parent dirs.
 fn write_owned_file(repo_root: &std::path::Path, rel_path: &str, content: &str) -> Result<()> {
     let path = repo_root.join(rel_path);
-    let verb = if path.exists() { "updated" } else { "created" };
+    let before = read_text(&path)?;
+    let verb = if before.is_some() {
+        "updated"
+    } else {
+        "created"
+    };
+    let mut effects = Vec::new();
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
+        effects.push(FileEffect::Directory(parent.to_path_buf()));
     }
-    std::fs::write(&path, content)?;
-    if !is_quiet() {
+    effects.push(FileEffect::Write {
+        path,
+        before,
+        text: content.into(),
+    });
+    FilePlan(effects).execute(Mode::current())?;
+    if !is_quiet() && !is_dry_run() {
         println!("  {} {} {}", sym_ok(), verb, rel_path);
     }
     Ok(())

@@ -33,3 +33,5 @@ callback-only wrapper or claim of transactional external-editor locking is appro
 by this audit. Remaining all-mutator acceptance criteria are still pending.
 
 Child 251 is complete after red/green failure controls, the full gate and critic review. Prepared migration and shared no-overwrite creation now cover migration, hooks and projection. The all-mutator executor, remaining local effects and full matrix remain pending. Guidance follow-up #252 corrected the unsupported map-file reference after command checks and critic acceptance.
+
+Child #253 routes configuration, context and init filesystem persistence through concrete prepared effects. Snapshots guard ordinary stale merges; new publication uses the no-overwrite primitive. Replacement still has an external check/rename race, ancestor links are filesystem-resolved, and multi-file init is not transactional. Parent #191 remains in progress for other families, Git effects and the all-mutator matrix.

@@ -1,0 +1,52 @@
+{
+  "kind": "source-and-check-receipt",
+  "platform": "Windows",
+  "gate": "mise run check",
+  "rustPassed": 435,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "fmt": "pass",
+  "clippy": "pass; zero warnings",
+  "critic": "accepted final production preview routing",
+  "files": [
+    {
+      "path": "src/effects.rs",
+      "sha256": "bf35cf99321052a245fc12d6938331522d3ad6854f9878110a9432a3fea29260"
+    },
+    {
+      "path": "src/config.rs",
+      "sha256": "0a644b73f497e5db47faaff20926292eeb7e795f81a5767663cd00ae89d1984d"
+    },
+    {
+      "path": "src/context.rs",
+      "sha256": "46d7b736e361b43ced90bb118e0415b5193f9ba27e1ac2a9ec6beb58b7b20df1"
+    },
+    {
+      "path": "src/commands/config.rs",
+      "sha256": "29af56194c90a9afa645d564fd0eb22705ef9ab531c15c366764f133bdc3cf51"
+    },
+    {
+      "path": "src/commands/context.rs",
+      "sha256": "1c3dd70d56fe74660079bbc8d43343c07661cb5e24de29b62873b007dcfd863c"
+    },
+    {
+      "path": "src/commands/init.rs",
+      "sha256": "98efc9865a71396ae636941f4173e9cd31fe187676a50d76de0bcc1827bcab83"
+    },
+    {
+      "path": "src/main.rs",
+      "sha256": "2f3a023223851d23c5d8f80ebe3b53e7a642c86c68380161f0a06c4092d2a3f8"
+    },
+    {
+      "path": "tests/local_effects.rs",
+      "sha256": "29d3424d9d2af9636d718c7f549b43dab7fbd5bfe7eb7c884930502f722e9cc0"
+    }
+  ],
+  "limits": [
+    "Unix execution not observed",
+    "One existing Windows relative-link fixture skipped",
+    "Snapshot compare then replace is not an external-writer lock",
+    "Multi-file operations are not batch atomic; ancestor links are filesystem-resolved",
+    "Parent 191 remains in progress"
+  ]
+}

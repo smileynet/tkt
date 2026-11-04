@@ -107,17 +107,18 @@ pub fn load(tickets_dir: &Path) -> Context {
 }
 
 /// Save context to .tickets/.context
-pub fn save(tickets_dir: &Path, ctx: &Context) -> std::io::Result<()> {
+pub fn save(tickets_dir: &Path, ctx: &Context) -> anyhow::Result<()> {
     let path = context_file_path(tickets_dir);
-    if ctx.is_empty() {
-        // Clear: remove the file
-        if path.exists() {
-            std::fs::remove_file(&path)?;
-        }
+    let effect = if ctx.is_empty() {
+        crate::effects::FileEffect::Remove(path)
     } else {
-        std::fs::write(&path, format!("{}\n", ctx.serialize()))?;
-    }
-    Ok(())
+        crate::effects::FileEffect::Write {
+            before: crate::effects::read_text(&path)?,
+            path,
+            text: format!("{}\n", ctx.serialize()),
+        }
+    };
+    crate::effects::FilePlan(vec![effect]).execute(crate::effects::Mode::current())
 }
 
 /// Path to the context state file.

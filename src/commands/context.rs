@@ -15,6 +15,7 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
     let dir = tickets_dir()?;
 
     if clear {
+        context::save(&dir, &context::Context::default())?;
         if is_dry_run() {
             if is_quiet_json() {
                 print_quiet_json_success("would clear context");
@@ -23,7 +24,6 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
             }
             return Ok(0);
         }
-        context::save(&dir, &context::Context::default())?;
         if is_quiet() {
             print_quiet_json_success("context cleared");
         } else {
@@ -48,6 +48,7 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
     // Set context from provided tags
     let raw = tags.join(" ");
     let ctx = context::parse_context(&raw);
+    context::save(&dir, &ctx)?;
 
     if ctx.is_empty() {
         if is_dry_run() {
@@ -58,7 +59,6 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
             }
             return Ok(0);
         }
-        context::save(&dir, &context::Context::default())?;
         if is_quiet() {
             print_quiet_json_success("context cleared");
         } else {
@@ -73,7 +73,6 @@ pub fn run(tags: &[String], clear: bool) -> Result<i32> {
             }
             return Ok(0);
         }
-        context::save(&dir, &ctx)?;
         if is_quiet() {
             print_quiet_json_success(&format!("context set: {}", ctx.serialize()));
         } else {

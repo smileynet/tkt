@@ -545,6 +545,10 @@ fn validate_user_debug_values(values: &BTreeMap<String, String>) -> Vec<String> 
 /// Converts `[section]\nkey = value` to `section.key = value` in the map.
 fn read_sectioned_config(path: &Path) -> Option<BTreeMap<String, String>> {
     let content = std::fs::read_to_string(path).ok()?;
+    Some(parse_sectioned_config(&content))
+}
+
+fn parse_sectioned_config(content: &str) -> BTreeMap<String, String> {
     let mut map = BTreeMap::new();
     let mut current_section = String::new();
 
@@ -574,7 +578,7 @@ fn read_sectioned_config(path: &Path) -> Option<BTreeMap<String, String>> {
             map.insert(full_key, value);
         }
     }
-    Some(map)
+    map
 }
 
 // ============================================================
@@ -650,9 +654,10 @@ impl Config {
             std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory")
         })?;
 
-        let mut values = read_sectioned_config(&path).unwrap_or_default();
+        let before = crate::effects::read_text(&path)?;
+        let mut values = parse_sectioned_config(before.as_deref().unwrap_or_default());
         values.insert(key.to_string(), value.to_string());
-        write_config_file(&path, &values)
+        write_config_file(&path, &values, before)
     }
 
     /// Remove a key from the user config file (revert to default).
@@ -661,9 +666,10 @@ impl Config {
             std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory")
         })?;
 
-        let mut values = read_sectioned_config(&path).unwrap_or_default();
+        let before = crate::effects::read_text(&path)?;
+        let mut values = parse_sectioned_config(before.as_deref().unwrap_or_default());
         let existed = values.remove(key).is_some();
-        write_config_file(&path, &values)?;
+        write_config_file(&path, &values, before)?;
         Ok(existed)
     }
 
@@ -775,11 +781,11 @@ fn default_for(key: &str) -> &str {
 }
 
 /// Write config file with sections. Groups keys by prefix (before the dot).
-fn write_config_file(path: &Path, values: &BTreeMap<String, String>) -> anyhow::Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-
+fn write_config_file(
+    path: &Path,
+    values: &BTreeMap<String, String>,
+    before: Option<String>,
+) -> anyhow::Result<()> {
     let mut content = String::from("# tkt configuration\n\n");
 
     // Group by section
@@ -818,7 +824,16 @@ fn write_config_file(path: &Path, values: &BTreeMap<String, String>) -> anyhow::
         content.push('\n');
     }
 
-    crate::core::atomic_write(path, &content)
+    let mut effects = Vec::new();
+    if let Some(parent) = path.parent() {
+        effects.push(crate::effects::FileEffect::Directory(parent.to_path_buf()));
+    }
+    effects.push(crate::effects::FileEffect::Write {
+        path: path.to_path_buf(),
+        before,
+        text: content,
+    });
+    crate::effects::FilePlan(effects).execute(crate::effects::Mode::current())
 }
 
 fn config_literal(key: &str, value: &str) -> String {
@@ -851,18 +866,20 @@ fn config_literal(key: &str, value: &str) -> String {
 /// Set a key in the project config file.
 pub fn set_project_config(tickets_dir: &Path, key: &str, value: &str) -> anyhow::Result<()> {
     let path = tickets_dir.join("config.toml");
-    let mut values = read_sectioned_config(&path).unwrap_or_default();
+    let before = crate::effects::read_text(&path)?;
+    let mut values = parse_sectioned_config(before.as_deref().unwrap_or_default());
     values.insert(key.to_string(), value.to_string());
     validate_project_values(&values, &path)?;
-    write_config_file(&path, &values)
+    write_config_file(&path, &values, before)
 }
 
 /// Remove a key from the project config file.
 pub fn unset_project_config(tickets_dir: &Path, key: &str) -> anyhow::Result<bool> {
     let path = tickets_dir.join("config.toml");
-    let mut values = read_sectioned_config(&path).unwrap_or_default();
+    let before = crate::effects::read_text(&path)?;
+    let mut values = parse_sectioned_config(before.as_deref().unwrap_or_default());
     let existed = values.remove(key).is_some();
-    write_config_file(&path, &values)?;
+    write_config_file(&path, &values, before)?;
     Ok(existed)
 }
 
@@ -921,7 +938,7 @@ mod tests {
         values.insert("debug".to_string(), "true".to_string());
         values.insert("debug.format".to_string(), "json".to_string());
 
-        write_config_file(&path, &values).unwrap();
+        write_config_file(&path, &values, None).unwrap();
         let read_back = read_sectioned_config(&path).unwrap();
         assert_eq!(read_back, values);
     }
@@ -1058,7 +1075,7 @@ foo = "bar"
         values.insert("close.require_resolution".to_string(), "true".to_string());
         values.insert("push.enabled".to_string(), "false".to_string());
 
-        write_config_file(&path, &values).unwrap();
+        write_config_file(&path, &values, None).unwrap();
         let content = std::fs::read_to_string(&path).unwrap();
         assert!(content.contains("[close]"));
         assert!(content.contains("allow_force = false"));
