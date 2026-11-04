@@ -78,6 +78,8 @@ Agent eligibility: identify each invocation with global `--agent <lowercase-slug
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 
 Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
+
+Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD new/claim/close carrying a versioned receipt from this build. Legacy/other operations, root/merge/rebased history and repeated undo are refused. It adds a revert commit, never resets history; push rejection keeps a local commit without automatic rebase.
 "#;
 
 // --- Per-agent variants ---
@@ -127,6 +129,8 @@ Agent eligibility: identify each invocation with global `--agent <lowercase-slug
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 
 Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
+
+Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD new/claim/close carrying a versioned receipt from this build. Legacy/other operations, root/merge/rebased history and repeated undo are refused. It adds a revert commit, never resets history; push rejection keeps a local commit without automatic rebase.
 "#;
 
 const SNIPPET_CURSOR: &str = r#"---
@@ -191,6 +195,8 @@ Agent eligibility: identify each invocation with global `--agent <lowercase-slug
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 
 Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
+
+Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD new/claim/close carrying a versioned receipt from this build. Legacy/other operations, root/merge/rebased history and repeated undo are refused. It adds a revert commit, never resets history; push rejection keeps a local commit without automatic rebase.
 "#;
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
@@ -248,6 +254,8 @@ Agent eligibility: identify each invocation with global `--agent <lowercase-slug
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 
 Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
+
+Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD new/claim/close carrying a versioned receipt from this build. Legacy/other operations, root/merge/rebased history and repeated undo are refused. It adds a revert commit, never resets history; push rejection keeps a local commit without automatic rebase.
 "#;
 
 const SNIPPET_WINDSURF: &str = r#"---
@@ -298,6 +306,8 @@ Agent eligibility: identify each invocation with global `--agent <lowercase-slug
 Use mutually exclusive `--agents codex,claude` or `--exclude-agents antigravity` on new/batch/edit; edit with an empty value clears it. One optional signed `agents` list stores the policy: ["codex", "claude"] allows either; ["!antigravity"] excludes; omission allows everyone. Empty lists, duplicates, mixed signs and invalid lowercase slugs are errors. Tags remain work-stream scope; requires remains all-of machine capabilities. Query honors tag context and exposes policy without agent filtering.
 
 Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
+
+Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD new/claim/close carrying a versioned receipt from this build. Legacy/other operations, root/merge/rebased history and repeated undo are refused. It adds a revert commit, never resets history; push rejection keeps a local commit without automatic rebase.
 "#;
 
 const DEFAULT_CONFIG: &str = r#"[push]

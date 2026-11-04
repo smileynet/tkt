@@ -243,6 +243,7 @@ pub fn run(
     ctx.publish(
         &paths,
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
+        None,
     )?;
     if !is_quiet() || is_json_output() {
         print_success(

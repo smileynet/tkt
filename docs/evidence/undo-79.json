@@ -1,0 +1,56 @@
+{
+  "kind": "reviewed-source-and-check-receipt",
+  "gate": "mise run check",
+  "rustPassed": 443,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "platform": "Windows",
+  "fmt": "pass",
+  "clippy": "pass; zero warnings",
+  "critic": "accepted final source including behavior-equivalent is_empty validator correction",
+  "sources": [
+    {
+      "path": "src/undo.rs",
+      "sha256": "1bb799d2438247adcb921efdff1921f4b31fe38f61d363df3247d3cd43a4f289"
+    },
+    {
+      "path": "src/commands/undo.rs",
+      "sha256": "ad819e93e8b444589f0b212b9606d10cb093d08b27d9803598bcc1006af46873"
+    },
+    {
+      "path": "src/git.rs",
+      "sha256": "b07a2f6f4de54e1827d2cbb4be9fa7494a2319c61282df491121584614f05e60"
+    },
+    {
+      "path": "src/mutation.rs",
+      "sha256": "60316624902fc7e6e576eb983e77f690fa8b00f67cec6ff50a8c210a62240fea"
+    },
+    {
+      "path": "src/commands/sync_plan.rs",
+      "sha256": "608a8f753caa0c0388c4dd4a27c6cd650f691923bec77da251dd9729a61602e3"
+    },
+    {
+      "path": "src/cli.rs",
+      "sha256": "7e33c32ca5623c507595db13455059a08d887e334a9ced24d0d90bafc73e9bb5"
+    },
+    {
+      "path": "src/commands/capabilities.rs",
+      "sha256": "e8d7b2abd028892f4c9129e1f67cbbd045b48be8946e31a1430743cc80050188"
+    },
+    {
+      "path": "src/commands/init.rs",
+      "sha256": "cd421b3609c0ff5cc4cc452d7d6d5a59695fff73521c212f20f17a18bfd202c8"
+    },
+    {
+      "path": "tests/undo.rs",
+      "sha256": "38ca1f5ea04308ec4de0ab08def79f44d0ce89ed570cf816f3089bba5985eb80"
+    }
+  ],
+  "limits": [
+    "Native Windows Git execution observed; Unix execution not observed",
+    "Only receipted new/claim/close at clean HEAD are recognized",
+    "Receipts are structural provenance, not authentication",
+    "Push rejection does not automatically rebase exact undo",
+    "Broader all-mutator matrix under191 remains open"
+  ]
+}

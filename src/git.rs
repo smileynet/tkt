@@ -6,6 +6,12 @@ use anyhow::{bail, Context, Result};
 
 /// Run a git command in the given repo directory and return stdout.
 pub fn git(repo: &Path, args: &[&str]) -> Result<String> {
+    Ok(String::from_utf8_lossy(&git_bytes(repo, args)?)
+        .trim()
+        .to_owned())
+}
+
+pub fn git_bytes(repo: &Path, args: &[&str]) -> Result<Vec<u8>> {
     let output = Command::new("git")
         .args(["-C", &repo.to_string_lossy()])
         .args(args)
@@ -17,7 +23,7 @@ pub fn git(repo: &Path, args: &[&str]) -> Result<String> {
         bail!("git {} failed: {}", args.join(" "), stderr.trim());
     }
 
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_owned())
+    Ok(output.stdout)
 }
 
 /// Find the repository root from a path inside it.
@@ -160,7 +166,8 @@ pub fn add(repo: &Path, files: &[&str]) -> Result<()> {
 pub fn commit(repo: &Path, message: &str, paths: &[&str]) -> Result<()> {
     let config = crate::config::ProjectConfig::load(&repo.join(".tickets"));
     config.validate()?;
-    let mut args = vec!["commit", "-qm", message, "--only", "--"];
+    let message = crate::undo::decorate_commit(repo, message, paths)?;
+    let mut args = vec!["commit", "-qm", &message, "--only", "--"];
     args.extend_from_slice(paths);
     if config.commit_hooks == crate::config::CommitHookPolicy::Run {
         git(repo, &args)?;

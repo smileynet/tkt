@@ -22,6 +22,11 @@ pub struct MutationContext {
     pub corpus: Vec<Ticket>,
 }
 
+pub struct CommitExpectation<'a> {
+    pub parent: &'a str,
+    pub tree: &'a str,
+}
+
 impl MutationContext {
     /// Resolve the full mutation context: tickets dir, repo root, config, remote
     /// detection, fetch (if remote), and corpus load.
@@ -143,12 +148,42 @@ impl MutationContext {
 
     /// Stage files, commit, and push (respecting push.enabled). This is the single
     /// push-gated path for existing-ticket mutations.
-    pub fn publish(&self, paths: &[&str], message: &str) -> Result<()> {
+    pub fn publish(
+        &self,
+        paths: &[&str],
+        message: &str,
+        expected: Option<CommitExpectation<'_>>,
+    ) -> Result<()> {
         let dbg = crate::telemetry::debug_mode();
-        git::add(&self.repo, paths)?;
-        crate::telemetry::debug_event(dbg, "", "", &format!("git add {:?}", paths));
+        let exact_inverse = expected.is_some();
+        if let Some(expected) = expected.as_ref() {
+            if git::git(&self.repo, &["rev-parse", "HEAD"])? != expected.parent
+                || git::git(&self.repo, &["write-tree"])? != expected.tree
+            {
+                return Err(DomainError::new(
+                    crate::ErrorKind::Conflict,
+                    "prepared parent or index changed before commit".into(),
+                )
+                .into());
+            }
+        } else {
+            git::add(&self.repo, paths)?;
+            crate::telemetry::debug_event(dbg, "", "", &format!("git add {:?}", paths));
+        }
         git::commit(&self.repo, message, paths)?;
         crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
+
+        if let Some(expected) = expected {
+            let parent = git::git(&self.repo, &["show", "-s", "--format=%P", "HEAD"])?;
+            let tree = git::git(&self.repo, &["rev-parse", "HEAD^{tree}"])?;
+            if parent != expected.parent || tree != expected.tree {
+                return Err(DomainError::with_hint(
+                    crate::ErrorKind::Conflict,
+                    "created local commit differs from the prepared inverse; it was not pushed".into(),
+                    "inspect HEAD and local history; preserve the commit and resolve unexpected hook or concurrent changes before publication".into(),
+                ).into());
+            }
+        }
 
         if let Some(upstream) = &self.upstream {
             // The commit above succeeded and is durable. If the push fails for a
@@ -157,7 +192,19 @@ impl MutationContext {
             // from push (network), the change is fully recoverable, and undoing a
             // valid commit under a transient failure is the wrong move (#180).
             // Surface a structured, actionable error instead of a bare crash.
-            if let Err(e) = git::push_with_retry(&self.repo, upstream) {
+            let pushed = if exact_inverse {
+                match git::push(&self.repo, upstream) {
+                    Ok(git::PushResult::Success) => Ok(()),
+                    Ok(git::PushResult::Rejected) => Err(anyhow::anyhow!(
+                        "upstream advanced; exact undo publication does not rebase automatically"
+                    )),
+                    Ok(git::PushResult::Failed(stderr)) => Err(anyhow::anyhow!(stderr)),
+                    Err(error) => Err(error),
+                }
+            } else {
+                git::push_with_retry(&self.repo, upstream)
+            };
+            if let Err(e) = pushed {
                 crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
                 return Err(git::local_commit_push_error(&self.repo, &format!("{e:#}")));
             }

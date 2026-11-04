@@ -129,6 +129,7 @@ pub fn run(id: &str, index: usize, to: &str) -> Result<i32> {
         ctx.publish(
             &refs,
             &format!("chore(tickets): move AC {id}:{index} to {to}"),
+            None,
         )?;
     }
     if !is_quiet() || super::common::is_json_output() {

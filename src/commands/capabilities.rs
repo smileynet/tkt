@@ -23,6 +23,7 @@ fn feature_manifest(cli: &Command) -> Value {
     {
         let (effects, behavior, format) = match command.get_name() {
             "new" | "batch" => ("non_idempotent", "Allocate tickets, commit and optionally push; dry-run previews without writing", "text"),
+            "undo" => ("non_idempotent", "Git revert of a versioned receipted new/claim/close at clean HEAD; refuses legacy, merge/root, changed or repeated history. Preserves local commit on push failure; dry-run reads without effects", "text"),
             "claim" | "close" | "edit" | "renumber" => ("idempotent", "Change tickets, commit and optionally push; dry-run previews without writing", "text"),
             "cancel" => ("idempotent", "Record cancellation history, handle dependent edges, and commit; dry-run previews without writing", "text"),
             "reopen" => ("idempotent", "Return a cancelled ticket to open while preserving cancellation history; dry-run previews without writing", "text"),

@@ -40,6 +40,7 @@ pub fn run(old_id: &str, new_id: &str, file_hint: Option<&str>) -> Result<i32> {
     ctx.publish(
         &path_refs,
         &format!("chore(tickets): renumber {} -> {}", old_id, new_id),
+        None,
     )?;
 
     // Report

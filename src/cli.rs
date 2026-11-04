@@ -47,6 +47,8 @@ pub(crate) struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Revert a receipted new/claim/close at clean HEAD; no history reset
+    Undo,
     /// Explicit optional advisory pre-commit hook (shared repository worktrees)
     Hooks {
         #[arg(value_enum)]
@@ -597,6 +599,7 @@ pub fn run() -> i32 {
                 drop_edges,
             ),
             Commands::Reopen { id } => crate::commands::reopen::run(&id),
+            Commands::Undo => crate::commands::undo::run(),
             Commands::Edit {
                 id,
                 title,
@@ -775,6 +778,7 @@ pub fn run() -> i32 {
 
 fn command_name(cmd: &Commands) -> String {
     match cmd {
+        Commands::Undo => "undo",
         Commands::Ready { .. } => "ready",
         Commands::Init { .. } => "init",
         Commands::Doctor { .. } => "doctor",
@@ -1070,6 +1074,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
         }
         // Commands with no notable optional flags
         Commands::Claim { .. }
+        | Commands::Undo
         | Commands::Blocked
         | Commands::Children { .. }
         | Commands::MoveAc { .. }

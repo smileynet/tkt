@@ -24,6 +24,7 @@ pub mod renumber;
 pub mod reopen;
 pub mod sync_plan;
 pub mod telemetry;
+pub mod undo;
 pub mod validate;
 
 pub mod hooks;

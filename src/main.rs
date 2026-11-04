@@ -15,6 +15,7 @@ mod nudge;
 mod renumber;
 mod telemetry;
 mod transaction;
+mod undo;
 mod update_check;
 
 use std::process::ExitCode;

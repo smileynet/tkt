@@ -49,7 +49,7 @@ pub fn run(id: &str) -> Result<i32> {
     if plan_changed {
         paths.push("docs/plan.md");
     }
-    ctx.publish(&paths, &format!("chore(tickets): reopen {}", id))?;
+    ctx.publish(&paths, &format!("chore(tickets): reopen {}", id), None)?;
     if is_quiet() {
         print_quiet_json_success(&format!(
             "reopened {} ({})",

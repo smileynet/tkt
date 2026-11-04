@@ -241,3 +241,11 @@ Migration safety: tk preview and apply prepare readable source snapshots and rej
 Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
 
 Preview performs no writes; existing command previews do not inspect every filesystem precondition. Coordinate external writers. `init --write FILE` retains explicit custom paths, including paths outside the checkout; it is not a path-containment boundary. Directory effects reject linked/non-directory targets, but ancestor paths are resolved by the filesystem. New-file publication requires hard-link support on the destination filesystem.
+
+## Controlled history reversal
+
+Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD new/claim/close carrying a versioned receipt from this build. Legacy/other operations, root/merge/rebased history and repeated undo are refused. It adds a revert commit, never resets history; push rejection keeps a local commit without automatic rebase.
+
+The first version supports regular non-executable ticket files and an optional already-tracked plan status update. Other effects (configuration, context, init, hooks, telemetry and caches) are outside the inverse. Unrelated untracked files are preserved; the index and tracked worktree must be clean with no active Git operation or index lock. A receipt is structural provenance, not author authentication.
+
+Global --no-push and push.enabled apply. Preview reads without fetching or creating a temporary index. A failed revert leaves conflict/sequencer state for inspection; a failed commit leaves the staged inverse. An opted-in hook that changes the prepared tree leaves a local commit and prevents push. Inspect git status and use explicit reviewed Git recovery for unsupported or interrupted work. Do not undo a valid local commit just because publishing failed.

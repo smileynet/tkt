@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Preview and revert a recognized new, claim or close at HEAD while preserving history, prior ticket/plan content and local commits when publication fails.
 - Generate a deterministic whole-project plan table, preview it without writes, and refresh an owned region while preserving human narrative.
 - Explicitly install, inspect and remove a project advisory pre-commit hook while preserving existing hooks and keeping commits nonblocking.
 - See missing source, acceptance and validation slots on the project frontier without changing readiness or making strict validation block on those advisories.

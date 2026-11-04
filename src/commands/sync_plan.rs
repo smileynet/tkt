@@ -74,21 +74,27 @@ fn update_status_cell(repo: &std::path::Path, id: &str, value: &str) -> Result<b
         domain_bail!(Conflict, "docs/plan.md has uncommitted changes; commit or stash them before changing ticket status");
     }
     let text = std::fs::read_to_string(&path)?;
-    let updated = RE_PLAN_ROW.replace_all(&text, |caps: &regex::Captures| {
-        if is_header(caps) || caps[1].trim() != id {
-            return caps[0].to_string();
-        }
-        let cell = caps.get(2).unwrap();
-        let row = caps.get(0).unwrap();
-        let start = cell.start() - row.start();
-        let end = cell.end() - row.start();
-        format!("{} {} {}", &caps[0][..start], value, &caps[0][end..])
-    });
+    let updated = rewrite_status_cell(&text, id, value);
     if updated == text {
         return Ok(false);
     }
     core::atomic_write(&path, &updated)?;
     Ok(true)
+}
+
+pub(crate) fn rewrite_status_cell(text: &str, id: &str, value: &str) -> String {
+    RE_PLAN_ROW
+        .replace_all(text, |caps: &regex::Captures| {
+            if is_header(caps) || caps[1].trim() != id {
+                return caps[0].to_string();
+            }
+            let cell = caps.get(2).unwrap();
+            let row = caps.get(0).unwrap();
+            let start = cell.start() - row.start();
+            let end = cell.end() - row.start();
+            format!("{} {} {}", &caps[0][..start], value, &caps[0][end..])
+        })
+        .into_owned()
 }
 
 pub fn run(

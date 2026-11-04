@@ -279,7 +279,7 @@ pub fn run(
     if plan_changed {
         paths.push("docs/plan.md");
     }
-    ctx.publish(&paths, &format!("chore(tickets): close {}", id))?;
+    ctx.publish(&paths, &format!("chore(tickets): close {}", id), None)?;
 
     if is_quiet() {
         if is_json_output() {

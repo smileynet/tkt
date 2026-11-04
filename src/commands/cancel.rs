@@ -188,7 +188,7 @@ pub fn run(
         paths.push("docs/plan.md".to_string());
     }
     let paths: Vec<&str> = paths.iter().map(String::as_str).collect();
-    ctx.publish(&paths, &format!("chore(tickets): cancel {}", id))?;
+    ctx.publish(&paths, &format!("chore(tickets): cancel {}", id), None)?;
 
     if is_quiet() {
         print_quiet_json_success(&format!("cancelled {} ({})", ticket.id, reason));

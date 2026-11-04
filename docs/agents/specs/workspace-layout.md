@@ -10,6 +10,7 @@ src/
 ├── telemetry.rs     — consent, session tracking, JSONL sink, rotation
 ├── migrate.rs       — schema detection + conversion (tk → tkt)
 ├── mutation.rs      — MutationContext (push-gated lifecycle for existing-ticket mutations)
+├── undo.rs          — receipt-bound Git inverse planning and safe recognition
 ├── effects.rs       — prepared local filesystem operations with preview/apply execution
 ├── renumber.rs      — RenumberPlan (pure ID remapping: plan + apply)
 ├── audit.rs         — pure audit rules (injectable deps, no I/O)
