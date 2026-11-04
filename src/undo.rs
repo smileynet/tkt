@@ -187,7 +187,8 @@ fn changed_paths(repo: &Path, before: &str, after: &str) -> Result<Vec<String>> 
 
 fn close_body(before: &str, after: &str) -> bool {
     let acceptance = crate::core::ac_section_range(before);
-    let prefix = if before.contains("## Resolution") {
+    let has_resolution = crate::core::resolution_section_range(before).is_some();
+    let prefix = if has_resolution {
         before
     } else {
         before.trim_end()
@@ -209,7 +210,7 @@ fn close_body(before: &str, after: &str) -> bool {
             return false;
         }
     }
-    if before.contains("## Resolution") {
+    if has_resolution {
         after.len() == before.len()
     } else {
         after

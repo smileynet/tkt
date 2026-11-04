@@ -91,7 +91,7 @@ fn metadata(path: &std::path::Path) -> Result<Option<std::fs::Metadata>> {
     }
 }
 
-fn linked(metadata: &std::fs::Metadata) -> bool {
+pub(crate) fn linked(metadata: &std::fs::Metadata) -> bool {
     #[cfg(windows)]
     {
         use std::os::windows::fs::MetadataExt;

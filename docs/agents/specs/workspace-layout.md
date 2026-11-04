@@ -8,6 +8,8 @@ src/
 ├── config.rs        — unified config cascade (user + project + env)
 ├── context.rs       — context state (load/save .tickets/.context)
 ├── telemetry.rs     — consent, session tracking, JSONL sink, rotation
+├── github.rs        — bounded GitHub source extraction and identity validation
+├── operation_lock.rs — owned per-worktree mutation markers
 ├── migrate.rs       — schema detection + conversion (tk → tkt)
 ├── mutation.rs      — MutationContext (push-gated lifecycle for existing-ticket mutations)
 ├── undo.rs          — receipt-bound Git inverse planning and safe recognition

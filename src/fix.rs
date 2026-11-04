@@ -210,7 +210,9 @@ pub fn run_fix(dir: &Path, dry_run: bool) -> anyhow::Result<FixResult> {
             .get("status")
             .map(|s| s.trim().trim_matches('"').to_string())
             .unwrap_or_default();
-        if effective_status == "done" && !modified_file.body.contains("## Resolution") {
+        if effective_status == "done"
+            && crate::core::resolution_section_range(&modified_file.body).is_none()
+        {
             advisories.push(Advisory {
                 file: fname.clone(),
                 message: "done ticket has no resolution recorded".into(),

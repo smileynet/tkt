@@ -1,0 +1,84 @@
+{
+  "kind": "public-cli-source-receipt",
+  "gate": "mise run check",
+  "rustPassed": 470,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "fmt": "pass; --check produced no diff",
+  "clippy": "pass; all targets, zero warnings",
+  "critic": "final source, guidance and test inspection accepted conditional on fresh gate; gate condition satisfied",
+  "sources": [
+    {
+      "path": "src/github.rs",
+      "sha256": "88cc2b14ba3199116fea060974e4f4d478f99027c653bc4e325adc407afe1595"
+    },
+    {
+      "path": "src/commands/import.rs",
+      "sha256": "92d21376d4a096c8a7d0c32f319f5036a333ae7a50a82d642312cbd7c0cf545c"
+    },
+    {
+      "path": "src/operation_lock.rs",
+      "sha256": "5eddad6ed25c8aded4dcad450b7d2cd10b1cbe24f7c87f4ce85fe548a6f3bc45"
+    },
+    {
+      "path": "src/transaction.rs",
+      "sha256": "e7c84b94e765fe4fabab0e57044245cb1d614cd4dc3e763df199632a2043abd2"
+    },
+    {
+      "path": "src/git.rs",
+      "sha256": "79f9d446ecff1f3061d9af8ebf7cc7fe4bd05b75db47a696100458d95c20c126"
+    },
+    {
+      "path": "src/core/ac_transfer.rs",
+      "sha256": "e4d3590dba9043bc33c6e2165b53f6e5f5dfb60622dc3ccd486527ab67919962"
+    },
+    {
+      "path": "src/core/mod.rs",
+      "sha256": "a6c52331b75dd8c3233e5bd258268ed92602a734c6ddc9e4f6b437cea12cf82f"
+    },
+    {
+      "path": "src/core/ticket.rs",
+      "sha256": "b8e9a0b2fd7e5e615bc9d98fc07a5a0e3b2095c318a040a6e15dd914f676da3b"
+    },
+    {
+      "path": "src/audit.rs",
+      "sha256": "b839b53802de5c35dc8d474a6e4e8a02a0b5e15d21f43747d2f9e53470f95b94"
+    },
+    {
+      "path": "src/fix.rs",
+      "sha256": "c5651d62396c164a99a587f38841764cdb70b7c6ec24ad68ffea1f36212bea85"
+    },
+    {
+      "path": "src/undo.rs",
+      "sha256": "a8efeae5f4447f7c283143da79b0a050d09c90dc147fdea1b533c12f65ef7e90"
+    },
+    {
+      "path": "src/commands/note.rs",
+      "sha256": "9d5f42c7ecbe17b29c3ab6edf1fe1ac31375e7036c9d072f8e7189555765656f"
+    },
+    {
+      "path": "src/cli.rs",
+      "sha256": "7f6492cd7dcbcadf566517c639f520a8737cdc2778d555879522076cd0e7cbe9"
+    },
+    {
+      "path": "src/commands/init.rs",
+      "sha256": "da8cf7ad2d50201214890999a078b56c3109fcc69c75ff9d9789d0791f77b97f"
+    },
+    {
+      "path": "tests/github_import.rs",
+      "sha256": "1cc5c3caca01e00e33d03f9e9f5cb837c581f15578443f475a6ff82fa34a536d"
+    },
+    {
+      "path": "tests/support/git_cas_probe.rs",
+      "sha256": "45766b687d153b5fb051180faa3ebf7865ffec9a8f42a80387e0238b6c6697d5"
+    }
+  ],
+  "limits": [
+    "Windows execution observed; Unix not run",
+    "Provider extraction used private fake-gh fixtures; no actual issues imported",
+    "Per-worktree cooperating allocator serialization, not an external-writer transaction",
+    "Create-only; no provider writes or update synchronization",
+    "Import remains outside undo receipt allowlist",
+    "Parent191 all-mutator acceptance remains unfinished"
+  ]
+}

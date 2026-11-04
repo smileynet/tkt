@@ -30,7 +30,7 @@ pub fn check_resolution_quality(
 
         let fname = filename(t);
 
-        if !t.body.contains("## Resolution") {
+        let Some(range) = core::resolution_section_range(&t.body) else {
             findings.push(Finding {
                 file: fname,
                 rule: "missing-resolution".into(),
@@ -38,17 +38,10 @@ pub fn check_resolution_quality(
                 severity: "warning".into(),
             });
             continue;
-        }
+        };
 
-        let has_content = t
-            .body
-            .split_once("## Resolution")
-            .map(|(_, after)| {
-                let text = after.lines().skip(1).collect::<Vec<_>>().join("\n");
-                let trimmed = text.trim();
-                !trimmed.is_empty() && trimmed != "TBD"
-            })
-            .unwrap_or(false);
+        let content = t.body[range].trim();
+        let has_content = !content.is_empty() && content != "TBD";
 
         if !has_content {
             findings.push(Finding {
@@ -250,10 +243,8 @@ pub fn check_template_only(corpus: &[Ticket]) -> Vec<Finding> {
 
     for t in corpus.iter().filter(|t| t.status == Status::Done) {
         // Skip tickets with migration resolutions — template body is expected
-        let resolution_lower = t
-            .body
-            .split_once("## Resolution")
-            .map(|(_, after)| after.to_lowercase())
+        let resolution_lower = core::resolution_section_range(&t.body)
+            .map(|range| t.body[range].to_lowercase())
             .unwrap_or_default();
         if resolution_lower.contains("migrated to")
             || resolution_lower.contains("superseded by")

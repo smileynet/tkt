@@ -12,6 +12,7 @@ pub mod context;
 mod creation_body;
 pub mod doctor;
 pub mod edit;
+pub mod import;
 pub mod init;
 pub mod lint;
 pub mod migrate;

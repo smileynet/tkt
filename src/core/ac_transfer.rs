@@ -61,13 +61,22 @@ fn fenced(line: &str, fence: &mut Option<(char, usize)>) -> bool {
 }
 
 pub fn section_range(body: &str) -> Option<std::ops::Range<usize>> {
+    section_range_named(body, "## Acceptance criteria")
+}
+
+pub(super) fn section_range_named(body: &str, name: &str) -> Option<std::ops::Range<usize>> {
     let mut fence = None;
     let mut start = None;
     let mut offset = 0;
     for line in body.split_inclusive('\n') {
         if !fenced(line, &mut fence) {
             let heading = line.trim_end();
-            if start.is_none() && heading == "## Acceptance criteria" {
+            let matches = heading == name
+                || (name == "## Resolution"
+                    && heading
+                        .strip_prefix(name)
+                        .is_some_and(|tail| tail.starts_with(" (") && tail.ends_with(')')));
+            if start.is_none() && matches {
                 start = Some(offset + line.len());
             } else if heading.starts_with("## ") {
                 if let Some(start) = start {

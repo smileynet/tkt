@@ -46,6 +46,22 @@ pub(crate) struct Cli {
 }
 
 #[derive(clap::Args)]
+struct ImportArgs {
+    /// Read open GitHub issues only; at most 999 received objects and less than 10 MiB JSON
+    #[arg(long, required = true)]
+    github: bool,
+    /// Explicit github.com OWNER/NAME; otherwise use this checkout's origin
+    #[arg(long)]
+    repo: Option<String>,
+    /// Require this source label; source labels are preserved without local mapping
+    #[arg(long)]
+    label: Option<String>,
+    /// Shared local validation criterion for every new issue (repeatable, at most 16)
+    #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
+    validation_criteria: Vec<String>,
+}
+
+#[derive(clap::Args)]
 struct BatchArgs {
     #[arg(required = true)]
     items: Vec<String>,
@@ -130,6 +146,8 @@ struct NoteArgs {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Create local open tickets from a bounded read-only GitHub snapshot
+    Import(ImportArgs),
     /// Append explicit UTF-8 text as a dated ticket note without opening an editor
     Note(NoteArgs),
     /// Revert a receipted new/claim/close at clean HEAD; no history reset
@@ -493,6 +511,16 @@ pub fn run() -> i32 {
                 crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
             })?;
         match cli.command {
+            Commands::Import(ImportArgs {
+                repo,
+                label,
+                validation_criteria,
+                ..
+            }) => crate::commands::import::run(
+                repo.as_deref(),
+                label.as_deref(),
+                &validation_criteria,
+            ),
             Commands::Ready { json, parent } => crate::commands::ready::run(
                 json || json_output,
                 current_agent.as_ref(),
@@ -796,6 +824,7 @@ pub fn run() -> i32 {
 
 fn command_name(cmd: &Commands) -> String {
     match cmd {
+        Commands::Import(..) => "import",
         Commands::Note(..) => "note",
         Commands::Undo => "undo",
         Commands::Ready { .. } => "ready",
@@ -834,6 +863,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
     let mut flags = Vec::new();
 
     match cmd {
+        Commands::Import(..) => flags.push("github"),
         Commands::Note(..) => flags.push("append"),
         Commands::New(NewArgs {
             parent,

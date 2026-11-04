@@ -575,7 +575,7 @@ impl TicketFile {
 
     /// Append a resolution section to the body (idempotent — skips if already present).
     pub fn append_resolution(&mut self, date: &str, note: &str, spike_branch: Option<&str>) {
-        if self.body.contains("## Resolution") {
+        if crate::core::resolution_section_range(&self.body).is_some() {
             return;
         }
         let branch_note = spike_branch

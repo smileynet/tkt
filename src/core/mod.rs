@@ -7,7 +7,7 @@ pub use ticket::{
     json_string_escape, load_corpus, max_id, new_ticket_text, resolve_blocked_by_ref,
     yaml_scalar_escape, AcSelection, AgentEligibility, AgentEligibilityMismatch, AgentId,
     CorpusIndex, Env, NewTicketParams, Priority, Status, Ticket, TicketFile, CANCELLATION_REASONS,
-    ENV_VALUES, STATUS_VALUES,
+    DEFAULT_AC_PROMPT, ENV_VALUES, STATUS_VALUES,
 };
 
 use std::path::Path;
@@ -149,23 +149,11 @@ fn io_error(path: &Path, source: &std::io::Error) -> anyhow::Error {
 /// Returns the range starting after the `## Acceptance criteria` heading line,
 /// ending at the next `## ` heading or EOF. Returns None if no AC section exists.
 pub fn ac_section_range(body: &str) -> Option<std::ops::Range<usize>> {
-    let heading = "## Acceptance criteria";
-    // Match only when heading appears at the start of a line (or start of body)
-    let start_idx = if body.starts_with(heading) {
-        Some(0)
-    } else {
-        body.find(&format!("\n{}", heading)).map(|i| i + 1)
-    }?;
-    let after_heading = start_idx + heading.len();
-    let content_start = body[after_heading..]
-        .find('\n')
-        .map(|i| after_heading + i + 1)
-        .unwrap_or(body.len());
-    let content_end = body[content_start..]
-        .find("\n## ")
-        .map(|i| content_start + i)
-        .unwrap_or(body.len());
-    Some(content_start..content_end)
+    ac_transfer::section_range(body)
+}
+
+pub fn resolution_section_range(body: &str) -> Option<std::ops::Range<usize>> {
+    ac_transfer::section_range_named(body, "## Resolution")
 }
 
 #[cfg(test)]

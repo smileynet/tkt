@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Import open GitHub issues with bounded read-only extraction, preserved source snapshots, explicit local validation and recoverable create-only replay.
 - Append dated, attributable ticket notes from explicit text, files or stdin while preserving lifecycle, existing content and unrelated staged work.
 - Preview and revert a recognized new, claim or close at HEAD while preserving history, prior ticket/plan content and local commits when publication fails.
 - Generate a deterministic whole-project plan table, preview it without writes, and refresh an owned region while preserving human narrative.

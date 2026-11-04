@@ -1,6 +1,5 @@
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::fs::File;
+use std::io::Read;
 
 use anyhow::Result;
 
@@ -37,51 +36,6 @@ fn read_input(reader: impl Read) -> Result<String> {
     String::from_utf8(bytes).map_err(|_| input_error("note input must be UTF-8"))
 }
 
-struct NoteLock {
-    path: PathBuf,
-    token: Vec<u8>,
-}
-
-impl NoteLock {
-    fn acquire(repo: &Path) -> Result<Self> {
-        let path = PathBuf::from(git::git(
-            repo,
-            &["rev-parse", "--git-path", "tkt-note.lock"],
-        )?);
-        let path = if path.is_absolute() {
-            path
-        } else {
-            repo.join(path)
-        };
-        let mut file = match OpenOptions::new().write(true).create_new(true).open(&path) {
-            Ok(file) => file,
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => return Err(DomainError::with_hint(
-                ErrorKind::Conflict, format!("another or interrupted note operation owns {}", path.display()),
-                "wait for the active writer; for an interrupted operation inspect Git status/history and the marker before removing a confirmed stale marker manually".into(),
-            ).into()),
-            Err(error) => return Err(io_error(&format!("cannot create note lock {}", path.display()), error)),
-        };
-        let token = format!("pid={}\nstarted_ns={}\n", std::process::id(), nonce()).into_bytes();
-        let guard = Self { path, token };
-        file.write_all(&guard.token)
-            .map_err(|e| io_error("cannot write note lock", e))?;
-        Ok(guard)
-    }
-}
-
-impl Drop for NoteLock {
-    fn drop(&mut self) {
-        let mut actual = Vec::new();
-        let read = File::open(&self.path).and_then(|file| {
-            file.take(self.token.len() as u64 + 1)
-                .read_to_end(&mut actual)
-        });
-        if read.is_ok() && actual == self.token {
-            let _ = std::fs::remove_file(&self.path);
-        }
-    }
-}
-
 fn nonce() -> u128 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -114,7 +68,9 @@ pub fn run(id: &str, source: &str, actor: Option<&AgentId>) -> Result<i32> {
     let _lock = if is_dry_run() {
         None
     } else {
-        Some(NoteLock::acquire(&repo)?)
+        Some(crate::operation_lock::OperationLock::acquire(
+            &repo, "note",
+        )?)
     };
     let ctx = MutationContext::open()?;
     let target = ctx.find_ticket(id)?;

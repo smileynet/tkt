@@ -243,10 +243,14 @@ pub enum PushResult {
 /// Push to origin (current branch). Returns a typed result distinguishing
 /// race rejections from other failures.
 pub fn push(repo: &Path, upstream: &Upstream) -> Result<PushResult> {
+    push_revision(repo, upstream, "HEAD")
+}
+
+pub fn push_revision(repo: &Path, upstream: &Upstream, revision: &str) -> Result<PushResult> {
     // A resolved remote HEAD may not be configured as this branch's tracking
     // upstream. Push an explicit refspec so the fallback is usable on every
     // platform instead of delegating to `git push`'s branch configuration.
-    let refspec = format!("HEAD:{}", upstream.branch());
+    let refspec = format!("{revision}:{}", upstream.branch());
     let output = Command::new("git")
         .args([
             "-C",

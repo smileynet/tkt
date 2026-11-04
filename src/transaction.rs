@@ -19,6 +19,11 @@ pub enum PublishOutcome {
     Retried,
 }
 
+pub enum PushAttempt {
+    Done(PublishOutcome),
+    Rejected,
+}
+
 /// A git transaction context for ticket allocation operations.
 ///
 /// Handles fetch, remote+local name scanning, and push-with-retry for
@@ -28,12 +33,30 @@ pub struct GitTransaction {
     pub dir: PathBuf,
     pub remote: bool,
     pub upstream: Option<git::Upstream>,
+    _allocation_lock: Option<crate::operation_lock::OperationLock>,
 }
 
 impl GitTransaction {
     /// Create a new transaction: resolves repo root, detects remote, fetches if remote exists.
     pub fn new(dir: &Path) -> Result<Self> {
+        Self::open(dir, true)
+    }
+
+    pub fn new_unfetched(dir: &Path) -> Result<Self> {
+        Self::open(dir, false)
+    }
+
+    fn open(dir: &Path, fetch: bool) -> Result<Self> {
         let repo = git::repo_root(dir)?;
+        let preview = crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed);
+        let allocation_lock = if preview {
+            None
+        } else {
+            Some(crate::operation_lock::OperationLock::acquire(
+                &repo,
+                "allocation",
+            )?)
+        };
         let has_remote = git::has_remote(&repo)?;
 
         // Respect project config push.enabled
@@ -53,8 +76,10 @@ impl GitTransaction {
             None
         };
 
-        if let Some(upstream) = &upstream {
-            git::fetch(&repo, upstream)?;
+        if fetch && !preview {
+            if let Some(upstream) = &upstream {
+                git::fetch(&repo, upstream)?;
+            }
         }
 
         Ok(Self {
@@ -62,7 +87,17 @@ impl GitTransaction {
             dir: dir.to_path_buf(),
             remote,
             upstream,
+            _allocation_lock: allocation_lock,
         })
+    }
+
+    pub fn fetch(&self) -> Result<()> {
+        if !crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
+            if let Some(upstream) = &self.upstream {
+                git::fetch(&self.repo, upstream)?;
+            }
+        }
+        Ok(())
     }
 
     /// Scan ticket filenames from both the local directory and resolved upstream.
@@ -94,25 +129,37 @@ impl GitTransaction {
     ///
     /// Returns Ok(PublishOutcome) on success, or a retryable signal.
     pub fn try_push(&self) -> Result<PublishResult> {
+        match self.push_once(None)? {
+            PushAttempt::Done(outcome) => Ok(PublishResult::Done(outcome)),
+            PushAttempt::Rejected => {
+                git::undo_commit(&self.repo)?;
+                git::pull_rebase(
+                    &self.repo,
+                    self.upstream
+                        .as_ref()
+                        .expect("rejected remote push has an upstream"),
+                )?;
+                Ok(PublishResult::NeedsRetry)
+            }
+        }
+    }
+
+    /// Expose rejection before recovery so journal owners can validate their attempt.
+    pub fn push_once(&self, revision: Option<&str>) -> Result<PushAttempt> {
         if !self.remote {
-            return Ok(PublishResult::Done(PublishOutcome::LocalOnly));
+            return Ok(PushAttempt::Done(PublishOutcome::LocalOnly));
         }
 
         let upstream = self
             .upstream
             .as_ref()
             .expect("remote transactions have an upstream");
-        match git::push(&self.repo, upstream)? {
-            git::PushResult::Success => Ok(PublishResult::Done(PublishOutcome::Published)),
+        match git::push_revision(&self.repo, upstream, revision.unwrap_or("HEAD"))? {
+            git::PushResult::Success => Ok(PushAttempt::Done(PublishOutcome::Published)),
             git::PushResult::Failed(stderr) => {
                 Err(git::local_commit_push_error(&self.repo, &stderr))
             }
-            git::PushResult::Rejected => {
-                // Undo and rebase for retry
-                git::undo_commit(&self.repo)?;
-                git::pull_rebase(&self.repo, upstream)?;
-                Ok(PublishResult::NeedsRetry)
-            }
+            git::PushResult::Rejected => Ok(PushAttempt::Rejected),
         }
     }
 
