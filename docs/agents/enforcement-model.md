@@ -71,7 +71,7 @@ policy; optional consumer CI is not authorization to dispatch them.
 
 This repository has no push or pull_request CI workflow; the legacy
 `.github/workflows/ci.yml` was removed. The local `mise run check` gate is the
-change gate (local pre-push checks are tracked separately). The remaining hosted
+change gate ([optional local pre-push checks](../optional-pre-push.md) require explicit installation). The remaining hosted
 workflows are manual-only, and no hosted workflow is dispatched without an
 explicit request. Publication remains separately authorized and is limited by
 the release contract.

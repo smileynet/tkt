@@ -460,7 +460,7 @@ Want a feature? [Request it](https://github.com/smileynet/tkt/issues/new?templat
 
 Before each code commit, run `mise run check`. The former automatic push/PR CI
 workflow has been removed; remaining hosted workflows are manual-only. Local
-pre-push checks are an opt-in proposal tracked in ticket 249, not installed by default.
+pre-push checks are [explicitly opt-in](docs/optional-pre-push.md), not installed by default.
 
 ## Release maintenance
 
