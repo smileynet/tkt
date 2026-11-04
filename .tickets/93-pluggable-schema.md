@@ -1,7 +1,7 @@
 ---
 id: "93"
 title: "Pluggable schema definitions with meta field + ai_context support"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Optional schema enforcement preserves unknown raw values and existing ticket compatibility"
   - "Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support"
 tags: ["schema", "kind:enhancement", "stream:relations", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Pluggable schema definitions with meta field + ai_context support
