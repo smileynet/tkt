@@ -217,4 +217,4 @@ Guidance delivery repair #255 is complete after critic acceptance: the core entr
 Maintenance integration: upstream #256–#258 fixture repairs are preserved. The Windows follow-up to #256 was reproduced, repaired and accepted by the critic after a fresh full gate; the newly integrated undo fixture passed nine focused tests. The reporting CLI was installed and verified fresh at `c15919f`.
 
 Latest 2026-11-04 delivery: #86 GitHub import, #88 Git-derived completed-work reporting, #89 trusted advisory lifecycle notifications, #93 design-only optional scalar schema, #148 worker-role examples and #158 explicit native write-nudge generation are complete after critic acceptance. The installed CLI is `e7fa64e`; the optional pre-push work #249 is complete; shared all-mutator work #191 remains actionable. #90 stays gated by the automatic implementation-policy rejection; dashboard rendering and the two historical backlog gates remain unchanged.
-| 259 | Prevent telemetry commands from mutating during dry-run | open |
+| 259 | Prevent telemetry commands from mutating during dry-run | in_progress |
