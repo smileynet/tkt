@@ -34,3 +34,14 @@ or proof of acceptance quality. No real project tickets were changed by tests.
 Shared build outputs and managed plugin caches are retained for continuing work;
 unrelated artifacts are preserved. Owned diagnostic logs are recycled after this
 compact receipt is committed.
+
+Integration follow-up: upstream fixture/deployment updates were cleanly rebased.
+The first combined gate failed in the upstream Windows missing-gh fixture before
+reaching its intended assertion. Reopened #256, retained the real Git runtime
+directory on its isolated PATH, and verified its focused test. The fresh combined
+gate passed 482 Rust/42 Node with the same one Windows skip, formatting clean and
+clippy warning-free. Critic accepted both #88 and #256 before closure. A later
+upstream undo-maintenance fixture update passed all nine focused undo tests.
+Source commits were pushed; `cargo install --path . --locked` succeeded and
+`node tools/check-binary-fresh.mjs` reported HEAD/installed `c15919f` fresh before
+closure metadata commits.
