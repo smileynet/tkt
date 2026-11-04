@@ -11,6 +11,7 @@ pub mod config;
 pub mod context;
 mod creation_body;
 pub mod doctor;
+pub mod done;
 pub mod edit;
 pub mod import;
 pub mod init;

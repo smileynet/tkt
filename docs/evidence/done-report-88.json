@@ -1,0 +1,53 @@
+{
+  "gate": "mise run check",
+  "rustPassed": 482,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "fmt": "pass; --check no diff",
+  "clippy": "pass; all targets zero warnings",
+  "sources": [
+    {
+      "path": "src/commands/done.rs",
+      "sha256": "557e61daa46be99473f8fb40463553c2b3fe4f9133f52c8b4641a14855a7fb3c"
+    },
+    {
+      "path": "src/cli.rs",
+      "sha256": "f1494ac03e7bc636b55827eddb05b7895ae235b604607b4cfe33467d8a7d8af4"
+    },
+    {
+      "path": "src/commands/close.rs",
+      "sha256": "55d2dfb49b6094482b60c9d810b17d66936cd5d7f3beefb6cde97c3d424a160c"
+    },
+    {
+      "path": "tests/done_report.rs",
+      "sha256": "6f4739f669d259ffdb37d422875f5f27cd3e1ca72be4b832848e486d53e9598f"
+    },
+    {
+      "path": "docs/done-report.md",
+      "sha256": "2a7578dccc99b54cd146051a5d437b13f78df344693b3f1d5e2686502871d37c"
+    },
+    {
+      "path": "src/commands/init.rs",
+      "sha256": "33611c4a56b0b0401d4fe568275642ce3906fe73e1b22eb422a4eac2e6455b2c"
+    },
+    {
+      "path": "skills/tkt-core/SKILL.md",
+      "sha256": "ca07c489f37f918711d24104c464b0a403526bbdaf20ecb893d99f44115a3ab4"
+    },
+    {
+      "path": "skills/tkt-core/references/commands.md",
+      "sha256": "e1390794fc92429a93689e58f3fbbf4c0be97ed84275b02bc14c920e9c5015f0"
+    },
+    {
+      "path": "skills/tkt-work/SKILL.md",
+      "sha256": "b10fc69cdf04741075fe198f0d568c8db04d4e52f3e4099bf64a74cb352f364b"
+    }
+  ],
+  "unknowns": [
+    "Unix execution",
+    "real-project history attribution performance",
+    "older Git compatibility",
+    "rendered dashboard laptop/phone verification"
+  ],
+  "artifactDisposition": "Private test fixtures are disposable TempDirs; shared target and managed plugin caches retained for ongoing work. Compact evidence replaces owned scratch logs; unrelated artifacts preserved."
+}

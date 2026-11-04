@@ -22,6 +22,7 @@ fn feature_manifest(cli: &Command) -> Value {
         .filter(|command| !command.is_hide_set())
     {
         let (effects, behavior, format) = match command.get_name() {
+            "done" => ("read_only", "Current done tickets with same-path/same-ID single-parent Git transition dates. Explicit unknowns for missing, shallow, ambiguous or bounded history; no stored completion field. --week uses the last 604800 seconds inclusive UTC and retains unknown-date rows. --all-context bypasses tag context", "text"),
             "import" => ("non_idempotent", "Read github.com issues via gh with explicit repository and API version; create-only owned ticket/snapshot pairs with journal recovery, bounded below 1000 received objects and 10 MiB raw JSON. Only open issues become tickets; no provider writes. Dry-run reads provider without local effects", "text"),
             "new" | "batch" => ("non_idempotent", "Allocate tickets, commit and optionally push; dry-run previews without writing", "text"),
             "undo" => ("non_idempotent", "Git revert of a versioned receipted new/claim/close at clean HEAD; refuses legacy, merge/root, changed or repeated history. Preserves local commit on push failure; dry-run reads without effects", "text"),

@@ -358,6 +358,10 @@ pub(crate) fn chrono_date() -> String {
         .unwrap_or_default()
         .as_secs() as i64;
 
+    utc_date(secs)
+}
+
+pub(crate) fn utc_date(secs: i64) -> String {
     let days = secs.div_euclid(86400) as i32;
     let z = days + 719468;
     let era = z.div_euclid(146097);

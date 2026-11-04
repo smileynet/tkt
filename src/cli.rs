@@ -46,6 +46,16 @@ pub(crate) struct Cli {
 }
 
 #[derive(clap::Args)]
+struct DoneArgs {
+    /// Last 604,800 seconds in UTC, inclusive; unknown dates remain visible
+    #[arg(long)]
+    week: bool,
+    /// Bypass tag context; completion dates still use bounded Git history
+    #[arg(long)]
+    all_context: bool,
+}
+
+#[derive(clap::Args)]
 struct ImportArgs {
     /// Read open GitHub issues only; at most 999 received objects and less than 10 MiB JSON
     #[arg(long, required = true)]
@@ -146,6 +156,8 @@ struct NoteArgs {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Report current done tickets using verified Git transitions, with explicit unknown dates
+    Done(DoneArgs),
     /// Create local open tickets from a bounded read-only GitHub snapshot
     Import(ImportArgs),
     /// Append explicit UTF-8 text as a dated ticket note without opening an editor
@@ -511,6 +523,9 @@ pub fn run() -> i32 {
                 crate::DomainError::new(crate::ErrorKind::Validation, error.to_string())
             })?;
         match cli.command {
+            Commands::Done(DoneArgs { week, all_context }) => {
+                crate::commands::done::run(week, all_context)
+            }
             Commands::Import(ImportArgs {
                 repo,
                 label,
@@ -824,6 +839,7 @@ pub fn run() -> i32 {
 
 fn command_name(cmd: &Commands) -> String {
     match cmd {
+        Commands::Done(..) => "done",
         Commands::Import(..) => "import",
         Commands::Note(..) => "note",
         Commands::Undo => "undo",
@@ -863,6 +879,14 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
     let mut flags = Vec::new();
 
     match cmd {
+        Commands::Done(DoneArgs { week, all_context }) => {
+            if *week {
+                flags.push("week");
+            }
+            if *all_context {
+                flags.push("all_context");
+            }
+        }
         Commands::Import(..) => flags.push("github"),
         Commands::Note(..) => flags.push("append"),
         Commands::New(NewArgs {

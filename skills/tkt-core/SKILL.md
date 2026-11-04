@@ -27,6 +27,7 @@ command discovery. Installing the CLI alone does not install the workflow skills
 | Recovering an immediately mistaken mutation | preview and revert a recognized HEAD safely | `tkt --dry-run undo` then `tkt undo` |
 | Discovering work during implementation | capture it as a separate ticket without losing focus | `tkt new <slug> --title "..."` (open — or `--status backlog` only if genuinely deferred) |
 | Creating several related tickets at once | one commit/push instead of N; share `--tags`/`--blocked-by` | `tkt batch "slug:title" "slug:title" ... --tags STREAM` |
+| Preparing a completed-work report | inspect Git dates and explicit unknowns | `tkt done --week -o json` |
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
 | Querying the full corpus | bypass context; optionally filter status or priority | `tkt query --all-context --status open --priority high` |
 | Working in a specific environment | see only relevant work | Set `machine.capabilities` in config (or `CREW_ENV=corp` for legacy env filtering) → `tkt ready` filters by `requires` |
@@ -322,3 +323,10 @@ Bounded extraction never writes to GitHub. Owned snapshots and create-only repla
 preserve source and local progress. Keep the tracked worktree/index clean.
 Resume a pending journal with the same repository, label, validation arguments and
 branch. Shared per-worktree `new`/`batch`/import markers require interruption inspection.
+
+
+## Completed work reports
+
+Use `tkt done --week` for a rolling UTC window; unknown dates remain visible.
+Read [date attribution and limits](references/commands.md#completed-work-reports)
+before using its counts. The report adds no stored completion field.
