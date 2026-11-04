@@ -1,12 +1,13 @@
 ---
 id: "86"
 title: "tkt import --github: pull open issues into .tickets/"
-status: open
+status: in_progress
 blocked_by: ["125"]
 priority: low
 validation_criteria:
   - "`tkt import --github` imports open issues from current repo"
 tags: ["integrations", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
+assignee: "codex"
 ---
 
 # tkt import --github: pull open issues into .tickets/
