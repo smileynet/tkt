@@ -1,45 +1,52 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 
-const INSTALLER = join(dirname(fileURLToPath(import.meta.url)), "deploy.mjs");
-function runInstaller(args) {
-  const result = spawnSync(process.execPath, [INSTALLER, ...args], { encoding: "utf8", env: { ...process.env, DO_NOT_TRACK: "1" } });
-  return { status: result.status, stdout: result.stdout + result.stderr };
-}
+const installer = fileURLToPath(new URL("./deploy.mjs", import.meta.url));
 
-// Exercise native warning semantics rather than duplicating Claude's validator.
-test("deployment check rejects root context and opt-in catalog warnings", (t) => {
-  try { execFileSync("claude", ["--version"], { stdio: "pipe" }); }
-  catch { t.skip("Claude CLI unavailable"); return; }
-  const pack = mkdtempSync(join(tmpdir(), "deploy-validation-"));
-  t.after(() => rmSync(pack, { recursive: true, force: true }));
-  mkdirSync(join(pack, ".claude-plugin"));
-  mkdirSync(join(pack, "skills", "example"), { recursive: true });
-  writeFileSync(join(pack, ".claude-plugin", "plugin.json"), JSON.stringify({
-    name: "example", version: "1.0.0", description: "Example plugin for deployment validation.",
-    author: { name: "Example" }, license: "MIT", skills: "./skills/",
-  }));
-  writeFileSync(join(pack, ".claude-plugin", "marketplace.json"), JSON.stringify({ name: "example", metadata: { description: "Example marketplace for deployment validation." }, owner: { name: "Example" }, plugins: [{ name: "example", source: "./" }] }));
-  writeFileSync(join(pack, "README.md"), "# Example\n" + "This plugin provides example workflows for local development and testing. ".repeat(6));
-  writeFileSync(join(pack, "skills", "example", "SKILL.md"), "---\nname: example\ndescription: An example skill for validation.\n---\nDo example work.\n");
-  const check = (...args) => runInstaller(["check", "--pack", pack, ...args]);
-  const clean = check();
-  assert.equal(clean.status, 0, clean.stdout);
-  writeFileSync(join(pack, "CLAUDE.md"), "Project context\n");
-  const context = check();
-  assert.notEqual(context.status, 0, context.stdout);
-  assert.match(context.stdout, /CLAUDE.md at the plugin root/);
-  rmSync(join(pack, "CLAUDE.md"));
-  const catalog = check("--profile", "directory");
-  assert.notEqual(catalog.status, 0, catalog.stdout);
-  assert.match(catalog.stdout, /No icon|ICON_MISSING/);
-  // A valid 512px PNG removes the only catalog warning.
-  writeFileSync(join(pack, ".claude-plugin", "icon.png"), Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAAHIElEQVR4nO3VMQ0AMAzAsEIZtEEdtMHoEUsGkC9z7gMgaNYLAFhhAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABBlAABRBgAQZQAAUQYAEGUAAFEGABD1AUEfSwGgnVe6AAAAAElFTkSuQmCC", "base64"));
-  const catalogClean = check("--profile", "directory");
-  assert.equal(catalogClean.status, 0, catalogClean.stdout);
+test("static manifest checks preserve bytes and reject invalid input without native tools", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "tkt-static-validation-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const pack = join(root, "pack"), manifest = join(pack, ".claude-plugin/plugin.json");
+  mkdirSync(join(pack, ".claude-plugin"), { recursive: true });
+  mkdirSync(join(pack, "skills/example"), { recursive: true });
+  writeFileSync(manifest, JSON.stringify({ name: "example", version: "1.0.0", skills: "./skills/" }));
+  const skill = join(pack, "skills/example/SKILL.md");
+  writeFileSync(skill, "---\nname: example\ndescription: Example fixture\n---\nExample.\n");
+  const before = readFileSync(manifest), skillBefore = readFileSync(skill);
+  const marker = join(root, "native-called"), preload = join(root, "native.mjs");
+  // Intercept by executable name so the fixture also covers Windows native shims.
+  writeFileSync(preload, `import cp from "node:child_process";
+import {syncBuiltinESMExports} from "node:module";
+import {writeFileSync} from "node:fs";
+const original = cp.spawnSync;
+cp.spawnSync = (command, ...args) => {
+  if (command !== "claude") return original(command, ...args);
+  writeFileSync(${JSON.stringify(marker)}, "called");
+  return {status: 1, stdout: "", stderr: "fixture native rejection"};
+};
+syncBuiltinESMExports();\n`);
+  const run = (...args) => spawnSync(process.execPath, ["--import", preload, installer, "check", "--pack", pack, ...args], {
+    encoding: "utf8", env: { ...process.env, DO_NOT_TRACK: "1" },
+  });
+  const clean = run("--static");
+  assert.equal(clean.status, 0, clean.stdout + clean.stderr);
+  assert.equal(existsSync(marker), false);
+  assert.deepEqual(readFileSync(manifest), before);
+  assert.deepEqual(readFileSync(skill), skillBefore);
+
+  const native = run();
+  assert.equal(native.status, 1);
+  assert.match(native.stderr, /fixture native rejection/);
+  assert.equal(existsSync(marker), true);
+  rmSync(marker);
+  writeFileSync(manifest, JSON.stringify({ name: "example", version: "invalid", skills: "./skills/" }));
+  const invalid = run("--static");
+  assert.equal(invalid.status, 1);
+  assert.match(invalid.stderr, /version/);
+  assert.equal(existsSync(marker), false);
 });

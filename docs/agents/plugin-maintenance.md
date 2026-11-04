@@ -30,6 +30,13 @@ plugins. Only manifest-owned copies are pruned. Use `--dry-run`, `list`, `audit`
 `check --profile directory` also rejects catalog blockers and warnings. Native checks
 are skipped with a message when Claude is absent. Run `check` before installation;
 the install command checks skill lint and ownership. `--allow-dual` is an explicit duplicate override.
+Routine tooling tests use `check --static`, which checks repository manifests without
+the installed Claude validator. The blocking `tools/deploy-validation.test.mjs` uses
+a fake native tool to verify static validation, byte preservation and rejection of
+invalid manifests. Hook/config and legacy-migration safety fixtures remain in
+`tools/release-tools.test.mjs`. Run `node --test tools/deploy-native.test.mjs`
+only for explicitly requested installed-Claude compatibility evidence; it is not
+imported by the mandatory tooling gate. Default deployment `check` retains native validation.
 Codex must use this checkout as its local marketplace. A plugin refresh failure stops
 deployment before existing skill copies are removed. Start a new chat after refresh.
 
