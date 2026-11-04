@@ -27,6 +27,7 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 | `tkt claim <id>` | Mark in-progress (push = visible WIP) |
 | `tkt close <id> --resolution "..."` | Mark done, write resolution |
 | `tkt edit <id> [--title] [--priority] [--blocked-by] [--status]` | Surgical field change |
+| `tkt note <id> --append TEXT\|@FILE\|-` | Append a dated attributable note; lifecycle unchanged |
 
 ## Viewing
 
@@ -336,3 +337,6 @@ Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD ne
 The first version supports regular non-executable ticket files and an optional already-tracked plan status update. Other effects (configuration, context, init, hooks, telemetry and caches) are outside the inverse. Unrelated untracked files are preserved; the index and tracked worktree must be clean with no active Git operation or index lock. A receipt is structural provenance, not author authentication.
 
 Global --no-push and push.enabled apply. Preview reads without fetching or creating a temporary index. A failed revert leaves conflict/sequencer state for inspection; a failed commit leaves the staged inverse. An opted-in hook that changes the prepared tree leaves a local commit and prevents push. Inspect git status and use explicit reviewed Git recovery for unsupported or interrupted work. Do not undo a valid local commit just because publishing failed.
+
+
+Append a ticket note with tkt note ID --append "text" (or @FILE / - for UTF-8 stdin, at most 64 KiB). Notes preserve lifecycle and existing body bytes; identify the caller with --agent or TKT_AGENT. The literal ## Resolution is reserved even inside examples. The target must be tracked and clean. Only cooperating note processes in the same worktree serialize; external editors, other mutations and other worktrees require coordination. Dry-run writes nothing. Every invocation appends: after a push fails, inspect the retained local commit and retry git push. If committing fails, inspect and explicitly finish or restore the retained note before retrying; do not append again. Note commits are outside undo receipt eligibility.

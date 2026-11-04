@@ -1,0 +1,39 @@
+{
+  "kind": "public-cli-source-receipt",
+  "gate": "mise run check",
+  "rustPassed": 451,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "fmt": "pass",
+  "clippy": "pass; zero warnings",
+  "critic": "accepted after ignored-untracked and commit-failure review fixes; final gate condition satisfied",
+  "sources": [
+    {
+      "path": "src/commands/note.rs",
+      "sha256": "bc1f8f1dfb1347e6c848e7ed79c8c88edd556cb684c9165fd80f45ea1e190203"
+    },
+    {
+      "path": "src/cli.rs",
+      "sha256": "9ec1cc42e8fb5a5ab948b5c5f0d54d72b1c87026403f4aa699503e539cd95543"
+    },
+    {
+      "path": "src/commands/capabilities.rs",
+      "sha256": "a7dd586c641826c1bd40d3e39cdb174e12cb7fbe1af5d0639d7a1bc362b4a273"
+    },
+    {
+      "path": "src/commands/init.rs",
+      "sha256": "dd26cd711fe7028841181164f13a6c596cd0c46778a7cfa4e11ecef4e766b2e2"
+    },
+    {
+      "path": "tests/note.rs",
+      "sha256": "6a2660998c2de9f5c42b26c08d3089ddad7621d7582c512a45bf4e1d7c30bd16"
+    }
+  ],
+  "limits": [
+    "Windows execution observed; Unix not run",
+    "Same-worktree cooperating note serialization only",
+    "No real project note was appended during tests",
+    "No interactive editor or general Markdown parser",
+    "Parent191 remains unfinished"
+  ]
+}

@@ -45,8 +45,93 @@ pub(crate) struct Cli {
     command: Commands,
 }
 
+#[derive(clap::Args)]
+struct BatchArgs {
+    #[arg(required = true)]
+    items: Vec<String>,
+    /// Body template from .tickets/templates/<name>.md
+    #[arg(long)]
+    template: Option<String>,
+    #[arg(long)]
+    spec: Option<String>,
+    /// Parent ticket id
+    #[arg(long)]
+    parent: Option<String>,
+    #[arg(long)]
+    env: Option<String>,
+    #[arg(long)]
+    priority: Option<String>,
+    #[arg(long)]
+    status: Option<String>,
+    #[arg(long, value_delimiter = ',')]
+    blocked_by: Option<Vec<String>>,
+    /// Validation criteria (repeatable)
+    #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
+    validation_criteria: Vec<String>,
+    /// Tags for categorization (repeatable, also auto-applied from active context)
+    #[arg(long = "tags", value_delimiter = ',')]
+    tags: Vec<String>,
+    /// Machine capabilities required (e.g., gpu,linux,corp)
+    #[arg(long = "requires", value_delimiter = ',')]
+    requires: Vec<String>,
+    #[arg(long, value_delimiter = ',', conflicts_with = "exclude_agents")]
+    agents: Vec<String>,
+    #[arg(long, value_delimiter = ',')]
+    exclude_agents: Vec<String>,
+}
+
+#[derive(clap::Args)]
+struct NewArgs {
+    slug: String,
+    #[arg(long)]
+    title: Option<String>,
+    /// Ticket body text, @file, or - for stdin
+    #[arg(long, conflicts_with = "template")]
+    body: Option<String>,
+    /// Body template from .tickets/templates/<name>.md
+    #[arg(long)]
+    template: Option<String>,
+    #[arg(long)]
+    spec: Option<String>,
+    /// Parent ticket id
+    #[arg(long)]
+    parent: Option<String>,
+    #[arg(long)]
+    env: Option<String>,
+    #[arg(long)]
+    priority: Option<String>,
+    #[arg(long)]
+    status: Option<String>,
+    #[arg(long, value_delimiter = ',')]
+    blocked_by: Option<Vec<String>>,
+    /// Validation criteria (repeatable)
+    #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
+    validation_criteria: Vec<String>,
+    /// Tags for categorization (repeatable, also auto-applied from active context)
+    #[arg(long = "tags", value_delimiter = ',')]
+    tags: Vec<String>,
+    /// Machine capabilities required (e.g., gpu,linux,corp)
+    #[arg(long = "requires", value_delimiter = ',')]
+    requires: Vec<String>,
+    /// Agents allowed to pick up the ticket
+    #[arg(long, value_delimiter = ',', conflicts_with = "exclude_agents")]
+    agents: Vec<String>,
+    /// Agents excluded from picking up the ticket
+    #[arg(long, value_delimiter = ',')]
+    exclude_agents: Vec<String>,
+}
+
+#[derive(clap::Args)]
+struct NoteArgs {
+    id: String,
+    #[arg(long, value_name = "TEXT|@FILE|-")]
+    append: String,
+}
+
 #[derive(Subcommand)]
 enum Commands {
+    /// Append explicit UTF-8 text as a dated ticket note without opening an editor
+    Note(NoteArgs),
     /// Revert a receipted new/claim/close at clean HEAD; no history reset
     Undo,
     /// Explicit optional advisory pre-commit hook (shared repository worktrees)
@@ -109,79 +194,9 @@ enum Commands {
         confirm: bool,
     },
     /// Allocate a new ticket id (fetch, scan, create, commit, push)
-    New {
-        slug: String,
-        #[arg(long)]
-        title: Option<String>,
-        /// Ticket body text, @file, or - for stdin
-        #[arg(long, conflicts_with = "template")]
-        body: Option<String>,
-        /// Body template from .tickets/templates/<name>.md
-        #[arg(long)]
-        template: Option<String>,
-        #[arg(long)]
-        spec: Option<String>,
-        /// Parent ticket id
-        #[arg(long)]
-        parent: Option<String>,
-        #[arg(long)]
-        env: Option<String>,
-        #[arg(long)]
-        priority: Option<String>,
-        #[arg(long)]
-        status: Option<String>,
-        #[arg(long, value_delimiter = ',')]
-        blocked_by: Option<Vec<String>>,
-        /// Validation criteria (repeatable)
-        #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
-        validation_criteria: Vec<String>,
-        /// Tags for categorization (repeatable, also auto-applied from active context)
-        #[arg(long = "tags", value_delimiter = ',')]
-        tags: Vec<String>,
-        /// Machine capabilities required (e.g., gpu,linux,corp)
-        #[arg(long = "requires", value_delimiter = ',')]
-        requires: Vec<String>,
-        /// Agents allowed to pick up the ticket
-        #[arg(long, value_delimiter = ',', conflicts_with = "exclude_agents")]
-        agents: Vec<String>,
-        /// Agents excluded from picking up the ticket
-        #[arg(long, value_delimiter = ',')]
-        exclude_agents: Vec<String>,
-    },
+    New(NewArgs),
     /// Allocate N sequential ids in one commit/push
-    Batch {
-        #[arg(required = true)]
-        items: Vec<String>,
-        /// Body template from .tickets/templates/<name>.md
-        #[arg(long)]
-        template: Option<String>,
-        #[arg(long)]
-        spec: Option<String>,
-        /// Parent ticket id
-        #[arg(long)]
-        parent: Option<String>,
-        #[arg(long)]
-        env: Option<String>,
-        #[arg(long)]
-        priority: Option<String>,
-        #[arg(long)]
-        status: Option<String>,
-        #[arg(long, value_delimiter = ',')]
-        blocked_by: Option<Vec<String>>,
-        /// Validation criteria (repeatable)
-        #[arg(long = "validation", visible_alias = "vc", num_args = 1, action = clap::ArgAction::Append)]
-        validation_criteria: Vec<String>,
-        /// Tags for categorization (repeatable, also auto-applied from active context)
-        #[arg(long = "tags", value_delimiter = ',')]
-        tags: Vec<String>,
-        /// Machine capabilities required (e.g., gpu,linux,corp)
-        #[arg(long = "requires", value_delimiter = ',')]
-        requires: Vec<String>,
-        #[arg(long, value_delimiter = ',', conflicts_with = "exclude_agents")]
-        agents: Vec<String>,
-        #[arg(long, value_delimiter = ',')]
-        exclude_agents: Vec<String>,
-    },
+    Batch(BatchArgs),
     /// Set, show, or clear the active tag context for scoped work
     Context {
         /// Tags to set (+tag to include, -tag to exclude, bare word = include)
@@ -498,7 +513,7 @@ pub fn run() -> i32 {
                 detect,
                 confirm,
             } => crate::commands::migrate::run(from.as_deref(), detect, confirm),
-            Commands::New {
+            Commands::New(NewArgs {
                 slug,
                 title,
                 body,
@@ -514,7 +529,7 @@ pub fn run() -> i32 {
                 requires,
                 agents,
                 exclude_agents,
-            } => crate::commands::new::run(
+            }) => crate::commands::new::run(
                 &slug,
                 title.as_deref(),
                 body.as_deref(),
@@ -531,7 +546,7 @@ pub fn run() -> i32 {
                 &agents,
                 &exclude_agents,
             ),
-            Commands::Batch {
+            Commands::Batch(BatchArgs {
                 items,
                 template,
                 spec,
@@ -545,7 +560,7 @@ pub fn run() -> i32 {
                 requires,
                 agents,
                 exclude_agents,
-            } => crate::commands::batch::run(
+            }) => crate::commands::batch::run(
                 &items,
                 template.as_deref(),
                 spec.as_deref(),
@@ -600,6 +615,9 @@ pub fn run() -> i32 {
             ),
             Commands::Reopen { id } => crate::commands::reopen::run(&id),
             Commands::Undo => crate::commands::undo::run(),
+            Commands::Note(NoteArgs { id, append }) => {
+                crate::commands::note::run(&id, &append, current_agent.as_ref())
+            }
             Commands::Edit {
                 id,
                 title,
@@ -778,14 +796,15 @@ pub fn run() -> i32 {
 
 fn command_name(cmd: &Commands) -> String {
     match cmd {
+        Commands::Note(..) => "note",
         Commands::Undo => "undo",
         Commands::Ready { .. } => "ready",
         Commands::Init { .. } => "init",
         Commands::Doctor { .. } => "doctor",
         Commands::Lint { .. } => "lint",
         Commands::Migrate { .. } => "migrate",
-        Commands::New { .. } => "new",
-        Commands::Batch { .. } => "batch",
+        Commands::New(..) => "new",
+        Commands::Batch(..) => "batch",
         Commands::Claim { .. } => "claim",
         Commands::Close { .. } => "close",
         Commands::Cancel { .. } => "cancel",
@@ -815,7 +834,8 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
     let mut flags = Vec::new();
 
     match cmd {
-        Commands::New {
+        Commands::Note(..) => flags.push("append"),
+        Commands::New(NewArgs {
             parent,
             spec,
             env,
@@ -826,7 +846,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             tags,
             requires,
             ..
-        } => {
+        }) => {
             if blocked_by.is_some() {
                 flags.push("blocked-by");
             }
@@ -855,7 +875,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
                 flags.push("validation");
             }
         }
-        Commands::Batch {
+        Commands::Batch(BatchArgs {
             parent,
             spec,
             env,
@@ -866,7 +886,7 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             tags,
             requires,
             ..
-        } => {
+        }) => {
             if blocked_by.is_some() {
                 flags.push("blocked-by");
             }
