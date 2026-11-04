@@ -61,3 +61,10 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Note — 2026-11-04
+
+By: codex
+
+<!-- tkt-note:v1 85356-1793774519777637300 -->
+Execution limitation: automatic approval review rejected the command that would write the URL-launcher implementation with the reason blocked by policy. The command was rejected before execution; no source file was created and no browser was launched. No alternate route will be used to bypass the rejection. Acceptance remains pending; keep this ticket in progress with gate:evidence while other actionable work continues.
