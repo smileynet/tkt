@@ -783,6 +783,45 @@ h3.group{font-size:13px;margin:16px 0 8px;color:var(--muted);letter-spacing:.07e
 <script type="application/json" id="gm-entries">
 [
   {
+    "id": "2026-11-03-ticket-254",
+    "date": "2026-11-03",
+    "kind": "shipped",
+    "fidelity": "live",
+    "tickets": [
+      "254"
+    ],
+    "title": "Keep undo tied to the real acceptance changes",
+    "summary": "Close recognition now restricts checkbox changes to the acceptance section used by the writer, preserving the boundary around unrelated specification text.",
+    "visual": {
+      "type": "steps",
+      "items": [
+        {
+          "label": "Reproduce a forged Background checkbox change",
+          "state": "done"
+        },
+        {
+          "label": "Reuse the writer’s acceptance range",
+          "state": "done"
+        },
+        {
+          "label": "Verify legitimate recovery still works",
+          "state": "done"
+        }
+      ]
+    },
+    "details": "The direct public regression failed before the repair and now refuses without effects. Final gate passed 444 Rust tests and 42 Node fixtures, clean fmt and zero clippy warnings; one existing Windows skip. Critic accepted the two-line repair and regression. Structural provenance is not author authentication, no real project history was reverted, and parent 191 remains in progress.",
+    "links": [
+      {
+        "label": "Repair evidence",
+        "href": "evidence/undo-range-254.md"
+      },
+      {
+        "label": "Recovery contract",
+        "href": "undo.md"
+      }
+    ]
+  },
+  {
     "id": "2026-11-03-ticket-79",
     "date": "2026-11-03",
     "kind": "shipped",
