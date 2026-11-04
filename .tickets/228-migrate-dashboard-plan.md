@@ -62,3 +62,10 @@ No scratch/capture artifacts were made.
 ## Planning gate
 
 Source and data checks pass; laptop/phone rendering is unverified because local browser use is disabled.
+
+## Note — 2026-11-04
+
+By: anonymous
+
+<!-- tkt-note:v1 111452-1793793404013577100 -->
+2026-11-04 fresh browser inventory still reports Local browser use is disabled in Work settings. Dashboard checker remains0errors/0warnings. Pending visual AC requires actual Overview/History/Plan at recorded laptop/phone widths, clipping and navigation checks, source-bound captures and critic receipt. No fallback browser or owner feedback ask. Detailed checklist: docs/evidence/remaining-six-review-2026-11-04.md.
