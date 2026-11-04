@@ -1,0 +1,112 @@
+{
+  "guidanceCommit": "319cbbe",
+  "cliSourceCommit": "fea00ab",
+  "originalFailure": "Antigravity strict validation: core body 24287 bytes exceeds 24000 loaded bytes",
+  "finalSkillFileBytes": 23655,
+  "finalBodyBytesCalculated": 23179,
+  "nativeStrict": "pass; final full deployment no warnings (generic-logo informational notice retained)",
+  "packLint": "pass",
+  "claudeStrict": "pass",
+  "guidanceCoverage": "pass:45units/355frozenlines",
+  "sources": [
+    {
+      "path": "skills\\tkt-core\\SKILL.md",
+      "sha256": "a8a89cc7f13c25275ed849622e6105958984e6bdc01c0505d006343a261a0801"
+    },
+    {
+      "path": "skills\\tkt-core\\references\\commands.md",
+      "sha256": "4e662ac4711d3a057106919e4598a22df349d9cdadd70c216d50ecc36a2634e9"
+    }
+  ],
+  "comparisons": [
+    {
+      "target": "codex",
+      "files": 15,
+      "mismatches": []
+    },
+    {
+      "target": "kiro",
+      "files": 15,
+      "mismatches": []
+    },
+    {
+      "target": "opencode",
+      "files": 15,
+      "mismatches": []
+    },
+    {
+      "target": "agy",
+      "files": 15,
+      "mismatches": []
+    },
+    {
+      "target": "staged-agy",
+      "files": 15,
+      "mismatches": []
+    },
+    {
+      "target": "staged-kirocrew",
+      "files": 15,
+      "mismatches": []
+    }
+  ],
+  "retainedLogicalBytes": {
+    "target": 4848047598,
+    "C:\\Users\\uosmi\\.codex\\plugins\\cache\\tkt\\tkt\\0.4.0": 4852380225
+  },
+  "unknownPreserved": [
+    {
+      "path": ".scratch\\.gitkeep",
+      "logicalBytes": 51,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\dashboard-lan.json",
+      "logicalBytes": 298,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\research",
+      "logicalBytes": 148002,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\review",
+      "logicalBytes": 80544,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\review-input",
+      "logicalBytes": 85113,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\review-output",
+      "logicalBytes": 43080,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\subagent-input",
+      "logicalBytes": 2553,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\subagent-raw",
+      "logicalBytes": 130827,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    },
+    {
+      "path": ".scratch\\v050-proposal.md",
+      "logicalBytes": 5129,
+      "disposition": "preserve; active hosting state or preexisting/unknown ownership"
+    }
+  ],
+  "limits": [
+    "Kiro Crew payload built; CLI absent so activation not observed",
+    "Claude reads checkout; reload/start a new chat for current guidance",
+    "Measured logical bytes, not allocated or reclaimable disk",
+    "Managed caches retained for ongoing work; no global cleanup claimed",
+    "Rust CLI unchanged by255; existing470Rust42Nodegate remains source evidence for86"
+  ],
+  "critic": "accepted; independently verified both guidance hashes and scoped acceptance to255"
+}
