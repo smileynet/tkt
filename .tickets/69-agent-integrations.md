@@ -1,7 +1,7 @@
 ---
 id: "69"
 title: "Define the focused remaining harness-integration scope"
-status: open
+status: in_progress
 blocked_by: ["68"]
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Remaining follow-up scope is bounded, tied to an observed need and has an explicit validation plan"
   - "Unneeded broad exploration is distinguished from real remaining work without fabricating completion"
 tags: ["integrations", "kind:enhancement", "stream:quality", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Define the focused remaining harness-integration scope
