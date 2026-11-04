@@ -4,8 +4,10 @@ title: "tkt undo: revert last mutation"
 status: in_progress
 blocked_by: []
 priority: low
-validation_criteria:
-  - "`tkt undo` reverts last tkt-generated commit"
+validation_criteria: 
+  - "Versioned receipts bind recognized new claim and close transitions to exact parent tree path blob and mode; arbitrary or unsupported history is refused"
+  - "Git revert preserves original history and exact prior ticket/plan state; dirty state conflicts hooks and push failures retain recoverable work without reset or automatic rebase"
+  - "Public integration and final local gate pass with standalone guidance and independent critic acceptance"
 tags: ["cli", "kind:enhancement", "triage:ready-for-agent", "stream:workflow"]
 assignee: "codex"
 ---
@@ -57,3 +59,7 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Recognized first-version boundary — 2026-11-03
+
+The implemented safe recognizer uses canonical versioned Git receipts for new/claim/close, binding full before/after trees, parent, path, blob and mode. Legacy/message-only and other operations remain unrecognized; this is structural provenance, not author authentication. Ordinary mutations remain compatible when not eligible for a receipt. Undo uses an exact staged inverse and checks the commit before a single push, without automatic rebase on rejection. Failed apply/commit states and durable local commits are retained for explicit inspection. See [the supported recovery contract](../docs/undo.md). This scope supersedes the historical trivial-prefix and repeated-undo proposal. Parent #191 remains incomplete for the broader all-mutator effect matrix.
