@@ -204,7 +204,7 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 243 | Collect dashboard decisions with recommendations and chat export | in_progress |
 | 244 | Serve the delivery dashboard on the local network | ✅ done |
 | 248 | Compare plan lifecycle labels precisely without narrative parsing | ✅ done |
-| 249 | Add optional local pre-push verification | in_progress |
+| 249 | Add optional local pre-push verification | ✅ done |
 | 250 | Prevent debug logging from writing during dry-run | ✅ done |
 | 251 | Preserve migration sources and foreign destinations | ✅ done |
 | 252 | Remove unsupported migration-map guidance | ✅ done |
