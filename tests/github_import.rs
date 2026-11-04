@@ -921,10 +921,19 @@ fn current_origin_and_missing_gh_have_explicit_public_behavior() {
         .map(|directory| directory.join(git_name))
         .find(|path| path.is_file())
         .unwrap();
+    // Git for Windows resolves its runtime relative to the executable directory;
+    // moving its launcher through a symlink can fail before it writes stderr.
     #[cfg(windows)]
-    std::os::windows::fs::symlink_file(git_executable, f.bin.join(git_name)).unwrap();
+    let isolated_path = {
+        let git_directory = git_executable.parent().unwrap();
+        assert!(!git_directory.join("gh.exe").exists());
+        std::env::join_paths([f.bin.as_path(), git_directory]).unwrap()
+    };
     #[cfg(unix)]
-    std::os::unix::fs::symlink(git_executable, f.bin.join(git_name)).unwrap();
+    let isolated_path = {
+        std::os::unix::fs::symlink(git_executable, f.bin.join(git_name)).unwrap();
+        f.bin.clone().into_os_string()
+    };
     let out = f
         .cli(&[
             "import",
@@ -934,7 +943,7 @@ fn current_origin_and_missing_gh_have_explicit_public_behavior() {
             "-o",
             "json",
         ])
-        .env("PATH", &f.bin)
+        .env("PATH", isolated_path)
         .output()
         .unwrap();
     assert!(!out.status.success(), "{out:?}");

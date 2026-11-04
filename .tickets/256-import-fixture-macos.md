@@ -28,3 +28,15 @@ done: isolated import and note fixture Git maintenance, executable hook creation
 
 ### Verification
 1. ✓ Import and note failure fixtures pass on this macOS host without host configuration edits or skipped assertions; Windows coverage is reported separately. — "Full mise run check with disposable GIT_TEMPLATE_DIR passed: 43 Node tests, cargo fmt --check, warning-free clippy and 467 Rust tests across 41 suites; zero failures or ignored Rust tests. Focused import19/19 and note7/7 passed without the template. Windows was not run on this Mac."
+
+## Windows follow-up — 2026-11-03
+
+Reopened after integrating the upstream fixture repair: the missing-gh test failed
+before reaching gh because moving Git for Windows through a symlink broke runtime
+lookup (rev-parse failed with empty stderr). Keep the real Git executable directory
+on the isolated Windows PATH, assert it contains no gh.exe, and keep the invalid
+fixture gh first. Unix retains its symlink-only PATH. The focused Windows check
+passed 1/1 and the fresh full gate passed 482 Rust tests, 42 Node tests, one
+existing Windows relative-link skip, clean formatting and warning-free clippy.
+Independent critic accepted this test-only change conditional on that gate.
+Historical macOS evidence above remains unchanged; macOS was not rerun here.
