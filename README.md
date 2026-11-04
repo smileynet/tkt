@@ -544,3 +544,8 @@ Use tkt done --week for current done work in the inclusive last 604,800 seconds 
 History attribution is bounded: 4,096 lookups/report, 256 path commits/ticket, 32 MiB/object, 8 MiB/listing, 4,096 ticket entries/tree, 16 MiB/8,192 entries each for tree and state/blob/commit metadata payload caches, and 64 MiB history payload/report. It uses local Git with no lazy fetch/replacement objects/optional locks; unsupported read options, missing/shallow/merge/rename/ID-discontinuous/unparseable history or limits produce unknowns. Existing diagnostic/telemetry settings still apply; no tickets, index or refs are changed.
 
 See [completed-work dates and report limits](docs/done-report.md).
+
+
+Lifecycle hooks are optional advisory commands configured as JSON argv arrays in hooks.on_new/on_claim/on_close (default []). Project commands execute only after separate Git-local trust: git config --local tkt.lifecycleHooks true; this approves future hook edits and linked worktrees too. Inspect trusted code and revoke trust before untrusted updates. Hooks inherit caller credentials/environment. They run after the publication attempt, never gate it; spawn/failure/timeout warnings preserve the original result. The two-second deadline terminates only the direct child, not descendants; trusted hooks must not detach. Dry-run/failed commits emit nothing, allocation retries emit only the final retained attempt, and nested hooks are suppressed. No automatic replay: inspect the consumer and explicitly replay safely, never repeat a successful mutation as a notification retry.
+
+See [hook configuration, trust and recovery](docs/lifecycle-hooks.md).

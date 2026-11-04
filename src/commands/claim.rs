@@ -79,7 +79,12 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
     if plan_changed {
         paths.push("docs/plan.md");
     }
-    ctx.publish(&paths, &format!("chore(tickets): claim {}", id), None)?;
+    ctx.publish(
+        &paths,
+        &format!("chore(tickets): claim {}", id),
+        None,
+        Some((crate::lifecycle::Event::Claim, id)),
+    )?;
 
     if !is_quiet() || is_json_output() {
         print_success(

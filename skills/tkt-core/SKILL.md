@@ -330,3 +330,5 @@ branch. Shared per-worktree `new`/`batch`/import markers require interruption in
 Use `tkt done --week` for a rolling UTC window; unknown dates remain visible.
 Read [date attribution and limits](references/commands.md#completed-work-reports)
 before using its counts. The report adds no stored completion field.
+
+Before configuring lifecycle hooks, read [trust and retry rules](references/commands.md#advisory-lifecycle-hooks).

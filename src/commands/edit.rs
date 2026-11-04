@@ -244,6 +244,7 @@ pub fn run(
         &paths,
         &format!("chore(tickets): edit {} ({})", id, changed.join(", ")),
         None,
+        None,
     )?;
     if !is_quiet() || is_json_output() {
         print_success(

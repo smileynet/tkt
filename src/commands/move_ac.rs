@@ -130,6 +130,7 @@ pub fn run(id: &str, index: usize, to: &str) -> Result<i32> {
             &refs,
             &format!("chore(tickets): move AC {id}:{index} to {to}"),
             None,
+            None,
         )?;
     }
     if !is_quiet() || super::common::is_json_output() {

@@ -279,7 +279,12 @@ pub fn run(
     if plan_changed {
         paths.push("docs/plan.md");
     }
-    ctx.publish(&paths, &format!("chore(tickets): close {}", id), None)?;
+    ctx.publish(
+        &paths,
+        &format!("chore(tickets): close {}", id),
+        None,
+        Some((crate::lifecycle::Event::Close, id)),
+    )?;
 
     if is_quiet() {
         if is_json_output() {

@@ -10,6 +10,7 @@ mod findings;
 mod fix;
 mod git;
 mod github;
+mod lifecycle;
 mod migrate;
 mod mutation;
 mod nudge;

@@ -25,6 +25,9 @@ const PROJECT_KEYS: &[(&str, &str)] = &[
     ("new.default_priority", ""),
     ("push.enabled", "true"),
     ("commit.hooks", "skip"),
+    ("hooks.on_new", "[]"),
+    ("hooks.on_claim", "[]"),
+    ("hooks.on_close", "[]"),
     ("machine.capabilities", ""),
     ("audit.resolution_baseline_id", ""),
 ];
@@ -57,6 +60,7 @@ pub struct ProjectConfig {
     pub new_default_priority: Option<crate::core::Priority>,
     pub push_enabled: bool,
     pub commit_hooks: CommitHookPolicy,
+    pub lifecycle_hooks: [Vec<String>; 3],
     /// Machine capabilities declared by this workstation (for requires matching).
     pub machine_capabilities: Vec<String>,
     /// Grandfather cutoff for audit resolution-quality rules: done tickets with a
@@ -87,6 +91,7 @@ impl Default for ProjectConfig {
             new_default_priority: None,
             push_enabled: true,
             commit_hooks: CommitHookPolicy::Skip,
+            lifecycle_hooks: Default::default(),
             machine_capabilities: Vec::new(),
             audit_resolution_baseline_id: None,
             label_namespaces: BTreeMap::new(),
@@ -245,6 +250,18 @@ impl ProjectConfig {
             ),
             ("push.enabled", self.push_enabled.to_string()),
             ("commit.hooks", self.commit_hooks.as_str().to_string()),
+            (
+                "hooks.on_new",
+                serde_json::to_string(&self.lifecycle_hooks[0]).unwrap(),
+            ),
+            (
+                "hooks.on_claim",
+                serde_json::to_string(&self.lifecycle_hooks[1]).unwrap(),
+            ),
+            (
+                "hooks.on_close",
+                serde_json::to_string(&self.lifecycle_hooks[2]).unwrap(),
+            ),
             ("machine.capabilities", self.machine_capabilities.join(",")),
             (
                 "audit.resolution_baseline_id",
@@ -428,6 +445,29 @@ fn apply_value(cfg: &mut ProjectConfig, key: &str, value: &str) -> Result<bool, 
                 "run" => CommitHookPolicy::Run,
                 _ => return Err("expected skip or run".to_string()),
             }
+        }
+        "hooks.on_new" | "hooks.on_claim" | "hooks.on_close" => {
+            if value.len() > 8192 {
+                return Err("expected at most 8192 bytes".into());
+            }
+            let argv: Vec<String> = serde_json::from_str(value).map_err(|_| {
+                "expected a JSON array of executable and argument strings".to_string()
+            })?;
+            if argv.len() > 16
+                || argv.iter().any(|arg| arg.contains('\0'))
+                || argv.first().is_some_and(|program| program.is_empty())
+            {
+                return Err(
+                    "expected at most 16 arguments / 8192 bytes, a nonempty executable and no NUL"
+                        .into(),
+                );
+            }
+            let index = match key {
+                "hooks.on_new" => 0,
+                "hooks.on_claim" => 1,
+                _ => 2,
+            };
+            cfg.lifecycle_hooks[index] = argv;
         }
         "machine.capabilities" => {
             cfg.machine_capabilities = value

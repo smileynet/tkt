@@ -203,6 +203,8 @@ pub fn run(
 
     let rel_path = format!(".tickets/{}", filename);
     git::add(&txn.repo, &[&rel_path])?;
+    let hook =
+        crate::lifecycle::PreparedEvent::prepare(&pcfg, &txn.repo, crate::lifecycle::Event::New);
     git::commit(
         &txn.repo,
         &format!("chore(tickets): new {} {}", tid, slug),
@@ -213,7 +215,22 @@ pub fn run(
     // creates, surface a suggestion to use `tkt batch`. Advisory only.
     let hint = crate::nudge::record_and_check(&txn.repo, &effective_tags, blocked_by);
 
-    match txn.try_push()? {
+    let hook_commit = hook.and_then(|hook| hook.capture(&txn.repo));
+    let publication = txn.try_push();
+    if let Some(commit) = hook_commit {
+        if !matches!(&publication, Ok(PublishResult::NeedsRetry))
+            && git::git(&txn.repo, &["rev-parse", "HEAD"]).ok().as_deref() == Some(commit.as_str())
+        {
+            crate::lifecycle::dispatch(
+                &pcfg,
+                &txn.repo,
+                crate::lifecycle::Event::New,
+                &tid,
+                &commit,
+            );
+        }
+    }
+    match publication? {
         PublishResult::Done(outcome) => {
             if is_quiet() && !is_json_output() {
                 println!("{}", tid);
@@ -249,13 +266,29 @@ pub fn run(
             crate::core::atomic_write(&path2, &content2)?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;
+            let hook = crate::lifecycle::PreparedEvent::prepare(
+                &pcfg,
+                &txn.repo,
+                crate::lifecycle::Event::New,
+            );
             git::commit(
                 &txn.repo,
                 &format!("chore(tickets): new {} {}", tid2, slug),
                 &[&rel_path2],
             )?;
 
-            txn.push_retry()?;
+            let hook_commit = hook.and_then(|hook| hook.capture(&txn.repo));
+            let publication = txn.push_retry();
+            if let Some(commit) = hook_commit {
+                crate::lifecycle::dispatch(
+                    &pcfg,
+                    &txn.repo,
+                    crate::lifecycle::Event::New,
+                    &tid2,
+                    &commit,
+                );
+            }
+            publication?;
             if is_quiet() && !is_json_output() {
                 println!("{}", tid2);
             } else {

@@ -53,6 +53,7 @@ pub fn run() -> Result<i32> {
             parent: &plan.commit,
             tree: &plan.parent_tree,
         }),
+        None,
     ) {
         if git::git(&repo, &["rev-parse", "HEAD"])? == plan.commit {
             return Err(DomainError::with_hint(ErrorKind::Io,format!("revert is prepared but was not committed: {error:#}"),"inspect the staged inverse; fix the commit failure and commit or restore those reviewed paths explicitly".into()).into());

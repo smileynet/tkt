@@ -153,6 +153,7 @@ impl MutationContext {
         paths: &[&str],
         message: &str,
         expected: Option<CommitExpectation<'_>>,
+        event: Option<(crate::lifecycle::Event, &str)>,
     ) -> Result<()> {
         let dbg = crate::telemetry::debug_mode();
         let exact_inverse = expected.is_some();
@@ -170,6 +171,9 @@ impl MutationContext {
             git::add(&self.repo, paths)?;
             crate::telemetry::debug_event(dbg, "", "", &format!("git add {:?}", paths));
         }
+        let hook = event.and_then(|(event, _)| {
+            crate::lifecycle::PreparedEvent::prepare(&self.config, &self.repo, event)
+        });
         git::commit(&self.repo, message, paths)?;
         crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
 
@@ -185,40 +189,55 @@ impl MutationContext {
             }
         }
 
-        if let Some(upstream) = &self.upstream {
-            // The commit above succeeded and is durable. If the push fails for a
-            // non-race reason (auth, network, unreachable remote), we deliberately
-            // do NOT roll back the commit — git separates commit (local, durable)
-            // from push (network), the change is fully recoverable, and undoing a
-            // valid commit under a transient failure is the wrong move (#180).
-            // Surface a structured, actionable error instead of a bare crash.
-            let pushed = if exact_inverse {
-                match git::push(&self.repo, upstream) {
-                    Ok(git::PushResult::Success) => Ok(()),
-                    Ok(git::PushResult::Rejected) => Err(anyhow::anyhow!(
+        let hook_commit = hook.and_then(|hook| hook.capture(&self.repo));
+        let publication = (|| -> Result<()> {
+            if let Some(upstream) = &self.upstream {
+                // The commit above succeeded and is durable. If the push fails for a
+                // non-race reason (auth, network, unreachable remote), we deliberately
+                // do NOT roll back the commit — git separates commit (local, durable)
+                // from push (network), the change is fully recoverable, and undoing a
+                // valid commit under a transient failure is the wrong move (#180).
+                // Surface a structured, actionable error instead of a bare crash.
+                let pushed = if exact_inverse {
+                    match git::push(&self.repo, upstream) {
+                        Ok(git::PushResult::Success) => Ok(()),
+                        Ok(git::PushResult::Rejected) => Err(anyhow::anyhow!(
                         "upstream advanced; exact undo publication does not rebase automatically"
                     )),
-                    Ok(git::PushResult::Failed(stderr)) => Err(anyhow::anyhow!(stderr)),
-                    Err(error) => Err(error),
+                        Ok(git::PushResult::Failed(stderr)) => Err(anyhow::anyhow!(stderr)),
+                        Err(error) => Err(error),
+                    }
+                } else {
+                    git::push_with_retry(&self.repo, upstream)
+                };
+                if let Err(e) = pushed {
+                    crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
+                    return Err(git::local_commit_push_error(&self.repo, &format!("{e:#}")));
                 }
-            } else {
-                git::push_with_retry(&self.repo, upstream)
-            };
-            if let Err(e) = pushed {
-                crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
-                return Err(git::local_commit_push_error(&self.repo, &format!("{e:#}")));
+                crate::telemetry::debug_event(dbg, "", "", "git push (success)");
+            } else if self.has_remote {
+                let reason = if crate::NO_PUSH.load(std::sync::atomic::Ordering::Relaxed) {
+                    "--no-push"
+                } else {
+                    "push.enabled = false"
+                };
+                crate::telemetry::debug_event(dbg, "", "", &format!("push skipped ({reason})"));
+                eprintln!(
+                    "created local commit; not pushed ({reason}). Run `git push` when ready."
+                );
             }
-            crate::telemetry::debug_event(dbg, "", "", "git push (success)");
-        } else if self.has_remote {
-            let reason = if crate::NO_PUSH.load(std::sync::atomic::Ordering::Relaxed) {
-                "--no-push"
-            } else {
-                "push.enabled = false"
-            };
-            crate::telemetry::debug_event(dbg, "", "", &format!("push skipped ({reason})"));
-            eprintln!("created local commit; not pushed ({reason}). Run `git push` when ready.");
+            Ok(())
+        })();
+        if let (Some((event, id)), Some(commit)) = (event, hook_commit) {
+            if let Ok(head) = git::git(&self.repo, &["rev-parse", "HEAD"]) {
+                if head == commit {
+                    crate::lifecycle::dispatch(&self.config, &self.repo, event, id, &head);
+                } else {
+                    eprintln!("advisory hook for {id} skipped: HEAD changed during publication; inspect the committed event before manual replay");
+                }
+            }
         }
-        Ok(())
+        publication
     }
 
     /// Compute a relative path from repo root, normalized to forward slashes.

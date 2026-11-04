@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Optional trusted lifecycle notifications after ticket publication, with bounded direct-child execution and advisory failure reporting.
 - Report current completed work from verified Git transitions, with visible unknown dates and an inclusive UTC weekly window.
 - Import open GitHub issues with bounded read-only extraction, preserved source snapshots, explicit local validation and recoverable create-only replay.
 - Append dated, attributable ticket notes from explicit text, files or stdin while preserving lifecycle, existing content and unrelated staged work.

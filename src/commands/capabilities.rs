@@ -73,6 +73,12 @@ fn feature_manifest(cli: &Command) -> Value {
         "config": {
             "user": crate::config::config_file_path().map(|path| path.to_string_lossy().into_owned()),
             "project": ".tickets/config.toml",
+            "lifecycle_hooks": {
+                "keys": ["hooks.on_new", "hooks.on_claim", "hooks.on_close"],
+                "default": [],
+                "trust": "Exactly one local Git tkt.lifecycleHooks value of true; includes/global values do not authorize execution. Shared by linked worktrees",
+                "execution": "Literal argv after committed publication attempt; advisory failure; two-second direct-child deadline, no descendant containment or automatic replay"
+            },
             "cascade": "CLI flag > env var > project > user > default",
             "label_namespaces": {
                 "path": "[labels.<namespace>]",

@@ -1,0 +1,60 @@
+{
+  "gate": "mise run check",
+  "rustPassed": 496,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "format": "pass; no diff",
+  "clippy": "pass; all targets zero warnings",
+  "lifecycleHarnessCases": 14,
+  "behaviorCases": 13,
+  "privateChildEntry": 1,
+  "sources": [
+    {
+      "path": "src/lifecycle.rs",
+      "sha256": "63b56241ece9e1f15eba92b3107f4cfdee3327b32b5d0d08dbef42fe46bab2cb"
+    },
+    {
+      "path": "src/config.rs",
+      "sha256": "8b696433ff8f8f79c143092bb85aa2ae92b0745a88d5d90a867faee6a20a48e8"
+    },
+    {
+      "path": "src/mutation.rs",
+      "sha256": "bbdfa10a85fb21b48559b98f8593261a09452b12c57d49c221a47c8cc6637891"
+    },
+    {
+      "path": "src/commands/new.rs",
+      "sha256": "f3ca3272642f6729d1917311cb0ef382a860093e1811eb2b759c729b4df039a3"
+    },
+    {
+      "path": "src/commands/claim.rs",
+      "sha256": "a255b07de13a201b3a1c96bd65fdd63769307c6ecfee144bfcfa7589f6bc04ae"
+    },
+    {
+      "path": "src/commands/close.rs",
+      "sha256": "4e090deb7ecda676488e03e4cdacc5e098f569440df43d6228a57cfb2ebdb9a4"
+    },
+    {
+      "path": "tests/lifecycle_hooks.rs",
+      "sha256": "d9920c1b997a5461d921d91a5340048163655427c6222b4aa235c93f2f78f904"
+    },
+    {
+      "path": "tests/support/git_cas_probe.rs",
+      "sha256": "c774f5df4a76fcc9955cfab8b348c6f525ea51b271e571a9d447e1237f24269a"
+    },
+    {
+      "path": "docs/lifecycle-hooks.md",
+      "sha256": "2a99fc87bea56a352ae0b02a3df05c5e6db7c719c1bebf513ba79741f97e82d9"
+    },
+    {
+      "path": "skills/tkt-core/references/commands.md",
+      "sha256": "5f2c3197618a8d8a79f6a3c8d194fb9e402c6cf9763215c381916da4e7b13b66"
+    }
+  ],
+  "limits": [
+    "Windows observed; Unix native execution unverified",
+    "Direct child only; no descendant containment",
+    "Best-effort notification, no outbox/replay/exactly-once guarantee",
+    "Concurrent/rebased event attribution conservatively skipped"
+  ],
+  "artifacts": "Owned logs to be recycled after compact evidence; shared target and managed caches retained for remaining work; unrelated artifacts preserved"
+}

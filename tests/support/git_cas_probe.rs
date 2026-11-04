@@ -33,20 +33,36 @@ fn main() -> ExitCode {
     let real = std::env::var_os("TKT_TEST_REAL_GIT").expect("private Git path");
     let args: Vec<_> = std::env::args_os().skip(1).collect();
     let root = &args[args.iter().position(|arg| arg == "-C").unwrap() + 1];
+    let mut after_commit = false;
+    if args.iter().any(|arg| arg == "commit") {
+        if let Some(race) = std::env::var_os("TKT_TEST_GIT_RACE") {
+            if std::fs::read_to_string(&race)
+                .is_ok_and(|text| text.lines().nth(3) == Some("after_commit"))
+            {
+                std::fs::remove_file(race).unwrap();
+                after_commit = true;
+            }
+        }
+    }
+    let mut after_push = false;
     if args.iter().any(|arg| arg == "push") {
         let race = std::env::var_os("TKT_TEST_GIT_RACE").unwrap();
         if let Ok(text) = std::fs::read_to_string(&race) {
             std::fs::remove_file(race).unwrap();
             let rows: Vec<_> = text.lines().collect();
-            assert!(Command::new(&real)
-                .arg(format!("--git-dir={}", rows[0]))
-                .args(["update-ref", "refs/heads/main", rows[1], rows[2]])
-                .env("DO_NOT_TRACK", "1")
-                .status()
-                .unwrap()
-                .success());
-            if rows[3] == "advanced" {
-                advance(&real, root, "Other local mutation\n");
+            if rows[3] == "after_push" {
+                after_push = true;
+            } else {
+                assert!(Command::new(&real)
+                    .arg(format!("--git-dir={}", rows[0]))
+                    .args(["update-ref", "refs/heads/main", rows[1], rows[2]])
+                    .env("DO_NOT_TRACK", "1")
+                    .status()
+                    .unwrap()
+                    .success());
+                if rows[3] == "advanced" {
+                    advance(&real, root, "Other local mutation\n");
+                }
             }
         }
     }
@@ -56,13 +72,16 @@ fn main() -> ExitCode {
     {
         advance(&real, root, "Concurrent mutator data\n");
     }
-    let status = Command::new(real)
-        .args(args)
+    let status = Command::new(&real)
+        .args(&args)
         .env("DO_NOT_TRACK", "1")
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()
         .unwrap();
+    if (after_push || after_commit) && status.success() {
+        advance(&real, root, "Other local mutation after push\n");
+    }
     ExitCode::from(status.code().unwrap_or(1) as u8)
 }

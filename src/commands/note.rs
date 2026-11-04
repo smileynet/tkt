@@ -140,6 +140,7 @@ pub fn run(id: &str, source: &str, actor: Option<&AgentId>) -> Result<i32> {
             &[&relative],
             &format!("chore(tickets): note {}", current.id),
             None,
+            None,
         )?;
     }
     if is_json_output() {

@@ -239,3 +239,6 @@ For completed-work reports, use `tkt done --week`. Read the date attribution,
 unknown-date semantics and resource limits in the sibling
 [tkt-core command reference](../tkt-core/references/commands.md#completed-work-reports)
 before interpreting its counts. No stored completion field is added.
+
+Before configuring lifecycle hooks or retrying their failed notification, read the
+sibling [tkt-core hook contract](../tkt-core/references/commands.md#advisory-lifecycle-hooks).
