@@ -48,6 +48,8 @@ fn fixture(push: bool, hooks: bool) -> (tempfile::TempDir, PathBuf) {
     let root = temp.path().join("repo");
     std::fs::create_dir(&root).unwrap();
     git(&root, &["init", "-q", "-b", "main"]);
+    git(&root, &["config", "maintenance.auto", "false"]);
+    git(&root, &["config", "gc.auto", "0"]);
     git(&root, &["config", "user.name", "Undo fixture"]);
     git(&root, &["config", "user.email", "fixture@example.invalid"]);
     std::fs::create_dir(root.join(".tickets")).unwrap();
