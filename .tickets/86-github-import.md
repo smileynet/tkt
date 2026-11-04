@@ -1,7 +1,7 @@
 ---
 id: "86"
 title: "tkt import --github: pull open issues into .tickets/"
-status: in_progress
+status: done
 blocked_by: ["125"]
 priority: low
 validation_criteria:
@@ -48,10 +48,10 @@ Behavior:
 
 These criteria project the already approved Current executable contract above. The original proposal's conflicting checklist is retained below as unchecked historical context, rather than being claimed as implemented.
 
-- [ ] Import open issues from the current github.com origin or an explicit repository using authenticated read-only gh extraction
-- [ ] Bound complete extraction, preserve canonical source identity and raw snapshots, and isolate source text from local lifecycle sections
-- [ ] Support source-label filtering and explicit shared validation while honoring scoped commits, creation policy and push settings
-- [ ] Preserve local work through create-only replay and exact journal recovery, with public error, preview, concurrency and retry coverage
+- [x] Import open issues from the current github.com origin or an explicit repository using authenticated read-only gh extraction
+- [x] Bound complete extraction, preserve canonical source identity and raw snapshots, and isolate source text from local lifecycle sections
+- [x] Support source-label filtering and explicit shared validation while honoring scoped commits, creation policy and push settings
+- [x] Preserve local work through create-only replay and exact journal recovery, with public error, preview, concurrency and retry coverage
 
 ## Historical acceptance criteria (superseded by current contract)
 
@@ -81,3 +81,10 @@ The owner requested review of all parked work and execution of actionable ticket
 ## Cross-project evidence review — 2026-11-03
 
 Grey Matter tickets 10 and 11 retain a concrete downstream tracker/triage use case for an issue import bridge. This supports the already-open implementation scope, not reopening the completed adapter design (#125) or claiming the importer exists. Keep the create-only identity/replay contract and explicit opt-in boundaries. See [the evidence review](../docs/evidence/cross-project-review-2026-11-03.md).
+
+## Resolution (2026-11-04)
+
+Implemented bounded read-only GitHub extraction, canonical owned snapshots, explicit shared validation and create-only replay. Journaled pair recovery, a shared allocator marker, immutable commit publishing and CAS-scoped retry preserve unrelated work. A red/green fenced-source lifecycle repair keeps imported headings outside local AC/resolution sections. Independent critic accepted final source/guidance/tests and the fresh 470-Rust/42-Node gate passed; one existing Windows skip. See docs/evidence/github-import-86.md.
+
+### Verification
+1. ✓ `tkt import --github` imports open issues from current repo — "Public integration suite: 19 importer tests pass, including current-origin import, label/local-validation policies, canonical identity, source preservation, bounds, malformed/failed reads, no-write previews, ownership conflicts, partial/committed recovery, linked worktrees, shared allocator control, actual NFF/CAS races and failed rebase/push recovery. Final mise run check: 470 Rust and 42 Node passes, fmt clean, clippy zero warnings; critic accepted. No real provider migration performed; source hashes in docs/evidence/github-import-86.json."
