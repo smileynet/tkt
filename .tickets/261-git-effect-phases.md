@@ -1,7 +1,7 @@
 ---
 id: "261"
 title: "Route Git publication and process phases through the common effect dispatcher"
-status: open
+status: in_progress
 blocked_by: ["260"]
 priority: medium
 validation_criteria:
