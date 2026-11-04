@@ -1,7 +1,7 @@
 ---
 id: "69"
 title: "Define the focused remaining harness-integration scope"
-status: in_progress
+status: done
 blocked_by: ["68"]
 priority: low
 validation_criteria:
@@ -26,9 +26,9 @@ Inventory the delivered skill, ownership and session-context integrations from c
 
 ## Acceptance criteria
 
-- [ ] Delivered integration pieces are identified with current source evidence
-- [ ] Remaining follow-up scope is bounded, tied to an observed need and has an explicit validation plan
-- [ ] Unneeded broad exploration is distinguished from real remaining work without fabricating completion
+- [x] Delivered integration pieces are identified with current source evidence
+- [x] Remaining follow-up scope is bounded, tied to an observed need and has an explicit validation plan
+- [x] Unneeded broad exploration is distinguished from real remaining work without fabricating completion
 
 ## Pending decision (2026-10-29)
 
@@ -62,3 +62,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-04)
+
+Recorded current delivered harness integrations and selected only the existing 158 advisory native-write follow-up with explicit validation and trust limits; independent critic accepted final scope.
+
+### Verification
+1. ✓ Delivered integration pieces are identified with current source evidence — "Nineteen current source paths and plugin boundaries checked; inventory covers four skills, typed ownership, Claude private SessionStart, Codex empty hooks, deployment guards and optional Git hook. See docs/integration-followup-scope.md and docs/evidence/integration-scope-69.json."
+2. ✓ Remaining follow-up scope is bounded, tied to an observed need and has an explicit validation plan — "Existing ticket 158 is the one bounded follow-up: owned opt-in advisory project configuration with fixture, merge, no-write, trust and native-dispatch evidence requirements. No duplicate task or new dependency edge was added."
+3. ✓ Unneeded broad exploration is distinguished from real remaining work without fabricating completion — "Critic corrected combined-context filtering prose and accepted final document. Existing roles, embedded-assets design and broad effect consolidation remain separate; no new MCP, hook activation, native model session or release is claimed. Docs accuracy, manifest boundaries and diff checks pass; shared build/batch helper retained only for ongoing work."
