@@ -1,7 +1,7 @@
 ---
 id: "158"
 title: "Generate optional advisory native write nudges"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria: 
@@ -9,6 +9,7 @@ validation_criteria:
   - "Claude Edit|Write path and Codex apply_patch command detection are bounded, advisory context only, with no deny or arbitrary shell/MCP coverage claim"
   - "Observed profiles, unknown minimum versions, trust and tool-coverage limits are documented; schema/merge/parser fixtures and native execution evidence limits are explicit"
 tags: ["contract", "integrations", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # tkt init installs per-agent write-nudge for .tickets/ (Claude, Codex)
