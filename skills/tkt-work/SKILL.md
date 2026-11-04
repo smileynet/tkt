@@ -242,3 +242,6 @@ before interpreting its counts. No stored completion field is added.
 
 Before configuring lifecycle hooks or retrying their failed notification, read the
 sibling [tkt-core hook contract](../tkt-core/references/commands.md#advisory-lifecycle-hooks).
+
+Before coordinating primary/workers or handing off ownership, read the
+sibling [tkt-core role examples](../tkt-core/references/roles.md).

@@ -35,6 +35,7 @@ tkt teaches agents how to use it through multiple documents. When CLI behavior c
 | Batch creation | — | ✓ | ✓ | — | ✓ | ✓ |
 | Advisory hints (TKT_ADVICE, batch nudge) | — | — | — | — | ✓ | ✓ |
 | Parent containers and explicit progress/closure | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Primary/worker coordination and explicit handoffs | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Invocation assignee versus eligibility | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Optional single-select label namespace policy | ✓ | ✓ | ✓ | — | ✓ | ✓ |
 

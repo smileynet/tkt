@@ -551,3 +551,8 @@ Lifecycle hooks are optional advisory commands configured as JSON argv arrays in
 See [hook configuration, trust and recovery](docs/lifecycle-hooks.md).
 
 The [optional extension-schema design](docs/extension-schema-design.md) specifies a narrow future scalar contract and explicit migration rules. Runtime schema enforcement and migration are not implemented; current unknown-field preservation remains the supported behavior.
+
+
+Primary/worker roles are invocation conventions: identify each caller with --agent or TKT_AGENT; use --agents/--exclude-agents for eligibility and let identified claim record assignee. Keep tags for workstreams and requires for all-of declared machine capabilities, never agent roles. Primary oversight is not a second claim; use authorized delegation and required independent review. An explicit coordinated handoff may reopen WIP with edit --status open, update eligibility, then use claim --force to override retained ownership. Force never claims WIP; direct claim does not establish machine/dependency readiness. There is no init --role or new/edit --assignee flag.
+
+Read the [primary/worker role and handoff examples](skills/tkt-core/references/roles.md) before coordinating sessions.

@@ -1,0 +1,266 @@
+{
+  "scope": "Disposable current-target CLI coordination probe; no real tickets or browser used",
+  "checks": [
+    {
+      "args": [
+        "--agent",
+        "codex-primary",
+        "new",
+        "implement-api",
+        "--title",
+        "Implement API contract",
+        "--body",
+        "@docs/api-brief.md",
+        "--tags",
+        "stream:api",
+        "--agents",
+        "codex-worker,claude-worker",
+        "--requires",
+        "rust",
+        "--vc",
+        "Public API contract tests pass"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "✓ created 01 implement-api (local only)\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "--agent",
+        "codex-worker",
+        "ready",
+        "-o",
+        "json"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "{\"id\":\"01\",\"title\":\"Implement API contract\",\"status\":\"open\",\"blocked_by\":[],\"pending_blockers\":[],\"agents\":[\"claude-worker\",\"codex-worker\"],\"assignee\":null}\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "--agent",
+        "codex-primary",
+        "ready",
+        "-o",
+        "json"
+      ],
+      "ambientAgent": "codex-worker",
+      "exit": 0,
+      "stdout": "",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "--agent",
+        "codex-worker",
+        "claim",
+        "01"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "✓ claimed 01 implement-api (→ in_progress)\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "--agent",
+        "claude-worker",
+        "query",
+        "--all-context",
+        "-o",
+        "json"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "{\"id\":\"01\",\"title\":\"Implement API contract\",\"status\":\"in_progress\",\"blocked_by\":[],\"pending_blockers\":[],\"tags\":[\"stream:api\"],\"validation_criteria\":[\"Public API contract tests pass\"],\"requires\":[\"rust\"],\"agents\":[\"claude-worker\",\"codex-worker\"],\"assignee\":\"codex-worker\"}\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "--agent",
+        "claude-worker",
+        "claim",
+        "01",
+        "--force"
+      ],
+      "ambientAgent": null,
+      "exit": 1,
+      "stdout": "",
+      "stderr": "tkt: ✗ 01 is in_progress, not open\n",
+      "outcome": "pass: expected refusal observed"
+    },
+    {
+      "args": [
+        "--dry-run",
+        "--agent",
+        "codex-worker",
+        "close",
+        "01",
+        "--check-all",
+        "--resolution",
+        "Fixture command preview only",
+        "--evidence",
+        "Command-shape fixture only; no implementation completion claim"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "Would close 01 implement-api (→ done)\n  Resolution: Fixture command preview only\n  Verification: 1 criteria with evidence\n  Would commit and push\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "edit",
+        "01",
+        "--status",
+        "open",
+        "--agents",
+        "claude-worker"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "✓ edited 01 implement-api (status, agents)\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "--agent",
+        "claude-worker",
+        "claim",
+        "01",
+        "--force"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "✓ claimed 01 implement-api (→ in_progress)\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "query",
+        "--all-context",
+        "-o",
+        "json"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "{\"id\":\"01\",\"title\":\"Implement API contract\",\"status\":\"in_progress\",\"blocked_by\":[],\"pending_blockers\":[],\"tags\":[\"stream:api\"],\"validation_criteria\":[\"Public API contract tests pass\"],\"requires\":[\"rust\"],\"agents\":[\"claude-worker\"],\"assignee\":\"claude-worker\"}\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    },
+    {
+      "args": [
+        "init",
+        "--role",
+        "observer"
+      ],
+      "ambientAgent": null,
+      "exit": 2,
+      "stdout": "",
+      "stderr": "error: unexpected argument '--role' found\n\nUsage: tkt.exe init [OPTIONS]\n\nFor more information, try '--help'.\n",
+      "outcome": "pass: expected refusal observed"
+    },
+    {
+      "args": [
+        "new",
+        "uncreated",
+        "--assignee",
+        "codex-worker"
+      ],
+      "ambientAgent": null,
+      "exit": 2,
+      "stdout": "",
+      "stderr": "error: unexpected argument '--assignee' found\n\n  tip: to pass '--assignee' as a value, use '-- --assignee'\n\nUsage: tkt.exe new <SLUG>\n\nFor more information, try '--help'.\n",
+      "outcome": "pass: expected refusal observed"
+    },
+    {
+      "args": [
+        "edit",
+        "01",
+        "--assignee",
+        "codex-worker"
+      ],
+      "ambientAgent": null,
+      "exit": 2,
+      "stdout": "",
+      "stderr": "error: unexpected argument '--assignee' found\n\n  tip: to pass '--assignee' as a value, use '-- --assignee'\n\nUsage: tkt.exe edit <ID>\n\nFor more information, try '--help'.\n",
+      "outcome": "pass: expected refusal observed"
+    },
+    {
+      "args": [
+        "init",
+        "--all"
+      ],
+      "ambientAgent": null,
+      "exit": 0,
+      "stdout": "  ✓ .tickets/ already exists\n  ✓ .tickets/config.toml already exists\n  ✓ .tickets/.gitignore (.context excluded)\n  ✓ updated AGENTS.md (tkt section)\n  ✓ updated CLAUDE.md (tkt section)\n  ✓ created .cursor/rules/tkt.mdc\n  ✓ created .kiro/steering/tkt.md\n  ✓ updated .github/copilot-instructions.md (tkt section)\n  ✓ created .windsurf/rules/tkt.md\n\nAgent setup recommendations:\n  - Project instructions: tkt init --write\n  - Workflow skills: install the tkt plugin separately, or run node tools/deploy.mjs from a source checkout.\n  - CLI installation does not include workflow skills.\n  - Command schemas: tkt capabilities -o json\n  - Setup guide: https://github.com/smileynet/tkt#ai-agent-integration\n",
+      "stderr": "",
+      "outcome": "pass: expected command success"
+    }
+  ],
+  "generatedInstructionTargets": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "69fc98fa290f92ddeebf1594e1e08374026251c8e73bec2fe74cfef597376cac"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "29ce7892e54a8eac3e30af4299112a0f07647a5114d182f6f89110a53e9706ea"
+    },
+    {
+      "path": ".cursor/rules/tkt.mdc",
+      "sha256": "eff17f4518eee0cc7988a8fc88e4949214c780129644f41d542be46817c6526e"
+    },
+    {
+      "path": ".kiro/steering/tkt.md",
+      "sha256": "bb625ab075bab5bf35f78211131c3b8f671c1d33ee880c0fc6fab2bb654d7680"
+    },
+    {
+      "path": ".github/copilot-instructions.md",
+      "sha256": "69fc98fa290f92ddeebf1594e1e08374026251c8e73bec2fe74cfef597376cac"
+    },
+    {
+      "path": ".windsurf/rules/tkt.md",
+      "sha256": "394c355e7074d2f487735c7c7e99f3f20caf8a9c5ea12502ddb09f155b545e52"
+    }
+  ],
+  "close": "Preview only: no fixture implementation completion was asserted",
+  "limits": "Local-only claims; no distributed publication race or harness delegation executed",
+  "sourceInitSha256": "1d1ddd94bcf4dad25026a24a3c99d45cee8d01eb5214784051b0914a8779ed1b",
+  "gate": {
+    "command": "mise run check",
+    "rustPassed": 497,
+    "nodePassed": 42,
+    "nodeSkipped": 1,
+    "format": "pass; no diff",
+    "clippy": "pass; alltargets zero warnings"
+  },
+  "critic": "accepted final standalone guidance, combined handoff, disposable probe and fresh gate before closure",
+  "sources": [
+    {
+      "path": "src/commands/init.rs",
+      "sha256": "1d1ddd94bcf4dad25026a24a3c99d45cee8d01eb5214784051b0914a8779ed1b"
+    },
+    {
+      "path": "skills/tkt-core/references/roles.md",
+      "sha256": "4aa467bd60ab61595dec6e8c478a611f79257186b85df15333c8452123a9edb0"
+    },
+    {
+      "path": "skills/tkt-core/SKILL.md",
+      "sha256": "ed2d0372d841fddd25b861b5371668bbae92f544ded42703cd8f3695c01de7f4"
+    },
+    {
+      "path": "skills/tkt-work/SKILL.md",
+      "sha256": "350cb97418aa23a2f427adf3aadad4eb6b0b3db38ca85e4e8dc63b465b4f1207"
+    }
+  ]
+}

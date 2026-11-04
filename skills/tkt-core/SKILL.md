@@ -27,6 +27,7 @@ command discovery. Installing the CLI alone does not install the workflow skills
 | Recovering an immediately mistaken mutation | preview and revert a recognized HEAD safely | `tkt --dry-run undo` then `tkt undo` |
 | Discovering work during implementation | capture it as a separate ticket without losing focus | `tkt new <slug> --title "..."` (open — or `--status backlog` only if genuinely deferred) |
 | Creating several related tickets at once | one commit/push instead of N; share `--tags`/`--blocked-by` | `tkt batch "slug:title" "slug:title" ... --tags STREAM` |
+| Coordinating primary/workers or handing off ownership | keep identity separate from machine capabilities | Read [role examples](references/roles.md) |
 | Preparing a completed-work report | inspect Git dates and explicit unknowns | `tkt done --week -o json` |
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
 | Querying the full corpus | bypass context; optionally filter status or priority | `tkt query --all-context --status open --priority high` |

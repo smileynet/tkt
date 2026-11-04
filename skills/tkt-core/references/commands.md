@@ -448,3 +448,9 @@ Do not repeat a successful lifecycle mutation to retry a notification. A plain
 `git push` retry does not replay hooks. Leaving hooks unconfigured preserves the existing
 lifecycle and publishing behavior. This feature is separate from Git commit/push
 hooks and the optional hook installer; it does not activate hosted CI.
+
+## Role coordination
+
+Before coordinating primary/worker sessions or overriding retained ownership, read
+[role and handoff examples](roles.md). These are invocation conventions, not a new
+role flag, machine capability, delegation permission or authentication system.
