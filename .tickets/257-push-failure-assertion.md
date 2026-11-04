@@ -1,7 +1,7 @@
 ---
 id: "257"
 title: "Align retained-commit fixture with current recovery wording"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "The rejected-push test verifies the local commit survives and the current recovery hint is actionable."
