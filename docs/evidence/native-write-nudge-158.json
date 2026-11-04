@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-04",
+  "gate": "mise run check",
+  "rustPassed": 508,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "additionalNativeNodeCases": 4,
+  "nativeRustCases": 11,
+  "format": "pass; no diff",
+  "clippy": "pass; alltargets zero warnings",
+  "critic": "accepted final boundary fixes, source identities and fresh gate before closure",
+  "package": "cargo package --list --allow-dirty includes native helper and command module",
+  "dependencies": "Serde1 made direct to use duplicate-rejecting Deserialize visitor; alreadylockedtransitive, no newly resolved crates or version changes. No serde_json globalprecision/raw feature changes.",
+  "sources": [
+    {
+      "path": "src/commands/native_nudge.rs",
+      "sha256": "53f152625bf712ee8cd2d9c37419cebfb79ceb13a9b0f4de66dc269e974576f0"
+    },
+    {
+      "path": "assets/native-write-nudge.mjs",
+      "sha256": "63a9322d362eab44bd6aeeb583a9393c1955cad5be2e0bcbc969faa4c862a1f4"
+    },
+    {
+      "path": "tests/native_nudge.rs",
+      "sha256": "9b7b01cc3281430ba5ec4ad03e746eff4911746000f632099f56b7ee67a4c8fa"
+    },
+    {
+      "path": "tools/native-write-nudge.test.mjs",
+      "sha256": "682c145b384b21c695c91563e7d7a8abddb0e22dcd16e91a8da98306662bb674"
+    },
+    {
+      "path": "skills/tkt-core/references/native-hooks.md",
+      "sha256": "5ee5d531ef864c131c56cbcb40c10cc703cc3256237bcfb961202f61e71decd3"
+    },
+    {
+      "path": "src/commands/init.rs",
+      "sha256": "b36dd9805499f52849721e695e4b2c01ef5d0bb195bf9da7219a2681d88b1f0d"
+    },
+    {
+      "path": "src/cli.rs",
+      "sha256": "22619aa3d82a9ff3a0f69124650d2912fb503a619063f6bec1363d72244f7df6"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "7063ced2559b8bb47dfb943db4622414552dbd78f2e394bcedda5b77c7844729"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "4798750953973018f284991456a7de3ade6c760bc13d62fb4f6cd978f3619b07"
+    }
+  ],
+  "observedProfiles": {
+    "codex": "0.166.0 hooks stable true",
+    "claude": "2.1.316",
+    "node": "22.22.3"
+  },
+  "limits": [
+    "Actual Codex/Claude native dispatch/trust UI unverified",
+    "Unix launcher execution and historical minimum versions unverified",
+    "Exact owned config checks do not prove activation",
+    "Per-file atomic; no multi-file transaction or external-editor lock",
+    "Modified/partial owned payload requires explicit manual recovery"
+  ],
+  "footprint": {
+    "targetBytes": 6394892091,
+    "distBytes": 789945,
+    "nodeModulesBytes": 3934146,
+    "disposition": "One shared Cargo target tree retained for remaining work; no test clone/build-tree copies. Managed plugin cache lifecycle retained; unrelated legacy artifacts preserved. Owned diagnostics promoted and recycled after closure."
+  }
+}

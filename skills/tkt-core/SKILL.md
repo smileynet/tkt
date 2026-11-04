@@ -333,3 +333,5 @@ Read [date attribution and limits](references/commands.md#completed-work-reports
 before using its counts. The report adds no stored completion field.
 
 Before configuring lifecycle hooks, read [trust and retry rules](references/commands.md#advisory-lifecycle-hooks).
+
+Native write nudges: read [setup/trust](references/native-hooks.md) before configuration.

@@ -41,3 +41,5 @@ TELEMETRY.md         — transparency document for telemetry collection
 ```
 
 See the [reference inventory and clone commands](../../../.references/README.md).
+
+`assets/native-write-nudge.mjs` is the embedded optional Node helper for explicit native config generation; `commands/native_nudge.rs` owns its configuration and preservation policy. The helper is included in the source crate payload and is not installed by ordinary init or workflow plugin deployment.

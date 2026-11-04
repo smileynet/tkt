@@ -30,7 +30,7 @@ fn feature_manifest(cli: &Command) -> Value {
             "claim" | "close" | "edit" | "renumber" => ("idempotent", "Change tickets, commit and optionally push; dry-run previews without writing", "text"),
             "cancel" => ("idempotent", "Record cancellation history, handle dependent edges, and commit; dry-run previews without writing", "text"),
             "reopen" => ("idempotent", "Return a cancelled ticket to open while preserving cancellation history; dry-run previews without writing", "text"),
-            "init" => ("idempotent", "Create project files or write snippets; without --write the snippet is printed; dry-run previews", "text"),
+            "init" => ("idempotent", "Create project files or write snippets; without --write the snippet is printed. Explicit --write-nudge claude/codex/both generates owned advisory native config; --nudge-action install/check/remove, no default native activation/trust changes. Check tests owned presence only. Dry-run previews", "text"),
             "doctor" => ("idempotent", "Read-only unless --fix applies safe setup repairs", "text"),
             "lint" => ("idempotent", "Normalize files by default; --check reports without writing", "text"),
             "migrate" => ("idempotent", "Preview or detect by default; --confirm applies a reviewed migration", "text"),

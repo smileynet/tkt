@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Explicit optional native write nudges for Claude and Codex, with owned configuration merging, read-only checks and removal.
 - Optional trusted lifecycle notifications after ticket publication, with bounded direct-child execution and advisory failure reporting.
 - Report current completed work from verified Git transitions, with visible unknown dates and an inclusive UTC weekly window.
 - Import open GitHub issues with bounded read-only extraction, preserved source snapshots, explicit local validation and recoverable create-only replay.

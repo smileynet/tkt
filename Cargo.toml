@@ -11,7 +11,7 @@ documentation = "https://github.com/smileynet/tkt#usage"
 readme = "README.md"
 keywords = ["tickets", "task-management", "git", "todo", "markdown"]
 categories = ["command-line-utilities", "development-tools"]
-include = ["/assets/pre-commit.sh", "/src/**", "/build.rs", "/Cargo.toml", "/Cargo.lock", "/README.md", "/CHANGELOG.md", "/LICENSE"]
+include = ["/assets/pre-commit.sh", "/assets/native-write-nudge.mjs", "/src/**", "/build.rs", "/Cargo.toml", "/Cargo.lock", "/README.md", "/CHANGELOG.md", "/LICENSE"]
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
@@ -20,6 +20,7 @@ anyhow = "1"
 thiserror = "2"
 dirs = "5"
 serde_json = "1"
+serde = "1" # Strict duplicate-key rejection for owned native configuration merges.
 
 [build-dependencies]
 serde_json = "1"

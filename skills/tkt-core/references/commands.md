@@ -454,3 +454,10 @@ hooks and the optional hook installer; it does not activate hosted CI.
 Before coordinating primary/worker sessions or overriding retained ownership, read
 [role and handoff examples](roles.md). These are invocation conventions, not a new
 role flag, machine capability, delegation permission or authentication system.
+
+## Native write nudges
+
+`tkt init --write-nudge claude|codex|both` explicitly generates owned advisory
+config. `--nudge-action check` checks owned presence read-only; `remove` removes
+exact owned entries. Before setup/removal/recovery, read the standalone
+[native hook contract](native-hooks.md). No trust or permission policy is changed.

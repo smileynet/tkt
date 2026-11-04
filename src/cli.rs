@@ -191,6 +191,12 @@ enum Commands {
         /// Skip directory/config creation, only output agent snippet
         #[arg(long)]
         agent_only: bool,
+        /// Explicitly generate owned advisory native write-hook configuration
+        #[arg(long, value_enum, conflicts_with_all = ["write", "target", "all", "agent_only"])]
+        write_nudge: Option<crate::commands::native_nudge::Target>,
+        /// Install, check or remove the selected owned native hook entries
+        #[arg(long, value_enum, requires = "write_nudge", default_value = "install")]
+        nudge_action: crate::commands::native_nudge::Action,
     },
     /// Health check: verify setup, find issues, scan multiple projects
     Doctor {
@@ -546,7 +552,16 @@ pub fn run() -> i32 {
                 target,
                 all,
                 agent_only,
-            } => crate::commands::init::run(write, target.as_deref(), all, agent_only),
+                write_nudge,
+                nudge_action,
+            } => crate::commands::init::run(
+                write,
+                target.as_deref(),
+                all,
+                agent_only,
+                write_nudge,
+                nudge_action,
+            ),
             Commands::Doctor { path, fix, strict } => {
                 crate::commands::doctor::run(path.as_deref(), fix, strict)
             }

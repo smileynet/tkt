@@ -245,3 +245,5 @@ sibling [tkt-core hook contract](../tkt-core/references/commands.md#advisory-lif
 
 Before coordinating primary/workers or handing off ownership, read the
 sibling [tkt-core role examples](../tkt-core/references/roles.md).
+
+Native write nudges: read [setup/trust](../tkt-core/references/native-hooks.md).

@@ -67,4 +67,4 @@ This assessment supersedes conflicting historical planning notes above. Evidence
 
 ## Planning gate
 
-Verify current harness hook support and version constraints; historical hook claims are unverified.
+Resolved support research: current official references and observed Codex0.166.0/Claude2.1.316 profiles support the bounded advisory design. Exact historical minimums and actual native dispatch/trust behavior remain explicitly unverified; the current executable contract permits that stated evidence limit. See [the standalone implementation contract](../skills/tkt-core/references/native-hooks.md). The historical support-absence proposal below is superseded; no native hook or trust is enabled here.
