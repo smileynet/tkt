@@ -4,9 +4,9 @@ title: "Pluggable schema definitions with meta field + ai_context support"
 status: in_progress
 blocked_by: []
 priority: low
-validation_criteria:
+validation_criteria: 
   - "Supported extension values/representations and schema version boundaries are explicit and narrow"
-  - "Optional schema enforcement preserves unknown raw values and existing ticket compatibility"
+  - "Define how a future optional schema preserves unknown raw values and existing ticket compatibility"
   - "Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support"
 tags: ["schema", "kind:enhancement", "stream:relations", "triage:ready-for-agent"]
 assignee: "codex"
