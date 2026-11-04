@@ -19,3 +19,10 @@ Fixed telemetry preview boundary in 0cfa35d and deployed the fresh CLI. Preview 
 ### Verification
 1. ✓ Dry-run telemetry enable, disable and clear preserve consent and data without accessing ambient user state in tests — "Private-path table covers enable/disable/clear, existing/absent files and a panic resolver proving preview cannot resolve platform user folders. Critic accepted final boundary."
 2. ✓ Private path controls prove real apply still writes consent and clears only the selected telemetry directory — "Private apply controls verify atomic consent writes and exact selected data removal while preserving unrelated files. Linked-root removal is refused. Fresh gate and deployed CLI verified at0cfa35d."
+
+## Note — 2026-11-04
+
+By: anonymous
+
+<!-- tkt-note:v1 103176-1793785430379630200 -->
+Reopened during260 gate: pre-existing tests/integration.rs test_telemetry_enable_disable_cycle explicitly invoked ambient consent enable/disable and cleared DO_NOT_TRACK; it ran in prior gates after the new unsafe matrix cases were removed. Therefore the earlier no-further-ambient-verification statement was incomplete. Runtime preview fix remains valid, but test isolation acceptance is not complete. Remove this legacy CLI fixture in favor of existing private-path unit controls before any more full gates; preserve DO_NOT_TRACK=1 on every child. Consent remains observed disabled; prior data/bytes unknown. Also isolate debug fixtures' state root and explicit debug-format environment.
