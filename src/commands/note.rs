@@ -129,12 +129,7 @@ pub fn run(id: &str, source: &str, actor: Option<&AgentId>) -> Result<i32> {
         after.push('\n');
     }
     let appended = after.len() - before.len();
-    FilePlan(vec![FileEffect::Write {
-        path,
-        before: Some(before),
-        text: after,
-    }])
-    .execute(Mode::current())?;
+    FilePlan(vec![FileEffect::write(path, Some(before), after)]).execute(Mode::current())?;
     if !is_dry_run() {
         ctx.publish(
             &[&relative],

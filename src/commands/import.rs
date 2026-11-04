@@ -363,13 +363,40 @@ fn update_journal(path: &Path, phase: &str, commit: Option<&str>) -> Result<()> 
     let mut value: Value = serde_json::from_str(&text)?;
     value["phase"] = json!(phase);
     value["commit"] = json!(commit);
-    core::atomic_write(path, &(serde_json::to_string_pretty(&value)? + "\n"))
+    FilePlan(vec![FileEffect::ReplaceSnapshot {
+        path: path.into(),
+        before: text,
+        text: serde_json::to_string_pretty(&value)? + "\n",
+    }])
+    .execute(Mode::current())
+}
+
+fn remove_committed_journal(path: &Path, selector: &Value, commit: &str) -> Result<()> {
+    let text = read_text(path)?.ok_or_else(|| conflict("import journal disappeared"))?;
+    let value: Value = serde_json::from_str(&text)?;
+    if value["format"] != FORMAT
+        || value["selector"] != *selector
+        || value["phase"] != "committed"
+        || value["commit"] != commit
+    {
+        return Err(conflict("cannot remove a changed committed import journal"));
+    }
+    FilePlan(vec![FileEffect::RemoveOwned {
+        path: path.into(),
+        text,
+    }])
+    .execute(Mode::current())
 }
 
 fn start_attempt(path: &Path, value: &Value) -> Result<()> {
     let text = serde_json::to_string_pretty(value)? + "\n";
     match read_text(path)? {
-        None => core::atomic_create(path, &text, false),
+        None => FilePlan(vec![FileEffect::CreateNoClobber {
+            path: path.into(),
+            text,
+            executable: false,
+        }])
+        .execute(Mode::current()),
         Some(previous) => {
             let old: Value = serde_json::from_str(&previous)?;
             if !same_retry(&old, value) {
@@ -377,11 +404,11 @@ fn start_attempt(path: &Path, value: &Value) -> Result<()> {
                     "new import attempt cannot replace a different pending journal",
                 ));
             }
-            FilePlan(vec![FileEffect::Write {
-                path: path.to_owned(),
-                before: Some(previous),
+            FilePlan(vec![FileEffect::write(
+                path.to_owned(),
+                Some(previous),
                 text,
-            }])
+            )])
             .execute(Mode::Apply)
         }
     }
@@ -443,11 +470,7 @@ fn apply(repo: &Path, pairs: &[Pair]) -> Result<()> {
                 Some(_) => {
                     return Err(conflict(format!("interrupted import collides with {path}")))
                 }
-                None => effects.push(FileEffect::Write {
-                    path: repo.join(path),
-                    before: None,
-                    text: text.into(),
-                }),
+                None => effects.push(FileEffect::write(repo.join(path), None, text.into())),
             }
         }
     }
@@ -638,7 +661,11 @@ fn finish_rollback(
     for pair in pairs {
         for (path, text) in pair.files() {
             match read_text(&txn.repo.join(path))? {
-                Some(current) if current == text => std::fs::remove_file(txn.repo.join(path))?,
+                Some(current) if current == text => FilePlan(vec![FileEffect::RemoveOwned {
+                    path: txn.repo.join(path),
+                    text: current,
+                }])
+                .execute(Mode::current())?,
                 Some(_) => return Err(conflict(format!("rollback worktree collision at {path}"))),
                 None => (),
             }
@@ -748,7 +775,7 @@ fn recover(txn: &GitTransaction, journal: &Path, selector: &Value) -> Result<Opt
     };
     match txn.push_once(Some(&commit))? {
         PushAttempt::Done(_) => {
-            std::fs::remove_file(journal)?;
+            remove_committed_journal(journal, selector, &commit)?;
             Ok(Some(Recovered::Completed(
                 extraction,
                 pairs.iter().map(|pair| pair.local_id.clone()).collect(),
@@ -884,7 +911,11 @@ pub fn run(repository: Option<&str>, label: Option<&str>, criteria: &[String]) -
                 ) {
                     return Err(conflict("cannot clear an unexpected import journal"));
                 }
-                std::fs::remove_file(&journal)?;
+                FilePlan(vec![FileEffect::RemoveOwned {
+                    path: journal.clone(),
+                    text,
+                }])
+                .execute(Mode::current())?;
             }
             break;
         }
@@ -913,7 +944,7 @@ pub fn run(repository: Option<&str>, label: Option<&str>, criteria: &[String]) -
         match txn.push_once(Some(commit.as_ref()))? {
             PushAttempt::Done(_) => {
                 imported = pairs.iter().map(|pair| pair.local_id.clone()).collect();
-                std::fs::remove_file(&journal)?;
+                remove_committed_journal(&journal, &selector, commit.as_ref())?;
                 break;
             }
             PushAttempt::Rejected if attempt == 0 => {

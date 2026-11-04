@@ -179,7 +179,12 @@ pub fn run(
                     agent_eligibility: &agent_eligibility,
                 });
                 let content = add_parent(content, parent, &path)?;
-                crate::core::atomic_write(&path, &content)?;
+                crate::effects::FilePlan(vec![crate::effects::FileEffect::CreateNoClobber {
+                    path,
+                    text: content,
+                    executable: false,
+                }])
+                .execute(crate::effects::Mode::current())?;
                 files.push(format!(".tickets/{}", filename));
             }
             for f in &files {

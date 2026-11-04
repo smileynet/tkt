@@ -126,9 +126,19 @@ fn publish(path: &Path, old: Option<&str>, output: &str) -> Result<()> {
         if read_destination(path)?.as_deref() != Some(expected) {
             domain_bail!(Conflict, "projection destination changed since preview; no file replaced, retry from current content");
         }
-        return core::atomic_write(path, output);
+        return crate::effects::FilePlan(vec![crate::effects::FileEffect::ReplaceSnapshot {
+            path: path.into(),
+            before: expected.into(),
+            text: output.into(),
+        }])
+        .execute(crate::effects::Mode::current());
     }
-    core::atomic_create(path, output, false)
+    crate::effects::FilePlan(vec![crate::effects::FileEffect::CreateNoClobber {
+        path: path.into(),
+        text: output.into(),
+        executable: false,
+    }])
+    .execute(crate::effects::Mode::current())
 }
 
 fn render(corpus: &[Ticket]) -> String {

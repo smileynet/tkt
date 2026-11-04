@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Telemetry dry runs preserve consent and event data, including on Windows where platform folders ignore environment redirection.
-- Configuration, session context and initialization preserve existing bytes on failed writes, reject unreadable or linked text targets, and avoid overwriting files that arrive during preparation.
+- Ticket edits, configuration, session context and initialization preserve changed source snapshots and failed writes; creation and relocation refuse files that arrive during preparation.
 - Migration preserves original tickets when publication fails, refuses foreign destinations and conflicting backups, and prepares readable complete output before writing.
 - Dry-run diagnostics leave file logs untouched, including local validate/rebase preview modes, while explicit stderr debug formats remain available.
 - Plan checks catch plain-done and nonterminal lifecycle mismatches and report unknown status cells, while preserving advisory reports and prose.

@@ -378,6 +378,7 @@ pub struct TicketFile {
     pub fm: Vec<(String, String)>,
     /// Everything after the closing --- fence.
     pub body: String,
+    pub(crate) original: String,
 }
 
 impl TicketFile {
@@ -390,6 +391,7 @@ impl TicketFile {
 
     /// Parse from a string (for testing).
     pub fn parse_str(content: &str, path: &Path) -> Result<Self> {
+        let original = content.to_owned();
         // Strip a leading UTF-8 BOM (YAML 1.2 §5.2: a conforming parser strips it).
         // Some Windows editors add it, which would otherwise hide the opening fence.
         let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
@@ -464,6 +466,7 @@ impl TicketFile {
             path: path.to_owned(),
             fm,
             body,
+            original,
         })
     }
 
@@ -680,7 +683,12 @@ impl TicketFile {
 
     /// Write the ticket file back to disk (atomically, via temp + rename).
     pub fn write(&self) -> Result<()> {
-        crate::core::atomic_write(&self.path, &self.serialize())
+        crate::effects::FilePlan(vec![crate::effects::FileEffect::ReplaceSnapshot {
+            path: self.path.clone(),
+            before: self.original.clone(),
+            text: self.serialize(),
+        }])
+        .execute(crate::effects::Mode::current())
     }
 }
 

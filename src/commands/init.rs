@@ -488,11 +488,11 @@ fn bootstrap_project(repo_root: &std::path::Path) -> Result<()> {
             println!("  {} .tickets/config.toml already exists", sym_ok());
         }
     } else {
-        FilePlan(vec![FileEffect::Write {
-            path: config_path,
-            before: None,
-            text: DEFAULT_CONFIG.into(),
-        }])
+        FilePlan(vec![FileEffect::write(
+            config_path,
+            None,
+            DEFAULT_CONFIG.into(),
+        )])
         .execute(Mode::current())?;
         if !is_quiet() && !is_dry_run() {
             println!("  {} created .tickets/config.toml", sym_ok());
@@ -509,12 +509,8 @@ fn bootstrap_project(repo_root: &std::path::Path) -> Result<()> {
             content.push('\n');
         }
         content.push_str(".context\n");
-        FilePlan(vec![FileEffect::Write {
-            path: gitignore_path,
-            before,
-            text: content,
-        }])
-        .execute(Mode::current())?;
+        FilePlan(vec![FileEffect::write(gitignore_path, before, content)])
+            .execute(Mode::current())?;
         if !is_quiet() && !is_dry_run() {
             println!("  {} .tickets/.gitignore (.context excluded)", sym_ok());
         }
@@ -632,11 +628,7 @@ fn write_with_markers(path: &std::path::Path, content: &str) -> Result<()> {
         if let Some(parent) = path.parent() {
             effects.push(FileEffect::Directory(parent.to_path_buf()));
         }
-        effects.push(FileEffect::Write {
-            path: path.to_path_buf(),
-            before,
-            text: wrapped,
-        });
+        effects.push(FileEffect::write(path.to_path_buf(), before, wrapped));
         FilePlan(effects).execute(Mode::current())?;
         return Ok(());
     }
@@ -669,12 +661,8 @@ fn write_with_markers(path: &std::path::Path, content: &str) -> Result<()> {
         result.push_str(&wrapped);
         result
     };
-    FilePlan(vec![FileEffect::Write {
-        path: path.to_path_buf(),
-        before,
-        text: result,
-    }])
-    .execute(Mode::current())?;
+    FilePlan(vec![FileEffect::write(path.to_path_buf(), before, result)])
+        .execute(Mode::current())?;
 
     Ok(())
 }
@@ -692,11 +680,7 @@ fn write_owned_file(repo_root: &std::path::Path, rel_path: &str, content: &str) 
     if let Some(parent) = path.parent() {
         effects.push(FileEffect::Directory(parent.to_path_buf()));
     }
-    effects.push(FileEffect::Write {
-        path,
-        before,
-        text: content.into(),
-    });
+    effects.push(FileEffect::write(path, before, content.into()));
     FilePlan(effects).execute(Mode::current())?;
     if !is_quiet() && !is_dry_run() {
         println!("  {} {} {}", sym_ok(), verb, rel_path);

@@ -480,7 +480,8 @@ impl PreparedMigration {
 
     pub fn apply(&self) -> anyhow::Result<ApplyResult> {
         self.verify_sources_and_destinations()?;
-        std::fs::create_dir_all(&self.backup_dir)?;
+        use crate::effects::{FileEffect, FilePlan, Mode};
+        FilePlan(vec![FileEffect::Directory(self.backup_dir.clone())]).execute(Mode::current())?;
         for file in &self.files {
             let backup = self
                 .backup_dir
@@ -497,7 +498,12 @@ impl PreparedMigration {
                     )
                     .into())
                 }
-                None => crate::core::atomic_create(&backup, &file.original, false)?,
+                None => FilePlan(vec![FileEffect::CreateNoClobber {
+                    path: backup,
+                    text: file.original.clone(),
+                    executable: false,
+                }])
+                .execute(Mode::current())?,
             }
         }
         let mut files_written = 0;
@@ -505,11 +511,20 @@ impl PreparedMigration {
         for file in &self.files {
             Self::verify_source(file)?;
             if file.source == file.destination {
-                crate::core::atomic_write(&file.destination, &file.converted)?;
+                FilePlan(vec![FileEffect::ReplaceSnapshot {
+                    path: file.destination.clone(),
+                    before: file.original.clone(),
+                    text: file.converted.clone(),
+                }])
+                .execute(Mode::current())?;
             } else {
-                crate::core::atomic_create(&file.destination, &file.converted, false)?;
-                Self::verify_source(file)?;
-                std::fs::remove_file(&file.source)?;
+                FilePlan(vec![FileEffect::RelocateSnapshot {
+                    source: file.source.clone(),
+                    destination: file.destination.clone(),
+                    before: file.original.clone(),
+                    text: file.converted.clone(),
+                }])
+                .execute(Mode::current())?;
                 files_renamed += 1;
             }
             files_written += 1;

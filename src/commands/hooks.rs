@@ -137,8 +137,15 @@ fn reject_link(path: &Path) -> Result<()> {
 }
 
 fn install(hooks: &Path, path: &Path) -> Result<()> {
-    std::fs::create_dir_all(hooks)?;
-    match crate::core::atomic_create(path, SHIM, true) {
+    crate::effects::FilePlan(vec![crate::effects::FileEffect::Directory(hooks.into())])
+        .execute(crate::effects::Mode::current())?;
+    match crate::effects::FilePlan(vec![crate::effects::FileEffect::CreateNoClobber {
+        path: path.into(),
+        text: SHIM.into(),
+        executable: true,
+    }])
+    .execute(crate::effects::Mode::current())
+    {
         Ok(()) => Ok(()),
         Err(error)
             if error
@@ -163,52 +170,11 @@ fn install(hooks: &Path, path: &Path) -> Result<()> {
 }
 
 fn remove_owned(path: &Path) -> Result<()> {
-    let nonce = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)?
-        .as_nanos();
-    let staged = path.with_file_name(format!(
-        ".tkt-removed-pre-commit-{}-{nonce}",
-        std::process::id()
-    ));
-    std::fs::rename(path, &staged)
-        .context("cannot stage hook removal; retry after inspecting the hook")?;
-    if reject_link(&staged).is_err() || !staged.is_file() {
-        domain_bail!(Conflict, "hook changed during removal; preserved at {} (restore manually without overwriting a new hook)", staged.display());
-    }
-    let bytes = std::fs::read(&staged).with_context(|| {
-        format!(
-            "cannot inspect moved hook; preserved at {}",
-            staged.display()
-        )
-    })?;
-    if bytes != SHIM.as_bytes() {
-        restore_foreign(path, &staged)?;
-        domain_bail!(
-            Conflict,
-            "hook changed during removal; restored foreign bytes to {}",
-            path.display()
-        );
-    }
-    std::fs::remove_file(&staged).with_context(|| {
-        format!(
-            "cannot finish owned hook removal; preserved at {}",
-            staged.display()
-        )
-    })?;
-    Ok(())
-}
-
-fn restore_foreign(path: &Path, staged: &Path) -> Result<()> {
-    if std::fs::hard_link(staged, path).is_err() {
-        domain_bail!(Conflict, "hook changed during removal; preserved at {}; {} was not overwritten (manual recovery required)", staged.display(), path.display());
-    }
-    std::fs::remove_file(staged).with_context(|| {
-        format!(
-            "foreign hook restored; extra staging link remains at {}",
-            staged.display()
-        )
-    })?;
-    Ok(())
+    crate::effects::FilePlan(vec![crate::effects::FileEffect::RemoveOwned {
+        path: path.into(),
+        text: SHIM.into(),
+    }])
+    .execute(crate::effects::Mode::current())
 }
 
 fn report(state: &str, installed: bool, path: Option<&Path>) {
@@ -247,7 +213,7 @@ mod tests {
         let staged = temp.path().join("staged");
         std::fs::write(&path, b"new foreign arrival").unwrap();
         std::fs::write(&staged, b"moved foreign bytes").unwrap();
-        assert!(restore_foreign(&path, &staged).is_err());
+        assert!(crate::effects::restore_foreign(&path, &staged).is_err());
         assert_eq!(std::fs::read(&path).unwrap(), b"new foreign arrival");
         assert_eq!(std::fs::read(&staged).unwrap(), b"moved foreign bytes");
     }

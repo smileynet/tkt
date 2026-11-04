@@ -78,7 +78,12 @@ fn update_status_cell(repo: &std::path::Path, id: &str, value: &str) -> Result<b
     if updated == text {
         return Ok(false);
     }
-    core::atomic_write(&path, &updated)?;
+    crate::effects::FilePlan(vec![crate::effects::FileEffect::ReplaceSnapshot {
+        path,
+        before: text,
+        text: updated,
+    }])
+    .execute(crate::effects::Mode::current())?;
     Ok(true)
 }
 
@@ -119,6 +124,7 @@ pub fn run(
     let corpus_map: std::collections::HashMap<&str, &Ticket> =
         corpus.iter().map(|t| (t.id.as_str(), t)).collect();
     let mut plan_text = std::fs::read_to_string(&plan)?;
+    let original_plan = plan_text.clone();
 
     let mut findings: Vec<Finding> = Vec::new();
     let mut fixed_count = 0;
@@ -227,7 +233,12 @@ pub fn run(
         // Route through atomic_write (temp-file + rename) so an interrupted
         // write never leaves a torn plan file — same guarantee ticket writes
         // get (AGENTS.md constraint). Was std::fs::write (defect, #183).
-        core::atomic_write(&plan, &plan_text)?;
+        crate::effects::FilePlan(vec![crate::effects::FileEffect::ReplaceSnapshot {
+            path: plan.clone(),
+            before: original_plan,
+            text: plan_text.clone(),
+        }])
+        .execute(crate::effects::Mode::current())?;
     }
 
     let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();

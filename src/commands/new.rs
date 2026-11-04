@@ -199,7 +199,12 @@ pub fn run(
         agent_eligibility: &agent_eligibility,
     });
     let content = add_parent(content, parent, &path)?;
-    crate::core::atomic_write(&path, &content)?;
+    crate::effects::FilePlan(vec![crate::effects::FileEffect::CreateNoClobber {
+        path: path.clone(),
+        text: content,
+        executable: false,
+    }])
+    .execute(crate::effects::Mode::current())?;
 
     let rel_path = format!(".tickets/{}", filename);
     git::add(&txn.repo, &[&rel_path])?;
@@ -263,7 +268,12 @@ pub fn run(
                 agent_eligibility: &agent_eligibility,
             });
             let content2 = add_parent(content2, parent, &path2)?;
-            crate::core::atomic_write(&path2, &content2)?;
+            crate::effects::FilePlan(vec![crate::effects::FileEffect::CreateNoClobber {
+                path: path2.clone(),
+                text: content2,
+                executable: false,
+            }])
+            .execute(crate::effects::Mode::current())?;
             let rel_path2 = format!(".tickets/{}", filename2);
             git::add(&txn.repo, &[&rel_path2])?;
             let hook = crate::lifecycle::PreparedEvent::prepare(

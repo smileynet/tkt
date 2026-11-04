@@ -232,11 +232,7 @@ pub(crate) fn consent_plan(path: &Path, enabled: bool) -> anyhow::Result<crate::
     if let Some(parent) = path.parent() {
         effects.push(FileEffect::Directory(parent.into()));
     }
-    effects.push(FileEffect::Write {
-        path: path.into(),
-        before: read_text(path)?,
-        text: content,
-    });
+    effects.push(FileEffect::write(path.into(), read_text(path)?, content));
     Ok(FilePlan(effects))
 }
 

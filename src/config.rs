@@ -868,11 +868,11 @@ fn write_config_file(
     if let Some(parent) = path.parent() {
         effects.push(crate::effects::FileEffect::Directory(parent.to_path_buf()));
     }
-    effects.push(crate::effects::FileEffect::Write {
-        path: path.to_path_buf(),
+    effects.push(crate::effects::FileEffect::write(
+        path.to_path_buf(),
         before,
-        text: content,
-    });
+        content,
+    ));
     crate::effects::FilePlan(effects).execute(crate::effects::Mode::current())
 }
 

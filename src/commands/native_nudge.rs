@@ -322,7 +322,7 @@ pub fn run(target: Target, action: Action) -> Result<i32> {
                 )));
             }
             effects.push(FileEffect::Directory(path.parent().unwrap().into()));
-            effects.push(FileEffect::Write { path, before, text });
+            effects.push(FileEffect::write(path, before, text));
         }
     }
     if action != Action::Check && (owner_before.is_some() || action == Action::Install) {
@@ -334,20 +334,12 @@ pub fn run(target: Target, action: Action) -> Result<i32> {
         );
         if owner_before.as_deref() != Some(&text) {
             effects.push(FileEffect::Directory(repo.join(".tickets/hooks")));
-            effects.push(FileEffect::Write {
-                path: repo.join(OWNER_PATH),
-                before: owner_before,
-                text,
-            });
+            effects.push(FileEffect::write(repo.join(OWNER_PATH), owner_before, text));
         }
         if action == Action::Install && script_before.is_none() {
             effects.insert(
                 0,
-                FileEffect::Write {
-                    path: repo.join(SCRIPT_PATH),
-                    before: None,
-                    text: SCRIPT.into(),
-                },
+                FileEffect::write(repo.join(SCRIPT_PATH), None, SCRIPT.into()),
             );
             effects.insert(0, FileEffect::Directory(repo.join(".tickets/hooks")));
         }

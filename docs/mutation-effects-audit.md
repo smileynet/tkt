@@ -43,3 +43,34 @@ Ticket #86 extends the allocation boundary with a shared new/batch/import marker
 Ticket #89 adds explicitly configured, locally trusted advisory process effects after new/claim/close publication attempts. Preview/failed commits/rolled-back allocations do not dispatch. The publisher carries an explicit event; other mutation families pass none. Hooks can make arbitrary trusted external effects and have no inverse or durable delivery journal. Include process invocation absence in #191’s all-mutator preview matrix; lifecycle hooks do not replace or complete the shared effect plan.
 
 Ticket #158 adds explicit native-nudge config/helper/ownership effects through FilePlan. Its install/remove modes preflight selected files before snapshot-guarded writes; check and global preview do not mutate native files or Git refs. Include all modes in #191’s remaining no-write matrix. Generation is per-file atomic, not a multi-file transaction, and native trust/user settings remain outside its effects.
+
+## Remaining execution phases — 2026-11-04
+
+Child #259 repaired observed telemetry preview writes and the unsafe Windows test
+isolation assumption; [the receipt](evidence/telemetry-preview-259.md) records the
+unknown prior user state. Telemetry mutation tests now use explicit private paths.
+
+Child #260 centralizes command-owned text publication in `FilePlan`:
+`ReplaceSnapshot`, `CreateNoClobber`, `RelocateSnapshot`, `RemoveOwned`, explicit
+context `UnlinkEntry`, directory creation and selected telemetry-directory removal.
+Preparation checks snapshots/ownership before Preview and before starting a phase;
+Apply checks again at each publication boundary. All command call sites now reach
+atomic text primitives only through this dispatcher. Parsed tickets retain their
+original raw snapshot so a later owner edit conflicts rather than being overwritten.
+Renumber/migration relocation publishes without clobbering before removing the
+matching source; a later failure can retain both versions. Owned removal stages
+and inspects bytes, restores a foreign arrival without clobbering, or preserves
+its staging path for manual recovery. Context clear intentionally unlinks its
+named entry, including a symlink, without following it.
+
+These are phase-local checks, not a cross-file transaction or external-editor lock.
+Preparation failures now stop a phase before earlier writes; later I/O failures
+can still leave earlier publications. Ancestor links remain filesystem-resolved.
+
+Child #261 still owns Git publication/fetch/recovery dispositions, process events,
+and their support effects: locks, undo's temporary index, cadence state,
+telemetry/debug rotation and the update cache. Those have not been centralized
+by #260. The pending preview matrix covers capability-declared mutation commands,
+with private telemetry unit controls, cached remote collision handling, import
+and pending recovery, and trusted lifecycle process markers. Parent #191 remains
+in progress until these remaining phases and its original criteria are evidenced.

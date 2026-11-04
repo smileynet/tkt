@@ -110,13 +110,10 @@ pub fn load(tickets_dir: &Path) -> Context {
 pub fn save(tickets_dir: &Path, ctx: &Context) -> anyhow::Result<()> {
     let path = context_file_path(tickets_dir);
     let effect = if ctx.is_empty() {
-        crate::effects::FileEffect::Remove(path)
+        crate::effects::FileEffect::UnlinkEntry(path)
     } else {
-        crate::effects::FileEffect::Write {
-            before: crate::effects::read_text(&path)?,
-            path,
-            text: format!("{}\n", ctx.serialize()),
-        }
+        let before = crate::effects::read_text(&path)?;
+        crate::effects::FileEffect::write(path, before, format!("{}\n", ctx.serialize()))
     };
     crate::effects::FilePlan(vec![effect]).execute(crate::effects::Mode::current())
 }

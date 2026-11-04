@@ -67,6 +67,7 @@ struct PlannedWrite {
     source: PathBuf,
     target: PathBuf,
     contents: String,
+    original: String,
 }
 
 impl RenumberPlan {
@@ -352,6 +353,7 @@ pub fn materialize_renumber(
                 source,
                 target,
                 contents: file.serialize(),
+                original: file.original.clone(),
             });
         }
     }
@@ -370,16 +372,24 @@ pub fn materialize_renumber(
 /// Apply a fully materialized renumber plan. This function performs no corpus
 /// discovery or parsing after mutation begins.
 pub fn apply_renumber(plan: &MaterializedRenumberPlan) -> Result<AppliedRenumber> {
-    // Move every source first. Targets were verified absent during preflight.
+    let mut effects = Vec::new();
     for write in &plan.writes {
-        if write.source != write.target {
-            std::fs::rename(&write.source, &write.target)?;
+        if write.source == write.target {
+            effects.push(crate::effects::FileEffect::ReplaceSnapshot {
+                path: write.target.clone(),
+                before: write.original.clone(),
+                text: write.contents.clone(),
+            });
+        } else {
+            effects.push(crate::effects::FileEffect::RelocateSnapshot {
+                source: write.source.clone(),
+                destination: write.target.clone(),
+                before: write.original.clone(),
+                text: write.contents.clone(),
+            });
         }
     }
-
-    for write in &plan.writes {
-        core::atomic_write(&write.target, &write.contents)?;
-    }
+    crate::effects::FilePlan(effects).execute(crate::effects::Mode::current())?;
 
     Ok(AppliedRenumber {
         staged_paths: plan.staged_paths.clone(),
