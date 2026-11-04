@@ -1,7 +1,7 @@
 ---
 id: "89"
 title: "Lifecycle hooks: on-new, on-claim, on-close scripts"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -30,9 +30,9 @@ Start with explicitly configured advisory lifecycle hooks. Publishing remains in
 
 ## Acceptance criteria
 
-- [ ] Hooks are opt-in and advisory; failure does not block publishing or alter ticket lifecycle truth
-- [ ] Portable invocation, bounded execution and failure/retry behavior are explicit and tested
-- [ ] No configuration preserves current behavior and existing verification policy
+- [x] Hooks are opt-in and advisory; failure does not block publishing or alter ticket lifecycle truth
+- [x] Portable invocation, bounded execution and failure/retry behavior are explicit and tested
+- [x] No configuration preserves current behavior and existing verification policy
 
 ## Triage — 2026-11-02
 
@@ -51,3 +51,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-04)
+
+Implemented explicitly configured lifecycle notifications after publication, gated by separate exact Git-local trust. Advisory spawn/nonzero/deadline failures preserve original results; direct-child-only timeout, recursion guard and conservative commit attribution are documented. Independent critic accepted final source and the496-Rust full gate; installed freshness passed at5fa4793.
+
+### Verification
+1. ✓ Hooks are opt-in and advisory; failure does not block publishing or alter ticket lifecycle truth — "Default hook argv arrays are empty; separate raw exact Git-local trust required. Publication-before-hook and failed-push retained-commit tests pass; hook failures preserve command outcome and JSON stdout. No hooks/trust enabled here."
+2. ✓ Portable invocation, bounded execution and failure/retry behavior are explicit and tested — "14 public harness cases (13behavior+privatechildentry) cover literal argv, missing/nonzero/two-second deadline, manual retry contract, all3events/previews/failedcommits, trust scopes/linkedworktrees, recursion, actualNFF finalallocation, concurrent commits beforecapture/afterpush. Full gate496Rust/42Node pass,1existingWindows skip,fmt clean,clippy0warnings; Unix and descendantcontainment explicitly unverified."
+3. ✓ No configuration preserves current behavior and existing verification policy — "No configuration executes no hooks; dryrun and failedcommit tests cover all3events. Other mutation publishers explicitly emit none; no Git hook/defaultCI/trust change occurs. Critic accepted final qualifying gate beforeclose; docs/evidence/lifecycle-hooks-89.md."
