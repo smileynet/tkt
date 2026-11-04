@@ -1,0 +1,28 @@
+{
+  "kind": "design-fixture-not-an-executable-cli-plan",
+  "plan_format": 1,
+  "operation": "rename-extension-field",
+  "schema_format": 1,
+  "schema_before_sha256": "3efa03fe2ed45c5f79df8eaedcf394627221aa5be4181c2fa08f8f9c1c27ffca",
+  "schema_after_sha256": "321269af45fe22c1dcf6b62364738f37e0be4b2d04fd45eafa28e68c8c167cd4",
+  "changes": [
+    {
+      "path": ".tickets/01-extension-fixture.md",
+      "before_sha256": "a819fb170d34e7215f2995272ddbe3a53106804ddb140f0aa27f6c1369bf673e",
+      "after_sha256": "f55e1c18c69af040cbd64c93f565bc8de842413a773bfa39f1c3e593bde8a7de",
+      "from": "x_team",
+      "to": "x_group",
+      "raw_value": " \"platform\""
+    }
+  ],
+  "effects": [
+    "rename exactly one declared key, retaining its entry position, spacing and raw scalar",
+    "replace schema only after explicit review and exact snapshot checks"
+  ],
+  "unapproved": [
+    "coercion",
+    "default insertion",
+    "unknown-field deletion",
+    "full YAML interpretation"
+  ]
+}

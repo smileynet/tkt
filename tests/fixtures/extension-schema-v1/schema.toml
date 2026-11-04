@@ -1,0 +1,10 @@
+format_version = 1
+
+[fields.x_team]
+type = "enum"
+values = ["platform", "frontend"]
+ai_context = "Owning team; advisory data, never permission to assign work."
+
+[fields.x_summary]
+type = "string"
+max_bytes = 2048

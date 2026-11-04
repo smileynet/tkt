@@ -1,0 +1,51 @@
+{
+  "scope": "design-only; no runtime schema loader/enforcement/migration",
+  "gate": "mise run check",
+  "rustPassed": 497,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "additionalDesignNodeCases": 2,
+  "fmt": "pass; no diff",
+  "clippy": "pass; alltargets zero warnings",
+  "critic": "accepted final design, codec boundary, clarified ACs and fresh gate before closure",
+  "sources": [
+    {
+      "path": "docs/extension-schema-design.md",
+      "sha256": "e71a03d96991b89db22b7813b47fc534902f71b2defbb1685bb74659a96a9fd8"
+    },
+    {
+      "path": "tests/extension_schema_contract.rs",
+      "sha256": "c8b4272c41d13d4d292101378907206175bb407037bc0fb641ad8ef258c1dfc1"
+    },
+    {
+      "path": "tools/extension-schema-design.test.mjs",
+      "sha256": "4cf95702a7df80efb8d5ae9bf7158925f3f465a09a78189466fadb9cb66d2ddd"
+    },
+    {
+      "path": "tests/fixtures/extension-schema-v1/after.md",
+      "sha256": "f55e1c18c69af040cbd64c93f565bc8de842413a773bfa39f1c3e593bde8a7de"
+    },
+    {
+      "path": "tests/fixtures/extension-schema-v1/before.md",
+      "sha256": "a819fb170d34e7215f2995272ddbe3a53106804ddb140f0aa27f6c1369bf673e"
+    },
+    {
+      "path": "tests/fixtures/extension-schema-v1/rename-preview.json",
+      "sha256": "84843f0ec1eaac6b91ce2755795fbe457a8de791238914db3440d18017063847"
+    },
+    {
+      "path": "tests/fixtures/extension-schema-v1/schema-after.toml",
+      "sha256": "321269af45fe22c1dcf6b62364738f37e0be4b2d04fd45eafa28e68c8c167cd4"
+    },
+    {
+      "path": "tests/fixtures/extension-schema-v1/schema.toml",
+      "sha256": "3efa03fe2ed45c5f79df8eaedcf394627221aa5be4181c2fa08f8f9c1c27ffca"
+    }
+  ],
+  "limitations": [
+    "No runtime implementation or migration execution",
+    "LF fixture compatibility, not arbitrary YAML/BOM/newline preservation",
+    "Windows observed; Unix not executed"
+  ],
+  "artifactDisposition": "Small text contract fixtures retained as reproducible source; owned logs recycled after compact evidence; shared target retained for remaining work; unrelated artifacts preserved"
+}

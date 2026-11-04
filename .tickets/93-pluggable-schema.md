@@ -155,6 +155,14 @@ Agents discover the schema at runtime — no hardcoded knowledge needed.
 
 ## Acceptance criteria
 
+These criteria describe the design and compatibility fixtures, not shipped runtime schema enforcement.
+
+- [ ] Supported extension values/representations and schema version boundaries are explicit and narrow
+- [ ] Define how a future optional schema preserves unknown raw values and existing ticket compatibility
+- [ ] Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support
+
+## Historical acceptance criteria (superseded by the design-only contract)
+
 - [ ] Supported extension values/representations and schema version boundaries are explicit and narrow
 - [ ] Optional schema enforcement preserves unknown raw values and existing ticket compatibility
 - [ ] Explicit migration/preview and round-trip fixtures cover supported changes without claiming full YAML support
