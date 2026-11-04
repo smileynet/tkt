@@ -1,0 +1,99 @@
+{
+  "kind": "integration-source-inventory",
+  "nativeExecution": false,
+  "paths": [
+    {
+      "path": "skills/tkt-core/SKILL.md",
+      "sha256": "7fed5c4a5e6d10aca6c00fc26967581dcefc7180cfa864942db462af81af04fb"
+    },
+    {
+      "path": "skills/tkt-orient/SKILL.md",
+      "sha256": "67346a95ac5c26335fbeabea348379f336d921237a2eb73f00c889d3607409dd"
+    },
+    {
+      "path": "skills/tkt-work/SKILL.md",
+      "sha256": "07cc6047b7c8fb215045aab8868009c0a48576cea999cfd55c43acc03c469f78"
+    },
+    {
+      "path": "skills/tkt-reconcile/SKILL.md",
+      "sha256": "94e0b9563f2304e7b2a6fb00d0bbe713330630ccb61ba0847fb1e028f54def3d"
+    },
+    {
+      "path": "src/core/ticket.rs",
+      "sha256": "a10ee3c370972b3282823b0621df0c0fdde5d588cc583984fcc6e0ab2d8759c5"
+    },
+    {
+      "path": "src/commands/claim.rs",
+      "sha256": "95d28779eb770ca527584effc2c1e3d02a90641bb3bf5b26487f798cf49df5fd"
+    },
+    {
+      "path": "src/commands/ready.rs",
+      "sha256": "af5fdc7d5e55750e101cbac0ec14a028952f81e4cd1280424e1a5234eb583235"
+    },
+    {
+      "path": "src/mutation.rs",
+      "sha256": "787ba89f6b2c49c62348a776fb7088077050df03bd656fdd1a1bf6d794646b06"
+    },
+    {
+      "path": ".claude-plugin/claude-hooks.json",
+      "sha256": "5013a21d80cae7a431fad5245ea78c971ab3ce7a540e49cc59efd982e61e94b7"
+    },
+    {
+      "path": ".claude-plugin/hooks/session-start.mjs",
+      "sha256": "c01dc78a4e2aa636c5fb196be6dddf902cdbb20f118a5a36478ef1e19934457e"
+    },
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "6acc85d51cc6cbaf9f4c8026cee5387c9e42eb709558f014fc0f7bc01591d9d3"
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "6757194f4e9674d22cf220232356f0ce150e226e462997ec44c708b04bfdcd37"
+    },
+    {
+      "path": ".claude-plugin/plugin.json",
+      "sha256": "b3d68cdb41c9a0d5ad63af4754c567b5c1cc540591333594e4f2f1452e0c28d3"
+    },
+    {
+      "path": "tools/deploy.mjs",
+      "sha256": "1d2b7932b73773ba6ea50103aba81f9708778329740886f22b4a5c555eb3a19d"
+    },
+    {
+      "path": "assets/pre-commit.sh",
+      "sha256": "a0bf67f641d5e493961cecb3a4b3a31a578eb66d2e77aa712af4c3d3e880d5cf"
+    },
+    {
+      "path": "src/commands/hooks.rs",
+      "sha256": "e4b48a10af9f1e252db4d042d2f714e6d2a0a93e70c32f925b818cdc5eb5d26b"
+    },
+    {
+      "path": "docs/optional-hooks.md",
+      "sha256": "8f245ba970a5d73f86ea2ca7eea7c46d1341a17d1caef4cb44706c12cc259df8"
+    },
+    {
+      "path": "src/effects.rs",
+      "sha256": "bf35cf99321052a245fc12d6938331522d3ad6854f9878110a9432a3fea29260"
+    },
+    {
+      "path": "docs/evidence/native-write-hooks-158.md",
+      "sha256": "bafbc0bde6fd9338a12df8f8058aefb1bf5e30645dfafb352c5582cf17c63409"
+    }
+  ],
+  "assertions": [
+    "All 19 named source paths exist",
+    "Codex hooks explicitly empty",
+    "Codex skill root is ./skills/",
+    "Claude SessionStart command registered",
+    "Claude hook declared in private claudeFiles",
+    "Claude private hook excluded from shared runtimeFiles"
+  ],
+  "limits": [
+    "No new native session or hook activation",
+    "Version remains0.4.0; historical0.5claim notused"
+  ],
+  "review": {
+    "result": "accepted",
+    "correction": "Distinguish ready identity/environment filters from status/tag-context-only in-progress query",
+    "documentSha256": "8109b62b65ef197e824d69373ce2ccf84763cd3620a67f59441716427e11e392"
+  }
+}
