@@ -36,8 +36,9 @@ gates. Preparation state and sealed artifacts stay unchanged.
 `tools/release-native.mjs`. Both default to inspection, with explicit `--execute` for
 actual checks. Read the [preparation guide](https://github.com/smileynet/grey-matter/blob/main/docs/agents/release-preparation.md)
 for required options, output ownership, resume, native binary selection and remaining
-gates. Product verification runs `mise run check`, including vendored-tool fixtures,
-formatting, clippy and Rust tests. Passing partial checks never implies release readiness.
+gates. Product verification runs `mise run check:release`, including cheap tooling
+safety fixtures, real build-identity and cargo-dist regressions, formatting, clippy
+and Rust tests. Passing partial checks never implies release readiness.
 
 Shared tools are owned by `tools/release-vendor.json`, with MIT notices in
 `tools/LICENSE-grey-matter.txt` and NOTICE. Edit canonical files in grey-matter and use

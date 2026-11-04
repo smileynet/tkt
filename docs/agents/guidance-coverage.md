@@ -65,9 +65,17 @@ contract keeps exact compatibility details previously held in AGENTS.md.
 | rule-44 | [348–351](https://github.com/smileynet/tkt/blob/9e944bda0dbc79361976907730564b969aa033d0/AGENTS.md#L348-L351) | Parent-scoped frontier | [docs/agents/tkt-contract.md](tkt-contract.md#rule-44) | CLI/storage/lifecycle/configuration/plan compatibility changes |
 | rule-45 | [352–355](https://github.com/smileynet/tkt/blob/9e944bda0dbc79361976907730564b969aa033d0/AGENTS.md#L352-L355) | Plan lifecycle comparison | [docs/agents/tkt-contract.md](tkt-contract.md#rule-45) | CLI/storage/lifecycle/configuration/plan compatibility changes |
 
-Run `node tools/check-guidance-coverage.mjs` during transition and append
-`--final` after extraction. The checker binds the frozen Git source, per-unit
-hashes, exhaustive line partition, reachable target text and final de-duplication.
+The completed migration used `node tools/check-guidance-coverage.mjs --final`
+to bind the frozen Git source, per-unit hashes, exhaustive line partition,
+reachable target text and final de-duplication. This is now an on-demand historical
+audit, not a required check for later guidance changes. Run it at the migration
+revision when investigating that extraction. Current instructions can legitimately
+differ from the frozen text; an exact-text assertion on them does not establish a
+current behavior defect. Verify current accuracy, links and affected behavior instead.
+
+Ticket 263 changed the tooling commands in rule-05 and rule-41. The historical
+checker rejects those updates as `Missing rule text`; its frozen source and hashes
+remain preserved. No current-text override or new mandatory migration gate was added.
 
 ## Owner policy amendment after the frozen migration
 

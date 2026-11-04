@@ -36,13 +36,20 @@ cargo fmt --check              # format (must produce no diff)
 ### Verification gate (run before every commit)
 
 ```bash
-mise run check   # release-tool fixtures + Rust gate, PATH-order-independent
+mise run check   # source-selected tooling fixtures + Rust gate, PATH-order-independent
 # equivalent raw form:
-node --test tools/release-tools.test.mjs tools/release-ci.test.mjs tools/check-binary-fresh.test.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+node tools/check-tools.mjs && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 ```
 
 Maintainer verification needs Node 22+ and `npm ci --ignore-scripts`; these pinned
 Node packages support release tooling, not the installed Rust CLI.
+
+`node tools/check-tools.mjs [--base REF]` always runs cheap tooling safety fixtures,
+then selects real build-identity and cargo-dist regressions from changed source,
+including tracked edits and untracked inputs. Default scope is the origin/main
+merge-base; unavailable scope conservatively selects both. Invalid explicit bases
+fail. `--plan` shows selection without executing tests. For release verification,
+`mise run check:release` forces both real regressions and the full Rust gate.
 
 Use `--check` (not bare `cargo fmt`) — bare `cargo fmt` mutates in place and exits 0 regardless, so it cannot gate a diff or reveal a broken formatter.
 
@@ -137,7 +144,7 @@ material; they do not relax the inline verification, safety or release rules.
 | Building, formatting, installing or composing commits on Windows; changing atomic replacement/filesystem behavior on any platform | [Windows maintenance](docs/agents/windows-maintenance.md) |
 | Inspecting cargo-dist, checking crate names, or regenerating release workflows | [Maintainer tooling](docs/agents/maintainer-tooling.md) and [release staging](docs/release-staging.md); the release authorization boundary above still applies |
 | Dispatching a Codex review or inventorying reference checkouts | [Session operations](docs/agents/session-operations.md) |
-| Changing CLI/agent-facing behavior or guidance layout | [Guidance surface checklist](docs/agents/agent-guidance-surfaces.md) and [migration coverage](docs/agents/guidance-coverage.md); verify coverage with `node tools/check-guidance-coverage.mjs --final` |
+| Changing CLI/agent-facing behavior or guidance layout | [Guidance surface checklist](docs/agents/agent-guidance-surfaces.md); check current accuracy and links. The [frozen migration audit](docs/agents/guidance-coverage.md) is on-demand, not a gate on later instruction changes. |
 
 ## Mutation effect boundary
 

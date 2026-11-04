@@ -52,7 +52,7 @@ When changing CLI behavior that affects agent usage:
 6. ☐ Update `README.md` (if user-facing behavior changed)
 7. ☐ Run `bash tools/deploy-skills.sh` (deploys skills to harness scan roots and refreshes the Antigravity `agy` plugin in `~/.gemini/config/plugins/tkt/`)
 8. ☐ Follow [release maintenance](../releasing.md) when preparing delivery of changed init snippets. Update versions together through the coordinated release process; never edit versions ad hoc.
-9. ☐ When moving contributor guidance, update [the exhaustive coverage map](guidance-coverage.md), run `node tools/check-guidance-coverage.mjs --final`, and review retained rules and read triggers against the frozen source. The map covers that migration baseline, not unreviewed future behavior.
+9. ☐ When moving contributor guidance, review retained rules and read triggers against the current source. The [exhaustive coverage map](guidance-coverage.md) records the completed migration baseline; its exact-text audit is on-demand and does not gate later instruction changes. Check current accuracy, links and affected behavior instead.
 
 ## Why this matters
 

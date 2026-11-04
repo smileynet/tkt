@@ -8,7 +8,7 @@ import { join } from "node:path";
 import * as tar from "tar";
 import { parse } from "yaml";
 import { ciIdentity, sealStage } from "./release-ci.mjs";
-import { generateStageWorkflow, stageWorkflow } from "./generate-release-workflow.mjs";
+import { stageWorkflow } from "./generate-release-workflow.mjs";
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), "tkt CI seal ")), repo = join(root, "repo"), input = join(root, "input"), output = join(root, "output");
@@ -27,9 +27,8 @@ function fixture() {
   const crate = (sha = env.GITHUB_SHA) => { writeFileSync(join(source, prefix, ".cargo_vcs_info.json"), JSON.stringify({ git: { sha1: sha }, path_in_vcs: "" })); tar.create({ file: join(input, `${prefix}.crate`), cwd: source, sync: true, gzip: true }, [`${prefix}/.cargo_vcs_info.json`]); }; crate();
   return { repo, input, output, env, plan, writePlan, crate, run: () => sealStage({ repo, input, output, env }), clean: () => rmSync(root, { recursive: true, force: true }) };
 }
-test("real dist generation is deterministic and retains only read-only manual staging jobs", () => {
-  const first = generateStageWorkflow(), second = generateStageWorkflow(); assert.equal(first, second);
-  assert.equal(first, readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8"));
+test("committed workflow retains only read-only manual staging jobs", () => {
+  const first = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
   const workflow = parse(first); assert.deepEqual(workflow.permissions, { contents: "read" }); assert.deepEqual(Object.keys(workflow.on), ["workflow_dispatch"]);
   assert.deepEqual(Object.keys(workflow.jobs), ["plan", "build-local-artifacts", "build-global-artifacts", "build-crate", "seal-stage"]);
   assert.doesNotMatch(first, /dist host|gh release|cargo publish|git push|secrets\./);

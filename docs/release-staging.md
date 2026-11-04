@@ -11,7 +11,7 @@ Use Node 22+, locked npm dependencies and cargo-dist 0.32.0 for maintenance:
 npm ci --ignore-scripts
 cargo install cargo-dist --version 0.32.0 --locked
 node tools/generate-release-workflow.mjs
-mise run check
+mise run check:release
 ```
 
 Release settings live in `dist-workspace.toml`; Cargo.toml retains build/package
