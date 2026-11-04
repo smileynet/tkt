@@ -221,20 +221,23 @@ fn read_consent_file(path: &Path) -> Option<Consent> {
     None
 }
 
-/// Write consent to the config file.
-#[allow(dead_code)] // Used by upcoming `tkt telemetry` subcommand (#20)
-pub fn write_consent(enabled: bool) -> std::io::Result<()> {
-    let path = consent_file_path()
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "no config directory"))?;
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
+pub(crate) fn consent_plan(path: &Path, enabled: bool) -> anyhow::Result<crate::effects::FilePlan> {
+    use crate::effects::{read_text, FileEffect, FilePlan};
     let date = iso_date();
     let content = format!(
         "[telemetry]\nenabled = {}\nconsented_at = \"{}\"\nversion = 1\n",
         enabled, date
     );
-    std::fs::write(&path, content)
+    let mut effects = Vec::new();
+    if let Some(parent) = path.parent() {
+        effects.push(FileEffect::Directory(parent.into()));
+    }
+    effects.push(FileEffect::Write {
+        path: path.into(),
+        before: read_text(path)?,
+        text: content,
+    });
+    Ok(FilePlan(effects))
 }
 
 // --- Event ---
@@ -332,6 +335,12 @@ pub fn telemetry_dir() -> Option<PathBuf> {
 /// Silently swallows all errors (telemetry must never affect CLI behavior).
 /// Runs rotation check after writing if file exceeds size threshold.
 pub fn record_event(event: &Event) {
+    if matches!(
+        crate::effects::Mode::current(),
+        crate::effects::Mode::Preview
+    ) {
+        return;
+    }
     let _ = try_record_event(event);
 }
 
@@ -443,6 +452,12 @@ fn is_rotated_file(name: &str) -> bool {
 /// Full cleanup: enforce max file count per project and prune sessions.
 /// Called from `tkt telemetry --status` or at startup.
 pub fn cleanup_telemetry_dir() {
+    if matches!(
+        crate::effects::Mode::current(),
+        crate::effects::Mode::Preview
+    ) {
+        return;
+    }
     if let Some(dir) = telemetry_dir() {
         if dir.is_dir() {
             let _ = cleanup_old_files(&dir);
@@ -583,7 +598,6 @@ fn sanitize_slug(name: &str) -> String {
 // --- Utilities ---
 
 /// Current ISO 8601 date (YYYY-MM-DD).
-#[allow(dead_code)] // Used by write_consent
 fn iso_date() -> String {
     let secs = SystemTime::now()
         .duration_since(UNIX_EPOCH)

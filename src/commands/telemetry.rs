@@ -5,7 +5,54 @@ use std::collections::HashMap;
 use anyhow::Result;
 
 use crate::commands::common::{is_quiet, print_quiet_json_success};
+use crate::effects::{FileEffect, FilePlan, Mode};
 use crate::telemetry;
+
+#[derive(Clone, Copy)]
+enum Mutation {
+    Consent(bool),
+    Clear,
+}
+
+fn mutate(
+    action: Mutation,
+    mode: Mode,
+    paths: impl FnOnce() -> (Option<std::path::PathBuf>, Option<std::path::PathBuf>),
+) -> Result<&'static str> {
+    if matches!(mode, Mode::Preview) {
+        return Ok(match action {
+            Mutation::Consent(true) => "would enable telemetry",
+            Mutation::Consent(false) => "would disable telemetry",
+            Mutation::Clear => "would clear telemetry data",
+        });
+    }
+    let (consent, data) = paths();
+    match action {
+        Mutation::Consent(enabled) => {
+            let path = consent
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("failed to write consent: no config directory"))?;
+            telemetry::consent_plan(path, enabled)?
+                .execute(mode)
+                .map_err(|e| anyhow::anyhow!("failed to write consent: {e}"))?;
+            Ok(if enabled {
+                "telemetry enabled — events will be recorded locally"
+            } else {
+                "telemetry disabled"
+            })
+        }
+        Mutation::Clear => match data {
+            Some(path) if path.is_dir() => {
+                FilePlan(vec![FileEffect::RemoveDirectory(path)])
+                    .execute(mode)
+                    .map_err(|e| anyhow::anyhow!("failed to clear telemetry: {e}"))?;
+                Ok("telemetry data cleared")
+            }
+            Some(_) => Ok("no telemetry data to clear"),
+            None => Ok("no telemetry data directory"),
+        },
+    }
+}
 
 pub fn run(
     enable: bool,
@@ -15,51 +62,32 @@ pub fn run(
     all: bool,
     clear: bool,
 ) -> Result<i32> {
-    if enable {
-        telemetry::write_consent(true)
-            .map_err(|e| anyhow::anyhow!("failed to write consent: {}", e))?;
+    let action = if enable {
+        Some(Mutation::Consent(true))
+    } else if disable {
+        Some(Mutation::Consent(false))
+    } else if clear {
+        Some(Mutation::Clear)
+    } else {
+        None
+    };
+    if let Some(action) = action {
+        let mode = Mode::current();
+        // Preview must not resolve platform user folders: environment redirection
+        // does not isolate Windows Known Folders.
+        let message = mutate(action, mode, || {
+            (telemetry::consent_file_path(), telemetry::telemetry_dir())
+        })?;
         if is_quiet() {
-            print_quiet_json_success("telemetry enabled");
-        } else {
-            println!("telemetry enabled — events will be recorded locally");
-        }
-        return Ok(0);
-    }
-
-    if disable {
-        telemetry::write_consent(false)
-            .map_err(|e| anyhow::anyhow!("failed to write consent: {}", e))?;
-        if is_quiet() {
-            print_quiet_json_success("telemetry disabled");
-        } else {
-            println!("telemetry disabled");
-        }
-        return Ok(0);
-    }
-
-    if clear {
-        if let Some(dir) = telemetry::telemetry_dir() {
-            if dir.is_dir() {
-                std::fs::remove_dir_all(&dir)
-                    .map_err(|e| anyhow::anyhow!("failed to clear telemetry: {}", e))?;
-                if is_quiet() {
-                    print_quiet_json_success("telemetry data cleared");
+            print_quiet_json_success(
+                if matches!((action, mode), (Mutation::Consent(true), Mode::Apply)) {
+                    "telemetry enabled"
                 } else {
-                    println!("telemetry data cleared");
-                }
-            } else {
-                if is_quiet() {
-                    print_quiet_json_success("no telemetry data to clear");
-                } else {
-                    println!("no telemetry data to clear");
-                }
-            }
+                    message
+                },
+            );
         } else {
-            if is_quiet() {
-                print_quiet_json_success("no telemetry data directory");
-            } else {
-                println!("no telemetry data directory");
-            }
+            println!("{message}");
         }
         return Ok(0);
     }
@@ -574,5 +602,93 @@ fn format_bytes(bytes: u64) -> String {
         format!("{:.1} KB", bytes as f64 / 1024.0)
     } else {
         format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
+    }
+}
+
+#[cfg(test)]
+mod mutation_tests {
+    use super::*;
+
+    #[test]
+    fn private_telemetry_preview_matrix_preserves_existing_and_absent_paths() {
+        for action in [
+            Mutation::Consent(true),
+            Mutation::Consent(false),
+            Mutation::Clear,
+        ] {
+            for existing in [false, true] {
+                let temp = tempfile::tempdir().unwrap();
+                let consent = temp.path().join("config/consent.toml");
+                let data = temp.path().join("data/telemetry");
+                if existing {
+                    std::fs::create_dir_all(consent.parent().unwrap()).unwrap();
+                    std::fs::write(&consent, "owner consent bytes\n").unwrap();
+                    std::fs::create_dir_all(&data).unwrap();
+                    std::fs::write(data.join("events"), "owner data\n").unwrap();
+                }
+                let message = mutate(action, Mode::Preview, || {
+                    (Some(consent.clone()), Some(data.clone()))
+                })
+                .unwrap();
+                assert!(message.starts_with("would "));
+                assert_eq!(consent.exists(), existing);
+                assert_eq!(data.exists(), existing);
+                if existing {
+                    assert_eq!(std::fs::read(&consent).unwrap(), b"owner consent bytes\n");
+                    assert_eq!(std::fs::read(data.join("events")).unwrap(), b"owner data\n");
+                } else {
+                    assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 0);
+                }
+            }
+            assert!(mutate(action, Mode::Preview, || panic!(
+                "preview resolved platform user folders"
+            ))
+            .unwrap()
+            .starts_with("would "));
+        }
+    }
+
+    #[test]
+    fn private_telemetry_apply_controls_change_only_selected_files() {
+        let temp = tempfile::tempdir().unwrap();
+        let consent = temp.path().join("config/consent.toml");
+        let data = temp.path().join("data/telemetry");
+        let foreign = temp.path().join("owner");
+        std::fs::write(&foreign, "preserved").unwrap();
+        for enabled in [true, false] {
+            mutate(Mutation::Consent(enabled), Mode::Apply, || {
+                (Some(consent.clone()), Some(data.clone()))
+            })
+            .unwrap();
+            let text = std::fs::read_to_string(&consent).unwrap();
+            assert!(text.contains(&format!("enabled = {enabled}\n")));
+            assert_eq!(
+                std::fs::read_dir(consent.parent().unwrap())
+                    .unwrap()
+                    .count(),
+                1
+            );
+        }
+        std::fs::create_dir_all(data.join("nested")).unwrap();
+        std::fs::write(data.join("nested/events"), "private events").unwrap();
+        assert_eq!(
+            mutate(Mutation::Clear, Mode::Apply, || (
+                Some(consent.clone()),
+                Some(data.clone())
+            ))
+            .unwrap(),
+            "telemetry data cleared"
+        );
+        assert!(!data.exists());
+        assert!(consent.exists());
+        assert_eq!(std::fs::read(foreign).unwrap(), b"preserved");
+        assert_eq!(
+            mutate(Mutation::Clear, Mode::Apply, || (
+                Some(consent.clone()),
+                Some(data.clone())
+            ))
+            .unwrap(),
+            "no telemetry data to clear"
+        );
     }
 }

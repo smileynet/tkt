@@ -28,6 +28,7 @@ pub enum FileEffect {
         text: String,
     },
     Remove(PathBuf),
+    RemoveDirectory(PathBuf),
 }
 
 pub struct FilePlan(pub Vec<FileEffect>);
@@ -65,6 +66,15 @@ impl FilePlan {
                     Err(e) if e.kind() == std::io::ErrorKind::NotFound => (),
                     Err(e) => return Err(file_error("remove file", &path, e)),
                 },
+                FileEffect::RemoveDirectory(path) => {
+                    if let Some(info) = metadata(&path)? {
+                        if !info.is_dir() || linked(&info) {
+                            return Err(conflict(&path, "expected an unlinked directory"));
+                        }
+                        std::fs::remove_dir_all(&path)
+                            .map_err(|e| file_error("remove directory", &path, e))?;
+                    }
+                }
             }
         }
         Ok(())
@@ -180,11 +190,37 @@ mod tests {
                 text: "new".into(),
             },
             FileEffect::Remove(old.clone()),
+            FileEffect::RemoveDirectory(temp.path().to_path_buf()),
         ])
         .execute(Mode::Preview)
         .unwrap();
         assert_eq!(std::fs::read_to_string(old).unwrap(), "original");
         assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+    }
+
+    #[test]
+    fn directory_removal_preserves_linked_root_and_foreign_target() {
+        let temp = tempfile::tempdir().unwrap();
+        let foreign = temp.path().join("foreign");
+        std::fs::create_dir(&foreign).unwrap();
+        std::fs::write(foreign.join("owner"), "preserved").unwrap();
+        let link = temp.path().join("selected");
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_dir(&foreign, &link).unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&foreign, &link).unwrap();
+        let error = FilePlan(vec![FileEffect::RemoveDirectory(link.clone())])
+            .execute(Mode::Apply)
+            .unwrap_err();
+        assert_eq!(
+            error.downcast_ref::<DomainError>().unwrap().kind,
+            ErrorKind::Conflict
+        );
+        assert!(std::fs::symlink_metadata(link)
+            .unwrap()
+            .file_type()
+            .is_symlink());
+        assert_eq!(std::fs::read(foreign.join("owner")).unwrap(), b"preserved");
     }
 
     #[test]

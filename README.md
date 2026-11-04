@@ -436,6 +436,10 @@ Structured output everywhere: `tkt ready --json`, `tkt query`, `tkt validate --b
 User configuration `debug = true` also defaults to the log file. Set
 `debug.format = "human"` or `"json"` explicitly for stderr output.
 
+Global `--dry-run` preserves telemetry consent, event data and diagnostics.
+Consent/clear previews avoid resolving platform user folders. Ordinary telemetry
+status can prune old local events; preview skips that cleanup.
+
 Known policy values are parsed strictly: booleans accept true/false/1/0/yes/no,
 evidence accepts true/warn/false, and priority/environment defaults use their
 declared values. Invalid effective settings report the key, value and source;

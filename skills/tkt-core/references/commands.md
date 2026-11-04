@@ -87,11 +87,16 @@ ticket stdout. `--all-context` bypasses context; status/priority/parent filters 
 | `tkt config --show` | Show resolved project values with sources | Debugging config cascade |
 | `tkt telemetry --status` | Check telemetry state | Privacy audit |
 | `tkt telemetry --enable` / `--disable` | Toggle telemetry consent | Opt in/out |
+
 | `tkt capabilities` | JSON feature manifest | Agent/automation discovery |
 | `tkt init` | Initialize `.tickets/` and deploy agent integration files | New project setup |
 | `tkt init --write` | Write agent snippet into AGENTS.md using markers | Embedding instructions |
 | `tkt init --write FILE` | Write snippet to a specific file | Custom agent file |
 | `tkt init --agent-only` | Output agent snippet only (skip dir/config creation) | Existing projects |
+
+Global `--dry-run` previews telemetry consent/clear operations without resolving
+platform user folders or changing consent, events or diagnostics. Ordinary
+telemetry status may prune old local event files; preview skips that cleanup.
 
 ## Context (tag scoping)
 
