@@ -206,3 +206,4 @@ re-certified by this reconciliation; #239 records audit follow-up.
 | 250 | Prevent debug logging from writing during dry-run | ✅ done |
 | 251 | Preserve migration sources and foreign destinations | ✅ done |
 | 252 | Remove unsupported migration-map guidance | ✅ done |
+| 253 | Plan and apply local configuration context and init effects | open |
