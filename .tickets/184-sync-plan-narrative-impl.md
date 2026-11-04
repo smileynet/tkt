@@ -90,3 +90,10 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Cross-project evidence review — 2026-11-03
 
 Crew Research ticket 149 and existing root PLAN.md files establish narrative-planning use, but not a bounded failure that the completed derived projection (#187) cannot serve. The owner deferral and ADR 0002 remain applicable; no parser implementation or dependency is activated from file popularity alone. Independent critic review found no reason to reactivate this ticket. See [the evidence review](../docs/evidence/cross-project-review-2026-11-03.md).
+
+## Note — 2026-11-04
+
+By: anonymous
+
+<!-- tkt-note:v1 98932-1793793401867869200 -->
+2026-11-04 review: preserve explicit owner deferral and ADR0002. The independent status-cell repair was delivered under248; current focused sync-plan integration passes8/8. No new independent correctness defect was reproduced and no narrative parser is activated. See docs/evidence/remaining-six-review-2026-11-04.md.
