@@ -6,7 +6,6 @@
 //! State lives in `.git/tkt-cadence.jsonl` (per-repo, uncommitted, ephemeral).
 //! Records are pruned to a short time window so unrelated sessions don't chain.
 
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -125,6 +124,28 @@ fn shares_attr(a: &Record, tags: &[String], blocked_by: &[String]) -> bool {
 ///
 /// Never errors out of the caller: state I/O failures degrade to "no nudge".
 pub fn record_and_check(repo_root: &Path, tags: &[String], blocked_by: &[String]) -> Option<Hint> {
+    match (crate::effects::Phase::Cadence {
+        repo: repo_root,
+        tags,
+        blockers: blocked_by,
+    })
+    .execute(crate::effects::Mode::current())
+    .ok()?
+    {
+        crate::effects::Outcome::Cadence(hint) => hint,
+        crate::effects::Outcome::Preview(effects) => {
+            drop(effects);
+            None
+        }
+        _ => None,
+    }
+}
+
+pub(crate) fn record_and_check_apply(
+    repo_root: &Path,
+    tags: &[String],
+    blocked_by: &[String],
+) -> Option<Hint> {
     if advice_disabled() {
         // Still keep state consistent-free: skip entirely when opted out.
         return None;
@@ -184,12 +205,11 @@ pub fn record_and_check(repo_root: &Path, tags: &[String], blocked_by: &[String]
     }
 }
 
-fn write_state(path: &Path, records: &[Record]) -> std::io::Result<()> {
+fn write_state(path: &Path, records: &[Record]) -> anyhow::Result<()> {
     let mut buf = String::new();
     for r in records {
         buf.push_str(&record_json(r.ts, &r.tags, &r.blocked_by));
         buf.push('\n');
     }
-    let mut f = std::fs::File::create(path)?;
-    f.write_all(buf.as_bytes())
+    crate::effects::replace_state(path, buf)
 }

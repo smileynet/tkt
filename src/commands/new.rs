@@ -7,7 +7,6 @@ use crate::commands::common::{
     project_config, tickets_dir,
 };
 use crate::core::{self, validate};
-use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
 
 #[allow(clippy::too_many_arguments)]
@@ -158,8 +157,42 @@ pub fn run(
     let filename = format!("{}-{}.md", tid, slug);
     let path = dir.join(&filename);
 
+    let content = core::new_ticket_text(&core::NewTicketParams {
+        id: &tid,
+        title,
+        body: body.as_deref(),
+        blocked_by,
+        env,
+        spec,
+        priority,
+        status,
+        validation_criteria,
+        tags: &effective_tags,
+        requires,
+        agent_eligibility: &agent_eligibility,
+    });
+    let content = add_parent(content, parent, &path)?;
+    crate::effects::FilePlan(vec![crate::effects::FileEffect::CreateNoClobber {
+        path: path.clone(),
+        text: content,
+        executable: false,
+    }])
+    .execute(crate::effects::Mode::current())?;
+
+    let rel_path = format!(".tickets/{}", filename);
     // Dry-run: show what would happen without writing
     if is_dry_run() {
+        let _ = txn.commit_created(
+            &[&rel_path],
+            &format!("chore(tickets): new {} {}", tid, slug),
+            Some((&pcfg, crate::lifecycle::Event::New)),
+        )?;
+        let _ = crate::nudge::record_and_check(&txn.repo, &effective_tags, blocked_by);
+        crate::effects::Phase::AllocationPublication(crate::transaction::AllocationPlan::Attempt(
+            &txn,
+        ))
+        .execute(crate::effects::Mode::current())?;
+
         if is_quiet_json() {
             print_quiet_json_success(&format!("would create {}", filename));
         } else {
@@ -184,36 +217,10 @@ pub fn run(
         return Ok(0);
     }
 
-    let content = core::new_ticket_text(&core::NewTicketParams {
-        id: &tid,
-        title,
-        body: body.as_deref(),
-        blocked_by,
-        env,
-        spec,
-        priority,
-        status,
-        validation_criteria,
-        tags: &effective_tags,
-        requires,
-        agent_eligibility: &agent_eligibility,
-    });
-    let content = add_parent(content, parent, &path)?;
-    crate::effects::FilePlan(vec![crate::effects::FileEffect::CreateNoClobber {
-        path: path.clone(),
-        text: content,
-        executable: false,
-    }])
-    .execute(crate::effects::Mode::current())?;
-
-    let rel_path = format!(".tickets/{}", filename);
-    git::add(&txn.repo, &[&rel_path])?;
-    let hook =
-        crate::lifecycle::PreparedEvent::prepare(&pcfg, &txn.repo, crate::lifecycle::Event::New);
-    git::commit(
-        &txn.repo,
-        &format!("chore(tickets): new {} {}", tid, slug),
+    let hook = txn.commit_created(
         &[&rel_path],
+        &format!("chore(tickets): new {} {}", tid, slug),
+        Some((&pcfg, crate::lifecycle::Event::New)),
     )?;
 
     // Advisory batch nudge: record this `new` and, on a burst of shared-scope
@@ -223,9 +230,7 @@ pub fn run(
     let hook_commit = hook.and_then(|hook| hook.capture(&txn.repo));
     let publication = txn.try_push();
     if let Some(commit) = hook_commit {
-        if !matches!(&publication, Ok(PublishResult::NeedsRetry))
-            && git::git(&txn.repo, &["rev-parse", "HEAD"]).ok().as_deref() == Some(commit.as_str())
-        {
+        if !matches!(&publication, Ok(PublishResult::NeedsRetry)) {
             crate::lifecycle::dispatch(
                 &pcfg,
                 &txn.repo,
@@ -275,16 +280,10 @@ pub fn run(
             }])
             .execute(crate::effects::Mode::current())?;
             let rel_path2 = format!(".tickets/{}", filename2);
-            git::add(&txn.repo, &[&rel_path2])?;
-            let hook = crate::lifecycle::PreparedEvent::prepare(
-                &pcfg,
-                &txn.repo,
-                crate::lifecycle::Event::New,
-            );
-            git::commit(
-                &txn.repo,
-                &format!("chore(tickets): new {} {}", tid2, slug),
+            let hook = txn.commit_created(
                 &[&rel_path2],
+                &format!("chore(tickets): new {} {}", tid2, slug),
+                Some((&pcfg, crate::lifecycle::Event::New)),
             )?;
 
             let hook_commit = hook.and_then(|hook| hook.capture(&txn.repo));

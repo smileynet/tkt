@@ -24,9 +24,7 @@ pub fn run(dry_run: bool) -> Result<i32> {
     };
 
     // A dry-run reads the last fetched remote state but never performs network I/O.
-    if !dry_run {
-        git::fetch(&repo, &upstream)?;
-    }
+    git::fetch(&repo, &upstream)?;
 
     // Step 2: gather local + remote filenames
     let remote_names = git::remote_ticket_names(&repo, &upstream)?;
@@ -54,6 +52,13 @@ pub fn run(dry_run: bool) -> Result<i32> {
 
     // Step 4: dry-run preview
     if dry_run {
+        let _ = apply_renumber(&materialized)?;
+        crate::effects::Phase::CollisionRebase(RebasePlan {
+            repo: &repo,
+            materialized: &materialized,
+            count: plan.entries.len(),
+        })
+        .execute(crate::effects::Mode::Preview)?;
         if is_quiet_json() {
             print_quiet_json_success(&format!(
                 "would renumber {} ticket(s) to resolve collisions",
@@ -70,17 +75,16 @@ pub fn run(dry_run: bool) -> Result<i32> {
         return Ok(0);
     }
 
-    // Step 5: apply
-    let result = apply_renumber(&materialized)?;
-
-    // Step 6: publish (stage + commit)
-    let add_paths: Vec<&str> = result.staged_paths.iter().map(|s| s.as_str()).collect();
-    git::add(&repo, &add_paths)?;
-    let msg = format!(
-        "chore(tickets): rebase — renumber {} ticket(s) to resolve ID collision",
-        plan.entries.len()
-    );
-    git::commit(&repo, &msg, &add_paths)?;
+    let crate::effects::Outcome::Rebased(result) =
+        crate::effects::Phase::CollisionRebase(RebasePlan {
+            repo: &repo,
+            materialized: &materialized,
+            count: plan.entries.len(),
+        })
+        .execute(crate::effects::Mode::current())?
+    else {
+        anyhow::bail!("collision rebase was not applied");
+    };
 
     // Step 7: report
     if is_quiet() {
@@ -100,6 +104,41 @@ pub fn run(dry_run: bool) -> Result<i32> {
         print_body_citations(&result.body_citations);
     }
     Ok(0)
+}
+
+pub(crate) struct RebasePlan<'a> {
+    repo: &'a std::path::Path,
+    materialized: &'a crate::renumber::MaterializedRenumberPlan,
+    count: usize,
+}
+
+impl RebasePlan<'_> {
+    pub(crate) fn summaries(&self) -> Vec<crate::effects::EffectSummary> {
+        let mut effects = vec![crate::effects::EffectSummary {
+            operation: "apply-and-commit-collision-rebase",
+            paths: vec![self.repo.join(".tickets")],
+            unresolved: true,
+        }];
+        effects.extend(git::commit_support_summaries(
+            self.repo,
+            "chore(tickets): rebase",
+        ));
+        effects
+    }
+    pub(crate) fn apply(self) -> Result<crate::renumber::AppliedRenumber> {
+        let result = apply_renumber(self.materialized)?;
+        let paths: Vec<_> = result.staged_paths.iter().map(String::as_str).collect();
+        git::add(self.repo, &paths)?;
+        git::commit(
+            self.repo,
+            &format!(
+                "chore(tickets): rebase — renumber {} ticket(s) to resolve ID collision",
+                self.count
+            ),
+            &paths,
+        )?;
+        Ok(result)
+    }
 }
 
 fn print_body_citations(citations: &[(String, crate::renumber::BodyCitation, String)]) {

@@ -96,6 +96,7 @@ fn run_tk_migration(dir: &std::path::Path, confirm: bool) -> Result<i32> {
     }
 
     if dry_run {
+        let _ = prepared.apply()?;
         if is_quiet() {
             print_quiet_json_success(&format!("would migrate {} ticket(s)", plan.total));
         } else {

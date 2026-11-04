@@ -37,10 +37,19 @@ fn do_not_track_prevents_update_request_and_cache_creation() {
         &dirs_source,
         "pub fn config_dir() -> Option<std::path::PathBuf> { std::env::var_os(\"TKT_TEST_CONFIG_DIR\").map(std::path::PathBuf::from) }\n",
     );
+    // The real updater is exercised with a private filesystem boundary. Atomic
+    // publication itself is covered by FilePlan's private-path tests.
+    let cache_boundary = r#"mod effects {
+pub fn replace_state(path: &std::path::Path, text: String) -> std::io::Result<()> {
+    assert!(path.starts_with(std::env::var_os("TKT_TEST_CONFIG_DIR").unwrap()));
+    std::fs::create_dir_all(path.parent().unwrap())?;
+    std::fs::write(path, text)
+}}
+"#;
     write(
         &harness_source,
         &format!(
-            "use std::sync::atomic::AtomicBool;\npub static QUIET: AtomicBool = AtomicBool::new(false);\npub static DRY_RUN: AtomicBool = AtomicBool::new(false);\n#[path = {:?}] mod update_check;\nfn main() {{ if std::env::var_os(\"TKT_TEST_CLEAR_DNT\").is_some() {{ std::env::remove_var(\"DO_NOT_TRACK\"); }} update_check::check_for_update(|| match std::env::var(\"TKT_TEST_INTERVAL\").as_deref() {{ Ok(\"never\") => Ok(None), Ok(\"invalid\") => Err(\"invalid test interval\".to_string()), Ok(value) => Ok(Some(value.parse().unwrap())), Err(_) => panic!(\"configuration callback invoked before suppression guard\"), }}); }}\n",
+            "{cache_boundary}\nuse std::sync::atomic::AtomicBool;\npub static QUIET: AtomicBool = AtomicBool::new(false);\npub static DRY_RUN: AtomicBool = AtomicBool::new(false);\n#[path = {:?}] mod update_check;\nfn main() {{ if std::env::var_os(\"TKT_TEST_CLEAR_DNT\").is_some() {{ std::env::remove_var(\"DO_NOT_TRACK\"); }} if std::env::var_os(\"TKT_TEST_PREVIEW\").is_some() {{ DRY_RUN.store(true, std::sync::atomic::Ordering::Relaxed); }} update_check::check_for_update(|| match std::env::var(\"TKT_TEST_INTERVAL\").as_deref() {{ Ok(\"never\") => Ok(None), Ok(\"invalid\") => Err(\"invalid test interval\".to_string()), Ok(value) => Ok(Some(value.parse().unwrap())), Err(_) => panic!(\"configuration callback invoked before suppression guard\"), }}); }}\n",
             Path::new(env!("CARGO_MANIFEST_DIR")).join("src/update_check.rs")
         ),
     );
@@ -92,6 +101,7 @@ fn do_not_track_prevents_update_request_and_cache_creation() {
     // control cases so the updater's other guards can be checked independently.
     for (case, clear_dnt, ci, update_check) in [
         ("DNT", false, None, None),
+        ("dry-run", true, None, None),
         ("TKT_UPDATE_CHECK", true, None, Some("0")),
         ("CI", true, Some("true"), None),
     ] {
@@ -105,10 +115,14 @@ fn do_not_track_prevents_update_request_and_cache_creation() {
             .env("TKT_FAKE_CURL_MARKER", &marker)
             .env("DO_NOT_TRACK", "1")
             .env_remove("TKT_TEST_CLEAR_DNT")
+            .env_remove("TKT_TEST_PREVIEW")
             .env_remove("CI")
             .env_remove("TKT_UPDATE_CHECK");
         if clear_dnt {
             command.env("TKT_TEST_CLEAR_DNT", "1");
+        }
+        if case == "dry-run" {
+            command.env("TKT_TEST_PREVIEW", "1");
         }
         if let Some(value) = ci {
             command.env("CI", value);

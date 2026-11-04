@@ -12,7 +12,14 @@ pub fn git(repo: &Path, args: &[&str]) -> Result<String> {
 }
 
 pub fn git_bytes(repo: &Path, args: &[&str]) -> Result<Vec<u8>> {
-    let output = Command::new("git")
+    let mut command = Command::new("git");
+    if matches!(
+        crate::effects::Mode::current(),
+        crate::effects::Mode::Preview
+    ) {
+        command.args(["--no-optional-locks", "--no-lazy-fetch"]);
+    }
+    let output = command
         .args(["-C", &repo.to_string_lossy()])
         .args(args)
         .output()
@@ -150,8 +157,38 @@ pub fn current_branch(repo: &Path) -> Result<String> {
 
 /// Fetch the selected remote (quiet).
 pub fn fetch(repo: &Path, upstream: &Upstream) -> Result<()> {
-    git(repo, &["fetch", "-q", &upstream.remote])?;
+    let outcome = crate::effects::Phase::RemoteRefresh(RemoteRefreshPlan { repo, upstream })
+        .execute(crate::effects::Mode::current())?;
+    if let crate::effects::Outcome::Preview(_) = outcome {
+        let message = "preview uses cached remote state; fetch results and remote-dependent allocation remain unresolved";
+        if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
+            eprintln!(
+                "{}",
+                serde_json::json!({"notice":{"kind":"preview_remote","message":message}})
+            );
+        } else if !crate::QUIET.load(std::sync::atomic::Ordering::Relaxed) {
+            eprintln!("{message}");
+        }
+    }
     Ok(())
+}
+
+pub(crate) struct RemoteRefreshPlan<'a> {
+    repo: &'a Path,
+    upstream: &'a Upstream,
+}
+
+impl RemoteRefreshPlan<'_> {
+    pub(crate) fn summary(&self) -> crate::effects::EffectSummary {
+        crate::effects::EffectSummary {
+            operation: "refresh-remote-state",
+            paths: vec![self.repo.into()],
+            unresolved: true,
+        }
+    }
+    pub(crate) fn apply(self) -> Result<()> {
+        git(self.repo, &["fetch", "-q", &self.upstream.remote]).map(drop)
+    }
 }
 
 /// Stage specific files.
@@ -188,6 +225,36 @@ pub fn commit(repo: &Path, message: &str, paths: &[&str]) -> Result<()> {
         );
     }
     Ok(())
+}
+
+pub(crate) fn commit_support_summaries(
+    repo: &Path,
+    message: &str,
+) -> Vec<crate::effects::EffectSummary> {
+    let mut effects = vec![crate::effects::EffectSummary {
+        operation: "scoped-git-index-and-history",
+        paths: vec![repo.into()],
+        unresolved: false,
+    }];
+    let temporary_root = std::env::temp_dir();
+    if crate::undo::operation(message).is_some() {
+        effects.push(crate::effects::EffectSummary {
+            operation: "temporary-tkt-undo-index-and-cleanup",
+            paths: vec![temporary_root.clone()],
+            unresolved: true,
+        });
+    }
+    let config = crate::config::ProjectConfig::load(&repo.join(".tickets"));
+    effects.push(crate::effects::EffectSummary {
+        operation: if config.commit_hooks == crate::config::CommitHookPolicy::Skip {
+            "temporary-tkt-hooks-directory-and-cleanup"
+        } else {
+            "configured-git-commit-hooks"
+        },
+        paths: vec![temporary_root],
+        unresolved: true,
+    });
+    effects
 }
 
 struct EmptyHooksDir(PathBuf);

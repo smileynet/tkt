@@ -16,14 +16,25 @@ large executables are referenced rather than copied or read into snapshots.
 | import and pending recovery | Private read-only provider probe, proposed import, pending-journal refusal and complete local snapshots |
 | telemetry enable / disable / clear | Explicit private-path unit matrix in commands/telemetry.rs; never invoke CLI mutations against Windows Known Folders |
 
-The local table has 29 cases. Three public tests pass; the ignored
+The local table has 29 cases. Four public tests pass; the ignored
 `preview_hook_probe` is a subprocess entry, not an omitted behavior check. A real
 private claim must execute it and write a marker before the undo-preview control;
 new/claim/close previews must not create that marker. Assertions check intended
 preview output as well as unchanged state. Existing specialized fixtures cover
 additional invalid input, ownership, push-race, migration and recovery cases.
 
-This suite is a regression baseline, not evidence that the remaining #261 Git,
-process and support effects already use a single dispatcher. The parent #191
-remains open for that consolidation and final phase coverage. No rendered UI,
-hosted CI or real GitHub import is exercised here.
+Each local case asserts the complete set of JSON preview operation names, including
+conditional lifecycle notifications, lock release, temporary Git index/hook support
+and persistent diagnostics. Import recovery plans also have private unit coverage
+for exact ticket/snapshot paths. Telemetry controls assert private-path summaries
+and prove that preview never invokes the platform path resolver.
+
+The partial-clone control starts with missing tree objects: preview refuses the
+cached read without fetching, while an ordinary Git read subsequently fetches
+those objects. The remote allocation control advances the remote after the last
+fetch and requires an explicit unresolved cached-ref notice. These are local Git
+controls, not proof of a future remote outcome.
+
+Ticket #261 routes these plans through the shared typed dispatcher while retaining
+the distinct transaction owners. No rendered UI, hosted CI or real GitHub import
+is exercised here. See [the execution receipt](evidence/git-effects-261.md).

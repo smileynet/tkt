@@ -440,6 +440,10 @@ Global `--dry-run` preserves telemetry consent, event data and diagnostics.
 Consent/clear previews avoid resolving platform user folders. Ordinary telemetry
 status can prune old local events; preview skips that cleanup.
 
+Previews also leave Git refs, locks and cadence/update caches untouched. Remote-backed
+previews use cached refs and report that final allocation/publication remains
+unresolved; a preview does not certify a future push or consumer result.
+
 Known policy values are parsed strictly: booleans accept true/false/1/0/yes/no,
 evidence accepts true/warn/false, and priority/environment defaults use their
 declared values. Invalid effective settings report the key, value and source;
@@ -565,3 +569,7 @@ Read the [primary/worker role and handoff examples](skills/tkt-core/references/r
 Native write nudges are explicit: tkt init --write-nudge claude|codex|both installs owned advisory config; --nudge-action check is read-only and remove removes exact owned entries while retaining inactive helper/ownership files. Ordinary init/--all leaves native hooks unchanged. Node22+ is required only for this optional helper. No trust, user settings, permissions or deny policy is changed. Detection covers Claude Edit/Write ticket paths and canonical Codex apply_patch headers only; body/spec edits remain allowed. Inspect both generated commands and helper before native trust review; helper changes may not invalidate native trust. Check proves owned config presence, not native activation. Foreign/modified/duplicate JSON is preserved by refusal; writes are atomic per-file, not a multi-file transaction.
 
 Before setup/removal, read [native write-nudge coverage, trust and recovery](skills/tkt-core/references/native-hooks.md).
+JSON dry runs also describe prepared effects on stderr as JSON Lines under
+`preview_effects` (`operation`, `paths`, `unresolved`), preserving command stdout.
+Remote previews use cached refs without lazy object fetching; missing cached
+objects can fail the preview, and future allocation/publication remains unresolved.

@@ -70,7 +70,18 @@ fn update_status_cell(repo: &std::path::Path, id: &str, value: &str) -> Result<b
     if !path.is_file() {
         return Ok(false);
     }
-    if !git::git(repo, &["status", "--porcelain", "--", "docs/plan.md"])?.is_empty() {
+    if !git::git(
+        repo,
+        &[
+            "--no-optional-locks",
+            "status",
+            "--porcelain",
+            "--",
+            "docs/plan.md",
+        ],
+    )?
+    .is_empty()
+    {
         domain_bail!(Conflict, "docs/plan.md has uncommitted changes; commit or stash them before changing ticket status");
     }
     let text = std::fs::read_to_string(&path)?;
@@ -146,7 +157,7 @@ pub fn run(
                 let status_disagrees = plan_status != Some(t.status)
                     || (t.status == Status::Cancelled && status_cell.trim() != cancellation_value);
                 if status_disagrees {
-                    if fix && !dry_run {
+                    if fix {
                         let new_status = match t.status {
                             Status::Done => " ✅ done ".to_string(),
                             Status::Cancelled => format!(" {} ", cancellation_value),
@@ -161,7 +172,8 @@ pub fn run(
                             .replace(&plan_text, format!("${{1}}{}${{2}}", new_status))
                             .to_string();
                         fixed_count += 1;
-                    } else {
+                    }
+                    if !fix || dry_run {
                         // Derivable/cosmetic drift: the status cell disagrees with the
                         // ticket, but `--fix` can regenerate it. Advisory (warning), not
                         // blocking — escalated to a failure only under --check/--strict.
@@ -205,7 +217,7 @@ pub fn run(
         .collect();
     for t in &corpus {
         if t.status != Status::Done && !plan_ids.contains(&*t.id) {
-            if fix && !dry_run {
+            if fix {
                 if !plan_text.contains("## Unplanned tickets\n") {
                     plan_text.push_str(
                         "\n## Unplanned tickets\n\n| ID | Work | Status |\n|---:|---|---|\n",
@@ -218,7 +230,9 @@ pub fn run(
                     plan_status_value(t)
                 ));
                 fixed_count += 1;
-                continue;
+                if !dry_run {
+                    continue;
+                }
             }
             findings.push(Finding {
                 file: t.path.file_name().unwrap().to_string_lossy().to_string(),
@@ -229,7 +243,7 @@ pub fn run(
         }
     }
 
-    if fix && !dry_run && fixed_count > 0 {
+    if fix && fixed_count > 0 {
         // Route through atomic_write (temp-file + rename) so an interrupted
         // write never leaves a torn plan file — same guarantee ticket writes
         // get (AGENTS.md constraint). Was std::fs::write (defect, #183).
@@ -239,6 +253,9 @@ pub fn run(
             text: plan_text.clone(),
         }])
         .execute(crate::effects::Mode::current())?;
+    }
+    if fix && dry_run && fixed_count == 0 {
+        crate::effects::FilePlan(vec![]).execute(crate::effects::Mode::Preview)?;
     }
 
     let errors: Vec<&Finding> = findings.iter().filter(|f| f.severity == "error").collect();

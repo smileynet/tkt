@@ -215,20 +215,6 @@ pub fn run(
         domain_bail!("nothing to edit — pass at least one field option");
     }
 
-    if is_dry_run() {
-        if is_quiet_json() {
-            print_quiet_json_success(&format!("would edit {} ({})", id, changed.join(", ")));
-        } else {
-            println!(
-                "Would edit {} {} ({})",
-                id,
-                slug_from_filename(&file.path),
-                changed.join(", ")
-            );
-        }
-        return Ok(0);
-    }
-
     let plan_changed = if changed.contains(&"status") {
         super::sync_plan::update_status(&ctx.repo, id, Status::parse(file.get("status").unwrap())?)?
     } else {
@@ -246,6 +232,20 @@ pub fn run(
         None,
         None,
     )?;
+
+    if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would edit {} ({})", id, changed.join(", ")));
+        } else {
+            println!(
+                "Would edit {} {} ({})",
+                id,
+                slug_from_filename(&file.path),
+                changed.join(", ")
+            );
+        }
+        return Ok(0);
+    }
     if !is_quiet() || is_json_output() {
         print_success(
             "edited",

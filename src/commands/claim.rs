@@ -52,20 +52,6 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
         }
     }
 
-    if is_dry_run() {
-        if is_quiet_json() {
-            print_quiet_json_success(&format!("would claim {}", t.id));
-        } else {
-            println!(
-                "Would claim {} {} (open → in_progress)",
-                t.id,
-                slug_from_filename(&t.path)
-            );
-            println!("  Would commit and push");
-        }
-        return Ok(0);
-    }
-
     let mut file = t.file.clone();
     file.set_status(Status::InProgress);
     if agent.is_some() {
@@ -85,6 +71,20 @@ pub fn run(id: &str, agent: Option<&AgentId>, force: bool) -> Result<i32> {
         None,
         Some((crate::lifecycle::Event::Claim, id)),
     )?;
+
+    if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would claim {}", t.id));
+        } else {
+            println!(
+                "Would claim {} {} (open → in_progress)",
+                t.id,
+                slug_from_filename(&t.path)
+            );
+            println!("  Would commit and push");
+        }
+        return Ok(0);
+    }
 
     if !is_quiet() || is_json_output() {
         print_success(

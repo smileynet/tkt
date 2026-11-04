@@ -102,15 +102,8 @@ pub fn run(id: &str, index: usize, to: &str) -> Result<i32> {
     let replacement = format!("- [>] {text}{moved_suffix}");
     let range = criterion.range.clone();
     src.body.replace_range(range, &replacement);
-    if is_dry_run() {
-        print_success(
-            "would move AC",
-            id,
-            "",
-            &format!("{index} to {to}; validation criteria/evidence stay unchanged"),
-        );
-        return Ok(0);
-    }
+    let changed = dst.serialize() != destination.file.serialize()
+        || src.serialize() != source.file.serialize();
     // Destination first: an interrupted source write leaves the original unchecked
     // and a deterministic back-reference lets retry finish without appending twice.
     if dst.serialize() != destination.file.serialize() {
@@ -123,15 +116,31 @@ pub fn run(id: &str, index: usize, to: &str) -> Result<i32> {
     let refs: Vec<_> = paths.iter().map(String::as_str).collect();
     let dirty = crate::git::git(
         &ctx.repo,
-        &["status", "--porcelain", "--", &paths[0], &paths[1]],
+        &[
+            "--no-optional-locks",
+            "status",
+            "--porcelain",
+            "--",
+            &paths[0],
+            &paths[1],
+        ],
     )?;
-    if !dirty.trim().is_empty() {
+    if !dirty.trim().is_empty() || (is_dry_run() && changed) {
         ctx.publish(
             &refs,
             &format!("chore(tickets): move AC {id}:{index} to {to}"),
             None,
             None,
         )?;
+    }
+    if is_dry_run() {
+        print_success(
+            "would move AC",
+            id,
+            "",
+            &format!("{index} to {to}; validation criteria/evidence stay unchanged"),
+        );
+        return Ok(0);
     }
     if !is_quiet() || super::common::is_json_output() {
         print_success(

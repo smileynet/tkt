@@ -25,20 +25,6 @@ pub fn run(id: &str) -> Result<i32> {
     if ticket.status != Status::Cancelled {
         domain_bail!(Conflict, "cannot reopen {}: it is not cancelled", ticket.id);
     }
-    if is_dry_run() {
-        if is_quiet_json() {
-            print_quiet_json_success(&format!("would reopen {}", ticket.id));
-            return Ok(0);
-        }
-        println!(
-            "Would reopen {} {} (cancelled → open)",
-            ticket.id,
-            slug_from_filename(&ticket.path)
-        );
-        println!("  Would keep Cancellation history");
-        println!("  Would commit and push");
-        return Ok(0);
-    }
 
     let mut file = ticket.file.clone();
     file.set_status(Status::Open);
@@ -55,6 +41,21 @@ pub fn run(id: &str) -> Result<i32> {
         None,
         None,
     )?;
+
+    if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would reopen {}", ticket.id));
+            return Ok(0);
+        }
+        println!(
+            "Would reopen {} {} (cancelled → open)",
+            ticket.id,
+            slug_from_filename(&ticket.path)
+        );
+        println!("  Would keep Cancellation history");
+        println!("  Would commit and push");
+        return Ok(0);
+    }
     if is_quiet() {
         print_quiet_json_success(&format!(
             "reopened {} ({})",

@@ -27,6 +27,7 @@ tkt teaches agents how to use it through multiple documents. When CLI behavior c
 | Env filtering | — | ✓ | ✓ | — | ✓ | — |
 | Requires / capabilities | — | ✓ | ✓ | — | ✓ | ✓ |
 | Race detection | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| Global preview effect boundary and cached remote uncertainty | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Ticket creation quality | — | link | — | — | — | — |
 | Health commands | — | ✓ | ✓ | — | ✓ | ✓ |
 | Tag context | — | — | ✓ | ✓ | ✓ | ✓ |

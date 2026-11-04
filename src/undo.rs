@@ -50,7 +50,7 @@ fn oid(value: &str) -> bool {
     matches!(value.len(), 40 | 64) && value.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
-fn operation(subject: &str) -> Option<(&str, &str)> {
+pub(crate) fn operation(subject: &str) -> Option<(&str, &str)> {
     let rest = subject.strip_prefix("chore(tickets): ")?;
     let (kind, args) = rest.split_once(' ')?;
     let id = if kind == "new" {

@@ -1,6 +1,13 @@
-# Mutation effects audit (in progress)
+# Mutation effects audit
 
-Ticket #191 remains implementation work, not completed by this audit or its repaired children #250 and #251.
+Current implementation and verification are recorded in the
+[261 receipt](evidence/git-effects-261.md) and the final section below.
+
+## Historical survey and intermediate delivery states
+
+The following survey and child updates record their state when written. Their
+then-pending work is superseded by the 2026-11-04 execution section below.
+Ticket #191 was not completed by this initial audit or children #250 and #251.
 The source survey at d197af2 found these distinct effect families:
 
 | Family | Current owner | Evidence and consolidation constraint |
@@ -44,7 +51,7 @@ Ticket #89 adds explicitly configured, locally trusted advisory process effects 
 
 Ticket #158 adds explicit native-nudge config/helper/ownership effects through FilePlan. Its install/remove modes preflight selected files before snapshot-guarded writes; check and global preview do not mutate native files or Git refs. Include all modes in #191’s remaining no-write matrix. Generation is per-file atomic, not a multi-file transaction, and native trust/user settings remain outside its effects.
 
-## Remaining execution phases — 2026-11-04
+## Final execution phases — 2026-11-04
 
 Child #259 repaired observed telemetry preview writes and the unsafe Windows test
 isolation assumption; [the receipt](evidence/telemetry-preview-259.md) records the
@@ -67,10 +74,21 @@ These are phase-local checks, not a cross-file transaction or external-editor lo
 Preparation failures now stop a phase before earlier writes; later I/O failures
 can still leave earlier publications. Ancestor links remain filesystem-resolved.
 
-Child #261 still owns Git publication/fetch/recovery dispositions, process events,
-and their support effects: locks, undo's temporary index, cadence state,
-telemetry/debug rotation and the update cache. Those have not been centralized
-by #260. The pending preview matrix covers capability-declared mutation commands,
-with private telemetry unit controls, cached remote collision handling, import
-and pending recovery, and trusted lifecycle process markers. Parent #191 remains
-in progress until these remaining phases and its original criteria are evidenced.
+Child #261 adds concrete typed dispatcher phases for Git publication/fetch/recovery,
+allocation commit/retry, undo, collision rebase, lifecycle notifications, operation
+locks, cadence and telemetry diagnostics. Existing transaction algorithms retain
+ownership of their scoped Git/index/CAS/recovery behavior; no callback-based plan
+or combined transaction abstraction was introduced. Git support summaries include
+temporary undo indexes and hook directories, configured commit hooks and owned
+lock release. Cadence and update-cache replacement use the same FilePlan boundary.
+
+Real command preview branches now reach prepared phases before returning their
+existing output. JSON mode adds stderr `preview_effects` records without changing
+stdout. Cached Git reads disable optional locks and lazy fetching; remote results
+and generated support paths remain explicitly unresolved. Phase-local plans are
+materialized again by existing retry owners rather than replayed after refresh.
+
+The [matrix](mutation-preview-coverage.md) covers capability-declared mutation
+commands, private telemetry controls, cached and stale remote refs, partial clones,
+import/pending recovery and trusted lifecycle process markers. The
+[execution receipt](evidence/git-effects-261.md) records verification and limits.

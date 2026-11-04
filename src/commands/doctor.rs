@@ -10,6 +10,9 @@ use crate::findings;
 
 pub fn run(path: Option<&str>, fix: bool, strict: bool) -> Result<i32> {
     if fix {
+        if super::common::is_dry_run() {
+            crate::effects::FilePlan(vec![]).execute(crate::effects::Mode::Preview)?;
+        }
         eprintln!(
             "  {} --fix is not yet implemented for doctor (use `tkt validate --fix` per project)",
             sym_warn()

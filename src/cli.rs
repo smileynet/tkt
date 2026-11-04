@@ -26,6 +26,7 @@ pub(crate) struct Cli {
     color: Option<String>,
 
     /// Show what would happen without making changes
+    /// Remote-backed previews use cached refs; final allocation/publication remains unresolved
     #[arg(long, global = true)]
     dry_run: bool,
 

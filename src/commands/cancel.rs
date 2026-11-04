@@ -121,28 +121,6 @@ pub fn run(
         }
     }
 
-    if is_dry_run() {
-        if is_quiet_json() {
-            print_quiet_json_success(&format!("would cancel {} ({})", ticket.id, reason));
-            return Ok(0);
-        }
-        println!(
-            "Would cancel {} {} (→ cancelled: {})",
-            ticket.id,
-            slug_from_filename(&ticket.path),
-            reason
-        );
-        for dependent in &rewrite {
-            println!(
-                "  Would {} blocked_by for {}",
-                if repoint { "repoint" } else { "drop" },
-                dependent.id
-            );
-        }
-        println!("  Would commit and push");
-        return Ok(0);
-    }
-
     let mut file = ticket.file.clone();
     file.set_status(Status::Cancelled);
     file.append_cancellation(&super::close::chrono_date(), reason, by, note);
@@ -174,7 +152,7 @@ pub fn run(
     for (dependent_id, dependent_file) in rewritten {
         dependent_file.write()?;
         paths.push(ctx.rel_path(&dependent_file.path));
-        if !is_quiet() {
+        if !is_quiet() && !is_dry_run() {
             println!(
                 "{} blocked_by for {}",
                 if repoint { "Repointed" } else { "Dropped" },
@@ -194,6 +172,28 @@ pub fn run(
         None,
         None,
     )?;
+
+    if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would cancel {} ({})", ticket.id, reason));
+            return Ok(0);
+        }
+        println!(
+            "Would cancel {} {} (→ cancelled: {})",
+            ticket.id,
+            slug_from_filename(&ticket.path),
+            reason
+        );
+        for dependent in &rewrite {
+            println!(
+                "  Would {} blocked_by for {}",
+                if repoint { "repoint" } else { "drop" },
+                dependent.id
+            );
+        }
+        println!("  Would commit and push");
+        return Ok(0);
+    }
 
     if is_quiet() {
         print_quiet_json_success(&format!("cancelled {} ({})", ticket.id, reason));

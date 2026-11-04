@@ -279,3 +279,13 @@ Read the [standalone role and handoff reference](../../skills/tkt-core/reference
 Native write nudges are explicit: tkt init --write-nudge claude|codex|both installs owned advisory config; --nudge-action check is read-only and remove removes exact owned entries while retaining inactive helper/ownership files. Ordinary init/--all leaves native hooks unchanged. Node22+ is required only for this optional helper. No trust, user settings, permissions or deny policy is changed. Detection covers Claude Edit/Write ticket paths and canonical Codex apply_patch headers only; body/spec edits remain allowed. Inspect both generated commands and helper before native trust review; helper changes may not invalidate native trust. Check proves owned config presence, not native activation. Foreign/modified/duplicate JSON is preserved by refusal; writes are atomic per-file, not a multi-file transaction.
 
 Before setup/removal, read [native write-nudge coverage, trust and recovery](../../skills/tkt-core/references/native-hooks.md).
+
+## Prepared effect phases
+
+Global --dry-run writes nothing, including Git refs, locks, cadence and diagnostic caches. Remote-backed previews use cached refs; final remote-dependent allocation/publication remains unresolved. Command-owned text and owner-scoped Git/process phases share one Preview/Apply dispatcher. Existing transaction owners retain retry/recovery algorithms; lifecycle capture guards and push configuration remain in force. See [the effect inventory](../mutation-effects-audit.md).
+JSON dry runs emit phase descriptions as stderr JSON Lines:
+`{"preview_effects":[{"operation":"…","paths":["…"],"unresolved":false}]}`.
+Command stdout contracts are preserved. Summaries include owned support cleanup
+and conditional notifications; unresolved paths/outcomes are not execution receipts.
+Preview Git reads disable optional locks and lazy object fetching, so missing
+cached objects cause a read error rather than an implicit network mutation.

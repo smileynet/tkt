@@ -61,15 +61,17 @@ pub fn run(check: bool, ids: &[String]) -> Result<i32> {
         if original != canonical {
             changed += 1;
             let name = path.file_name().unwrap_or_default().to_string_lossy();
-            if check || dry_run {
-                eprintln!("  would change: {}", name);
-            } else {
+            if !check {
                 crate::effects::FilePlan(vec![crate::effects::FileEffect::ReplaceSnapshot {
                     path: path.clone(),
                     before: original,
                     text: canonical,
                 }])
                 .execute(crate::effects::Mode::current())?;
+            }
+            if check || dry_run {
+                eprintln!("  would change: {}", name);
+            } else {
                 eprintln!("  ✓ {}", name);
             }
         }

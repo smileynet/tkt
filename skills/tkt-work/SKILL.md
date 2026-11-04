@@ -247,3 +247,5 @@ Before coordinating primary/workers or handing off ownership, read the
 sibling [tkt-core role examples](../tkt-core/references/roles.md).
 
 Native write nudges: read [setup/trust](../tkt-core/references/native-hooks.md).
+
+Remote preview uses cached refs.

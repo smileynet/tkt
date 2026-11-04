@@ -61,10 +61,10 @@ impl MutationContext {
         };
 
         let dbg = crate::telemetry::debug_mode();
-        if !crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
-            if let Some(upstream) = &upstream {
-                let fetch_start = std::time::Instant::now();
-                git::fetch(&repo, upstream)?;
+        if let Some(upstream) = &upstream {
+            let fetch_start = std::time::Instant::now();
+            git::fetch(&repo, upstream)?;
+            if !crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
                 crate::telemetry::debug_event(
                     dbg,
                     "",
@@ -155,11 +155,73 @@ impl MutationContext {
         expected: Option<CommitExpectation<'_>>,
         event: Option<(crate::lifecycle::Event, &str)>,
     ) -> Result<()> {
+        crate::effects::Phase::ExistingPublication(PublicationPlan {
+            context: self,
+            paths,
+            message,
+            expected,
+            event,
+        })
+        .execute(crate::effects::Mode::current())
+        .map(drop)
+    }
+
+    /// Compute a relative path from repo root, normalized to forward slashes.
+    pub fn rel_path(&self, path: &Path) -> String {
+        path.strip_prefix(&self.repo)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/")
+    }
+}
+
+pub(crate) struct PublicationPlan<'a> {
+    context: &'a MutationContext,
+    paths: &'a [&'a str],
+    message: &'a str,
+    expected: Option<CommitExpectation<'a>>,
+    event: Option<(crate::lifecycle::Event, &'a str)>,
+}
+
+impl PublicationPlan<'_> {
+    pub(crate) fn summaries(&self) -> Vec<crate::effects::EffectSummary> {
+        let mut effects = vec![crate::effects::EffectSummary {
+            operation: "publish-existing-ticket",
+            paths: self
+                .paths
+                .iter()
+                .map(|path| self.context.repo.join(path))
+                .collect(),
+            unresolved: self.context.upstream.is_some(),
+        }];
+        effects.extend(git::commit_support_summaries(
+            &self.context.repo,
+            self.message,
+        ));
+        if let Some((event, _)) = self.event {
+            if !self.context.config.lifecycle_hooks[event.index()].is_empty() {
+                effects.push(crate::lifecycle::notification_summary(
+                    &self.context.repo,
+                    event,
+                ));
+            }
+        }
+        effects
+    }
+
+    pub(crate) fn apply(self) -> Result<()> {
+        let Self {
+            context,
+            paths,
+            message,
+            expected,
+            event,
+        } = self;
         let dbg = crate::telemetry::debug_mode();
         let exact_inverse = expected.is_some();
         if let Some(expected) = expected.as_ref() {
-            if git::git(&self.repo, &["rev-parse", "HEAD"])? != expected.parent
-                || git::git(&self.repo, &["write-tree"])? != expected.tree
+            if git::git(&context.repo, &["rev-parse", "HEAD"])? != expected.parent
+                || git::git(&context.repo, &["write-tree"])? != expected.tree
             {
                 return Err(DomainError::new(
                     crate::ErrorKind::Conflict,
@@ -168,18 +230,18 @@ impl MutationContext {
                 .into());
             }
         } else {
-            git::add(&self.repo, paths)?;
+            git::add(&context.repo, paths)?;
             crate::telemetry::debug_event(dbg, "", "", &format!("git add {:?}", paths));
         }
         let hook = event.and_then(|(event, _)| {
-            crate::lifecycle::PreparedEvent::prepare(&self.config, &self.repo, event)
+            crate::lifecycle::PreparedEvent::prepare(&context.config, &context.repo, event)
         });
-        git::commit(&self.repo, message, paths)?;
+        git::commit(&context.repo, message, paths)?;
         crate::telemetry::debug_event(dbg, "", "", &format!("git commit {:?}", message));
 
         if let Some(expected) = expected {
-            let parent = git::git(&self.repo, &["show", "-s", "--format=%P", "HEAD"])?;
-            let tree = git::git(&self.repo, &["rev-parse", "HEAD^{tree}"])?;
+            let parent = git::git(&context.repo, &["show", "-s", "--format=%P", "HEAD"])?;
+            let tree = git::git(&context.repo, &["rev-parse", "HEAD^{tree}"])?;
             if parent != expected.parent || tree != expected.tree {
                 return Err(DomainError::with_hint(
                     crate::ErrorKind::Conflict,
@@ -189,9 +251,9 @@ impl MutationContext {
             }
         }
 
-        let hook_commit = hook.and_then(|hook| hook.capture(&self.repo));
+        let hook_commit = hook.and_then(|hook| hook.capture(&context.repo));
         let publication = (|| -> Result<()> {
-            if let Some(upstream) = &self.upstream {
+            if let Some(upstream) = &context.upstream {
                 // The commit above succeeded and is durable. If the push fails for a
                 // non-race reason (auth, network, unreachable remote), we deliberately
                 // do NOT roll back the commit — git separates commit (local, durable)
@@ -199,7 +261,7 @@ impl MutationContext {
                 // valid commit under a transient failure is the wrong move (#180).
                 // Surface a structured, actionable error instead of a bare crash.
                 let pushed = if exact_inverse {
-                    match git::push(&self.repo, upstream) {
+                    match git::push(&context.repo, upstream) {
                         Ok(git::PushResult::Success) => Ok(()),
                         Ok(git::PushResult::Rejected) => Err(anyhow::anyhow!(
                         "upstream advanced; exact undo publication does not rebase automatically"
@@ -208,14 +270,17 @@ impl MutationContext {
                         Err(error) => Err(error),
                     }
                 } else {
-                    git::push_with_retry(&self.repo, upstream)
+                    git::push_with_retry(&context.repo, upstream)
                 };
                 if let Err(e) = pushed {
                     crate::telemetry::debug_event(dbg, "", "", &format!("git push (failed): {e}"));
-                    return Err(git::local_commit_push_error(&self.repo, &format!("{e:#}")));
+                    return Err(git::local_commit_push_error(
+                        &context.repo,
+                        &format!("{e:#}"),
+                    ));
                 }
                 crate::telemetry::debug_event(dbg, "", "", "git push (success)");
-            } else if self.has_remote {
+            } else if context.has_remote {
                 let reason = if crate::NO_PUSH.load(std::sync::atomic::Ordering::Relaxed) {
                     "--no-push"
                 } else {
@@ -229,23 +294,9 @@ impl MutationContext {
             Ok(())
         })();
         if let (Some((event, id)), Some(commit)) = (event, hook_commit) {
-            if let Ok(head) = git::git(&self.repo, &["rev-parse", "HEAD"]) {
-                if head == commit {
-                    crate::lifecycle::dispatch(&self.config, &self.repo, event, id, &head);
-                } else {
-                    eprintln!("advisory hook for {id} skipped: HEAD changed during publication; inspect the committed event before manual replay");
-                }
-            }
+            crate::lifecycle::dispatch(&context.config, &context.repo, event, id, &commit);
         }
         publication
-    }
-
-    /// Compute a relative path from repo root, normalized to forward slashes.
-    pub fn rel_path(&self, path: &Path) -> String {
-        path.strip_prefix(&self.repo)
-            .unwrap_or(path)
-            .to_string_lossy()
-            .replace('\\', "/")
     }
 }
 
@@ -260,4 +311,43 @@ fn load_project_config(tickets_dir: &Path) -> Result<ProjectConfig> {
         );
     }
     Ok(cfg)
+}
+
+#[cfg(test)]
+mod phase_tests {
+    use super::*;
+
+    #[test]
+    fn existing_publication_preview_retains_paths_without_staging_or_publishing() {
+        use crate::effects::{Mode, Outcome, Phase};
+        let temp = tempfile::tempdir().unwrap();
+        let tickets = temp.path().join(".tickets");
+        let context = MutationContext {
+            repo: temp.path().into(),
+            tickets_dir: tickets.clone(),
+            has_remote: true,
+            upstream: Some(git::Upstream {
+                remote: "never-contact-fixture".into(),
+                reference: "never-contact-fixture/main".into(),
+            }),
+            config: ProjectConfig::load(&tickets),
+            corpus: vec![],
+        };
+        let paths = [".tickets/01-fixture.md"];
+        let Outcome::Preview(effects) = Phase::ExistingPublication(PublicationPlan {
+            context: &context,
+            paths: &paths,
+            message: "private fixture",
+            expected: None,
+            event: None,
+        })
+        .execute(Mode::Preview)
+        .unwrap() else {
+            panic!("preview applied publication effects");
+        };
+        assert_eq!(effects[0].operation, "publish-existing-ticket");
+        assert_eq!(effects[0].paths, vec![temp.path().join(paths[0])]);
+        assert!(effects[0].unresolved);
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 0);
+    }
 }

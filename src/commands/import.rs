@@ -56,7 +56,7 @@ fn hash(repo: &Path, text: &str) -> Result<String> {
     Ok(String::from_utf8(output.stdout)?.trim().to_owned())
 }
 
-struct Pair {
+pub(crate) struct Pair {
     source_id: u64,
     local_id: String,
     ticket_path: String,
@@ -409,7 +409,7 @@ fn start_attempt(path: &Path, value: &Value) -> Result<()> {
                 Some(previous),
                 text,
             )])
-            .execute(Mode::Apply)
+            .execute(Mode::current())
         }
     }
 }
@@ -474,7 +474,7 @@ fn apply(repo: &Path, pairs: &[Pair]) -> Result<()> {
             }
         }
     }
-    FilePlan(effects).execute(Mode::Apply)
+    FilePlan(effects).execute(Mode::current())
 }
 
 fn paths(pairs: &[Pair]) -> Vec<&str> {
@@ -568,6 +568,28 @@ fn commit_pairs(
     base: &str,
     pairs: &[Pair],
 ) -> Result<String> {
+    let crate::effects::Outcome::ImportCommit(commit) =
+        crate::effects::Phase::Import(ImportPlan::Commit {
+            txn,
+            journal,
+            branch,
+            base,
+            pairs,
+        })
+        .execute(Mode::current())?
+    else {
+        return Err(conflict("import commit was not applied"));
+    };
+    Ok(commit)
+}
+
+fn commit_pairs_apply(
+    txn: &GitTransaction,
+    journal: &Path,
+    branch: &str,
+    base: &str,
+    pairs: &[Pair],
+) -> Result<String> {
     no_git_operation(&txn.repo)?;
     owned_changes_only(&txn.repo, pairs)?;
     if git::git(&txn.repo, &["symbolic-ref", "--quiet", "HEAD"])? != branch
@@ -604,6 +626,26 @@ fn rollback(
     commit: &str,
     pairs: &[Pair],
 ) -> Result<()> {
+    crate::effects::Phase::Import(ImportPlan::Rollback {
+        txn,
+        journal,
+        branch,
+        base,
+        commit,
+        pairs,
+    })
+    .execute(Mode::current())
+    .map(drop)
+}
+
+fn rollback_apply(
+    txn: &GitTransaction,
+    journal: &Path,
+    branch: &str,
+    base: &str,
+    commit: &str,
+    pairs: &[Pair],
+) -> Result<()> {
     verify_commit(&txn.repo, base, commit, pairs)?;
     update_journal(journal, "rolling_back", Some(commit))?;
     if git::git(&txn.repo, &["symbolic-ref", "--quiet", "HEAD"])? != branch {
@@ -624,6 +666,24 @@ fn rollback(
 }
 
 fn finish_rollback(
+    txn: &GitTransaction,
+    journal: &Path,
+    branch: &str,
+    base: &str,
+    pairs: &[Pair],
+) -> Result<()> {
+    crate::effects::Phase::Import(ImportPlan::FinishRollback {
+        txn,
+        journal,
+        branch,
+        base,
+        pairs,
+    })
+    .execute(Mode::current())
+    .map(drop)
+}
+
+fn finish_rollback_apply(
     txn: &GitTransaction,
     journal: &Path,
     branch: &str,
@@ -677,6 +737,12 @@ fn finish_rollback(
 }
 
 fn finish_rebase(txn: &GitTransaction, journal: &Path) -> Result<()> {
+    crate::effects::Phase::Import(ImportPlan::FinishRebase { txn, journal })
+        .execute(Mode::current())
+        .map(drop)
+}
+
+fn finish_rebase_apply(txn: &GitTransaction, journal: &Path) -> Result<()> {
     clean(&txn.repo)?;
     if let Some(upstream) = &txn.upstream {
         git::pull_rebase(&txn.repo, upstream)?;
@@ -688,6 +754,106 @@ fn finish_rebase(txn: &GitTransaction, journal: &Path) -> Result<()> {
 enum Recovered {
     Completed(Extraction, Vec<String>),
     Retry(Extraction),
+}
+
+pub(crate) enum ImportPlan<'a> {
+    Commit {
+        txn: &'a GitTransaction,
+        journal: &'a Path,
+        branch: &'a str,
+        base: &'a str,
+        pairs: &'a [Pair],
+    },
+    Rollback {
+        txn: &'a GitTransaction,
+        journal: &'a Path,
+        branch: &'a str,
+        base: &'a str,
+        commit: &'a str,
+        pairs: &'a [Pair],
+    },
+    FinishRollback {
+        txn: &'a GitTransaction,
+        journal: &'a Path,
+        branch: &'a str,
+        base: &'a str,
+        pairs: &'a [Pair],
+    },
+    FinishRebase {
+        txn: &'a GitTransaction,
+        journal: &'a Path,
+    },
+}
+
+impl ImportPlan<'_> {
+    pub(crate) fn summaries(&self) -> Vec<crate::effects::EffectSummary> {
+        let (txn, journal, operation) = match self {
+            Self::Commit { txn, journal, .. } => (*txn, *journal, "commit-import-journal"),
+            Self::Rollback { txn, journal, .. } => (*txn, *journal, "rollback-import-attempt"),
+            Self::FinishRollback { txn, journal, .. } => (*txn, *journal, "finish-import-rollback"),
+            Self::FinishRebase { txn, journal } => (*txn, *journal, "rebase-import-for-retry"),
+        };
+        let mut effects = vec![crate::effects::EffectSummary {
+            operation,
+            paths: vec![journal.into(), txn.repo.clone()],
+            unresolved: true,
+        }];
+        let pairs = match self {
+            Self::Commit { pairs, .. }
+            | Self::Rollback { pairs, .. }
+            | Self::FinishRollback { pairs, .. } => Some(*pairs),
+            Self::FinishRebase { .. } => None,
+        };
+        if let Some(pairs) = pairs {
+            effects[0]
+                .paths
+                .extend(paths(pairs).iter().map(|path| txn.repo.join(path)));
+        }
+        if matches!(self, Self::Commit { .. }) {
+            effects.push(crate::effects::EffectSummary {
+                operation: "update-import-journal",
+                paths: vec![journal.into()],
+                unresolved: true,
+            });
+            effects.extend(git::commit_support_summaries(
+                &txn.repo,
+                "chore(tickets): import GitHub issues",
+            ));
+        }
+        effects
+    }
+
+    pub(crate) fn apply(self) -> Result<crate::effects::Outcome> {
+        match self {
+            Self::Commit {
+                txn,
+                journal,
+                branch,
+                base,
+                pairs,
+            } => {
+                return commit_pairs_apply(txn, journal, branch, base, pairs)
+                    .map(crate::effects::Outcome::ImportCommit)
+            }
+            Self::Rollback {
+                txn,
+                journal,
+                branch,
+                base,
+                commit,
+                pairs,
+            } => rollback_apply(txn, journal, branch, base, commit, pairs)?,
+            Self::FinishRollback {
+                txn,
+                journal,
+                branch,
+                base,
+                pairs,
+            } => finish_rollback_apply(txn, journal, branch, base, pairs)?,
+            Self::FinishRebase { txn, journal } => finish_rebase_apply(txn, journal)?,
+        }
+        Ok(crate::effects::Outcome::Applied)
+    }
 }
 
 fn recover(txn: &GitTransaction, journal: &Path, selector: &Value) -> Result<Option<Recovered>> {
@@ -897,6 +1063,9 @@ pub fn run(repository: Option<&str>, label: Option<&str>, criteria: &[String]) -
         let (pairs, existing) = plan(&txn, &extraction, criteria)?;
         skipped = existing;
         if pairs.is_empty() {
+            if is_dry_run() {
+                FilePlan(vec![]).execute(Mode::Preview)?;
+            }
             if let Some(text) = read_text(&journal)? {
                 let old: Value = serde_json::from_str(&text)?;
                 if !same_retry(
@@ -932,6 +1101,27 @@ pub fn run(repository: Option<&str>, label: Option<&str>, criteria: &[String]) -
             }
         }
         if is_dry_run() {
+            let base = git::git(&repo, &["rev-parse", "HEAD"])?;
+            start_attempt(
+                &journal,
+                &journal_value(&branch, &selector, &extraction.raw, &base, &pairs),
+            )?;
+            apply(&repo, &pairs)?;
+            crate::effects::Phase::Import(ImportPlan::Commit {
+                txn: &txn,
+                journal: &journal,
+                branch: &branch,
+                base: &base,
+                pairs: &pairs,
+            })
+            .execute(Mode::Preview)?;
+            crate::effects::Phase::AllocationPublication(
+                crate::transaction::AllocationPlan::Once {
+                    transaction: &txn,
+                    revision: None,
+                },
+            )
+            .execute(Mode::Preview)?;
             imported = pairs.iter().map(|pair| pair.local_id.clone()).collect();
             break;
         }
@@ -970,5 +1160,111 @@ fn report(source: &Extraction, imported: &[String], skipped: Option<usize>, reco
         );
     } else if !is_quiet() {
         println!("{} {} {} open GitHub issues from {}; existing count {}, {} closed, {} pull requests and {} repeated objects skipped",crate::color::sym_ok(),if recovered {"recovered"}else if is_dry_run(){"would import"}else{"imported"},imported.len(),source.repository.name,skipped.map(|n|n.to_string()).unwrap_or_else(||"not recomputed during recovery".into()),source.closed,source.pull_requests,source.duplicates);
+    }
+}
+
+#[cfg(test)]
+mod phase_tests {
+    use super::*;
+
+    #[test]
+    fn import_commit_and_recovery_previews_include_exact_owned_pair_paths() {
+        use crate::effects::{Outcome, Phase};
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path();
+        let init = Command::new("git")
+            .args(["init", "-q", "-b", "main"])
+            .arg(root)
+            .env("DO_NOT_TRACK", "1")
+            .output()
+            .unwrap();
+        assert!(init.status.success(), "{init:?}");
+        let dir = root.join(".tickets");
+        std::fs::create_dir(&dir).unwrap();
+        std::fs::write(
+            dir.join("config.toml"),
+            "[push]\nenabled=false\n[commit]\nhooks=\"skip\"\n",
+        )
+        .unwrap();
+        let txn = GitTransaction::new_unfetched(&dir).unwrap();
+        let journal = root.join(".git/tkt-github-import.json");
+        let pairs = vec![Pair {
+            source_id: 101,
+            local_id: "05".into(),
+            ticket_path: ".tickets/05-import-fixture.md".into(),
+            ticket: "private ticket bytes".into(),
+            snapshot_path: ".tickets/imports/github/77-101.json".into(),
+            snapshot: "private snapshot bytes".into(),
+        }];
+        let marker = root.join(".git/tkt-allocation.lock");
+        let before_marker = std::fs::read(&marker).unwrap();
+        for (plan, operation, owns_pairs) in [
+            (
+                ImportPlan::Commit {
+                    txn: &txn,
+                    journal: &journal,
+                    branch: "refs/heads/main",
+                    base: "unresolved",
+                    pairs: &pairs,
+                },
+                "commit-import-journal",
+                true,
+            ),
+            (
+                ImportPlan::Rollback {
+                    txn: &txn,
+                    journal: &journal,
+                    branch: "refs/heads/main",
+                    base: "unresolved",
+                    commit: "unresolved",
+                    pairs: &pairs,
+                },
+                "rollback-import-attempt",
+                true,
+            ),
+            (
+                ImportPlan::FinishRollback {
+                    txn: &txn,
+                    journal: &journal,
+                    branch: "refs/heads/main",
+                    base: "unresolved",
+                    pairs: &pairs,
+                },
+                "finish-import-rollback",
+                true,
+            ),
+            (
+                ImportPlan::FinishRebase {
+                    txn: &txn,
+                    journal: &journal,
+                },
+                "rebase-import-for-retry",
+                false,
+            ),
+        ] {
+            let Outcome::Preview(effects) = Phase::Import(plan).execute(Mode::Preview).unwrap()
+            else {
+                panic!("preview applied recovery effects");
+            };
+            assert_eq!(effects[0].operation, operation);
+            assert!(effects[0].unresolved);
+            let mut expected: std::collections::BTreeSet<_> =
+                [journal.clone(), root.to_path_buf()].into_iter().collect();
+            if owns_pairs {
+                expected.extend(paths(&pairs).iter().map(|path| root.join(path)));
+            }
+            assert_eq!(
+                effects[0]
+                    .paths
+                    .iter()
+                    .cloned()
+                    .collect::<std::collections::BTreeSet<_>>(),
+                expected
+            );
+            assert_eq!(std::fs::read(&marker).unwrap(), before_marker);
+            assert!(!journal.exists());
+            assert!(!root.join(&pairs[0].ticket_path).exists());
+            assert!(!root.join(&pairs[0].snapshot_path).exists());
+        }
     }
 }

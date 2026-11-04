@@ -14,6 +14,29 @@ enum Entry {
     File(Vec<u8>),
 }
 
+fn planned_effects(output: &Output) -> Vec<serde_json::Value> {
+    let records: Vec<_> = String::from_utf8_lossy(&output.stderr)
+        .lines()
+        .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+        .filter_map(|value| {
+            value
+                .get("preview_effects")
+                .and_then(|effects| effects.as_array())
+                .cloned()
+        })
+        .collect();
+    assert!(!records.is_empty(), "no dispatcher preview: {output:?}");
+    records.into_iter().flatten().collect()
+}
+
+fn assert_operations(effects: &[serde_json::Value], expected: &[&str]) {
+    let actual: std::collections::BTreeSet<_> = effects
+        .iter()
+        .map(|effect| effect["operation"].as_str().unwrap())
+        .collect();
+    assert_eq!(actual, expected.iter().copied().collect());
+}
+
 #[test]
 fn remote_collision_preview_uses_cached_state_without_mutating_either_repository() {
     let f = Fixture::new();
@@ -54,7 +77,10 @@ fn remote_collision_preview_uses_cached_state_without_mutating_either_repository
     ]);
     f.git(&["-C", other.to_str().unwrap(), "push", "-q"]);
     f.git(&["fetch", "-q", "origin"]);
-    for args in [vec!["--dry-run", "rebase"], vec!["rebase", "--dry-run"]] {
+    for args in [
+        vec!["-o", "json", "--dry-run", "rebase"],
+        vec!["-o", "json", "rebase", "--dry-run"],
+    ] {
         let before = f.snapshot();
         let out = f.cli(&args);
         assert!(out.status.success(), "{out:?}");
@@ -62,13 +88,192 @@ fn remote_collision_preview_uses_cached_state_without_mutating_either_repository
             String::from_utf8_lossy(&out.stdout).contains("Collisions detected"),
             "{out:?}"
         );
+        assert_operations(
+            &planned_effects(&out),
+            &[
+                "append-debug-log",
+                "refresh-remote-state",
+                "apply-and-commit-collision-rebase",
+                "scoped-git-index-and-history",
+                "temporary-tkt-hooks-directory-and-cleanup",
+                "relocate-snapshot",
+            ],
+        );
         assert_eq!(f.snapshot(), before);
     }
+    std::fs::write(
+        f.root.join(".tickets/config.toml"),
+        "[push]\nenabled=true\n",
+    )
+    .unwrap();
+    std::fs::write(other.join(".tickets/05-upstream.md"), "---\nid: \"05\"\ntitle: Upstream\nstatus: open\nblocked_by: []\n---\n\nRemote owner work\n").unwrap();
+    f.git(&["-C", other.to_str().unwrap(), "add", "."]);
+    f.git(&[
+        "-C",
+        other.to_str().unwrap(),
+        "commit",
+        "-qm",
+        "uncached remote allocation",
+    ]);
+    f.git(&["-C", other.to_str().unwrap(), "push", "-q"]);
+    let before = f.snapshot();
+    let out = f.cli(&[
+        "--dry-run",
+        "-o",
+        "json",
+        "new",
+        "candidate",
+        "--title",
+        "Candidate",
+        "--vc",
+        "Verify candidate",
+    ]);
+    assert!(out.status.success(), "{out:?}");
+    assert!(
+        String::from_utf8_lossy(&out.stdout).contains("05-candidate.md"),
+        "{out:?}"
+    );
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("cached remote state"),
+        "{out:?}"
+    );
+    let effects = planned_effects(&out);
+    for operation in [
+        "refresh-remote-state",
+        "publish-allocation-with-race-recovery",
+    ] {
+        assert!(effects
+            .iter()
+            .any(|effect| effect["operation"] == operation && effect["unresolved"] == true));
+    }
+    assert_eq!(f.snapshot(), before);
+}
+
+#[test]
+fn partial_clone_preview_refuses_lazy_fetch_while_an_ordinary_read_fetches() {
+    let f = Fixture::new();
+    let remote = f.temp.path().join("promisor.git");
+    f.git(&["init", "--bare", "-q", remote.to_str().unwrap()]);
+    f.git(&[
+        "-C",
+        remote.to_str().unwrap(),
+        "config",
+        "uploadpack.allowFilter",
+        "true",
+    ]);
+    f.git(&["remote", "add", "origin", remote.to_str().unwrap()]);
+    f.git(&["push", "-qu", "origin", "main"]);
+    let partial = f.temp.path().join("partial");
+    let remote_path = remote.to_string_lossy().replace('\\', "/");
+    let url = format!(
+        "file://{}{}",
+        if remote_path.starts_with('/') {
+            ""
+        } else {
+            "/"
+        },
+        remote_path
+    );
+    f.git(&[
+        "clone",
+        "-q",
+        "--no-checkout",
+        "--filter=tree:0",
+        "--branch",
+        "main",
+        &url,
+        partial.to_str().unwrap(),
+    ]);
+    std::fs::create_dir(partial.join(".tickets")).unwrap();
+    std::fs::write(
+        partial.join(".tickets/config.toml"),
+        "[push]\nenabled=true\n",
+    )
+    .unwrap();
+    let tree = f.git(&["rev-parse", "HEAD^{tree}"]);
+    let absent = f
+        .command("git")
+        .args([
+            "--no-lazy-fetch",
+            "-C",
+            partial.to_str().unwrap(),
+            "cat-file",
+            "-e",
+            &tree,
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        !absent.status.success(),
+        "partial clone fixture unexpectedly contains the tree"
+    );
+    let before = f.snapshot();
+    let out = f
+        .command(env!("CARGO_BIN_EXE_tkt"))
+        .current_dir(&partial)
+        .args([
+            "--dry-run",
+            "-o",
+            "json",
+            "new",
+            "candidate",
+            "--title",
+            "Candidate",
+            "--vc",
+            "Verify unavailable cached state",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        !out.status.success(),
+        "preview should report unavailable cached objects: {out:?}"
+    );
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("ls-tree"),
+        "unexpected preview refusal: {out:?}"
+    );
+    assert_eq!(f.snapshot(), before);
+    let fetched = f
+        .command("git")
+        .args([
+            "-C",
+            partial.to_str().unwrap(),
+            "ls-tree",
+            "-r",
+            "--name-only",
+            "HEAD",
+            "--",
+            ".tickets",
+        ])
+        .env_remove("GIT_NO_LAZY_FETCH")
+        .output()
+        .unwrap();
+    assert!(
+        fetched.status.success(),
+        "ordinary lazy-fetch control: {fetched:?}"
+    );
+    assert!(String::from_utf8_lossy(&fetched.stdout).contains(".tickets/01-fixture.md"));
+    assert_ne!(
+        f.snapshot(),
+        before,
+        "ordinary read control did not fetch missing objects"
+    );
 }
 
 #[test]
 fn import_preview_and_pending_recovery_preserve_all_local_state() {
     let f = Fixture::new();
+    let remote = f.temp.path().join("import-remote.git");
+    f.git(&["init", "--bare", "-q", remote.to_str().unwrap()]);
+    f.git(&["remote", "add", "origin", remote.to_str().unwrap()]);
+    f.git(&["push", "-qu", "origin", "main"]);
+    std::fs::write(
+        f.root.join(".tickets/config.toml"),
+        "[push]\nenabled=true\n",
+    )
+    .unwrap();
+    f.git(&["add", ".tickets/config.toml"]);
+    f.git(&["commit", "-qm", "enable private import publication"]);
     let bin = f.temp.path().join("bin");
     std::fs::create_dir(&bin).unwrap();
     let node = f
@@ -109,6 +314,8 @@ process.stdout.write(JSON.stringify(endpoint.endsWith('/issues')?
             .command(env!("CARGO_BIN_EXE_tkt"))
             .args([
                 "--dry-run",
+                "-o",
+                "json",
                 "import",
                 "--github",
                 "--repo",
@@ -137,14 +344,33 @@ process.stdout.write(JSON.stringify(endpoint.endsWith('/issues')?
             String::from_utf8_lossy(&out.stdout),
             String::from_utf8_lossy(&out.stderr)
         );
-        assert!(
-            text.contains(if pending {
-                "pending import journal"
-            } else {
-                "would import"
-            }),
-            "{text}"
-        );
+        let effects = planned_effects(&out);
+        if pending {
+            assert!(text.contains("pending import journal"), "{text}");
+            assert!(!effects
+                .iter()
+                .any(|effect| effect["operation"] == "commit-import-journal"));
+        } else {
+            let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+            assert_eq!(report["dry_run"], true);
+            assert_eq!(report["imported"].as_array().unwrap().len(), 1);
+            assert_operations(
+                &effects,
+                &[
+                    "append-debug-log",
+                    "acquire-operation-lock",
+                    "release-operation-lock-if-owned",
+                    "refresh-remote-state",
+                    "commit-import-journal",
+                    "update-import-journal",
+                    "scoped-git-index-and-history",
+                    "temporary-tkt-hooks-directory-and-cleanup",
+                    "create-no-clobber",
+                    "publish-recorded-allocation",
+                    "create-directory",
+                ],
+            );
+        }
         assert_eq!(f.snapshot(), before);
     }
 }
@@ -194,6 +420,7 @@ impl Fixture {
 
     fn cli(&self, args: &[&str]) -> Output {
         self.command(env!("CARGO_BIN_EXE_tkt"))
+            .env_remove("GIT_OPTIONAL_LOCKS")
             .args(args)
             .output()
             .unwrap()
@@ -426,9 +653,100 @@ fn local_mutation_previews_preserve_files_git_and_process_markers() {
             std::fs::write(dir.join("fixture.jsonl"), "existing local telemetry\n").unwrap();
         }
         let before = f.snapshot();
-        let mut preview = vec!["--dry-run"];
+        let mut preview = vec!["--dry-run", "-o", "json"];
         preview.extend_from_slice(args);
         let out = f.cli(&preview);
+        let effects = planned_effects(&out);
+        if matches!(*name, "doctor" | "native-check") {
+            assert!(
+                String::from_utf8_lossy(&out.stderr)
+                    .lines()
+                    .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+                    .any(|record| record["preview_effects"]
+                        .as_array()
+                        .is_some_and(Vec::is_empty)),
+                "{name}: expected an explicit no-effect plan"
+            );
+        }
+        let operations: Vec<_> = effects
+            .iter()
+            .filter_map(|effect| effect["operation"].as_str())
+            .collect();
+        let files: &[&str] = match *name {
+            "new" | "batch" | "plan-generate" | "config-set" | "config-unset" => {
+                &["create-no-clobber"]
+            }
+            "claim" | "close" | "cancel" | "reopen" | "edit" | "note" | "move-ac" | "plan-fix"
+            | "validate-fix" | "lint" | "project-set" | "project-unset" | "context-set"
+            | "native-remove" => &["replace-snapshot"],
+            "renumber" => &["relocate-snapshot"],
+            "context-clear" => &["unlink-entry"],
+            "hooks-remove" => &["remove-owned"],
+            "init" | "native-install" | "hooks-install" => {
+                &["create-directory", "create-no-clobber"]
+            }
+            "migrate" => &["create-directory", "create-no-clobber", "relocate-snapshot"],
+            _ => &[],
+        };
+        let mut expected: std::collections::BTreeSet<_> =
+            ["append-debug-log"].into_iter().collect();
+        expected.extend(files.iter().copied());
+        if matches!(
+            *name,
+            "config-set" | "config-unset" | "project-set" | "project-unset" | "native-remove"
+        ) {
+            expected.insert("create-directory");
+        }
+        if matches!(
+            *name,
+            "claim" | "close" | "cancel" | "reopen" | "edit" | "note" | "move-ac" | "renumber"
+        ) {
+            expected.extend([
+                "publish-existing-ticket",
+                "scoped-git-index-and-history",
+                "temporary-tkt-hooks-directory-and-cleanup",
+            ]);
+        }
+        if matches!(*name, "new" | "batch") {
+            expected.extend([
+                "acquire-operation-lock",
+                "release-operation-lock-if-owned",
+                "commit-allocated-tickets",
+                "scoped-git-index-and-history",
+                "temporary-tkt-hooks-directory-and-cleanup",
+                "publish-allocation-with-race-recovery",
+            ]);
+        }
+        if *name == "note" {
+            expected.extend(["acquire-operation-lock", "release-operation-lock-if-owned"]);
+        }
+        if matches!(*name, "new" | "claim" | "close") {
+            expected.insert("temporary-tkt-undo-index-and-cleanup");
+        }
+        match *name {
+            "new" => {
+                expected.extend(["notify-new-if-trusted", "record-cadence"]);
+            }
+            "claim" => {
+                expected.insert("notify-claim-if-trusted");
+            }
+            "close" => {
+                expected.insert("notify-close-if-trusted");
+            }
+            "undo" => {
+                expected.extend([
+                    "apply-and-publish-exact-undo",
+                    "scoped-git-index-and-history",
+                    "temporary-tkt-hooks-directory-and-cleanup",
+                ]);
+            }
+            _ => (),
+        }
+        let actual: std::collections::BTreeSet<_> = operations.into_iter().collect();
+        assert_eq!(
+            actual, expected,
+            "{name}: complete dispatcher operation contract"
+        );
         let after = f.snapshot();
         let text = format!(
             "{}{}",
@@ -440,7 +758,10 @@ fn local_mutation_previews_preserve_files_git_and_process_markers() {
             "plan-fix" => "plan-status-drift",
             "plan-generate" => "<!-- tkt:projection:begin -->",
             "migrate" => "migration plan",
-            "native-check" => "installed native write nudge",
+            "native-check" => "\"installed\":true",
+            "native-install" => "\"action\":\"install\"",
+            "native-remove" => "\"action\":\"remove\"",
+            "note" | "undo" => "\"dry_run\":true",
             "doctor" => "--fix is not yet implemented",
             _ => "would",
         };

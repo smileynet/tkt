@@ -19,38 +19,79 @@ fn mutate(
     mode: Mode,
     paths: impl FnOnce() -> (Option<std::path::PathBuf>, Option<std::path::PathBuf>),
 ) -> Result<&'static str> {
-    if matches!(mode, Mode::Preview) {
-        return Ok(match action {
+    let (consent, data) = if matches!(mode, Mode::Preview) {
+        (None, None)
+    } else {
+        paths()
+    };
+    match crate::effects::Phase::TelemetryMutation(TelemetryMutationPlan {
+        action,
+        consent,
+        data,
+    })
+    .execute(mode)?
+    {
+        crate::effects::Outcome::TelemetryMutation(message) => Ok(message),
+        crate::effects::Outcome::Preview(_) => Ok(match action {
             Mutation::Consent(true) => "would enable telemetry",
             Mutation::Consent(false) => "would disable telemetry",
             Mutation::Clear => "would clear telemetry data",
-        });
+        }),
+        _ => anyhow::bail!("telemetry phase returned no mutation result"),
     }
-    let (consent, data) = paths();
-    match action {
-        Mutation::Consent(enabled) => {
-            let path = consent
-                .as_deref()
-                .ok_or_else(|| anyhow::anyhow!("failed to write consent: no config directory"))?;
-            telemetry::consent_plan(path, enabled)?
-                .execute(mode)
-                .map_err(|e| anyhow::anyhow!("failed to write consent: {e}"))?;
-            Ok(if enabled {
-                "telemetry enabled — events will be recorded locally"
-            } else {
-                "telemetry disabled"
-            })
+}
+
+pub(crate) struct TelemetryMutationPlan {
+    action: Mutation,
+    consent: Option<std::path::PathBuf>,
+    data: Option<std::path::PathBuf>,
+}
+
+impl TelemetryMutationPlan {
+    pub(crate) fn summary(&self) -> crate::effects::EffectSummary {
+        let (operation, path) = match self.action {
+            Mutation::Consent(true) => ("enable-telemetry", self.consent.as_ref()),
+            Mutation::Consent(false) => ("disable-telemetry", self.consent.as_ref()),
+            Mutation::Clear => ("clear-telemetry-data", self.data.as_ref()),
+        };
+        crate::effects::EffectSummary {
+            operation,
+            paths: path.into_iter().cloned().collect(),
+            unresolved: path.is_none(),
         }
-        Mutation::Clear => match data {
-            Some(path) if path.is_dir() => {
-                FilePlan(vec![FileEffect::RemoveDirectory(path)])
-                    .execute(mode)
-                    .map_err(|e| anyhow::anyhow!("failed to clear telemetry: {e}"))?;
-                Ok("telemetry data cleared")
+    }
+
+    pub(crate) fn apply(self) -> Result<&'static str> {
+        let Self {
+            action,
+            consent,
+            data,
+        } = self;
+        match action {
+            Mutation::Consent(enabled) => {
+                let path = consent.as_deref().ok_or_else(|| {
+                    anyhow::anyhow!("failed to write consent: no config directory")
+                })?;
+                telemetry::consent_plan(path, enabled)?
+                    .execute(Mode::Apply)
+                    .map_err(|e| anyhow::anyhow!("failed to write consent: {e}"))?;
+                Ok(if enabled {
+                    "telemetry enabled — events will be recorded locally"
+                } else {
+                    "telemetry disabled"
+                })
             }
-            Some(_) => Ok("no telemetry data to clear"),
-            None => Ok("no telemetry data directory"),
-        },
+            Mutation::Clear => match data {
+                Some(path) if path.is_dir() => {
+                    FilePlan(vec![FileEffect::RemoveDirectory(path)])
+                        .execute(Mode::Apply)
+                        .map_err(|e| anyhow::anyhow!("failed to clear telemetry: {e}"))?;
+                    Ok("telemetry data cleared")
+                }
+                Some(_) => Ok("no telemetry data to clear"),
+                None => Ok("no telemetry data directory"),
+            },
+        }
     }
 }
 
@@ -620,6 +661,33 @@ mod mutation_tests {
                 let temp = tempfile::tempdir().unwrap();
                 let consent = temp.path().join("config/consent.toml");
                 let data = temp.path().join("data/telemetry");
+                let operation = match action {
+                    Mutation::Consent(true) => "enable-telemetry",
+                    Mutation::Consent(false) => "disable-telemetry",
+                    Mutation::Clear => "clear-telemetry-data",
+                };
+                let crate::effects::Outcome::Preview(effects) =
+                    crate::effects::Phase::TelemetryMutation(TelemetryMutationPlan {
+                        action,
+                        consent: Some(consent.clone()),
+                        data: Some(data.clone()),
+                    })
+                    .execute(Mode::Preview)
+                    .unwrap()
+                else {
+                    panic!("telemetry preview applied effects");
+                };
+                assert_eq!(effects.len(), 1);
+                assert_eq!(effects[0].operation, operation);
+                assert_eq!(
+                    effects[0].paths,
+                    vec![if matches!(action, Mutation::Clear) {
+                        data.clone()
+                    } else {
+                        consent.clone()
+                    }]
+                );
+                assert!(!effects[0].unresolved);
                 if existing {
                     std::fs::create_dir_all(consent.parent().unwrap()).unwrap();
                     std::fs::write(&consent, "owner consent bytes\n").unwrap();

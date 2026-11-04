@@ -62,6 +62,166 @@ impl FileEffect {
 pub struct FilePlan(pub Vec<FileEffect>);
 pub struct PreparedFiles(Vec<FileEffect>);
 
+#[derive(Debug)]
+pub struct EffectSummary {
+    pub operation: &'static str,
+    pub paths: Vec<PathBuf>,
+    pub unresolved: bool,
+}
+
+impl serde::Serialize for EffectSummary {
+    fn serialize<S: serde::Serializer>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut summary = serializer.serialize_struct("EffectSummary", 3)?;
+        summary.serialize_field("operation", self.operation)?;
+        let paths: Vec<_> = self
+            .paths
+            .iter()
+            .map(|path| path.to_string_lossy())
+            .collect();
+        summary.serialize_field("paths", &paths)?;
+        summary.serialize_field("unresolved", &self.unresolved)?;
+        summary.end()
+    }
+}
+
+pub(crate) enum Phase<'a> {
+    Files(PreparedFiles),
+    Diagnostic(crate::telemetry::DiagnosticPlan<'a>),
+    TelemetryMutation(crate::commands::telemetry::TelemetryMutationPlan),
+    ExistingPublication(crate::mutation::PublicationPlan<'a>),
+    Lifecycle(crate::lifecycle::Notification<'a>),
+    OperationLock(crate::operation_lock::LockPlan<'a>),
+    RemoteRefresh(crate::git::RemoteRefreshPlan<'a>),
+    AllocationPublication(crate::transaction::AllocationPlan<'a>),
+    AllocationCommit(crate::transaction::AllocationCommitPlan<'a>),
+    Import(crate::commands::import::ImportPlan<'a>),
+    CollisionRebase(crate::commands::rebase::RebasePlan<'a>),
+    UndoApplication(crate::commands::undo::UndoApplicationPlan<'a>),
+    Cadence {
+        repo: &'a std::path::Path,
+        tags: &'a [String],
+        blockers: &'a [String],
+    },
+}
+
+pub(crate) enum Outcome {
+    Applied,
+    Preview(Vec<EffectSummary>),
+    Cadence(Option<crate::nudge::Hint>),
+    Lock(Option<crate::operation_lock::OperationLock>),
+    Allocation(crate::transaction::AllocationResult),
+    AllocationCommit(Option<crate::lifecycle::PreparedEvent>),
+    ImportCommit(String),
+    Rebased(crate::renumber::AppliedRenumber),
+    TelemetryMutation(&'static str),
+}
+
+impl Phase<'_> {
+    pub fn summaries(&self) -> Vec<EffectSummary> {
+        let summary = |operation, paths, unresolved| EffectSummary {
+            operation,
+            paths,
+            unresolved,
+        };
+        match self {
+            Self::Files(files) => files
+                .0
+                .iter()
+                .map(|effect| match effect {
+                    FileEffect::Directory(path) => {
+                        summary("create-directory", vec![path.clone()], false)
+                    }
+                    FileEffect::ReplaceSnapshot { path, .. } => {
+                        summary("replace-snapshot", vec![path.clone()], false)
+                    }
+                    FileEffect::CreateNoClobber { path, .. } => {
+                        summary("create-no-clobber", vec![path.clone()], false)
+                    }
+                    FileEffect::RelocateSnapshot {
+                        source,
+                        destination,
+                        ..
+                    } => summary(
+                        "relocate-snapshot",
+                        vec![source.clone(), destination.clone()],
+                        false,
+                    ),
+                    FileEffect::RemoveOwned { path, .. } => {
+                        summary("remove-owned", vec![path.clone()], false)
+                    }
+                    FileEffect::UnlinkEntry(path) => {
+                        summary("unlink-entry", vec![path.clone()], false)
+                    }
+                    FileEffect::RemoveDirectory(path) => {
+                        summary("remove-directory", vec![path.clone()], false)
+                    }
+                })
+                .collect(),
+            Self::Diagnostic(plan) => vec![plan.summary()],
+            Self::TelemetryMutation(plan) => vec![plan.summary()],
+            Self::ExistingPublication(plan) => plan.summaries(),
+            Self::Lifecycle(plan) => vec![plan.summary()],
+            Self::OperationLock(plan) => plan.summaries(),
+            Self::RemoteRefresh(plan) => vec![plan.summary()],
+            Self::AllocationPublication(plan) => vec![plan.summary()],
+            Self::AllocationCommit(plan) => plan.summaries(),
+            Self::Import(plan) => plan.summaries(),
+            Self::CollisionRebase(plan) => plan.summaries(),
+            Self::UndoApplication(plan) => plan.summaries(),
+            Self::Cadence { repo, .. } => {
+                vec![summary("record-cadence", vec![repo.to_path_buf()], false)]
+            }
+        }
+    }
+
+    pub fn execute(self, mode: Mode) -> Result<Outcome> {
+        if matches!(mode, Mode::Preview) {
+            let effects = self.summaries();
+            if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
+                eprintln!("{}", serde_json::json!({"preview_effects": effects}));
+            }
+            return Ok(Outcome::Preview(effects));
+        }
+        match self {
+            Self::Files(files) => files.apply()?,
+            Self::Diagnostic(plan) => plan.apply(),
+            Self::TelemetryMutation(plan) => return plan.apply().map(Outcome::TelemetryMutation),
+            Self::ExistingPublication(plan) => plan.apply()?,
+            Self::Lifecycle(plan) => plan.apply(),
+            Self::OperationLock(plan) => return plan.apply().map(Outcome::Lock),
+            Self::RemoteRefresh(plan) => plan.apply()?,
+            Self::AllocationPublication(plan) => return plan.apply().map(Outcome::Allocation),
+            Self::AllocationCommit(plan) => return plan.apply().map(Outcome::AllocationCommit),
+            Self::Import(plan) => return plan.apply(),
+            Self::CollisionRebase(plan) => return plan.apply().map(Outcome::Rebased),
+            Self::UndoApplication(plan) => plan.apply()?,
+            Self::Cadence {
+                repo,
+                tags,
+                blockers,
+            } => {
+                return Ok(Outcome::Cadence(crate::nudge::record_and_check_apply(
+                    repo, tags, blockers,
+                )))
+            }
+        }
+        Ok(Outcome::Applied)
+    }
+}
+
+pub fn replace_state(path: &std::path::Path, text: String) -> Result<()> {
+    let mut effects = Vec::new();
+    if let Some(parent) = path.parent() {
+        effects.push(FileEffect::Directory(parent.into()));
+    }
+    effects.push(FileEffect::write(path.into(), read_text(path)?, text));
+    FilePlan(effects).execute(Mode::current())
+}
+
 impl FilePlan {
     pub fn prepare(self) -> Result<PreparedFiles> {
         for effect in &self.0 {
@@ -122,9 +282,10 @@ impl FilePlan {
 
 impl PreparedFiles {
     pub fn execute(self, mode: Mode) -> Result<()> {
-        if matches!(mode, Mode::Preview) {
-            return Ok(());
-        }
+        Phase::Files(self).execute(mode).map(drop)
+    }
+
+    fn apply(self) -> Result<()> {
         for effect in self.0 {
             match effect {
                 FileEffect::Directory(path) => {
@@ -288,6 +449,37 @@ fn file_error(action: &str, path: &std::path::Path, error: std::io::Error) -> an
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn preview_reports_lock_and_cadence_without_starting_their_protocols() {
+        let temp = tempfile::tempdir().unwrap();
+        std::fs::create_dir(temp.path().join(".git")).unwrap();
+        for phase in [
+            Phase::OperationLock(crate::operation_lock::LockPlan::Acquire {
+                repo: temp.path(),
+                operation: "fixture",
+            }),
+            Phase::Cadence {
+                repo: temp.path(),
+                tags: &[],
+                blockers: &[],
+            },
+        ] {
+            let Outcome::Preview(summaries) = phase.execute(Mode::Preview).unwrap() else {
+                panic!("preview applied an owner phase");
+            };
+            assert!(!summaries.is_empty());
+            let encoded = serde_json::to_value(&summaries[0]).unwrap();
+            assert!(
+                encoded["operation"].as_str().unwrap().contains("lock")
+                    || encoded["operation"] == "record-cadence"
+            );
+            assert_eq!(
+                std::fs::read_dir(temp.path().join(".git")).unwrap().count(),
+                0
+            );
+        }
+    }
 
     #[test]
     fn relocation_previews_and_late_collisions_preserve_both_sides() {

@@ -335,3 +335,5 @@ before using its counts. The report adds no stored completion field.
 Before configuring lifecycle hooks, read [trust and retry rules](references/commands.md#advisory-lifecycle-hooks).
 
 Native write nudges: read [setup/trust](references/native-hooks.md) before configuration.
+
+Remote previews use cached refs; IDs/publication remain unresolved.

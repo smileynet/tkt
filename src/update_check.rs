@@ -131,7 +131,6 @@ struct CacheEntry {
 
 fn cache_file() -> Option<PathBuf> {
     let dir = dirs::config_dir()?.join("tkt");
-    std::fs::create_dir_all(&dir).ok()?;
     Some(dir.join("update-check.txt"))
 }
 
@@ -146,9 +145,9 @@ fn read_cache(path: &PathBuf) -> Option<CacheEntry> {
     })
 }
 
-fn write_cache(path: &PathBuf, version: &str) {
+fn write_cache(path: &std::path::Path, version: &str) {
     let content = format!("{}\n{}\n", unix_now(), version);
-    let _ = std::fs::write(path, content);
+    let _ = crate::effects::replace_state(path, content);
 }
 
 fn unix_now() -> u64 {

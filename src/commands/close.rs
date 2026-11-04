@@ -198,41 +198,6 @@ pub fn run(
     }
 
     // Dry-run: show what would happen
-    if is_dry_run() {
-        if is_quiet_json() {
-            print_quiet_json_success(&format!("would close {}", t.id));
-            return Ok(0);
-        }
-        println!(
-            "Would close {} {} (→ done)",
-            t.id,
-            slug_from_filename(&t.path)
-        );
-        if let Some(n) = note {
-            println!("  Resolution: {}", n);
-        }
-        if let Some(ref emap) = evidence_map {
-            println!("  Verification: {} criteria with evidence", emap.len());
-        }
-        // Compute what would be unblocked
-        let mut corpus_clone = ctx.corpus.clone();
-        if let Some(ticket) = corpus_clone.iter_mut().find(|x| x.id == t.id) {
-            ticket.status = Status::Done;
-        }
-        let unblocked: Vec<_> = core::frontier(&corpus_clone)
-            .into_iter()
-            .filter(|x| !core::frontier(&ctx.corpus).iter().any(|f| f.id == x.id))
-            .collect();
-        if !unblocked.is_empty() {
-            let items: Vec<String> = unblocked
-                .iter()
-                .map(|x| format!("{} {}", x.id, x.title))
-                .collect();
-            println!("  Would unblock: {}", items.join(", "));
-        }
-        println!("  Would commit and push");
-        return Ok(0);
-    }
 
     let mut file = t.file.clone();
 
@@ -285,6 +250,42 @@ pub fn run(
         None,
         Some((crate::lifecycle::Event::Close, id)),
     )?;
+
+    if is_dry_run() {
+        if is_quiet_json() {
+            print_quiet_json_success(&format!("would close {}", t.id));
+            return Ok(0);
+        }
+        println!(
+            "Would close {} {} (→ done)",
+            t.id,
+            slug_from_filename(&t.path)
+        );
+        if let Some(n) = note {
+            println!("  Resolution: {}", n);
+        }
+        if let Some(ref emap) = evidence_map {
+            println!("  Verification: {} criteria with evidence", emap.len());
+        }
+        // Compute what would be unblocked
+        let mut corpus_clone = ctx.corpus.clone();
+        if let Some(ticket) = corpus_clone.iter_mut().find(|x| x.id == t.id) {
+            ticket.status = Status::Done;
+        }
+        let unblocked: Vec<_> = core::frontier(&corpus_clone)
+            .into_iter()
+            .filter(|x| !core::frontier(&ctx.corpus).iter().any(|f| f.id == x.id))
+            .collect();
+        if !unblocked.is_empty() {
+            let items: Vec<String> = unblocked
+                .iter()
+                .map(|x| format!("{} {}", x.id, x.title))
+                .collect();
+            println!("  Would unblock: {}", items.join(", "));
+        }
+        println!("  Would commit and push");
+        return Ok(0);
+    }
 
     if is_quiet() {
         if is_json_output() {

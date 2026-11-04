@@ -65,13 +65,7 @@ pub fn run(id: &str, source: &str, actor: Option<&AgentId>) -> Result<i32> {
         return Err(input_error("the literal '## Resolution' is reserved in note input, including fenced or inline examples; link to that material instead"));
     }
     let repo = git::repo_root_cwd()?;
-    let _lock = if is_dry_run() {
-        None
-    } else {
-        Some(crate::operation_lock::OperationLock::acquire(
-            &repo, "note",
-        )?)
-    };
+    let _lock = crate::operation_lock::OperationLock::acquire(&repo, "note")?;
     let ctx = MutationContext::open()?;
     let target = ctx.find_ticket(id)?;
     let path = target.file.path.clone();
@@ -130,14 +124,12 @@ pub fn run(id: &str, source: &str, actor: Option<&AgentId>) -> Result<i32> {
     }
     let appended = after.len() - before.len();
     FilePlan(vec![FileEffect::write(path, Some(before), after)]).execute(Mode::current())?;
-    if !is_dry_run() {
-        ctx.publish(
-            &[&relative],
-            &format!("chore(tickets): note {}", current.id),
-            None,
-            None,
-        )?;
-    }
+    ctx.publish(
+        &[&relative],
+        &format!("chore(tickets): note {}", current.id),
+        None,
+        None,
+    )?;
     if is_json_output() {
         println!(
             "{}",

@@ -466,3 +466,14 @@ role flag, machine capability, delegation permission or authentication system.
 config. `--nudge-action check` checks owned presence read-only; `remove` removes
 exact owned entries. Before setup/removal/recovery, read the standalone
 [native hook contract](native-hooks.md). No trust or permission policy is changed.
+
+Global --dry-run writes nothing, including Git refs, locks, cadence and diagnostic caches. Remote-backed previews use cached refs; final remote-dependent allocation/publication remains unresolved. A preview notice identifies unresolved cached remote state; it does not certify a future push or external consumer result. Existing quiet/JSON command results remain structured.
+### Preview effect records
+
+With `--dry-run -o json`, stderr includes JSON Lines records of the form
+`{"preview_effects":[{"operation":"…","paths":["…"],"unresolved":false}]}`.
+Existing command stdout remains unchanged. Records describe prepared phases;
+they are not a replayable transaction or a promise of a future remote result.
+Remote previews use cached refs and disable implicit lazy fetching and optional
+Git locks. Missing cached objects can therefore fail a preview without fetching.
+An unresolved phase may change after a later fetch, allocation or publication.

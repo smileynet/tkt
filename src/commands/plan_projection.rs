@@ -78,7 +78,7 @@ pub fn run(destination: Option<&str>) -> Result<i32> {
         _ => projection,
     };
     let changed = old.as_deref() != Some(output.as_str());
-    if changed && !is_dry_run() {
+    if changed {
         publish(&path, old.as_deref(), &output)?;
     }
     if is_json_output() {

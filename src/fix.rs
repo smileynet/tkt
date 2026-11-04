@@ -223,8 +223,12 @@ pub fn run_fix(dir: &Path, dry_run: bool) -> anyhow::Result<FixResult> {
         }
 
         // Write if there are repairs and not dry-run
-        if !file_repairs.is_empty() && !dry_run {
-            modified_file.write()?;
+        if !file_repairs.is_empty() {
+            modified_file.write_plan().execute(if dry_run {
+                crate::effects::Mode::Preview
+            } else {
+                crate::effects::Mode::current()
+            })?;
         }
         repairs.extend(file_repairs);
     }

@@ -683,12 +683,15 @@ impl TicketFile {
 
     /// Write the ticket file back to disk (atomically, via temp + rename).
     pub fn write(&self) -> Result<()> {
+        self.write_plan().execute(crate::effects::Mode::current())
+    }
+
+    pub fn write_plan(&self) -> crate::effects::FilePlan {
         crate::effects::FilePlan(vec![crate::effects::FileEffect::ReplaceSnapshot {
             path: self.path.clone(),
             before: self.original.clone(),
             text: self.serialize(),
         }])
-        .execute(crate::effects::Mode::current())
     }
 }
 

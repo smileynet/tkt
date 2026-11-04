@@ -92,6 +92,12 @@ pub fn run(action: Action) -> Result<i32> {
     if matches!(action, Action::Install) && owned && !active {
         domain_bail!(Conflict, "managed hook is not executable; inspect its permissions before enabling it (no files changed)");
     }
+
+    match action {
+        Action::Install if !owned => install(&hooks, &path)?,
+        Action::Remove if owned => remove_owned(&path)?,
+        _ => {}
+    }
     if is_dry_run() {
         report(
             if matches!(action, Action::Install) {
@@ -103,11 +109,6 @@ pub fn run(action: Action) -> Result<i32> {
             Some(&path),
         );
         return Ok(0);
-    }
-    match action {
-        Action::Install if !owned => install(&hooks, &path)?,
-        Action::Remove if owned => remove_owned(&path)?,
-        _ => {}
     }
     report(
         if matches!(action, Action::Install) {

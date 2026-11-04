@@ -138,3 +138,10 @@ material; they do not relax the inline verification, safety or release rules.
 | Inspecting cargo-dist, checking crate names, or regenerating release workflows | [Maintainer tooling](docs/agents/maintainer-tooling.md) and [release staging](docs/release-staging.md); the release authorization boundary above still applies |
 | Dispatching a Codex review or inventorying reference checkouts | [Session operations](docs/agents/session-operations.md) |
 | Changing CLI/agent-facing behavior or guidance layout | [Guidance surface checklist](docs/agents/agent-guidance-surfaces.md) and [migration coverage](docs/agents/guidance-coverage.md); verify coverage with `node tools/check-guidance-coverage.mjs --final` |
+
+## Mutation effect boundary
+
+Route new persistence through prepared `effects::Phase` plans. Keep scoped Git
+commit/publication and recovery in their existing owners; do not add free-form
+Git mutation or callback-shaped phases. Preview must return before filesystem,
+Git, lock, process or diagnostic application. See [the effect inventory](docs/mutation-effects-audit.md).

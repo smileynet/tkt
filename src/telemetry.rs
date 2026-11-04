@@ -75,18 +75,24 @@ pub fn debug_event(mode: DebugMode, session: &str, project: &str, msg: &str) {
 
 /// Write a debug line to the log file. Silently swallows errors.
 fn write_debug_log(msg: &str) {
+    let mode = crate::effects::Mode::current();
+    let path = state_path(mode, || Some(debug_log_path()));
+    let _ = crate::effects::Phase::Diagnostic(DiagnosticPlan {
+        kind: Diagnostic::Debug(msg),
+        path,
+    })
+    .execute(mode);
+}
+
+fn write_debug_log_at(path: &Path, msg: &str) {
     use std::io::Write;
-    if crate::DRY_RUN.load(std::sync::atomic::Ordering::Relaxed) {
-        return;
-    }
-    let path = debug_log_path();
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
     if let Ok(mut f) = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(&path)
+        .open(path)
     {
         let _ = writeln!(f, "[{}] {}", iso_timestamp(), msg);
     }
@@ -331,19 +337,17 @@ pub fn telemetry_dir() -> Option<PathBuf> {
 /// Silently swallows all errors (telemetry must never affect CLI behavior).
 /// Runs rotation check after writing if file exceeds size threshold.
 pub fn record_event(event: &Event) {
-    if matches!(
-        crate::effects::Mode::current(),
-        crate::effects::Mode::Preview
-    ) {
-        return;
-    }
-    let _ = try_record_event(event);
+    let mode = crate::effects::Mode::current();
+    let path = state_path(mode, telemetry_dir);
+    let _ = crate::effects::Phase::Diagnostic(DiagnosticPlan {
+        kind: Diagnostic::Record(event),
+        path,
+    })
+    .execute(mode);
 }
 
-fn try_record_event(event: &Event) -> std::io::Result<()> {
-    let dir = telemetry_dir()
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "no data directory"))?;
-    std::fs::create_dir_all(&dir)?;
+fn record_event_at(dir: &Path, event: &Event) -> std::io::Result<()> {
+    std::fs::create_dir_all(dir)?;
 
     let slug = sanitize_slug(&event.project);
     let filename = format!("{}.jsonl", slug);
@@ -364,12 +368,12 @@ fn try_record_event(event: &Event) -> std::io::Result<()> {
     // Check if rotation is needed (fast: just a stat call)
     if let Ok(meta) = std::fs::metadata(&path) {
         if meta.len() > MAX_FILE_SIZE {
-            let _ = rotate_file(&dir, &slug);
+            let _ = rotate_file(dir, &slug);
         }
     }
 
     // Run cleanup periodically (cheap check: look for any .1.jsonl files older than max age)
-    let _ = cleanup_old_files(&dir);
+    let _ = cleanup_old_files(dir);
 
     Ok(())
 }
@@ -448,16 +452,64 @@ fn is_rotated_file(name: &str) -> bool {
 /// Full cleanup: enforce max file count per project and prune sessions.
 /// Called from `tkt telemetry --status` or at startup.
 pub fn cleanup_telemetry_dir() {
-    if matches!(
-        crate::effects::Mode::current(),
-        crate::effects::Mode::Preview
-    ) {
-        return;
+    let mode = crate::effects::Mode::current();
+    let path = state_path(mode, telemetry_dir);
+    let _ = crate::effects::Phase::Diagnostic(DiagnosticPlan {
+        kind: Diagnostic::Cleanup,
+        path,
+    })
+    .execute(mode);
+}
+
+fn state_path(
+    mode: crate::effects::Mode,
+    resolve: impl FnOnce() -> Option<PathBuf>,
+) -> Option<PathBuf> {
+    match mode {
+        crate::effects::Mode::Preview => None,
+        crate::effects::Mode::Apply => resolve(),
     }
-    if let Some(dir) = telemetry_dir() {
-        if dir.is_dir() {
-            let _ = cleanup_old_files(&dir);
-            let _ = enforce_max_files(&dir);
+}
+
+enum Diagnostic<'a> {
+    Debug(&'a str),
+    Record(&'a Event),
+    Cleanup,
+}
+
+pub(crate) struct DiagnosticPlan<'a> {
+    kind: Diagnostic<'a>,
+    path: Option<PathBuf>,
+}
+
+impl DiagnosticPlan<'_> {
+    pub(crate) fn summary(&self) -> crate::effects::EffectSummary {
+        let operation = match self.kind {
+            Diagnostic::Debug(_) => "append-debug-log",
+            Diagnostic::Record(_) => "record-and-rotate-telemetry",
+            Diagnostic::Cleanup => "prune-telemetry",
+        };
+        crate::effects::EffectSummary {
+            operation,
+            paths: self.path.iter().cloned().collect(),
+            unresolved: self.path.is_none(),
+        }
+    }
+    pub(crate) fn apply(self) {
+        let Some(path) = self.path else {
+            return;
+        };
+        match self.kind {
+            Diagnostic::Debug(line) => write_debug_log_at(&path, line),
+            Diagnostic::Record(event) => {
+                let _ = record_event_at(&path, event);
+            }
+            Diagnostic::Cleanup => {
+                if path.is_dir() {
+                    let _ = cleanup_old_files(&path);
+                    let _ = enforce_max_files(&path);
+                }
+            }
         }
     }
 }
@@ -656,6 +708,99 @@ pub fn arch_string() -> &'static str {
 mod tests {
     use super::*;
     use std::path::Path;
+
+    #[test]
+    fn diagnostic_phases_use_private_targets_and_preview_never_resolves_platform_paths() {
+        use crate::effects::{Mode, Outcome, Phase};
+        assert!(state_path(Mode::Preview, || panic!("preview resolved platform state")).is_none());
+        let temp = tempfile::tempdir().unwrap();
+        let log = temp.path().join("logs/debug.log");
+        let data = temp.path().join("events");
+        let event = Event {
+            ts: "fixture".into(),
+            session: "private".into(),
+            project: "fixture".into(),
+            cmd: "ready".into(),
+            exit_code: 0,
+            duration_ms: 0,
+            version: "fixture".into(),
+            os: "fixture".into(),
+            arch: "fixture".into(),
+            error_kind: None,
+            flags: vec![],
+            result_count: None,
+        };
+        for (kind, path, operation) in [
+            (
+                Diagnostic::Debug("private diagnostic"),
+                log.clone(),
+                "append-debug-log",
+            ),
+            (
+                Diagnostic::Record(&event),
+                data.clone(),
+                "record-and-rotate-telemetry",
+            ),
+            (Diagnostic::Cleanup, data.clone(), "prune-telemetry"),
+        ] {
+            let Outcome::Preview(effects) = Phase::Diagnostic(DiagnosticPlan {
+                kind,
+                path: Some(path.clone()),
+            })
+            .execute(Mode::Preview)
+            .unwrap() else {
+                panic!("preview applied diagnostic effects");
+            };
+            assert_eq!(effects[0].operation, operation);
+            assert_eq!(effects[0].paths, vec![path]);
+            assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 0);
+        }
+        Phase::Diagnostic(DiagnosticPlan {
+            kind: Diagnostic::Debug("private diagnostic"),
+            path: Some(log.clone()),
+        })
+        .execute(Mode::Apply)
+        .unwrap();
+        assert!(std::fs::read_to_string(log)
+            .unwrap()
+            .contains("private diagnostic"));
+        Phase::Diagnostic(DiagnosticPlan {
+            kind: Diagnostic::Record(&event),
+            path: Some(data.clone()),
+        })
+        .execute(Mode::Apply)
+        .unwrap();
+        assert!(std::fs::read_to_string(data.join("fixture.jsonl"))
+            .unwrap()
+            .contains("\"project\":\"fixture\""));
+        for index in 1..=MAX_ROTATED_FILES + 3 {
+            std::fs::write(
+                data.join(format!("fixture.{index}.jsonl")),
+                "private data\n",
+            )
+            .unwrap();
+        }
+        Phase::Diagnostic(DiagnosticPlan {
+            kind: Diagnostic::Cleanup,
+            path: Some(data.clone()),
+        })
+        .execute(Mode::Preview)
+        .unwrap();
+        assert_eq!(
+            std::fs::read_dir(&data).unwrap().count(),
+            MAX_ROTATED_FILES as usize + 4
+        );
+        Phase::Diagnostic(DiagnosticPlan {
+            kind: Diagnostic::Cleanup,
+            path: Some(data.clone()),
+        })
+        .execute(Mode::Apply)
+        .unwrap();
+        assert_eq!(
+            std::fs::read_dir(data).unwrap().count(),
+            MAX_ROTATED_FILES as usize + 1
+        );
+    }
 
     #[test]
     fn session_id_format() {

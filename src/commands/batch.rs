@@ -7,7 +7,6 @@ use crate::commands::common::{
     print_success, project_config, tickets_dir,
 };
 use crate::core::{self, validate};
-use crate::git;
 use crate::transaction::{GitTransaction, PublishResult};
 
 #[allow(clippy::too_many_arguments)]
@@ -187,15 +186,12 @@ pub fn run(
                 .execute(crate::effects::Mode::current())?;
                 files.push(format!(".tickets/{}", filename));
             }
-            for f in &files {
-                git::add(&txn.repo, &[f.as_str()])?;
-            }
             let tids: Vec<String> = (0..parsed.len())
                 .map(|i| format!("{:0>width$}", base + i as u64, width = width))
                 .collect();
             let file_paths: Vec<&str> = files.iter().map(String::as_str).collect();
-            git::commit(
-                &txn.repo,
+            let _ = txn.commit_created(
+                &file_paths,
                 &format!(
                     "chore(tickets): batch {} ({})",
                     tids.join(","),
@@ -205,13 +201,19 @@ pub fn run(
                         .collect::<Vec<_>>()
                         .join(", ")
                 ),
-                &file_paths,
+                None,
             )?;
             Ok((base, width))
         };
 
+    let (mut base, mut width) = allocate_and_commit(&names, &parsed)?;
+
     // Dry-run: compute IDs and show what would be created
     if is_dry_run() {
+        crate::effects::Phase::AllocationPublication(crate::transaction::AllocationPlan::Attempt(
+            &txn,
+        ))
+        .execute(crate::effects::Mode::current())?;
         let base = core::max_id(&names) + 1;
         let width = core::id_width(&names);
         let tids: Vec<String> = (0..parsed.len())
@@ -228,8 +230,6 @@ pub fn run(
         }
         return Ok(0);
     }
-
-    let (mut base, mut width) = allocate_and_commit(&names, &parsed)?;
 
     let outcome = match txn.try_push()? {
         PublishResult::Done(outcome) => outcome,
