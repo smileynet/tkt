@@ -1,7 +1,7 @@
 ---
 id: "260"
 title: "Route remaining filesystem mutation families through typed effect phases"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
