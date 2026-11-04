@@ -1,7 +1,7 @@
 ---
 id: "259"
 title: "Prevent telemetry commands from mutating during dry-run"
-status: done
+status: open
 blocked_by: []
 priority: high
 validation_criteria:
