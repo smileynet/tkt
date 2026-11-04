@@ -1,7 +1,7 @@
 ---
 id: "168"
 title: "Measure demand for missing-tag and backlog advisories"
-status: open
+status: in_progress
 blocked_by: ["167"]
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "The report distinguishes recurring demand from hypothetical benefit and recommends whether an advisory is justified"
   - "No runtime nudge, hard gate or default-status behavior is added by the measurement task"
 tags: ["guidance", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Measure demand for missing-tag and backlog advisories
