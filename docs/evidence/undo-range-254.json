@@ -1,0 +1,34 @@
+{
+  "kind": "red-green-source-receipt",
+  "gate": "mise run check",
+  "rustPassed": 444,
+  "nodePassed": 42,
+  "nodeSkipped": 1,
+  "fmt": "pass",
+  "clippy": "pass; zero warnings",
+  "critic": "accepted the shared acceptance-range predicate and direct forged-receipt regression",
+  "sources": [
+    {
+      "path": "src/undo.rs",
+      "sha256": "fb246517743072b9abd4a3863e250727594f68acdfb4d0f26fa3308f9d857953"
+    },
+    {
+      "path": "src/core/mod.rs",
+      "sha256": "29d856a7d95474472107cb288e60a954e3124e63c45fa0a3192175d07480dedf"
+    },
+    {
+      "path": "src/core/ticket.rs",
+      "sha256": "a10ee3c370972b3282823b0621df0c0fdde5d588cc583984fcc6e0ab2d8759c5"
+    },
+    {
+      "path": "tests/undo.rs",
+      "sha256": "491930c37eeec390b020260547de82215a90e2899206f0c65fc813d7f28cf7ee"
+    }
+  ],
+  "limits": [
+    "Structural recognition is not authentication",
+    "No real project history was reverted",
+    "Unix execution not observed",
+    "Parent191 all-mutator work remains open"
+  ]
+}

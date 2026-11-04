@@ -186,6 +186,7 @@ fn changed_paths(repo: &Path, before: &str, after: &str) -> Result<Vec<String>> 
 }
 
 fn close_body(before: &str, after: &str) -> bool {
+    let acceptance = crate::core::ac_section_range(before);
     let prefix = if before.contains("## Resolution") {
         before
     } else {
@@ -202,6 +203,7 @@ fn close_body(before: &str, after: &str) -> bool {
                 && b[i] == b'x'
                 && i >= 3
                 && i + 1 < a.len()
+                && acceptance.as_ref().is_some_and(|range| range.contains(&i))
                 && &a[i - 3..=i + 1] == b"- [ ]")
         {
             return false;

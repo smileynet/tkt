@@ -56,6 +56,8 @@ quiet while `-q -o json` retains structured output.
 The canonical `Tkt-Undo` trailer binds version, subject, parent, complete before/
 after trees and each supported path's blob/mode. Recognition verifies those
 against actual Git objects and checks the operation's ticket/body/plan transition.
+Checkbox changes in a close must be inside the same acceptance section used by
+the close writer; unrelated background examples cannot qualify.
 Message-only, altered, malformed, duplicated and unknown-version records fail.
 
 Receipt creation uses a private temporary index so unrelated staged work remains

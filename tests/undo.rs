@@ -232,6 +232,49 @@ fn forged_legacy_duplicate_unknown_and_mismatched_receipts_are_refused() {
 }
 
 #[test]
+fn forged_close_checkbox_change_outside_acceptance_is_refused() {
+    let (_temp, root) = fixture(false, false);
+    let path = root.join(".tickets/01-seed.md");
+    let mut body = std::fs::read_to_string(&path).unwrap();
+    body.push_str("\n## Background\n\n- [ ] Preserve this unrelated example.\n");
+    std::fs::write(&path, body).unwrap();
+    git(&root, &["add", ".tickets/01-seed.md"]);
+    git(&root, &["commit", "-qm", "seed separate background"]);
+    good(
+        &root,
+        &[
+            "close",
+            "01",
+            "--check-all",
+            "--resolution",
+            "Verified acceptance",
+        ],
+    );
+    let message = git(&root, &["show", "-s", "--format=%B", "HEAD"]);
+    let (subject, raw) = message.split_once("\n\nTkt-Undo: ").unwrap();
+    let body = std::fs::read_to_string(&path).unwrap().replace(
+        "- [ ] Preserve this unrelated example.",
+        "- [x] Preserve this unrelated example.",
+    );
+    std::fs::write(path, body).unwrap();
+    git(&root, &["add", ".tickets/01-seed.md"]);
+    git(&root, &["commit", "--amend", "--no-edit", "-q"]);
+    let mut receipt: serde_json::Value = serde_json::from_str(raw).unwrap();
+    receipt["after_tree"] = serde_json::json!(git(&root, &["rev-parse", "HEAD^{tree}"]));
+    for change in receipt["changes"].as_array_mut().unwrap() {
+        if change["path"] == ".tickets/01-seed.md" {
+            change["after"]["oid"] =
+                serde_json::json!(git(&root, &["rev-parse", "HEAD:.tickets/01-seed.md"]));
+        }
+    }
+    amend_message(&root, &format!("{subject}\n\nTkt-Undo: {receipt}"));
+    let saved = snapshot(&root);
+    let out = cli(&root, &["--dry-run", "undo"]);
+    assert_eq!(out.status.code(), Some(1), "{out:?}");
+    assert_eq!(snapshot(&root), saved);
+}
+
+#[test]
 fn dirty_index_worktree_and_preexisting_git_state_are_preserved() {
     for state in ["worktree", "index", "REVERT_HEAD", "index.lock"] {
         let (_temp, root) = fixture(false, false);
