@@ -1,7 +1,7 @@
 ---
 id: "168"
 title: "Measure demand for missing-tag and backlog advisories"
-status: in_progress
+status: done
 blocked_by: ["167"]
 priority: low
 validation_criteria:
@@ -55,9 +55,9 @@ Measure representative missing-tag/backlog workflow cases before proposing runti
 
 ## Acceptance criteria
 
-- [ ] Representative observations state scope, frequency, sources and limits without fabricated or newly enabled telemetry
-- [ ] The report distinguishes recurring demand from hypothetical benefit and recommends whether an advisory is justified
-- [ ] No runtime nudge, hard gate or default-status behavior is added by the measurement task
+- [x] Representative observations state scope, frequency, sources and limits without fabricated or newly enabled telemetry
+- [x] The report distinguishes recurring demand from hypothetical benefit and recommends whether an advisory is justified
+- [x] No runtime nudge, hard gate or default-status behavior is added by the measurement task
 
 ## Triage — 2026-11-02
 
@@ -80,3 +80,12 @@ The owner requested review of all parked work and execution of actionable ticket
 ## Cross-project evidence review — 2026-11-03
 
 Current read-only queries across 78 other project boards parsed 3,482 tickets, including 785 open/in-progress tickets, 420 of those without tags, and 258 backlog tickets. Three malformed files were skipped with diagnostics. These are snapshots across mixed active/historical/example corpora, not demand frequency, unwanted backlog or proof that nudges improve behavior. Preserve the existing open measurement scope; compare historical guidance adoption and attributed friction before recommending any runtime advisory. No telemetry was enabled. See [per-project measurements](../docs/evidence/cross-project-review-2026-11-03.json) and [interpretation](../docs/evidence/cross-project-review-2026-11-03.md).
+
+## Resolution (2026-11-04)
+
+Measured cross-project and local tagging/backlog evidence, distinguished prevalence from unwanted workflow behavior, and recorded a no-additional-nudge decision with a bounded revisit threshold; critic accepted.
+
+### Verification
+1. ✓ Representative observations state scope, frequency, sources and limits without fabricated or newly enabled telemetry — "Pinned 78-project snapshot: 3482 parsed tickets, 785 active, 420 active untagged, 258 backlog; project distributions and limitations recorded. Fresh local capture has no untagged active tickets. Historical 167 counts are attributed, not represented as a causal cohort. See docs/advisory-demand.md."
+2. ✓ The report distinguishes recurring demand from hypothetical benefit and recommends whether an advisory is justified — "One observed local over-parking episode is distinguished from independent recurring post-guidance demand. Intentional deferral and untagged-work counterexamples bound the recommendation. No runtime nudge is selected; future reconsideration requires attributed friction and controls."
+3. ✓ No runtime nudge, hard gate or default-status behavior is added by the measurement task — "No product code, default-status policy, hard gate, telemetry collection or consent change added. Arithmetic and links checked; critic accepted final UTC/local chronology and evidence scope. Promoted receipt includes six source identities; disposable measurement artifacts recycled. Shared target/batch helper retained for ongoing 191 and deployment."
