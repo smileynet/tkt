@@ -1,7 +1,7 @@
 ---
 id: "83"
 title: "Add a noninteractive ticket-note append operation"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -30,9 +30,9 @@ Start with a noninteractive append operation that resolves the ticket ID, accept
 
 ## Acceptance criteria
 
-- [ ] Explicit note input is appended atomically to the correct ticket without launching an editor or changing lifecycle state
-- [ ] Existing specification, resolution and evidence are preserved; only intended paths are committed and push policy is honored
-- [ ] Missing IDs, dry-run and concurrent/retry behavior have public integration coverage
+- [x] Explicit note input is appended atomically to the correct ticket without launching an editor or changing lifecycle state
+- [x] Existing specification, resolution and evidence are preserved; only intended paths are committed and push policy is honored
+- [x] Missing IDs, dry-run and concurrent/retry behavior have public integration coverage
 
 ## Field report — 2026-11-01
 
@@ -55,3 +55,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-04)
+
+Implemented explicit attributable note append with bounded UTF-8 input, atomic prefix-preserving writes, same-worktree serialization and scoped push-gated commits. Independent critic accepted after tracking and commit-recovery fixes; final gate passed. See docs/evidence/note-83.md.
+
+### Verification
+1. ✓ Explicit note input is appended atomically to the correct ticket without launching an editor or changing lifecycle state — "Explicit literal/file/stdin appends and all lifecycle states pass in seven public tests; no editor is launched; final mise run check passed 451 Rust tests."
+2. ✓ Existing specification, resolution and evidence are preserved; only intended paths are committed and push policy is honored — "Prefix-byte, resolution/evidence, unrelated staged scope and no-push controls pass; ignored-untracked files are refused before writes; critic accepted; source receipt docs/evidence/note-83.json."
+3. ✓ Missing IDs, dry-run and concurrent/retry behavior have public integration coverage — "Missing/dirty targets, full no-write previews, competing writers, linked worktrees, commit-hook failure and failed-push retry controls pass in tests/note.rs; 42 Node fixtures pass, one existing Windows skip."
