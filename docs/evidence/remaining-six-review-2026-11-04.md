@@ -87,3 +87,11 @@ Artifacts: promoted the bounded probe, compact results and this report. Temporar
 reader executables/fixtures were removed by their owning probe; owned scratch
 scripts/results are recycled after review. Existing build caches, dependencies,
 dashboard server and unknown-owner scratch remain preserved under prior scopes.
+
+Independent critic review accepted the isolation, selected-path absence assertions,
+negative control and limited conclusions; no ticket was closed or unparked on
+unsupported evidence. Fresh notes were published on all six tickets. The plan
+projection passes with no findings; the refreshed dashboard checker passes with
+101 entries, 261 tickets, zero asks/errors/warnings. The LAN page returned HTTP200
+with the current review entry. Four owned scratch helper/result files were
+recycled after review; the promoted probe, results and this report are retained.

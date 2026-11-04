@@ -145,6 +145,8 @@ The owner requested execution of actionable parked work. The [per-ticket review]
 
 ### Current execution queue
 
+Fresh review of all six remaining tickets: [reproduction results and rendering checklist](evidence/remaining-six-review-2026-11-04.md). Private current-reader controls did not reproduce a persistent consent reset; session overrides and alternate roots explain disabled state without file changes. No gate was removed on inference. Browser inventory still denies local browser use; no fallback was attempted. Narrative support remains owner-deferred; its separate status-cell repair was delivered in #248.
+
 The remaining implementation queue is complete: #261 and parent #191 closed after the fresh 523-Rust/42-Node gate and independent critic acceptance ([receipt](evidence/git-effects-261.md)). The installed CLI is `e755765`; workflow deployment is recorded in the receipt. The earlier #259 test-isolation incident remains documented with prior consent/data state unknown ([receipt](evidence/telemetry-preview-259.md)). No open ready ticket remains. #90 is gated by automatic approval review rejecting the launcher implementation as blocked by policy. Three dashboard tickets (#228, #240, #243) retain unavailable rendered acceptance. Two backlog tickets remain: #147 needs its exact cross-session reproduction; #184 is explicitly deferred. This queue adds no dependency edges.
 
 ## Recorded cancellations under ADR 0004
