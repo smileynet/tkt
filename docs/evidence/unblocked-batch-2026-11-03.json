@@ -1,0 +1,164 @@
+{
+  "closed": [
+    "253",
+    "69",
+    "168"
+  ],
+  "rustSourceReceipt": "local-effects-253.json",
+  "acceptedSourceHashesStillMatch": true,
+  "deployment": {
+    "command": "node tools/deploy.mjs",
+    "result": "pass",
+    "claude": "reads checkout directly; strict manifest and inline inventory passed",
+    "codex": "refreshed local marketplace plugin",
+    "kiroCrew": "built only; CLI absent",
+    "comparisons": [
+      {
+        "root": "C:/Users/uosmi/.codex/plugins/cache/tkt/tkt/0.4.0",
+        "skillFiles": 15,
+        "runtimeFiles": 24,
+        "byteHashesMatch": true
+      },
+      {
+        "root": "C:/Users/uosmi/.gemini/config/plugins/tkt",
+        "skillFiles": 15,
+        "runtimeFiles": 24,
+        "byteHashesMatch": true
+      },
+      {
+        "root": "dist/agy-plugin",
+        "skillFiles": 15,
+        "runtimeFiles": 24,
+        "byteHashesMatch": true
+      },
+      {
+        "root": "dist/kirocrew-app",
+        "skillFiles": 15,
+        "runtimeFiles": 24,
+        "byteHashesMatch": true
+      },
+      {
+        "root": "C:/Users/uosmi/.kiro/skills",
+        "skillFiles": 15,
+        "runtimeFiles": 24,
+        "byteHashesMatch": true
+      },
+      {
+        "root": "C:/Users/uosmi/.config/opencode/skills",
+        "skillFiles": 15,
+        "runtimeFiles": 24,
+        "byteHashesMatch": true
+      }
+    ]
+  },
+  "retention": {
+    "measurement": "Logical regular-file lengths, not allocated/reclaimable bytes",
+    "maintainerOwned": "Shared target and Node dependencies retained for ongoing 191/frontier work; clean only through a reviewed maintainer policy. Dist payloads replace on deploy; Kiro Crew staging ends on activation/rebuild.",
+    "harnessOwned": "Native caches remain managed while installed; replace/uninstall with harness manager.",
+    "unknown": "Unowned/mixed scratch, legacy roots, references and temporary backup directory preserved; prior inventory findings were not re-audited or cleaned.",
+    "dashboard": "Retain active supervised LAN state until server stops",
+    "items": [
+      {
+        "path": "target",
+        "files": 20164,
+        "bytes": 4652938579
+      },
+      {
+        "path": "node_modules",
+        "files": 589,
+        "bytes": 3934146
+      },
+      {
+        "path": "dist/agy-plugin",
+        "files": 43,
+        "bytes": 363025
+      },
+      {
+        "path": "dist/kirocrew-app",
+        "files": 43,
+        "bytes": 363095
+      },
+      {
+        "path": ".scratch/.gitkeep",
+        "files": 1,
+        "bytes": 51
+      },
+      {
+        "path": ".scratch/dashboard-lan.json",
+        "files": 1,
+        "bytes": 299
+      },
+      {
+        "path": ".scratch/v050-proposal.md",
+        "files": 1,
+        "bytes": 5129
+      },
+      {
+        "path": ".scratch/research",
+        "files": 11,
+        "bytes": 148002
+      },
+      {
+        "path": ".scratch/review",
+        "files": 9,
+        "bytes": 80544
+      },
+      {
+        "path": ".scratch/review-input",
+        "files": 10,
+        "bytes": 85113
+      },
+      {
+        "path": ".scratch/review-output",
+        "files": 5,
+        "bytes": 43080
+      },
+      {
+        "path": ".scratch/subagent-input",
+        "files": 1,
+        "bytes": 2553
+      },
+      {
+        "path": ".scratch/subagent-raw",
+        "files": 9,
+        "bytes": 130827
+      },
+      {
+        "path": ".references",
+        "files": 1,
+        "bytes": 1672
+      },
+      {
+        "path": ".crush",
+        "files": 3,
+        "bytes": 946727
+      },
+      {
+        "path": ".kiro/skills",
+        "files": 100,
+        "bytes": 348048
+      },
+      {
+        "path": "C:/Users/uosmi/.codex/plugins/cache/tkt/tkt/0.4.0",
+        "files": 26094,
+        "bytes": 4680430707
+      },
+      {
+        "path": "C:/Users/uosmi/.claude/plugins/cache/tkt/tkt/0.4.0",
+        "files": 20520,
+        "bytes": 4506902767
+      },
+      {
+        "path": "C:/Users/uosmi/AppData/Local/Temp/.tickets.bak",
+        "files": 2,
+        "bytes": 127
+      }
+    ]
+  },
+  "verifiedAtCommit": "0e3b058af655e4a0eef7e0b6a2ecaee25cee99ba",
+  "recycled": {
+    "files": 7,
+    "logicalBytes": 14005.0,
+    "scope": "Own batch helpers and terminal logs only; useful results promoted; OS Recycle Bin"
+  }
+}
