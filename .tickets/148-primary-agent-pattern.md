@@ -1,7 +1,7 @@
 ---
 id: "148"
 title: "Support primary-agent role pattern via init snippets and documentation"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -26,9 +26,9 @@ Revise primary-agent role examples around invocation identity, optional ownershi
 
 ## Acceptance criteria
 
-- [ ] Role examples use invocation identity, assignee and eligibility rather than machine capabilities for agent scheduling
-- [ ] Tags, requires, eligibility and ownership stay distinct, including explicit force overrides
-- [ ] Affected standalone guidance examples are consistent with current capabilities and claim behavior
+- [x] Role examples use invocation identity, assignee and eligibility rather than machine capabilities for agent scheduling
+- [x] Tags, requires, eligibility and ownership stay distinct, including explicit force overrides
+- [x] Affected standalone guidance examples are consistent with current capabilities and claim behavior
 
 ## Research
 
@@ -58,3 +58,12 @@ See [the decision record](../docs/decision-record-2026-11-03.md). Backlog remain
 ## Reactivation — 2026-11-03
 
 The owner requested review of all parked work and execution of actionable tickets. This supersedes earlier blanket deferral. See [the parked-work review](../docs/parked-review-2026-11-03.md) for current scope and sequencing. Independent critic review is required before closure.
+
+## Resolution (2026-11-04)
+
+Delivered primary/worker coordination using invocation identity, eligibility and claim ownership, with tags/workstreams and machine requirements kept separate. Explicit handoff uses one open+eligibility edit and an intentional ownership override; WIP remains unclaimable even with force. All init/standalone guidance updated; critic accepted current-target probe and freshgate beforeclosure; installed freshness passed atf2a4f1c.
+
+### Verification
+1. ✓ Role examples use invocation identity, assignee and eligibility rather than machine capabilities for agent scheduling — "Standalone roles reference and all5init constants(6targets) use --agent/TKT_AGENT,eligibility and claim-recordedassignee. No fictitious init--role or new/edit--assignee flags; actualCLI rejection observed."
+2. ✓ Tags, requires, eligibility and ownership stay distinct, including explicit force overrides — "14 disposable current-target CLI observations verify identity precedence, ready worker eligibility, rawquery ownership, WIP force refusal/no-write, close preview/no completionclaim and combinedhandoff+newassignee. Requires are all-of machine declarations in ready, not scheduling roles; directclaim actualbounds stated."
+3. ✓ Affected standalone guidance examples are consistent with current capabilities and claim behavior — "Fresh mise check497Rust/42Node pass,1existingWindows skip,fmt clean,clippy0warnings. Packlint,nativeagystrict,coverage45/355pass; six generatedinit targetscarrybrief. Critic accepted final standalone guidance+probe+gate; docs/evidence/role-examples-148.md."
