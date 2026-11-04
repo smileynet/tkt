@@ -1,11 +1,12 @@
 ---
 id: "256"
 title: "Make import and note fixtures deterministic on macOS"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria: 
   - "Import and note failure fixtures pass on this macOS host without host configuration edits or skipped assertions; Windows coverage is reported separately."
 tags: ["stream:tooling"]
+assignee: "codex"
 ---
 ## What to build
 
