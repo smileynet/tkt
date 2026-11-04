@@ -1,6 +1,6 @@
 ---
 id: "256"
-title: "Make import failure fixtures deterministic on macOS"
+title: "Make import and note fixtures deterministic on macOS"
 status: in_progress
 blocked_by: []
 validation_criteria:
