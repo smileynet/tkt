@@ -59,3 +59,10 @@ Rendered layout/interactions and the browser gate remain unavailable because loc
 browser use is disabled. Keep rendered acceptance unverified, without asking the
 user for dashboard review. Temporary scripts/results are promoted into the evidence
 above, then sent to OS trash; no captures or new runtime dependencies were created.
+
+## Note — 2026-11-04
+
+By: anonymous
+
+<!-- tkt-note:v1 107880-1793793406248658300 -->
+2026-11-04 review: actual laptop/phone graph inspection remains blocked by fresh Work-settings browser denial. Required evidence covers stream/scope filters, selected dependency chains/cross-stream edges, terminal/cancelled context and accurate no-ready/gated/deferred states, with captures and source-bound critic acceptance. Model checks do not substitute. See docs/evidence/remaining-six-review-2026-11-04.md.
