@@ -1,13 +1,14 @@
 ---
 id: "255"
 title: "Keep import guidance within native skill loading limits"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
   - "Core import routing and standalone reference preserve guidance within the observed native body limit"
   - "Strict native validation and refreshed workflow targets are verified with deployment limitations explicit"
 tags: ["kind:bug", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 # Keep GitHub import guidance fully loadable
 
