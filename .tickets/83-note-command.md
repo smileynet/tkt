@@ -1,7 +1,7 @@
 ---
 id: "83"
 title: "Add a noninteractive ticket-note append operation"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Existing specification, resolution and evidence are preserved; only intended paths are committed and push policy is honored"
   - "Missing IDs, dry-run and concurrent/retry behavior have public integration coverage"
 tags: ["cli", "kind:enhancement", "stream:workflow", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Add a noninteractive ticket-note append operation
