@@ -1,7 +1,7 @@
 ---
 id: "253"
 title: "Plan and apply local configuration context and init effects"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -36,7 +36,16 @@ No additional dependency, hook activation, user consent change or release.
 
 ## Acceptance criteria
 
-- [ ] Local effects are prepared as concrete data and Preview performs no filesystem effects.
-- [ ] Config/context/init persistence uses the plan and atomic writes; foreign new-file arrivals are preserved.
-- [ ] Tests cover preview/apply, replacement failure and preserved bytes, and real CLI no-write and normal-write controls.
-- [ ] Full local gate and independent critic review accept final source before closure; parent #191 stays in progress.
+- [x] Local effects are prepared as concrete data and Preview performs no filesystem effects.
+- [x] Config/context/init persistence uses the plan and atomic writes; foreign new-file arrivals are preserved.
+- [x] Tests cover preview/apply, replacement failure and preserved bytes, and real CLI no-write and normal-write controls.
+- [x] Full local gate and independent critic review accept final source before closure; parent #191 stays in progress.
+
+## Resolution (2026-11-04)
+
+Implemented concrete local filesystem plans for config context and init with production preview routing, atomic publication and preserved failure bytes; critic accepted and full gate passed. Parent 191 remains incomplete.
+
+### Verification
+1. ✓ Concrete filesystem plan preserves explicit preview/apply semantics without opaque callbacks — "Concrete Directory/Write/Remove data and explicit Preview/Apply execution; production previews now prepare the same text operations and apply no effects. See docs/evidence/local-effects-253.md."
+2. ✓ Configuration context and init route persistence through atomic local effects with failure and no-write controls — "Four public CLI tests and three effect tests cover full-tree no-write controls, normal operations, stale snapshots, foreign arrivals, invalid text, links and Windows locked replacement. Per-file and external-writer limits remain explicit."
+3. ✓ Full local gate and independent critic review pass; parent all-mutator acceptance remains open — "Final mise run check passed 435 Rust tests and 42 Node fixtures, with clean fmt and zero clippy warnings; one existing Windows skip. Independent critic accepted final production preview routing. Source hashes promoted; disposable child artifacts recycled; shared target retained for ongoing 191."
