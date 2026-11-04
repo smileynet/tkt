@@ -131,7 +131,7 @@ The owner requested execution of actionable parked work. See [the per-ticket rev
 | 99 | Make update check interval configurable | ✅ done |
 | 125 | Design the first external-system import adapter contract | ✅ done |
 | 147 | Investigate telemetry consent resetting to disabled between sessions | backlog |
-| 148 | Support primary-agent role pattern via init snippets and documentation | open |
+| 148 | Support primary-agent role pattern via init snippets and documentation | in_progress |
 | 157 | Optional advisory project pre-commit hooks | ✅ done |
 | 158 | Generate optional advisory native write nudges | open |
 | 168 | Measure demand for missing-tag and backlog advisories | ✅ done |

@@ -1,7 +1,7 @@
 ---
 id: "148"
 title: "Support primary-agent role pattern via init snippets and documentation"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "Tags, requires, eligibility and ownership stay distinct, including explicit force overrides"
   - "Affected standalone guidance examples are consistent with current capabilities and claim behavior"
 tags: ["guidance", "kind:enhancement", "stream:guidance", "triage:ready-for-agent"]
+assignee: "codex"
 ---
 
 # Support primary-agent role pattern via init snippets and documentation
