@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.8.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.9.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -37,7 +37,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.8.0";
+const DEPLOY_VERSION = "1.9.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -174,13 +174,22 @@ function refreshCodex(pack, args) {
   const label = codexPlugin(pack);
   if (!label) return;
   const id = label.slice("Codex plugin ".length);
-  console.log(`\n${args.dryRun ? "would refresh" : "refreshing"} Codex plugin ${id}`);
-  if (args.dryRun) return;
+  if (args.dryRun) { console.log(`\nwould refresh Codex plugin ${id}`); return; }
   const listing = JSON.parse(execFileSync("codex", ["plugin", "list", "--json"], { encoding: "utf8" }));
   const installed = listing.installed?.find((p) => p.pluginId === id && p.enabled);
   if (installed?.source?.source !== "local" || real(installed.source.path) !== real(pack.dir)) {
     throw new Error(`${id} must use this checkout as its local marketplace before deploy: codex plugin marketplace add ${pack.dir}`);
   }
+  const at = installed.installedPath || join(CODEX_HOME(), "plugins", "cache", installed.marketplaceName, installed.name, installed.version);
+  const files = [...agyResources(pack), join(pack.dir, ".codex-plugin", "plugin.json")];
+  const cachedNames = discoverPluginSkills(at, readJson(join(at, ".codex-plugin", "plugin.json")) ?? {});
+  if (JSON.stringify(cachedNames.slice().sort()) === JSON.stringify(pack.skills.map((s) => s.name).sort()) &&
+      files.every((file) => isFile(join(at, relative(pack.dir, file))) && readFileSync(file).equals(readFileSync(join(at, relative(pack.dir, file))))) &&
+      pack.skills.every((skill) => isDir(join(at, relative(pack.dir, skill.src))) && treeHash(skill.src) === treeHash(join(at, relative(pack.dir, skill.src))))) {
+    console.log(`  Codex plugin ${id} is up to date`);
+    return;
+  }
+  console.log(`\nrefreshing Codex plugin ${id}`);
   execFileSync("codex", ["plugin", "add", id, "--json"], { stdio: "inherit" });
 }
 
@@ -287,6 +296,14 @@ function installRoot(pack, root, args) {
   const ownsShared = readJson(join(root, manifestName(pack)))?.resources === resourceName(pack);
   if (hasShared && exists(sharedRoot) && !ownsShared) throw new PackError(`refusing foreign resource directory: ${sharedRoot}`);
   const project = (file) => projectResource(pack, file, root, sharedRoot);
+  const manifest = readJson(join(root, manifestName(pack)));
+  const targets = [...pack.skills.map((s) => join(root, s.name)), ...(hasShared ? [sharedRoot] : [])];
+  if (!args.link && manifest?.mode === "copy" && manifest.resources === (hasShared ? resourceName(pack) : undefined) &&
+      JSON.stringify(readOwned(pack, root).slice().sort()) === JSON.stringify(pack.skills.map((s) => s.name).sort()) &&
+      projectionMatches(resources, project, targets)) {
+    console.log(`\nroot: ${root}  (up to date)`);
+    return;
+  }
   let copied = false;
   const directories = new Set();
   if (!args.dryRun) mkdirSync(root, { recursive: true });
@@ -341,6 +358,7 @@ function doInstall(pack, args) {
   if (!pack.skills.length) { console.error(`no skills found for ${pack.name}`); process.exit(1); }
   const errors = [...lint(pack), ...inspectPortfolio(pack, args).findings];
   if (errors.length) { console.error("install aborted, lint failed:"); for (const e of errors) console.error("  - " + e); process.exit(1); }
+  if (!args.preflighted) preflightInstall(pack, args);
   if (!args.roots.length) {
     verifyClaudeSource(pack, args);
     refreshCodex(pack, args);
@@ -380,6 +398,13 @@ function doInstall(pack, args) {
     if (!args.noKirocrew && isDir(KIROCREW_HOME())) kirocrewDeploy(pack, { ...args, out: null, cmd: "install" });
   }
   console.log(`\n${args.dryRun ? "(dry-run) would install" : "installed"} ${pack.skills.length} skills.`);
+}
+
+function preflightInstall(pack, args) {
+  agyResources(pack); // Resolve the resource closure before any installed target changes.
+  if (!args.roots.length && !args.noAgy && isDir(join(HOME, ".gemini"))) {
+    agyDeploy(pack, { ...args, cmd: "validate" });
+  }
 }
 
 function knownRoots(args) {
@@ -464,6 +489,23 @@ function copyResources(files, project, directories = new Set()) {
   return directories;
 }
 
+function projectionMatches(files, project, roots, extra = []) {
+  const expected = new Map(extra);
+  let directoriesExist = true;
+  for (const file of files) {
+    const bytes = file.endsWith(".md") ? Buffer.from(markdownResources(readFileSync(file, "utf8"), (target) => {
+      const source = resolve(dirname(file), target);
+      if (isDir(source) && !isDir(project(source))) directoriesExist = false;
+      return relative(dirname(project(file)), project(source)).split(sep).join("/") || ".";
+    })) : readFileSync(file);
+    expected.set(project(file), bytes);
+  }
+  if (!directoriesExist || roots.some((root) => !isDir(root) || lstatSync(root).isSymbolicLink())) return false;
+  const actual = roots.flatMap((root) => readdirSync(root, { recursive: true, withFileTypes: true })
+    .filter((entry) => !entry.isDirectory()).map((entry) => join(entry.parentPath ?? entry.path, entry.name)));
+  return actual.length === expected.size && actual.every((file) => lstatSync(file).isFile() && expected.has(file) && expected.get(file).equals(readFileSync(file)));
+}
+
 // Flat skills preserve native command names; linked resources are projected with them.
 function agyDeploy(pack, args) {
   const out = args.out ?? join(pack.dir, "dist", "agy-plugin");
@@ -476,19 +518,26 @@ function agyDeploy(pack, args) {
   };
   console.log(`\nagy plugin: ${tilde(out)}  (${pack.skills.length} skills, v${m.version})`);
   const resources = agyResources(pack);
-  const project = (file) => projectResource(pack, file, join(out, "skills"), out);
+  // Root AGENTS.md is reference material, not an active Antigravity rules file.
+  const project = (file) => file === join(pack.dir, "AGENTS.md") ? join(out, resourceName(pack), "AGENTS.md") : projectResource(pack, file, join(out, "skills"), out);
   if (args.dryRun) return;
-  rmSync(out, { recursive: true, force: true });
-  mkdirSync(join(out, "skills"), { recursive: true });
-  for (const target of copyResources(resources, project)) mkdirSync(target, { recursive: true });
-  writeFileSync(join(out, "plugin.json"), JSON.stringify(agyManifest, null, 2) + "\n");
-  if (args.cmd !== "install") return;
+  const manifestPath = join(out, "plugin.json"), manifestBytes = JSON.stringify(agyManifest, null, 2) + "\n";
+  if (!projectionMatches(resources, project, [out], [[manifestPath, Buffer.from(manifestBytes)]])) {
+    rmSync(out, { recursive: true, force: true });
+    mkdirSync(join(out, "skills"), { recursive: true });
+    for (const target of copyResources(resources, project)) mkdirSync(target, { recursive: true });
+    writeFileSync(manifestPath, manifestBytes);
+  }
+  if (args.cmd === "build") return;
   const hasAgy = spawnSync("agy", ["--version"], { stdio: "ignore" }).error?.code !== "ENOENT";
+  if (hasAgy) execFileSync("agy", ["plugin", "validate", out, "--strict"], { stdio: "inherit" });
+  if (args.cmd === "validate") return;
+  const dest = join(HOME, ".gemini", "config", "plugins", pack.name);
+  if (sameAppContent(out, dest, new Set([manifestName(pack)]))) { console.log(`  agy plugin ${pack.name} is up to date`); return; }
   if (hasAgy) {
-    execFileSync("agy", ["plugin", "validate", out, "--strict"], { stdio: "inherit" });
     execFileSync("agy", ["plugin", "install", out], { stdio: "inherit" });
   } else {
-    const dest = join(HOME, ".gemini", "config", "plugins", pack.name), marker = join(dest, manifestName(pack));
+    const marker = join(dest, manifestName(pack));
     const owned = !lstatSync(dest, { throwIfNoEntry: false })?.isSymbolicLink() && readJson(marker)?.agyPlugin === pack.name;
     if (exists(dest) && !owned && !args.force) {
       console.log(`  refused ${tilde(dest)} (exists, not installed by ${pack.name}; --force to override)`);
@@ -556,12 +605,12 @@ function kirocrewDeploy(pack, args) {
 // The installed copy matches the build when every built file is there byte for byte and the
 // copy has no other packaged files. The gateway adds its own runtime state beside them.
 const KIROCREW_RUNTIME = new Set([".app_secret", "approved-grants.json", "installed.json", "data"]);
-export function sameAppContent(built, installed) {
+export function sameAppContent(built, installed, runtime = KIROCREW_RUNTIME) {
   if (!isDir(installed)) return false;
   const files = (root) => readdirSync(root, { recursive: true, withFileTypes: true })
     .filter((e) => e.isFile())
     .map((e) => relative(root, join(e.parentPath ?? e.path, e.name)))
-    .filter((rel) => !KIROCREW_RUNTIME.has(rel.split(sep)[0]))
+    .filter((rel) => !runtime.has(rel.split(sep)[0]))
     .sort();
   const a = files(built), b = files(installed);
   if (a.length !== b.length || a.some((rel, i) => rel !== b[i])) return false;
@@ -887,6 +936,8 @@ if (process.argv[1] && real(fileURLToPath(import.meta.url)) === real(process.arg
       console.error(JSON.stringify({ status: "fail", metrics: { packs: portfolio.packs.length }, errors: portfolio.findings }));
       process.exit(1);
     }
-    for (const item of portfolio.packs.filter((p) => !p.inventoryOnly)) doInstall(item, { ...args, portfolio: null });
+    const active = portfolio.packs.filter((p) => !p.inventoryOnly);
+    for (const item of active) preflightInstall(item, args);
+    for (const item of active) doInstall(item, { ...args, portfolio: null, preflighted: true });
   } else doInstall(pack, args);
 }
