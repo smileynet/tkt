@@ -214,6 +214,39 @@ function refreshCodex(pack, args) {
   execFileSync("codex", ["plugin", "add", id, "--json"], { stdio: "inherit" });
 }
 
+// ZCode: refresh the installed plugin from this checkout via its CLI. The marketplace update
+// re-syncs the snapshot from the directory source; the plugin update then re-copies content at
+// the same version (spike-confirmed), so no version bump is needed. A version change prints
+// "restart zcode to apply" — skills load at session start.
+function refreshZcode(pack, args) {
+  const label = zcodePlugin(pack);
+  if (!label) return;
+  const id = label.slice("ZCode plugin ".length);
+  const marketplace = id.split("@")[1];
+  if (args.dryRun) { console.log(`\nwould refresh ZCode plugin ${id}`); return; }
+  const cli = process.env.ZCODE_CLI || (platform() === "darwin" ? "/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs" : null);
+  if (!cli || !isFile(cli)) {
+    console.log(`  zcode CLI not found (set ZCODE_CLI): plugin refresh skipped (${id} stays as installed)`);
+    return;
+  }
+  console.log(`\nrefreshing ZCode plugin ${id}`);
+  try {
+    execFileSync(process.execPath, [cli, "plugins", "marketplace", "update", marketplace], { stdio: "inherit" });
+    execFileSync(process.execPath, [cli, "plugins", "update", id], { stdio: "inherit" });
+  } catch (error) {
+    console.log(`  warning: ZCode plugin refresh did not finish (${String(error.message).split("\n")[0]})`);
+    console.log(`  then run it yourself from a terminal on this machine:\n    node ${cli} plugins marketplace update ${marketplace} && node ${cli} plugins update ${id}`);
+    return;
+  }
+  // Superseded version cache dirs linger after upgrades; keep only the newest.
+  const base = join(ZCODE_HOME(), "cli", "plugins", "cache", marketplace, pack.name);
+  const stale = (isDir(base) ? readdirSync(base).filter((v) => !v.startsWith(".")).sort(versionDesc) : []).slice(1);
+  for (const version of stale) {
+    console.log(`  prune   ${pack.name} ${version} (superseded cache dir)`);
+    rmSync(join(base, version), { recursive: true, force: true });
+  }
+}
+
 // A plugin harness must not inherit another harness's bare copies through a root symlink.
 function separatePluginRoots(pack, args) {
   for (const h of HARNESSES()) {
@@ -383,6 +416,7 @@ function doInstall(pack, args) {
   if (!args.roots.length) {
     verifyClaudeSource(pack, args);
     refreshCodex(pack, args);
+    refreshZcode(pack, args);
     if (!args.allowDual) separatePluginRoots(pack, args);
   }
   const harnesses = HARNESSES().map((h) => ({ ...h, covered: !args.allowDual && h.plugin ? h.plugin(pack) : null }));
@@ -821,11 +855,7 @@ function doAudit(pack, args) {
       const [name, market] = id.split("@");
       const base = join(cache, market, name);
       if (!isDir(base)) { findings.push(`zcode plugin ${id}: cache missing at ${base}`); continue; }
-      const versions = readdirSync(base).filter((v) => !v.startsWith(".")).sort((a, b) => {
-        const tuple = (v) => (/^(\d+)\.(\d+)\.(\d+)$/.exec(v ?? "") || []).slice(1).map(Number);
-        for (let i = 0; i < 3; i++) if (tuple(b)[i] !== tuple(a)[i]) return (tuple(b)[i] ?? -1) - (tuple(a)[i] ?? -1);
-        return 0;
-      });
+      const versions = readdirSync(base).filter((v) => !v.startsWith(".")).sort(versionDesc);
       const at = join(base, versions[0]);
       const manifest = readJson(join(at, ".zcode-plugin", "plugin.json")) ?? readJson(join(at, ".claude-plugin", "plugin.json")) ?? readJson(join(at, ".codex-plugin", "plugin.json"));
       addPlugin("zcode", id, at, manifest);
@@ -865,6 +895,13 @@ function discoverPluginSkills(dir, manifest) {
     walk(at);
   }
   return names;
+}
+
+// Newest-first order for plugin cache version directories (X.Y.Z, non-numeric sorts last).
+function versionDesc(a, b) {
+  const tuple = (v) => (/^(\d+)\.(\d+)\.(\d+)$/.exec(v ?? "") || []).slice(1).map(Number);
+  for (let i = 0; i < 3; i++) if (tuple(b)[i] !== tuple(a)[i]) return (tuple(b)[i] ?? -1) - (tuple(a)[i] ?? -1);
+  return 0;
 }
 
 function treeHash(dir) {
