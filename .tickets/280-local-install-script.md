@@ -1,5 +1,5 @@
 ---
-id: "278"
+id: "280"
 title: "One-command local install: build + stable install + freshness check"
 status: in_progress
 blocked_by: []
