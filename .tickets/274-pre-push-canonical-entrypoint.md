@@ -1,7 +1,7 @@
 ---
 id: "274"
 title: "Fix pre-push entry-point detection across canonicalized paths"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -25,11 +25,18 @@ Make direct-script detection robust when the invocation path and module URL diff
 
 ## Acceptance criteria
 
-- [ ] Direct invocation runs `main()` when path aliases differ only by symbolic-link/canonical-path normalization.
-- [ ] The actual Git push fixture invokes the gate, and a failing gate blocks the push.
-- [ ] Installation, ownership, linked-worktree, malformed-input, timeout, and missing-runtime tests retain their behavior.
-- [ ] `node --test tools/pre-push-check.test.mjs` and the complete Node tooling suite pass.
+- [x] Direct invocation runs `main()` when path aliases differ only by symbolic-link/canonical-path normalization.
+- [x] The actual Git push fixture invokes the gate, and a failing gate blocks the push.
+- [x] Installation, ownership, linked-worktree, malformed-input, timeout, and missing-runtime tests retain their behavior.
+- [x] `node --test tools/pre-push-check.test.mjs` and the complete Node tooling suite pass.
 
 ## Out of scope
 
 Enabling the hook, changing hosted-CI policy, or weakening the full-check contract.
+
+## Resolution (2026-11-08)
+
+Canonicalize the invoked script path before comparing its file URL, so direct execution and actual Git pushes reliably invoke the gate.
+
+### Verification
+1. ✓ Direct execution and actual-push fixtures invoke the gate across canonicalized paths; all pre-push and Node tooling tests pass — "Commit 20edac8; node --test tools/pre-push-check.test.mjs passed 7/7 including real push success/failure; node --test tools/*.test.mjs passed 96/96; mise run check passed formatting, Clippy, tooling fixtures, and all Rust tests."
