@@ -107,6 +107,13 @@ install the plugin; the owner installs **tkt** from **Personal** by clicking **ï
 Rebuild and register the same output directory for updates, and start a new chat if
 an active session retains old skills. Live update timing remains unverified.
 
+Verified 2026-11-08: the rights scan was clear, native validation returned zero errors
+and warnings, and registration read back `tkt` version `0.4.0` with all four skills.
+After owner installation, model invocation loaded `tkt:tkt-core`; its manifest, skill
+body and linked `references/commands.md` matched the package byte for byte. A
+read-only `tkt query --all-context --status in_progress -o json` returned the current
+project's tickets. Update timing and non-macOS installation remain unverified.
+
 `tests/plugin_manifests.rs` keeps `.kimi-plugin/kimi.plugin.json` on the Cargo
 version. Local release preparation updates it with the other manifests, and release
 archives include a self-contained Kimi bundle. GitHub publication does not register,
