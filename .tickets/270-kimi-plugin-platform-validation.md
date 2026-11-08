@@ -35,3 +35,10 @@ By: anonymous
 
 <!-- tkt-note:v1 99564-1794172689034443000 -->
 2026-11-08 audit: no real non-macOS Kimi client is available in this environment. Keep backlog with gate:evidence; static package inspection is not platform validation.
+
+## Note — 2026-11-08
+
+By: anonymous
+
+<!-- tkt-note:v1 9747-1794173499010986000 -->
+## Planning gate\n\nA real non-macOS Kimi client is required; no platform result may be inferred from macOS or static package checks.
