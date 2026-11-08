@@ -86,7 +86,7 @@ Rows record completed repairs alongside remaining investigations and implementat
 | 234 | Acceptance criteria can be marked moved to another ticket | ✅ done |
 | 235 | Ticket mutations skip heavy commit hooks and can defer the push | ✅ done |
 | 239 | Review historical closure warnings without fabricating evidence | ✅ done |
-| 240 | Show workstreams and decision/evidence gates in the ticket graph | in_progress |
+| 240 | Show workstreams and decision/evidence gates in the ticket graph | ✅ done |
 | 241 | Reject done status outside the close lifecycle | ✅ done |
 
 ## Native relations and label namespaces

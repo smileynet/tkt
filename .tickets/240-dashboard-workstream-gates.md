@@ -1,7 +1,7 @@
 ---
 id: "240"
 title: "Show workstreams and decision/evidence gates in the ticket graph"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Task graph distinguishes open unblocked work, ticket dependencies, decision gates and evidence gaps without changing frontier ordering"
@@ -66,3 +66,12 @@ By: anonymous
 
 <!-- tkt-note:v1 107880-1793793406248658300 -->
 2026-11-04 review: actual laptop/phone graph inspection remains blocked by fresh Work-settings browser denial. Required evidence covers stream/scope filters, selected dependency chains/cross-stream edges, terminal/cancelled context and accurate no-ready/gated/deferred states, with captures and source-bound critic acceptance. Model checks do not substitute. See docs/evidence/remaining-six-review-2026-11-04.md.
+
+## Resolution (2026-11-08)
+
+Workstream lanes, real dependency edges, and decision/evidence gate semantics are implemented. Rendered layout acceptance moved to shared ticket 277.
+
+### Verification
+1. ✓ Task graph distinguishes open unblocked work, ticket dependencies, decision gates and evidence gaps without changing frontier ordering — "docs/evidence/dashboard-workstream-gates-240.md records distinct frontier/dependency/gate semantics with unchanged ticket ordering and explicit all-work coverage."
+2. ✓ Snapshot includes every ticket and graph workstreams preserve visible cross-stream dependencies — "The same evidence records all 240 tickets, unique workstream memberships, preserved cross-stream dependencies, all 17 entries, and repeatable snapshots."
+3. ✓ Dashboard and graph model checks pass; unavailable rendered checks are explicitly unverified — "Canonical 38-test fixtures and adopter model checks passed; current strict dashboard comparison passes. Laptop/phone rendering remains explicitly unverified in ticket 277."
