@@ -21,3 +21,6 @@ Record actual browser/client identity, viewport sizes, captures, interactions, c
 
 - [ ] Inspect overview, history, and Plan views at phone and laptop widths. <!-- tkt-from:228:6 -->
 
+
+- [ ] Rendered laptop/phone layout and interactions are inspected when a permitted browser is available. <!-- tkt-from:240:6 -->
+

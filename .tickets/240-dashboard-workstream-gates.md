@@ -34,7 +34,7 @@ the dashboard snapshot is a projection, not a second planning database.
 - [x] Ticket dependencies, completed blockers, deferred work and lifecycle status keep their distinct meanings.
 - [x] Snapshot regeneration preserves all entries and includes every ticket.
 - [x] Graph fixtures, dashboard checker, strict ticket validation and plan checks pass.
-- [ ] Rendered laptop/phone layout and interactions are inspected when a permitted browser is available.
+- [>] Rendered laptop/phone layout and interactions are inspected when a permitted browser is available. <!-- tkt-moved:277 -->
 
 ## Planning gate
 
