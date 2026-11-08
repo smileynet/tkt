@@ -1,7 +1,7 @@
 ---
 id: "269"
 title: "Measure tkt Kimi plugin update behavior"
-status: in_progress
+status: open
 blocked_by: []
 validation_criteria:
   - "test -s docs/evidence/kimi-plugin-live-update.md"
