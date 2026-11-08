@@ -42,3 +42,12 @@ By: anonymous
 
 <!-- tkt-note:v1 9747-1794173499010986000 -->
 ## Planning gate\n\nA real non-macOS Kimi client is required; no platform result may be inferred from macOS or static package checks.
+
+## Note — 2026-11-08
+
+By: anonymous
+
+<!-- tkt-note:v1 10219-1794173520330919000 -->
+## Planning gate
+
+A real non-macOS Kimi client is required; no platform result may be inferred from macOS or static package checks.
