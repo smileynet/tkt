@@ -114,6 +114,7 @@ export function lint(pack) {
 // never as the harness's copy). `project`: project-level dir names it scans (<proj>/<d>/skills).
 // `plugin`: how to tell whether this pack is installed as the harness's plugin.
 const CODEX_HOME = () => process.env.CODEX_HOME || join(HOME, ".codex");
+const ZCODE_HOME = () => process.env.ZCODE_HOME || join(HOME, ".zcode");
 const SHARED = () => join(HOME, ".agents", "skills");
 const HARNESSES = () => [
   { id: "kiro", home: join(HOME, ".kiro"), own: join(HOME, ".kiro", "skills"),
@@ -126,6 +127,9 @@ const HARNESSES = () => [
   { id: "opencode", home: join(HOME, ".config", "opencode"), own: join(HOME, ".config", "opencode", "skills"),
     reads: [{ root: join(HOME, ".config", "opencode", "skills") }, { root: join(HOME, ".claude", "skills") }, { root: SHARED() }],
     project: [".opencode", ".claude", ".agents"] },
+  { id: "zcode", home: ZCODE_HOME(), own: join(ZCODE_HOME(), "skills"),
+    reads: [{ root: join(ZCODE_HOME(), "skills") }, { root: SHARED() }],
+    project: [".zcode", ".agents"], plugin: zcodePlugin },
 ];
 
 // Claude Code: installed_plugins.json lists `<name>@<marketplace>` ids with their install path.
@@ -167,6 +171,19 @@ function codexPlugin(pack) {
     if (id?.startsWith(`${pack.name}@`) && /^enabled\s*=\s*true\s*(?:#.*)?$/m.test(section)) return `Codex plugin ${id}`;
   }
   return null;
+}
+
+// ZCode: `~/.zcode/cli/config.json` records `plugins.enabledPlugins["<name>@<marketplace>"]`
+// booleans; a plugin with no entry is enabled by default, so a cache hit counts too — an
+// explicit false alone does not.
+function zcodePlugin(pack) {
+  const enabled = readJson(join(ZCODE_HOME(), "cli", "config.json"))?.plugins?.enabledPlugins ?? {};
+  const ids = Object.keys(enabled).filter((id) => id.startsWith(`${pack.name}@`));
+  if (ids.length) return ids.some((id) => enabled[id] === true) ? `ZCode plugin ${ids.find((id) => enabled[id] === true)}` : null;
+  const cache = join(ZCODE_HOME(), "cli", "plugins", "cache");
+  if (!isDir(cache)) return null;
+  const market = readdirSync(cache).find((m) => isDir(join(cache, m, pack.name)));
+  return market ? `ZCode plugin ${pack.name}@${market}` : null;
 }
 
 // Refresh before pruning copies: a failed plugin update must leave the old deployment intact.
@@ -723,7 +740,7 @@ function installedResourceFindings(root, manifest) {
 
 function doAudit(pack, args) {
   const harnesses = HARNESSES();
-  const roots = uniqReal([...knownRoots({ roots: [] }), ...[".agents", ".claude", ".codex", ".opencode", ".kiro"].map((d) => resolve(d, "skills"))].filter(isDir));
+  const roots = uniqReal([...knownRoots({ roots: [] }), ...[".agents", ".claude", ".codex", ".opencode", ".kiro", ".zcode"].map((d) => resolve(d, "skills"))].filter(isDir));
   const portfolio = inspectPortfolio(pack, args);
   const findings = [...portfolio.findings];
   const notices = [...portfolio.notices];
@@ -748,7 +765,7 @@ function doAudit(pack, args) {
     if (unowned.length) findings.push(`${tilde(root)}: ${unowned.length} unowned: ${unowned.join(" ")}`);
     for (const [n, ps] of owners) if (ps.length > 1) findings.push(`${tilde(root)}: "${n}" claimed by ${ps.join(", ")}`);
   }
-  const pluginSkills = { claude: new Map(), codex: new Map() };
+  const pluginSkills = { claude: new Map(), codex: new Map(), zcode: new Map() };
   const addPlugin = (harness, id, at, manifest) => {
     if (!manifest) { findings.push(`${harness} plugin ${id}: installed manifest missing at ${at}`); return; }
     const names = discoverPluginSkills(at, manifest);
@@ -788,6 +805,26 @@ function doAudit(pack, args) {
         const manifest = overlay ? { ...portable, ...overlay } : readJson(join(at, ".codex-plugin", "plugin.json")) ?? portable;
         addPlugin("codex", installed.pluginId, at, manifest);
       }
+    }
+  }
+  // ZCode has no list CLI, so the inventory is file-based: explicitly enabled entries only
+  // (built-in plugins carry no entry), newest cached version dir (older dirs linger).
+  {
+    const enabled = readJson(join(ZCODE_HOME(), "cli", "config.json"))?.plugins?.enabledPlugins ?? {};
+    const cache = join(ZCODE_HOME(), "cli", "plugins", "cache");
+    for (const [id, on] of Object.entries(enabled)) {
+      if (on !== true) continue;
+      const [name, market] = id.split("@");
+      const base = join(cache, market, name);
+      if (!isDir(base)) { findings.push(`zcode plugin ${id}: cache missing at ${base}`); continue; }
+      const versions = readdirSync(base).filter((v) => !v.startsWith(".")).sort((a, b) => {
+        const tuple = (v) => (/^(\d+)\.(\d+)\.(\d+)$/.exec(v ?? "") || []).slice(1).map(Number);
+        for (let i = 0; i < 3; i++) if (tuple(b)[i] !== tuple(a)[i]) return (tuple(b)[i] ?? -1) - (tuple(a)[i] ?? -1);
+        return 0;
+      });
+      const at = join(base, versions[0]);
+      const manifest = readJson(join(at, ".zcode-plugin", "plugin.json")) ?? readJson(join(at, ".claude-plugin", "plugin.json")) ?? readJson(join(at, ".codex-plugin", "plugin.json"));
+      addPlugin("zcode", id, at, manifest);
     }
   }
   for (const h of harnesses.filter((h) => isDir(h.home))) {
