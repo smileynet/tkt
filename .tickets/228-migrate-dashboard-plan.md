@@ -1,7 +1,7 @@
 ---
 id: "228"
 title: "Migrate status dashboard to the current Plan-tab contract"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Dashboard preserves existing entries, renders an all-ticket Plan tab, supports snapshot refresh, and passes the current checker without warnings"
@@ -69,3 +69,10 @@ By: anonymous
 
 <!-- tkt-note:v1 111452-1793793404013577100 -->
 2026-11-04 fresh browser inventory still reports Local browser use is disabled in Work settings. Dashboard checker remains0errors/0warnings. Pending visual AC requires actual Overview/History/Plan at recorded laptop/phone widths, clipping and navigation checks, source-bound captures and critic receipt. No fallback browser or owner feedback ask. Detailed checklist: docs/evidence/remaining-six-review-2026-11-04.md.
+
+## Resolution (2026-11-08)
+
+Dashboard Plan migration and source/data checks are complete. The remaining rendered acceptance criterion moved to shared ticket 277.
+
+### Verification
+1. ✓ Dashboard preserves existing entries, renders an all-ticket Plan tab, supports snapshot refresh, and passes the current checker without warnings — "docs/evidence/dashboard-migration-228.md records preservation of all 16 entries/assets, full-board snapshots, canonical renderer/source checks and a warning-free checker; current strict full-board comparison also passes. Rendered acceptance is transferred, not claimed."
