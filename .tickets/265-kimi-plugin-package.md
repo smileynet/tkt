@@ -1,7 +1,7 @@
 ---
 id: "265"
 title: "Build a self-contained tkt Kimi plugin package"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "The builder emits all four tkt skills, linked resources, legal notices, localization, and Kimi metadata into dist/kimi-plugin without Claude hooks."
