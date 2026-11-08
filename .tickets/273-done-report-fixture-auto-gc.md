@@ -1,7 +1,7 @@
 ---
 id: "273"
 title: "Disable automatic Git GC in done-report fixtures"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
