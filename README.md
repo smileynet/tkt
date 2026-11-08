@@ -195,6 +195,13 @@ Batch creation for related work:
 tkt batch "api:Build API" "docs:Write docs" "tests:Add tests" --blocked-by 01
 ```
 
+For scripted creation, `tkt new -o json` preserves the existing `result` and
+optional `hints` fields and adds `id` plus repository-relative `path`. Batch JSON
+is one object with a `tickets` array containing each `{id, path}` in input order.
+These fields report the final allocation after any collision retry, so scripts do
+not need to parse the human-readable result. Quiet JSON previews expose the same
+identity fields.
+
 ### Claim and close
 
 Body acceptance checkboxes use `--check-all` / `--ac`; frontmatter validation

@@ -54,7 +54,7 @@ Project structural frontier slot checks are info-only: source, acceptance and va
 Use tkt sync-plan --generate [FILE] for a full derived table: stdout by default, explicit owned region for file writes, global dry-run safe, human narrative outside preserved.
 Optional tkt hooks install/check/remove/run manages advisory Git hooks explicitly; no hook is installed by init and existing mutation bypass stays unchanged.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
-Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q. New JSON adds final id/path; batch JSON adds tickets[{id,path}], including after allocation retry.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
@@ -128,7 +128,7 @@ Project structural frontier slot checks are info-only: source, acceptance and va
 Use tkt sync-plan --generate [FILE] for a full derived table: stdout by default, explicit owned region for file writes, global dry-run safe, human narrative outside preserved.
 Optional tkt hooks install/check/remove/run manages advisory Git hooks explicitly; no hook is installed by init and existing mutation bypass stays unchanged.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
-Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q. New JSON adds final id/path; batch JSON adds tickets[{id,path}], including after allocation retry.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
@@ -197,7 +197,7 @@ Project structural frontier slot checks are info-only: source, acceptance and va
 Use tkt sync-plan --generate [FILE] for a full derived table: stdout by default, explicit owned region for file writes, global dry-run safe, human narrative outside preserved.
 Optional tkt hooks install/check/remove/run manages advisory Git hooks explicitly; no hook is installed by init and existing mutation bypass stays unchanged.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
-Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q. New JSON adds final id/path; batch JSON adds tickets[{id,path}], including after allocation retry.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
@@ -276,7 +276,7 @@ Project structural frontier slot checks are info-only: source, acceptance and va
 Use tkt sync-plan --generate [FILE] for a full derived table: stdout by default, explicit owned region for file writes, global dry-run safe, human narrative outside preserved.
 Optional tkt hooks install/check/remove/run manages advisory Git hooks explicitly; no hook is installed by init and existing mutation bypass stays unchanged.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
-Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q. New JSON adds final id/path; batch JSON adds tickets[{id,path}], including after allocation retry.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.
@@ -356,7 +356,7 @@ Project structural frontier slot checks are info-only: source, acceptance and va
 Use tkt sync-plan --generate [FILE] for a full derived table: stdout by default, explicit owned region for file writes, global dry-run safe, human narrative outside preserved.
 Optional tkt hooks install/check/remove/run manages advisory Git hooks explicitly; no hook is installed by init and existing mutation bypass stays unchanged.
 Invalid known config policies fail with key/value/source context. Skipped invalid tickets produce stderr warnings (JSONL under -o json); exit 0 alone does not prove corpus health.
-Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q.
+Query preserves tag context; --all-context bypasses it without changing context. Query emits typed known fields and unknown raw frontmatter strings; pending_blockers omits done prerequisites but blocked_by retains history. -o json stays structured when combined with -q. New JSON adds final id/path; batch JSON adds tickets[{id,path}], including after allocation retry.
 Deep audit ignores quoted template examples but flags real unfinished sections; checked placeholders remain unfilled content after closure.
 DO_NOT_TRACK=1 disables update requests/cache writes. Rebase reports possible stale body citations without rewriting prose; qualify external issues as owner/repo#NNN or links, and quote examples as code.
 Creation: new --body TEXT, @file or - (stdin); new/batch --template NAME reads .tickets/templates/NAME.md verbatim. Replace default prompts and cite the source.

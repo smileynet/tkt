@@ -320,6 +320,7 @@ enum Commands {
         priority: Option<String>,
         #[arg(long)]
         status: Option<String>,
+        /// Check acceptance criteria by 1-based index; repeat or comma-separate indices
         #[arg(long, value_delimiter = ',')]
         ac: Option<Vec<u32>>,
         /// Validation criteria (repeatable, replaces existing list)
@@ -1309,17 +1310,25 @@ pub(crate) fn emit_json_success(result: &str) {
     println!("{{\"ok\":true,\"result\":{}}}", json_escape(result));
 }
 
-/// Emit a JSON success envelope carrying advisory hints (machine-legible).
+/// Emit a creation success envelope with its final ticket identity and advisory hints.
 /// Hints are advisory only — presence never changes the exit code.
-pub(crate) fn emit_json_success_with_hints(result: &str, hints: &[crate::nudge::Hint]) {
-    if hints.is_empty() {
-        emit_json_success(result);
-        return;
-    }
-    let arr: Vec<String> = hints.iter().map(|h| h.to_json()).collect();
+pub(crate) fn emit_json_created_with_hints(
+    result: &str,
+    id: &str,
+    path: &str,
+    hints: &[crate::nudge::Hint],
+) {
+    let hint_part = if hints.is_empty() {
+        String::new()
+    } else {
+        let arr: Vec<String> = hints.iter().map(|h| h.to_json()).collect();
+        format!(",\"hints\":[{}]", arr.join(","))
+    };
     println!(
-        "{{\"ok\":true,\"result\":{},\"hints\":[{}]}}",
+        "{{\"ok\":true,\"result\":{},\"id\":{},\"path\":{}{}}}",
         json_escape(result),
-        arr.join(",")
+        json_escape(id),
+        json_escape(path),
+        hint_part
     );
 }

@@ -64,6 +64,12 @@ remains snippet-only and quiet writes omit recommendation chatter.
 | `--dry-run` | Preview mutations without writing |
 | `--color=always\|never\|auto` | Control ANSI color output (default: auto) |
 
+Creation success JSON is additive for `new`: `id` and repository-relative `path`
+join the existing `ok`, `result` and optional `hints`. Batch emits one object with
+a `tickets` array of final `{id, path}` pairs in input order, in normal and quiet
+JSON modes. Quiet JSON dry runs expose the same fields. Collision retries report
+the retained allocation, not rolled-back IDs.
+
 
 <a id="rule-12"></a>
 

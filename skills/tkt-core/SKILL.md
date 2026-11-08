@@ -230,7 +230,7 @@ when missing; qualify external issues or link them, and use code formatting for 
 - **Env filtering (legacy):** Tickets with `env: corp` only appear in `tkt ready` when `CREW_ENV=corp`. No env field = visible everywhere.
 - **Requires filtering:** Tickets with `requires: [gpu, linux]` only appear if `machine.capabilities` config includes all listed values. If a ticket has `env` but no `requires`, requires is synthesized from env for backward compat. Prefer `requires` over `env` for new tickets.
 - **Tag context:** `tkt context backend api` sets a session-scoped filter. `ready`, `query`, and `blocked` only show tickets whose `tags` include all context-include tags and none of the context-exclude tags. `new` and `batch` auto-inherit context tags.
-- **Scripted/non-interactive use — advice routing:** `tkt`'s advisory hints (e.g. the batch nudge) print to **stderr** in human mode. `-q`/`--quiet` keeps text output minimal; `-o json` selects structured output and remains JSON when combined with `-q`. Set `TKT_ADVICE=0` (also `off`/`false`) to silence the nudge entirely.
+- **Scripted/non-interactive use — advice routing:** `tkt`'s advisory hints (e.g. the batch nudge) print to **stderr** in human mode. `-q`/`--quiet` keeps text output minimal; `-o json` selects structured output and remains JSON when combined with `-q`. Creation JSON exposes final `id`/`path` fields (`tickets[]` for batch), including after allocation retry; read those instead of parsing `result`. Set `TKT_ADVICE=0` (also `off`/`false`) to silence the nudge entirely.
 
 Query retains the active tag context by default and reports actual narrowing on
 stderr. Use `tkt query --all-context` to bypass context for a whole-board audit

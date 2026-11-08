@@ -3,8 +3,7 @@
 use anyhow::Result;
 
 use crate::commands::common::{
-    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
-    project_config, tickets_dir,
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, project_config, tickets_dir,
 };
 use crate::core::{self, validate};
 use crate::transaction::{GitTransaction, PublishResult};
@@ -194,7 +193,12 @@ pub fn run(
         .execute(crate::effects::Mode::current())?;
 
         if is_quiet_json() {
-            print_quiet_json_success(&format!("would create {}", filename));
+            crate::cli::emit_json_created_with_hints(
+                &format!("would create {}", filename),
+                &tid,
+                &rel_path,
+                &[],
+            );
         } else {
             println!("Would create .tickets/{}", filename);
             println!(
@@ -249,7 +253,7 @@ pub fn run(
                     crate::transaction::PublishOutcome::LocalOnly => "local only",
                     _ => "pushed",
                 };
-                emit_created(&tid, slug, detail, hint.as_ref());
+                emit_created(&tid, slug, &rel_path, detail, hint.as_ref());
             }
             Ok(0)
         }
@@ -304,6 +308,7 @@ pub fn run(
                 emit_created(
                     &tid2,
                     slug,
+                    &rel_path2,
                     &format!("pushed, renumbered {}→{}", tid, tid2),
                     hint.as_ref(),
                 );
@@ -325,14 +330,12 @@ fn add_parent(content: String, parent: Option<&str>, path: &std::path::Path) -> 
 /// Emit the `created` success line, routing an optional advisory nudge: human
 /// mode prints prose to stderr; JSON mode carries it in the `hints[]` array.
 /// Advisory only — never touches stdout in human mode, never changes exit code.
-fn emit_created(id: &str, slug: &str, detail: &str, hint: Option<&crate::nudge::Hint>) {
+fn emit_created(id: &str, slug: &str, path: &str, detail: &str, hint: Option<&crate::nudge::Hint>) {
     use crate::commands::common::{is_json_output, success_msg};
     if is_json_output() {
         let result = format!("created {} {} ({})", id, slug, detail);
-        match hint {
-            Some(h) => crate::cli::emit_json_success_with_hints(&result, std::slice::from_ref(h)),
-            None => crate::cli::emit_json_success(&result),
-        }
+        let hints = hint.map(std::slice::from_ref).unwrap_or(&[]);
+        crate::cli::emit_json_created_with_hints(&result, id, path, hints);
     } else {
         println!("{}", success_msg("created", id, slug, detail));
         if let Some(h) = hint {

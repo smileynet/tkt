@@ -144,6 +144,15 @@ templates do not interpolate fields. Fill the default prompts before validating
 open work; unfilled prompts still trigger `stub-body`. Do not park actionable work
 to hide that warning.
 
+### Creation JSON
+
+`tkt new -o json` preserves `ok`, `result` and optional `hints`, and adds the final
+`id` plus repository-relative `path`. `tkt batch -o json` emits one success object
+whose `tickets` array contains each final `{id, path}` in input order. Quiet JSON
+previews expose the same identity fields. After an allocation retry, these fields
+identify the retained tickets rather than the rolled-back attempt; scripts should
+read them instead of parsing `result`.
+
 ## Edit flags
 
 | Flag | Effect |
@@ -158,7 +167,7 @@ to hide that warning.
 | `--remove-tag T` | Remove exact tags last (repeatable; removals win) |
 | `--env E` | Set environment (pass `''` to clear) |
 | `--spec S` | Set spec link (pass `''` to clear) |
-| `--ac N,N` | Check acceptance criteria boxes (1-based) |
+| `--ac N,N` | Check acceptance criteria by 1-based index; repeat or comma-separate indices |
 | `--validation "..."` | Replace validation criteria list. Alias: `--vc` |
 
 **Dependency edits replace:** `--blocked-by` replaces the entire list. To add a

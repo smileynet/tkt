@@ -3,8 +3,8 @@
 use anyhow::Result;
 
 use crate::commands::common::{
-    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_quiet_json_success,
-    print_success, project_config, tickets_dir,
+    domain_bail, is_dry_run, is_json_output, is_quiet, is_quiet_json, print_success,
+    project_config, tickets_dir,
 };
 use crate::core::{self, validate};
 use crate::transaction::{GitTransaction, PublishResult};
@@ -220,7 +220,11 @@ pub fn run(
             .map(|i| format!("{:0>width$}", base + i as u64, width = width))
             .collect();
         if is_quiet_json() {
-            print_quiet_json_success(&format!("would create tickets {}", tids.join(", ")));
+            emit_batch_json(
+                &format!("would create tickets {}", tids.join(", ")),
+                &tids,
+                &parsed,
+            );
         } else {
             println!("Would create {} tickets:", parsed.len());
             for (i, (slug, title)) in parsed.iter().enumerate() {
@@ -245,8 +249,12 @@ pub fn run(
     let tids: Vec<String> = (0..parsed.len())
         .map(|i| format!("{:0>width$}", base + i as u64, width = width))
         .collect();
-    if is_quiet() && is_json_output() {
-        crate::cli::emit_json_success(&format!("created tickets {}", tids.join(", ")));
+    if is_json_output() {
+        emit_batch_json(
+            &format!("created tickets {}", tids.join(", ")),
+            &tids,
+            &parsed,
+        );
     } else {
         for (i, (slug, _)) in parsed.iter().enumerate() {
             let tid = &tids[i];
@@ -262,6 +270,23 @@ pub fn run(
         }
     }
     Ok(0)
+}
+
+fn emit_batch_json(result: &str, tids: &[String], parsed: &[(&str, String)]) {
+    let tickets: Vec<_> = tids
+        .iter()
+        .zip(parsed)
+        .map(|(id, (slug, _))| {
+            serde_json::json!({
+                "id": id,
+                "path": format!(".tickets/{id}-{slug}.md"),
+            })
+        })
+        .collect();
+    println!(
+        "{}",
+        serde_json::json!({"ok": true, "result": result, "tickets": tickets})
+    );
 }
 
 fn add_parent(content: String, parent: Option<&str>, path: &std::path::Path) -> Result<String> {
