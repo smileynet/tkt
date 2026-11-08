@@ -24,7 +24,7 @@ Fixing unreproduced platform defects, release publication, and replacing live in
 
 # Acceptance criteria
 
-- A real non-macOS installation loads `tkt-core` and its linked command reference from packaged bytes.
-- A read-only ticket query returns current repository data using the separately installed prerequisites.
-- Evidence names every tested and untested platform.
-- Existing Kimi package tests pass in the applicable maintained environment.
+- [ ] A real non-macOS installation loads `tkt-core` and its linked command reference from packaged bytes.
+- [ ] A read-only ticket query returns current repository data using the separately installed prerequisites.
+- [ ] Evidence names every tested and untested platform.
+- [ ] Existing Kimi package tests pass in the applicable maintained environment.

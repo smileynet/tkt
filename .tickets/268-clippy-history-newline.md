@@ -22,6 +22,6 @@ Apply the minimal idiomatic newline-byte comparison and run the complete require
 
 # Acceptance criteria
 
-- Clippy completes with zero warnings under the repository deny-warnings command.
-- Formatting and the complete Rust test suite run and pass through `mise run check`.
-- The fix is deployed with the normal Rust installation workflow after commit and push.
+- [ ] Clippy completes with zero warnings under the repository deny-warnings command.
+- [ ] Formatting and the complete Rust test suite run and pass through `mise run check`.
+- [ ] The fix is deployed with the normal Rust installation workflow after commit and push.
