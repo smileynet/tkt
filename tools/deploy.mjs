@@ -192,6 +192,10 @@ function refreshCodex(pack, args) {
   if (!label) return;
   const id = label.slice("Codex plugin ".length);
   if (args.dryRun) { console.log(`\nwould refresh Codex plugin ${id}`); return; }
+  if (spawnSync("codex", ["--version"], { stdio: "ignore" }).error) {
+    console.log(`  codex not on PATH: plugin refresh skipped (${id} stays as installed)`);
+    return;
+  }
   const listing = JSON.parse(execFileSync("codex", ["plugin", "list", "--json"], { encoding: "utf8" }));
   const installed = listing.installed?.find((p) => p.pluginId === id && p.enabled);
   if (installed?.source?.source !== "local" || real(installed.source.path) !== real(pack.dir)) {
