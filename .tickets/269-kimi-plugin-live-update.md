@@ -22,7 +22,7 @@ Use a disposable plugin copy for experiments. Do not hand-edit release versions,
 
 Add `docs/evidence/kimi-plugin-live-update.md` with versions, operations, loaded byte comparisons, session state, and remaining uncertainty. Update `docs/agents/plugin-maintenance.md` with the verified procedure.
 
-# Acceptance criteria
+## Acceptance criteria
 
 - [ ] Same-version and supported changed-version behavior are measured separately.
 - [ ] A live skill load proves which package bytes the new session received.

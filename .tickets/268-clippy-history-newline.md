@@ -10,7 +10,7 @@ tags: ["tooling"]
 ---
 # Intent source
 
-Sam requested tickets for remaining limitations found during the tkt Kimi plugin work on 2026-11-08. Closed tickets 265 and 266 recorded this pre-existing full-gate blocker.
+Sam requested tickets for remaining limitations found during the tkt Kimi plugin work on 2026-11-08. Closed tickets #265 and #266 recorded this pre-existing full-gate blocker.
 
 # Observed problem
 
@@ -20,7 +20,7 @@ Sam requested tickets for remaining limitations found during the tkt Kimi plugin
 
 Apply the minimal idiomatic newline-byte comparison and run the complete required gate. Preserve history parsing behavior and avoid unrelated refactoring.
 
-# Acceptance criteria
+## Acceptance criteria
 
 - [ ] Clippy completes with zero warnings under the repository deny-warnings command.
 - [ ] Formatting and the complete Rust test suite run and pass through `mise run check`.

@@ -22,7 +22,7 @@ Record the client OS and package identity in `docs/evidence/kimi-plugin-platform
 
 Fixing unreproduced platform defects, release publication, and replacing live installation with static archive inspection.
 
-# Acceptance criteria
+## Acceptance criteria
 
 - [ ] A real non-macOS installation loads `tkt-core` and its linked command reference from packaged bytes.
 - [ ] A read-only ticket query returns current repository data using the separately installed prerequisites.
