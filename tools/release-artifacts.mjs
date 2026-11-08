@@ -15,7 +15,7 @@ export { ArtifactError };
 import { loadPack, lint, agyResources, PackError } from "./deploy.mjs";
 import { checkPack } from "./check-skill-syntax.mjs";
 
-const hosts = ["codex", "claude", "agy"];
+const hosts = ["codex", "claude", "agy", "kimi"];
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 function read(path, encoding) {
   try { return readFileSync(path, encoding); }
@@ -100,26 +100,30 @@ function inventory(dir) {
 
 function validatePack(dir, host, identity) {
   if (read(join(dir, "README.md"), "utf8").trim().split(/\s+/).length < 40) throw new ArtifactError(`missing or incomplete ${host} plugin README`);
-  const manifest = json(join(dir, host === "agy" ? "plugin.json" : `.${host === "codex" ? "codex" : "claude"}-plugin/plugin.json`));
+  const manifestPath = host === "agy" ? "plugin.json" : host === "kimi" ? "kimi.plugin.json" : `.${host === "codex" ? "codex" : "claude"}-plugin/plugin.json`;
+  const manifest = json(join(dir, manifestPath));
   if (manifest.name !== identity.name || manifest.version !== identity.version) throw new ArtifactError(`wrong ${host} bundle identity/version`);
   const syntax = checkPack(dir);
   if (syntax.status !== "pass" || syntax.metrics.skills !== identity.skills) throw new ArtifactError(`extracted ${host} skill validation failed: ${syntax.errors.join("; ")}`);
-  if (host !== "agy") {
+  if (host === "agy" || host === "kimi") {
+    const skills = readdirSync(join(dir, "skills"))
+      .filter((name) => existsSync(join(dir, "skills", name, "SKILL.md")))
+      .map((name) => ({ name, src: join(dir, "skills", name) }));
+    agyResources({ dir, skills, deploy: {} });
+    if (host === "kimi" && (manifest.hooks !== undefined || manifest.mcp !== undefined || existsSync(join(dir, "setup.sh")))) throw new ArtifactError("Kimi bundle must remain skill-only without hooks or an installer");
+  } else {
     const pack = loadPack(dir);
     const errors = lint(pack);
     if (errors.length) throw new ArtifactError(errors.join("; "));
     agyResources(pack);
     if (host === "claude") claudeFiles(pack);
     else if (pack.manifest.hooks !== undefined || pack.deploy.claudeFiles !== undefined) throw new ArtifactError("Claude hook declaration leaked into Codex bundle");
-  } else {
-    const skills = readdirSync(join(dir, "skills")).map((name) => ({ name, src: join(dir, "skills", name) }));
-    agyResources({ dir, skills, deploy: {} });
   }
 }
 
 export function verifyArtifacts(out) {
   const metadata = json(join(out, "release-metadata.json"));
-  if (metadata.schema !== 1 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(metadata.name) || !/^\d+\.\d+\.\d+$/.test(metadata.version) || !/^[a-f0-9]{40}$/.test(metadata.candidateSha) || metadata.assets?.length !== 3) throw new ArtifactError("invalid release metadata identity");
+  if (metadata.schema !== 1 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(metadata.name) || !/^\d+\.\d+\.\d+$/.test(metadata.version) || !/^[a-f0-9]{40}$/.test(metadata.candidateSha) || metadata.assets?.length !== hosts.length) throw new ArtifactError("invalid release metadata identity");
   const expectedNames = ["release-metadata.json", "SHA256SUMS"];
   const temp = mkdtempSync(join(tmpdir(), "plugin-verify-"));
   try {
@@ -163,7 +167,11 @@ export function buildArtifacts({ repo, ref, out, compatibility = { status: "not-
     for (const host of hosts) {
       const tree = join(temp, host);
       mkdirSync(tree);
-      if (host === "agy") {
+      if (host === "kimi") {
+        const script = ["scripts/build-kimi-plugin.mjs", "tools/build-kimi-plugin.mjs"].find((path) => existsSync(join(source, path)));
+        if (!script) throw new ArtifactError("source has no Kimi package builder");
+        execFileSync(process.execPath, [join(source, script), "--pack", source, "--out", tree], { encoding: "utf8" });
+      } else if (host === "agy") {
         const script = ["scripts/deploy.mjs", "tools/deploy.mjs"].find((path) => existsSync(join(source, path)));
         if (!script) throw new ArtifactError("source has no canonical deploy engine");
         execFileSync(process.execPath, [join(source, script), "agy", "build", "--out", tree], { encoding: "utf8" });
@@ -186,14 +194,18 @@ export function buildArtifacts({ repo, ref, out, compatibility = { status: "not-
         }
       }
       let install = "agy plugin install /absolute/path/to/extracted-plugin";
-      if (host !== "agy") {
+      if (host !== "agy" && host !== "kimi") {
         const catalog = host === "codex" && existsSync(join(tree, ".agents/plugins/marketplace.json")) ? ".agents/plugins/marketplace.json" : ".claude-plugin/marketplace.json";
         const market = json(join(tree, catalog)).name;
         if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(market)) throw new ArtifactError(`invalid ${host} marketplace name`);
         install = `${host} plugin marketplace add /absolute/path/to/extracted-plugin\n${host} plugin ${host === "codex" ? "add" : "install"} ${identity.name}@${market}`;
       }
-      const helpers = pack.deploy.runtimeFiles?.includes("package.json") ? "\n## Maintainer helpers\n\nBundled maintenance helpers need Node 22+, Git and their pinned Node dependencies. Run `npm ci --ignore-scripts` in a disposable extracted copy before invoking them. Preparation and product checks take an explicit --repo pointing to a clean Git checkout. Installing this plugin alone does not prepare or publish a release.\n" : "";
-      writeFileSync(join(tree, "README.md"), `# ${identity.name}\n\n${pack.manifest.description}\n\nThis ${host} plugin archive contains version ${identity.version}, with ${identity.skills} workflow skills and their supporting resources. It was built from commit ${candidateSha}.\n\n## Install\n\nExtract this archive into its own directory, then use the host's native plugin installer:\n\n\`\`\`sh\n${install}\n\`\`\`\n\nRestart or reload the host after installing. Read each bundled SKILL.md for workflow-specific prerequisites; install any required command-line tools separately. This archive supplies skills and references, not third-party executables. Retain all bundled license and attribution notices when redistributing it.\n${helpers}`);
+      const installInstructions = host === "kimi"
+        ? "Extract this archive into its own directory. Ask Kimi to register that directory through the plugin-builder's personal-registration workflow, then open Personal and click + to install."
+        : `Extract this archive into its own directory, then use the host's native plugin installer:\n\n\`\`\`sh\n${install}\n\`\`\``;
+      const refresh = host === "kimi" ? "Kimi hot-reloads after installation." : "Restart or reload the host after installing.";
+      const helpers = host !== "kimi" && pack.deploy.runtimeFiles?.includes("package.json") ? "\n## Maintainer helpers\n\nBundled maintenance helpers need Node 22+, Git and their pinned Node dependencies. Run `npm ci --ignore-scripts` in a disposable extracted copy before invoking them. Preparation and product checks take an explicit --repo pointing to a clean Git checkout. Installing this plugin alone does not prepare or publish a release.\n" : "";
+      writeFileSync(join(tree, "README.md"), `# ${identity.name}\n\n${pack.manifest.description}\n\nThis ${host} plugin archive contains version ${identity.version}, with ${identity.skills} workflow skills and their supporting resources. It was built from commit ${candidateSha}.\n\n## Install\n\n${installInstructions}\n\n${refresh} Read each bundled SKILL.md for workflow-specific prerequisites; install any required command-line tools separately. This archive supplies skills and references, not third-party executables. Retain all bundled license and attribution notices when redistributing it.\n${helpers}`);
       const files = inventory(tree);
       const name = `${identity.name}-${identity.version}-${host}.tar.gz`;
       tar.create({ cwd: tree, file: join(staged, name), sync: true, gzip: true, portable: true, noMtime: true, strict: true, noDirRecurse: true }, Object.keys(files).sort());

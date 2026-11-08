@@ -121,6 +121,28 @@ then start a new chat. The skill installer skips Codex scan roots when this plug
 is enabled, removing only copies it previously installed. `--allow-dual` overrides
 that guard.
 
+### Kimi Work plugin
+
+Build the self-contained package from a source checkout (Node 22+):
+
+```sh
+node tools/build-kimi-plugin.mjs
+python3 /path/to/plugin-builder/scripts/validate_plugin.py dist/kimi-plugin
+bash /path/to/plugin-builder/scripts/register_personal.sh dist/kimi-plugin
+```
+
+Run registration inside a Kimi session with the plugin-builder tools available. The
+workflow scans package rights, validates the catalog metadata, registers the local
+plugin and reads back its identity. Stop for owner confirmation if the rights scan
+reports a hit. Registration does not install the plugin: open **Personal** on the
+plugins page and click **＋** beside **tkt**.
+
+The package supplies the four workflow skills and their linked references. Install
+the `tkt` CLI and Git separately; the package has no hooks, MCP servers, commands or
+setup script. For updates, rebuild and register the same output directory again.
+Start a new chat if an active session still shows old skills; live update timing is
+not yet verified. A GitHub release does not register, install or refresh Kimi plugins.
+
 ### Claude Code and Antigravity
 
 ```sh
@@ -395,10 +417,11 @@ tkt config --set push.enabled=false
 `tkt --help` points to the complete command-schema inventory. `tkt init` prints
 agent setup recommendations: persist project instructions with `tkt init --write`,
 then install workflow skills separately through the [Codex plugin](#codex-plugin),
-[Claude/Antigravity plugins](#claude-code-and-antigravity), or `node tools/deploy.mjs`
-from a source checkout. Installing the CLI alone does not install workflow skills.
+[Kimi Work plugin](#kimi-work-plugin), [Claude/Antigravity plugins](#claude-code-and-antigravity),
+or `node tools/deploy.mjs` from a source checkout. Installing the CLI alone does not
+install workflow skills.
 
-Works with **Kiro**, **OpenCode**, **Claude Code**, **Codex**, **Cursor**, **Copilot**, and **Windsurf**.
+Works with **Kiro**, **OpenCode**, **Claude Code**, **Codex**, **Kimi Work**, **Cursor**, **Copilot**, and **Windsurf**.
 
 Add to your project's AGENTS.md (or use `tkt init --write` to inject automatically):
 

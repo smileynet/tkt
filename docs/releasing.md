@@ -23,8 +23,18 @@ mise run release -- prepare --repo /path/to/tkt --version X.Y.Z --out /path/to/n
 These are alternative entry points. Default preparation is read-only. Only an approved
 version/scope permits `--execute`, which makes a separate local draft branch/worktree,
 notes and sealed plugin bundles. Cargo.toml owns the version; preparation derives the
-root Cargo.lock and all plugin manifests from it. It creates no tag or publication.
-Old patch/minor/major shell modes and automatic mise bump aliases are removed.
+root Cargo.lock and all plugin manifests from it, including
+`.kimi-plugin/kimi.plugin.json`. The sealed host archives include Codex, Claude,
+Antigravity and a self-contained Kimi package. Preparation creates no tag or
+publication. Old patch/minor/major shell modes and automatic mise bump aliases are
+removed.
+
+For Kimi package checks, run `node tools/build-kimi-plugin.mjs`, then Kimi's
+plugin-builder `validate_plugin.py` on `dist/kimi-plugin`. Personal registration is a
+separate Kimi-session workflow with a rights scan and native read-back; registration
+does not install the plugin, and GitHub publication does not refresh it. See
+[plugin maintenance](agents/plugin-maintenance.md#kimi-work-plugin) for the commands,
+owner installation and update boundary.
 
 `verify` coordinates fresh product/native checks for one clean commit and matching
 sealed artifacts through `node tools/release.mjs verify --repo DIR --sha SHA

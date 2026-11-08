@@ -18,7 +18,7 @@ function parsed(read, file, format) {
 }
 
 export function inspectVersions(read, has) {
-  const files = [".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ...(has("plugin.json") ? ["plugin.json"] : [])];
+  const files = [".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ...(has(".kimi-plugin/kimi.plugin.json") ? [".kimi-plugin/kimi.plugin.json"] : []), ...(has("plugin.json") ? ["plugin.json"] : [])];
   const manifests = files.map((file) => ({ file, data: parsed(read, file, "json") }));
   const cargo = has("Cargo.toml") ? parsed(read, "Cargo.toml", "toml").package : null;
   const authority = cargo ?? manifests[0].data;

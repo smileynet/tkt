@@ -59,3 +59,11 @@ fn codex_plugin_version_matches_crate() {
         env!("CARGO_PKG_VERSION")
     );
 }
+
+#[test]
+fn kimi_plugin_version_matches_crate() {
+    assert_eq!(
+        manifest_version(".kimi-plugin/kimi.plugin.json"),
+        env!("CARGO_PKG_VERSION")
+    );
+}

@@ -85,6 +85,33 @@ the CLI surface the skills describe:
 
 All three gate checks must pass with zero warnings before presenting work as done.
 
+## Kimi Work plugin
+
+`node tools/deploy.mjs` does not build, register or install the Kimi package. Build it
+explicitly with `node tools/build-kimi-plugin.mjs`, which writes `dist/kimi-plugin/`
+with the four skills, linked resources, localization and icon. The package is
+skill-only: no hooks, MCP servers, generated commands, setup script or grey-matter
+dependency. Install the `tkt` CLI and Git separately.
+
+Use Kimi's plugin-builder tools for native validation and personal registration:
+
+```sh
+python3 /path/to/plugin-builder/scripts/validate_plugin.py dist/kimi-plugin
+bash /path/to/plugin-builder/scripts/register_personal.sh dist/kimi-plugin
+```
+
+Run registration inside a Kimi session. It uses the client-provided daemon, scans
+rights, requires error-free validation and reads back the registered ID, version and
+source path. Stop for owner confirmation on a rights hit. Registration does not
+install the plugin; the owner installs **tkt** from **Personal** by clicking **＋**.
+Rebuild and register the same output directory for updates, and start a new chat if
+an active session retains old skills. Live update timing remains unverified.
+
+`tests/plugin_manifests.rs` keeps `.kimi-plugin/kimi.plugin.json` on the Cargo
+version. Local release preparation updates it with the other manifests, and release
+archives include a self-contained Kimi bundle. GitHub publication does not register,
+install or refresh that personal plugin.
+
 ## Kiro Crew app delivery
 
 The current vendored deployer also builds and installs a Kiro Crew app when

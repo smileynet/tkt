@@ -21,7 +21,7 @@ test("source selection keeps unrelated work cheap and selects native regressions
 test("execution plans keep gate edits cheap and retain native source and release coverage", () => {
   const cheap = executionPlan(["tools/check-tools.mjs", "tools/check-tools.test.mjs", "mise.toml", "tools/deploy.mjs"]);
   assert.deepEqual(cheap.selected, { identity: false, generation: false });
-  assert.deepEqual(cheap.files, ["tools/release-tools.test.mjs", "tools/release-ci.test.mjs", "tools/check-binary-fresh.test.mjs", "tools/check-tools.test.mjs"]);
+  assert.deepEqual(cheap.files, ["tools/release-tools.test.mjs", "tools/release-ci.test.mjs", "tools/check-binary-fresh.test.mjs", "tools/check-tools.test.mjs", "tools/kimi-plugin.test.mjs"]);
   assert.ok(executionPlan(["build.rs"]).files.includes("tools/build-identity.test.mjs"));
   assert.ok(!executionPlan(["build.rs"]).files.includes("tools/release-generation.test.mjs"));
   assert.ok(executionPlan(["tools/generate-release-workflow.mjs"]).files.includes("tools/release-generation.test.mjs"));
