@@ -1,7 +1,7 @@
 ---
 id: "243"
 title: "Collect dashboard decisions with recommendations and chat export"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "Recommended radio choices and notes export deterministically with clipboard fallback"
@@ -53,3 +53,11 @@ By: anonymous
 
 <!-- tkt-note:v1 112960-1793793408569760300 -->
 2026-11-04 review: all17 decisions answered; actual rendering/clipboard acceptance remains pending. Inspect real answered history plus a controlled pending-decision fixture using the same renderer: recommended radios, alternative/text retention across tabs, exact export and denied-clipboard selectable fallback at laptop/phone widths. Fresh browser inventory still disabled; no bypass or feedback ask. See docs/evidence/remaining-six-review-2026-11-04.md.
+
+## Resolution (2026-11-08)
+
+Decision choices, recommendations, notes, deterministic chat export, and selectable clipboard fallback are implemented. Rendered acceptance moved to shared ticket 277.
+
+### Verification
+1. ✓ Recommended radio choices and notes export deterministically with clipboard fallback — "docs/evidence/dashboard-decisions-243.md and tools/dashboard-decisions.test.mjs verify recommended radios, retained notes/alternatives, exact export, and selectable fallback for absent/denied/throwing clipboard access."
+2. ✓ Canonical checks and complete snapshot preservation pass; unavailable rendered checks remain explicit — "Seven renderer interaction tests and 42 canonical contract tests passed; migration preserved all 52 entries and the strict checker passes. Native rendering and OS clipboard behavior remain unverified in ticket 277."
