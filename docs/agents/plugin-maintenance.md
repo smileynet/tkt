@@ -13,9 +13,18 @@ now lives here; AGENTS.md keeps operational rules and conditional read pointers.
 ### Deploy (run after pulling or making changes)
 
 ```bash
-cargo install --path .     # when Rust code changed
-node tools/deploy.mjs     # once after skill/guidance/plugin changes
+bash tools/install-local.sh  # when Rust code changed: build + install to ~/.local/bin
+node tools/deploy.mjs        # once after skill/guidance/plugin changes
 ```
+
+`install-local.sh` builds the release binary, installs it to `<root>/bin`
+(default `$HOME/.local`; override with `--root DIR`), and fails loudly when the
+installed `--version` hash does not match HEAD. Prefer it over bare
+`cargo install --path .` on machines where a version manager (mise, rustup
+shims) owns `CARGO_HOME`: there the binary lands inside a toolchain-managed
+directory that upgrades and prunes can wipe. Keep `<root>/bin` on PATH; the
+script prints a reminder when it is not, or when PATH resolves `tkt` to a
+shadowing copy.
 
 `node tools/deploy.mjs` verifies Claude reads this checkout directly and refreshes the
 enabled Codex plugin, then packages Antigravity when `~/.gemini` exists. `bash tools/deploy-skills.sh` is a compatibility
