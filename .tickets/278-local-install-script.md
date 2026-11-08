@@ -1,7 +1,7 @@
 ---
 id: "278"
 title: "One-command local install: build + stable install + freshness check"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "tools/install-local.sh builds and installs to --root or default HOME/.local"
