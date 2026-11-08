@@ -6,7 +6,7 @@ blocked_by: []
 validation_criteria:
   - "test -s docs/evidence/kimi-plugin-live-update.md"
   - "node --test tools/kimi-plugin.test.mjs"
-tags: ["tooling"]
+tags: ["tooling", "gate:evidence"]
 assignee: "kimi"
 ---
 # Intent source
@@ -25,7 +25,7 @@ Add `docs/evidence/kimi-plugin-live-update.md` with versions, operations, loaded
 
 ## Acceptance criteria
 
-- [ ] Same-version and supported changed-version behavior are measured separately.
+- [x] Same-version and supported changed-version behavior are measured separately.
 - [ ] A live skill load proves which package bytes the new session received.
-- [ ] Documentation states observed timing without claiming instantaneous updates.
-- [ ] Existing Kimi package tests still pass.
+- [x] Documentation states observed timing without claiming instantaneous updates.
+- [x] Existing Kimi package tests still pass.
