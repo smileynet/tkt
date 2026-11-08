@@ -1,12 +1,13 @@
 ---
 id: "274"
 title: "Fix pre-push entry-point detection across canonicalized paths"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
   - "Direct execution and actual-push fixtures invoke the gate across canonicalized paths; all pre-push and Node tooling tests pass"
 tags: ["tooling", "kind:bug", "stream:quality"]
+assignee: "kimi"
 ---
 # Fix pre-push entry-point detection across canonicalized paths
 
