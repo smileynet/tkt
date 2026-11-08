@@ -1,7 +1,7 @@
 ---
 id: "266"
 title: "Integrate the Kimi plugin with tkt maintenance and releases"
-status: open
+status: in_progress
 blocked_by: ["265"]
 validation_criteria:
   - "Cargo-owned version preparation and manifest checks include the Kimi manifest without drift."
