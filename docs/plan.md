@@ -228,5 +228,5 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 270 | Validate tkt Kimi installation beyond macOS | open |
 | 271 | tkt edit --body to replace a ticket body | open |
 | 274 | Fix pre-push entry-point detection across canonicalized paths | open |
-| 275 | Prevent done reports from triggering Git maintenance | open |
+| 275 | Prevent done reports from triggering Git maintenance | cancelled (duplicate) |
 | 276 | Normalize macOS temporary paths in import preview test | open |

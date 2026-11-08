@@ -1,7 +1,7 @@
 ---
 id: "275"
 title: "Prevent done reports from triggering Git maintenance"
-status: open
+status: cancelled
 blocked_by: []
 priority: high
 validation_criteria:
@@ -32,3 +32,10 @@ Suppress automatic maintenance for the report's Git object-reading process witho
 ## Out of scope
 
 Changing global Git configuration, disabling maintenance for other commands without evidence, or redesigning history attribution.
+
+## Cancellation
+
+- Reason: duplicate
+- By: 273
+- Note: Concurrent repair #273 already fixed and verified the done-report automatic-maintenance defect before this audit ticket was allocated.
+- Date: 2026-11-08
