@@ -1,7 +1,7 @@
 ---
 id: "273"
 title: "Disable automatic Git GC in done-report fixtures"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -28,6 +28,15 @@ Changing report history limits, the Clippy comparison, import path canonicalizat
 
 ## Acceptance criteria
 
-- [ ] Both named done-report tests pass individually with their exact snapshot assertions unchanged.
-- [ ] The full `mise run check` gate passes with the other blocker fixes present.
-- [ ] Only fixture-local Git configuration changes; no user or global Git setting is modified.
+- [x] Both named done-report tests pass individually with their exact snapshot assertions unchanged.
+- [x] The full `mise run check` gate passes with the other blocker fixes present.
+- [x] Only fixture-local Git configuration changes; no user or global Git setting is modified.
+
+## Resolution (2026-11-08)
+
+Disabled fixture-local automatic GC and explicitly packed the two large fixture repositories before their baseline snapshots. Product behavior and exact snapshot assertions remain unchanged. Committed and pushed ecb85fd; deployed binary freshness verified. Removed temporary diagnostic scripts and copied logs.
+
+### Verification
+1. ✓ cargo test --test done_report oversized_tree_listing_never_produces_dates_from_a_partial_map -- --exact — "oversized_tree_listing_never_produces_dates_from_a_partial_map passed individually after explicit baseline packing."
+2. ✓ cargo test --test done_report report_lookup_budget_retains_remaining_rows_with_unknown_dates -- --exact — "report_lookup_budget_retains_remaining_rows_with_unknown_dates passed individually with its exact snapshot assertion unchanged."
+3. ✓ mise run check — "mise run check passed at ecb85fd, including all 11 done-report tests and the complete Rust gate."
