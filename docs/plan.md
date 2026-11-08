@@ -232,4 +232,4 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 276 | Normalize macOS temporary paths in import preview test | cancelled (duplicate) |
 | 277 | Verify dashboard rendering and interactions on laptop and phone | cancelled (obsolete) |
 | 278 | Keep routine dashboard verification in the delivery-dashboard workflow | ✅ done |
-| 279 | Check skill body size before deployment | open |
+| 279 | Check skill body size before deployment | in_progress |

@@ -1,7 +1,7 @@
 ---
 id: "279"
 title: "Check skill body size before deployment"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
