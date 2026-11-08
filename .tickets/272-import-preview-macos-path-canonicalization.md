@@ -1,7 +1,7 @@
 ---
 id: "272"
 title: "Canonicalize macOS temp paths in import preview test"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
