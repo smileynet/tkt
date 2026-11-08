@@ -222,7 +222,7 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 259 | Prevent telemetry commands from mutating during dry-run | ✅ done |
 | 260 | Route remaining filesystem mutation families through typed effect phases | ✅ done |
 | 261 | Route Git publication and process phases through the common effect dispatcher | ✅ done |
-| 264 | tkt new -o json returns id and path; edit --ac help explains its argument | in_progress |
+| 264 | tkt new -o json returns id and path; edit --ac help explains its argument | ✅ done |
 | 268 | Fix the history newline comparison that blocks Clippy | ✅ done |
 | 269 | Measure tkt Kimi plugin update behavior | open |
 | 270 | Validate tkt Kimi installation beyond macOS | open |

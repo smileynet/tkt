@@ -1,7 +1,7 @@
 ---
 id: "264"
 title: "tkt new -o json returns id and path; edit --ac help explains its argument"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -23,6 +23,13 @@ Observed with tkt 0.4.0 (1fbc40c):
 
 ## Acceptance criteria
 
-- [ ] `tkt new -o json` includes `id` and `path` alongside the existing `result` (backward compatible)
-- [ ] `tkt batch -o json` reports each created id and path
-- [ ] `tkt edit --help` says what --ac accepts
+- [x] `tkt new -o json` includes `id` and `path` alongside the existing `result` (backward compatible)
+- [x] `tkt batch -o json` reports each created id and path
+- [x] `tkt edit --help` says what --ac accepts
+
+## Resolution (2026-11-08)
+
+Added stable creation identities to JSON output, structured batch collections, final retry paths, edit --ac help, regression tests, and synchronized user/agent guidance. Removed the disposable capability snapshot; no generated artifacts are retained for this ticket.
+
+### Verification
+1. ✓ tkt new -o json includes id and path fields; tkt edit --help describes --ac — "Commit 9a06540: creation_json passed 4/4 for normal, quiet, dry-run, help, and new/batch retry behavior; integration passed 104/104 and quiet_json 3/3; mise run check passed formatting, Clippy, 49 selected tooling tests, and the complete Rust suite with zero failures."
