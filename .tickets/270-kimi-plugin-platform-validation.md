@@ -28,3 +28,10 @@ Fixing unreproduced platform defects, release publication, and replacing live in
 - [ ] A read-only ticket query returns current repository data using the separately installed prerequisites.
 - [ ] Evidence names every tested and untested platform.
 - [ ] Existing Kimi package tests pass in the applicable maintained environment.
+
+## Note — 2026-11-08
+
+By: anonymous
+
+<!-- tkt-note:v1 99564-1794172689034443000 -->
+2026-11-08 audit: no real non-macOS Kimi client is available in this environment. Keep backlog with gate:evidence; static package inspection is not platform validation.
