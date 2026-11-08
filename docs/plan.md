@@ -233,3 +233,4 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 277 | Verify dashboard rendering and interactions on laptop and phone | cancelled (obsolete) |
 | 278 | Keep routine dashboard verification in the delivery-dashboard workflow | ✅ done |
 | 279 | Check skill body size before deployment | ✅ done |
+| 281 | Ticket id collision when push.enabled=false: allocation is local-only | open |
