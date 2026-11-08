@@ -54,6 +54,7 @@ impl Fixture {
         git(&root, &["config", "user.name", "Report fixture"]);
         git(&root, &["config", "user.email", "fixture@example.invalid"]);
         git(&root, &["config", "core.autocrlf", "false"]);
+        git(&root, &["config", "gc.auto", "0"]);
         std::fs::create_dir(root.join(".tickets")).unwrap();
         std::fs::write(root.join(".tickets/config.toml"), "[push]\nenabled=false\n").unwrap();
         std::fs::write(root.join("README.md"), "Owner source\n").unwrap();
@@ -435,6 +436,7 @@ fn report_lookup_budget_retains_remaining_rows_with_unknown_dates() {
         f.state(&id, "done", "Completed record");
     }
     f.commit(f.now - 60, "+0000");
+    git(&f.root, &["gc", "--quiet"]);
     let before = snapshot(&f.root);
     let (report, _) = f.report(&[]);
     assert_eq!(report["count"], 3000);
@@ -532,6 +534,7 @@ fn oversized_tree_listing_never_produces_dates_from_a_partial_map() {
         f.state(&id, "done", "Initial closed record");
     }
     f.commit(f.now - 60, "+0000");
+    git(&f.root, &["gc", "--quiet"]);
     let before = snapshot(&f.root);
     let (report, _) = f.report(&["--week"]);
     assert_eq!(report["count"], 4097);

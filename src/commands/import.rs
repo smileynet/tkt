@@ -1171,10 +1171,10 @@ mod phase_tests {
     fn import_commit_and_recovery_previews_include_exact_owned_pair_paths() {
         use crate::effects::{Outcome, Phase};
         let temp = tempfile::tempdir().unwrap();
-        let root = temp.path();
+        let root = temp.path().canonicalize().unwrap();
         let init = Command::new("git")
             .args(["init", "-q", "-b", "main"])
-            .arg(root)
+            .arg(&root)
             .env("DO_NOT_TRACK", "1")
             .output()
             .unwrap();

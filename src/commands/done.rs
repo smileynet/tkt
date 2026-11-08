@@ -199,7 +199,7 @@ impl Objects {
             .read_exact(&mut bytes)
             .and_then(|_| self.output.read_exact(&mut end))
             .map_err(|_| Unknown::Unavailable)?;
-        if end != [b'\n'] {
+        if end != *b"\n" {
             return Err(Unknown::InvalidHistory);
         }
         String::from_utf8(bytes).map_err(|_| Unknown::InvalidHistory)
