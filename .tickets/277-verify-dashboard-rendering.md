@@ -27,3 +27,12 @@ Record actual browser/client identity, viewport sizes, captures, interactions, c
 
 - [ ] Actual laptop/phone layout and interactions are inspected when a permitted browser is available. <!-- tkt-from:243:4 -->
 
+
+## Note — 2026-11-08
+
+By: anonymous
+
+<!-- tkt-note:v1 10465-1794173531653413000 -->
+## Planning gate
+
+Actual laptop/phone rendering, interactions, and native clipboard behavior require a permitted browser with source-bound captures; model and DOM checks are insufficient.
