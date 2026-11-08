@@ -1,7 +1,7 @@
 ---
 id: "278"
 title: "Keep routine dashboard verification in the delivery-dashboard workflow"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
