@@ -33,8 +33,11 @@ export function checkPack(pack) {
       return;
     }
     metrics.skills++;
-    const match = readFileSync(file, "utf8").match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+    const text = readFileSync(file, "utf8");
+    const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
     if (!match) { errors.push(`${relative(pack, file)}: missing YAML frontmatter delimiters`); return; }
+    const bodyBytes = Buffer.byteLength(text.slice(match[0].length), "utf8");
+    if (bodyBytes > 24000) errors.push(`${relative(pack, file)}: body is ${bodyBytes} bytes; at most 24000 bytes are loaded`);
     const data = readYaml(file, match[1]);
     if (data) {
       string(data, "name", file, true, 64);

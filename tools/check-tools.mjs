@@ -40,9 +40,11 @@ export function changedPaths(root, base) {
 
 export function executionPlan(paths, release = false) {
   const selected = selectChecks(paths, release);
+  const skillSyntax = release || paths === null || paths.some(path => matches(path, ["skills/", ".claude-plugin/", ".codex-plugin/", ".kimi-plugin/", "plugin.json", "tools/deploy.mjs", "tools/deploy-validation.test.mjs", "tools/check-skill-syntax.mjs", "tools/check-skill-syntax.test.mjs"]));
   const files = ["tools/release-tools.test.mjs", "tools/release-ci.test.mjs", "tools/check-binary-fresh.test.mjs", "tools/check-tools.test.mjs", "tools/kimi-plugin.test.mjs"];
   if (selected.identity) files.push("tools/build-identity.test.mjs");
   if (selected.generation) files.push("tools/release-generation.test.mjs");
+  if (skillSyntax) files.push("tools/check-skill-syntax.test.mjs");
   return { status: "selected", scope: release ? "release" : paths === null ? "unknown" : "changes", selected, files };
 }
 
