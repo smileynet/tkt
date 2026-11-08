@@ -1,7 +1,7 @@
 ---
 id: "278"
 title: "Keep routine dashboard verification in the delivery-dashboard workflow"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -22,5 +22,13 @@ Preserve the existing generated gm-tickets ownership, canonical renderer alignme
 
 ## Acceptance criteria
 
-- [ ] AGENTS.md assigns routine docs/status.html generation, updates and verification scope to the delivery-dashboard skill without a separate standing validation ticket
-- [ ] Existing dashboard snapshot and strict checker requirements remain unchanged
+- [x] AGENTS.md assigns routine docs/status.html generation, updates and verification scope to the delivery-dashboard skill without a separate standing validation ticket
+- [x] Existing dashboard snapshot and strict checker requirements remain unchanged
+
+## Resolution (2026-11-08)
+
+Clarified that routine dashboard work follows the delivery-dashboard skill without creating a standing validation ticket. No scratch artifacts retained for this guidance-only change.
+
+### Verification
+1. ✓ AGENTS.md assigns routine docs/status.html generation, updates and verification scope to the delivery-dashboard skill without a separate standing validation ticket — "AGENTS.md lines 15-18 now assign routine generation, updates and verification scope to delivery-dashboard and keep unavailable visual checks as in-workflow evidence limits; git diff --check passed."
+2. ✓ Existing dashboard snapshot and strict checker requirements remain unchanged — "The published guidance diff retains snapshot-tickets.mjs ownership, tag-context refresh, delivery-dashboard checker and canonical renderer requirements verbatim; docs/status.html and checker code were unchanged."
