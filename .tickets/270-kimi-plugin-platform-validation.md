@@ -1,7 +1,7 @@
 ---
 id: "270"
 title: "Validate tkt Kimi installation beyond macOS"
-status: open
+status: backlog
 blocked_by: []
 validation_criteria:
   - "test -s docs/evidence/kimi-plugin-platform-validation.md"
