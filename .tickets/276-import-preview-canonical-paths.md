@@ -1,7 +1,7 @@
 ---
 id: "276"
 title: "Normalize macOS temporary paths in import preview test"
-status: open
+status: cancelled
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -32,3 +32,10 @@ Normalize the test fixture root before constructing expected paths, or compare a
 ## Out of scope
 
 Changing production import behavior when only path spelling differs, or broad fixture refactoring.
+
+## Cancellation
+
+- Reason: duplicate
+- By: 272
+- Note: Concurrent repair #272 already fixed and verified the macOS import-preview path canonicalization defect before this audit ticket was allocated.
+- Date: 2026-11-08
