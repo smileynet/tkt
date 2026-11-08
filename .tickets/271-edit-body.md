@@ -1,7 +1,7 @@
 ---
 id: "271"
 title: "tkt edit --body to replace a ticket body"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -17,6 +17,13 @@ Source: a retrospective of an ios-helper session on 2026-11-08 (ios-helper ticke
 
 ## Acceptance criteria
 
-- [ ] `tkt edit --body @file` replaces the body and keeps notes appended earlier.
-- [ ] The edit is one tkt commit; a later `tkt note` on the same ticket succeeds without a manual commit.
-- [ ] `tkt validate` rules still apply to the new body, for example the source-reference check.
+- [x] `tkt edit --body @file` replaces the body and keeps notes appended earlier.
+- [x] The edit is one tkt commit; a later `tkt note` on the same ticket succeeds without a manual commit.
+- [x] `tkt validate` rules still apply to the new body, for example the source-reference check.
+
+## Resolution (2026-11-08)
+
+Added edit --body for literal text, @FILE, and stdin; replacement preserves the exact real-note suffix and uses the existing atomic edit transaction. Updated command docs and all generated guidance.
+
+### Verification
+1. ✓ tkt edit --body replaces the body, keeps notes, commits once, and a later note succeeds — "tests/edit_body.rs verifies file/literal/stdin input, exact preservation of two notes and markers, one edit commit, a later note without manual commit, strict source-reference validation, dry-run, and no-push; cargo test passed all 217 unit tests and all integration suites; commit 102705c."
