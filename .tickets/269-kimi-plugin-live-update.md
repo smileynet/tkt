@@ -36,3 +36,10 @@ By: anonymous
 
 <!-- tkt-note:v1 8711-1794173332418443000 -->
 2026-11-08 disposable probe recorded in docs/evidence/kimi-plugin-live-update.md: same-version registration preserved installed/current-session bytes; +local registration exposed Update. Update was not clicked and no fresh chat was observed, so AC2 remains unchecked. Registration restored to maintained dist/kimi-plugin at 0.4.0.
+
+## Note — 2026-11-08
+
+By: anonymous
+
+<!-- tkt-note:v1 9546-1794173497200089000 -->
+## Planning gate\n\nFresh-session post-Update byte loading remains unverified; resume with an explicit Update action and a genuinely new chat.
