@@ -118,7 +118,7 @@ export function main(args = process.argv.slice(2)) {
   console.log('Installed explicit full pre-push check; no core.hooksPath/global settings changed. Linked worktrees share it.');
   return 0;
 }
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try { process.exitCode = main(); }
   catch (error) { console.error(`[pre-push] ${error.message}`); process.exitCode = 1; }
 }
