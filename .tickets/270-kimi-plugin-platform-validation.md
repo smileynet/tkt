@@ -6,7 +6,7 @@ blocked_by: []
 validation_criteria:
   - "test -s docs/evidence/kimi-plugin-platform-validation.md"
   - "node --test tools/kimi-plugin.test.mjs"
-tags: ["tooling"]
+tags: ["tooling", "gate:evidence"]
 ---
 # Intent source
 
