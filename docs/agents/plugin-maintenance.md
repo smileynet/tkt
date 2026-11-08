@@ -105,7 +105,11 @@ rights, requires error-free validation and reads back the registered ID, version
 source path. Stop for owner confirmation on a rights hit. Registration does not
 install the plugin; the owner installs **tkt** from **Personal** by clicking **＋**.
 Rebuild and register the same output directory for updates, and start a new chat if
-an active session retains old skills. Live update timing remains unverified.
+an active session retains old skills. A 2026-11-08 disposable probe found that
+same-version re-registration left installed and actively loaded skill bytes unchanged;
+a `+local` version change exposed the client's Update action. Registration is not proof
+of delivery to a new chat. See [the update evidence](../evidence/kimi-plugin-live-update.md);
+post-Update fresh-session timing remains unverified.
 
 Verified 2026-11-08: the rights scan was clear, native validation returned zero errors
 and warnings, and registration read back `tkt` version `0.4.0` with all four skills.
