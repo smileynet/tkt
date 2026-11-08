@@ -1,0 +1,29 @@
+{
+  "displayName": "tkt",
+  "shortDescription": "Git 原生工单与前沿工作流",
+  "longDescription": "以 Markdown 文件跟踪工单，处理依赖图中的可开展工作，并通过四个 tkt 工作流技能同步计划。需要单独安装 tkt CLI 和 Git。",
+  "developerName": "smileynet",
+  "tryPrompts": [
+    "显示当前可以开始的工单",
+    "接手下一个可开展的工单",
+    "检查我的工单看板和计划"
+  ],
+  "skillOverrides": {
+    "tkt-core": {
+      "displayName": "tkt 核心",
+      "description": "跟踪工单、检查可开展工作并管理工单生命周期"
+    },
+    "tkt-work": {
+      "displayName": "tkt 执行",
+      "description": "认领、执行、验证并关闭可开展的工单"
+    },
+    "tkt-orient": {
+      "displayName": "tkt 导航",
+      "description": "恢复会话上下文并建议下一个工单"
+    },
+    "tkt-reconcile": {
+      "displayName": "tkt 协调",
+      "description": "审计工单并让计划符合当前优先级"
+    }
+  }
+}

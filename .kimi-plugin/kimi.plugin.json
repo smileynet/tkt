@@ -1,0 +1,51 @@
+{
+  "$schema": "https://catalog.msh.team/misc/kimi.plugin.schema.json",
+  "name": "tkt",
+  "version": "0.4.0",
+  "description": "Git-native ticket tracking and workflow skills for ready work, ticket execution, orientation, and reconciliation. Requires the tkt CLI and Git.",
+  "keywords": [
+    "tickets",
+    "task-management",
+    "dependencies",
+    "frontier",
+    "tkt"
+  ],
+  "author": "smileynet",
+  "license": "MIT",
+  "skillInstructions": "Before ticket operations, verify tkt --version and git --version succeed. If either is missing, stop and tell the user to install the missing prerequisite. Use tkt close to complete tickets; never hand-edit ticket status to done.",
+  "interface": {
+    "displayName": "tkt",
+    "shortDescription": "Git-native tickets and frontier workflows",
+    "longDescription": "Track tickets as Markdown files, work the dependency-graph frontier, and keep plans current with four tkt workflow skills. Requires the separately installed tkt CLI and Git.",
+    "developerName": "smileynet",
+    "websiteURL": "https://github.com/smileynet/tkt",
+    "iconUrl": "",
+    "category": "PRODUCTIVITY",
+    "defaultLocale": "en-US",
+    "locales": "./locales/",
+    "tryPrompts": [
+      "Show me what ticket work is ready",
+      "Pick up the next frontier ticket",
+      "Review my ticket board and plan"
+    ],
+    "skillOverrides": {
+      "tkt-core": {
+        "displayName": "tkt core",
+        "description": "Track tickets, inspect the frontier, and manage the ticket lifecycle"
+      },
+      "tkt-work": {
+        "displayName": "tkt work",
+        "description": "Claim, execute, verify, and close frontier tickets"
+      },
+      "tkt-orient": {
+        "displayName": "tkt orient",
+        "description": "Resume session state and propose the next ticket"
+      },
+      "tkt-reconcile": {
+        "displayName": "tkt reconcile",
+        "description": "Audit tickets and align the plan with current priorities"
+      }
+    }
+  },
+  "skills": "./skills/"
+}
