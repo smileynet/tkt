@@ -1,12 +1,13 @@
 ---
 id: "264"
 title: "tkt new -o json returns id and path; edit --ac help explains its argument"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
   - "tkt new -o json includes id and path fields; tkt edit --help describes --ac"
 tags: ["kind:enhancement", "cli"]
+assignee: "kimi"
 ---
 ## What to build
 
