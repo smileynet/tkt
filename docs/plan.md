@@ -126,7 +126,7 @@ The owner requested execution of actionable parked work. The [per-ticket review]
 | 86 | tkt import --github: pull open issues into .tickets/ | ✅ done |
 | 88 | tkt done --week: show-resolved report for standups | ✅ done |
 | 89 | Lifecycle hooks: on-new, on-claim, on-close scripts | ✅ done |
-| 90 | tkt open <id>: find URLs in ticket body and open in browser | in_progress |
+| 90 | tkt open <id>: find URLs in ticket body and open in browser | open |
 | 93 | Pluggable schema definitions with meta field + ai_context support | ✅ done |
 | 99 | Make update check interval configurable | ✅ done |
 | 125 | Design the first external-system import adapter contract | ✅ done |
