@@ -1,7 +1,7 @@
 ---
 id: "267"
 title: "Register and validate the tkt plugin in Kimi"
-status: open
+status: in_progress
 blocked_by: ["266"]
 validation_criteria:
   - "The validated tkt package is registered in the personal market and its ID, version, and source path read back successfully."
