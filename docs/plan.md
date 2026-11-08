@@ -226,3 +226,4 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 268 | Fix the history newline comparison that blocks Clippy | ✅ done |
 | 269 | Measure tkt Kimi plugin update behavior | open |
 | 270 | Validate tkt Kimi installation beyond macOS | open |
+| 271 | tkt edit --body to replace a ticket body | open |
