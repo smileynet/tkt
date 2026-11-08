@@ -6,6 +6,7 @@ blocked_by: []
 validation_criteria:
   - "Current dashboard visual evidence covers every transferred criterion at recorded laptop and phone sizes, with source-bound review and explicit limitations"
 tags: ["tooling", "stream:quality", "gate:evidence"]
+spec: "docs/evidence/dashboard-migration-228.md"
 ---
 Source: tickets 228, 240, and 243 implementation evidence; consolidated during the 2026-11-08 repository audit.
 
