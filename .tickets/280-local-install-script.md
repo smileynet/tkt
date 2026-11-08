@@ -1,7 +1,7 @@
 ---
 id: "280"
 title: "One-command local install: build + stable install + freshness check"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "tools/install-local.sh builds and installs to --root or default HOME/.local"
@@ -39,7 +39,17 @@ script as the canonical local-refresh path.
 
 ## Acceptance criteria
 
-- [ ] `tools/install-local.sh` exists; builds and installs to `--root` or default `$HOME/.local`
-- [ ] Install target is outside toolchain-managed directories (mise/rustup homes never written)
-- [ ] Re-running is idempotent; post-install `--version` embeds current HEAD hash and script fails loudly on mismatch
-- [ ] `docs/agents/plugin-maintenance.md` documents the script and the stable-location rationale
+- [x] `tools/install-local.sh` exists; builds and installs to `--root` or default `$HOME/.local`
+- [x] Install target is outside toolchain-managed directories (mise/rustup homes never written)
+- [x] Re-running is idempotent; post-install `--version` embeds current HEAD hash and script fails loudly on mismatch
+- [x] `docs/agents/plugin-maintenance.md` documents the script and the stable-location rationale
+
+## Resolution (2026-11-08)
+
+done: tools/install-local.sh builds, installs to a user-controlled root, verifies embedded hash vs HEAD; plugin-maintenance.md documents it as the canonical local-refresh path
+
+### Verification
+1. ✓ tools/install-local.sh builds and installs to --root or default HOME/.local — "ran 'bash tools/install-local.sh': built release and installed ~/.local/bin/tkt.exe; default root honored; --root flag implemented"
+2. ✓ install target is outside toolchain-managed dirs — "script writes only <root>/bin (default ~/.local/bin); no mise/rustup toolchain dirs touched"
+3. ✓ idempotent rerun; post-install --version embeds HEAD hash; loud failure on mismatch — "rerun finished in 0.05s and passed freshness; hash-mismatch path exits 1 with STALE install; bad arg exits 2"
+4. ✓ plugin-maintenance.md documents the script and rationale — "docs/agents/plugin-maintenance.md Deploy section documents the script, --root, and the version-manager rationale"
