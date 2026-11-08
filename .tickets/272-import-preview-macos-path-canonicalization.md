@@ -1,7 +1,7 @@
 ---
 id: "272"
 title: "Canonicalize macOS temp paths in import preview test"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -27,6 +27,14 @@ The original newline-byte Clippy change, unrelated import behavior, and suppress
 
 ## Acceptance criteria
 
-- [ ] The focused import preview test passes on macOS with exact owned-path coverage intact.
-- [ ] The complete `mise run check` gate passes after both this fix and #268 are present.
-- [ ] No platform skip or relaxed unordered subset assertion replaces the exact path comparison.
+- [x] The focused import preview test passes on macOS with exact owned-path coverage intact.
+- [x] The complete `mise run check` gate passes after both this fix and #268 are present.
+- [x] No platform skip or relaxed unordered subset assertion replaces the exact path comparison.
+
+## Resolution (2026-11-08)
+
+Canonicalized the import preview temporary root on macOS while preserving exact path assertions. Committed and pushed ecb85fd; installed tkt 0.4.0 (ecb85fd) and verified binary freshness. No scratch artifacts retained.
+
+### Verification
+1. ✓ cargo test commands::import::phase_tests::import_commit_and_recovery_previews_include_exact_owned_pair_paths -- --exact — "Focused import preview test passed: 1 test, exact owned-path set preserved."
+2. ✓ mise run check — "mise run check passed at ecb85fd: 48 tooling tests, formatting, warning-free Clippy, 216 unit tests, and all integration suites."
