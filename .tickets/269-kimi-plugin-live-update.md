@@ -29,3 +29,10 @@ Add `docs/evidence/kimi-plugin-live-update.md` with versions, operations, loaded
 - [ ] A live skill load proves which package bytes the new session received.
 - [x] Documentation states observed timing without claiming instantaneous updates.
 - [x] Existing Kimi package tests still pass.
+
+## Note — 2026-11-08
+
+By: anonymous
+
+<!-- tkt-note:v1 8711-1794173332418443000 -->
+2026-11-08 disposable probe recorded in docs/evidence/kimi-plugin-live-update.md: same-version registration preserved installed/current-session bytes; +local registration exposed Update. Update was not clicked and no fresh chat was observed, so AC2 remains unchecked. Registration restored to maintained dist/kimi-plugin at 0.4.0.
