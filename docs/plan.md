@@ -224,7 +224,7 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 261 | Route Git publication and process phases through the common effect dispatcher | ✅ done |
 | 264 | tkt new -o json returns id and path; edit --ac help explains its argument | ✅ done |
 | 268 | Fix the history newline comparison that blocks Clippy | ✅ done |
-| 269 | Measure tkt Kimi plugin update behavior | open |
+| 269 | Measure tkt Kimi plugin update behavior | in_progress |
 | 270 | Validate tkt Kimi installation beyond macOS | backlog |
 | 271 | tkt edit --body to replace a ticket body | ✅ done |
 | 274 | Fix pre-push entry-point detection across canonicalized paths | ✅ done |

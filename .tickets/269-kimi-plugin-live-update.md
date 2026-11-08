@@ -1,12 +1,13 @@
 ---
 id: "269"
 title: "Measure tkt Kimi plugin update behavior"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "test -s docs/evidence/kimi-plugin-live-update.md"
   - "node --test tools/kimi-plugin.test.mjs"
 tags: ["tooling"]
+assignee: "kimi"
 ---
 # Intent source
 
