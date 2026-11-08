@@ -153,12 +153,9 @@ Use `--parent ID` on new/batch for hierarchy independently of `--blocked-by`.
 Edit sets the same field (`--parent ''` clears it); missing/self/cyclic references
 are rejected. Query emits parent and accepts `--parent ID` to select its children.
 
-For scripted creation, `new -o json` exposes final `id` and repository-relative
-`path` fields; batch uses a `tickets[]` array of those pairs. Read them instead of
-parsing `result`, including after an allocation retry. Quiet JSON previews retain
-the same identity fields.
+Creation JSON: read final `id`/`path` (batch `tickets[]`), not `result`.
 
-Ticket creation is a race when 2+ sessions work the same repo (observed twice: archwright 005 pair, crew-research 12/13 collision — both required reconciliation merges).
+Ticket creation is a race in shared repos; reconcile ID collisions immediately.
 
 **Status follows readiness — default to `open`.** A new ticket is `open` (frontier-eligible) when the work could realistically be picked up once its blockers are done. Use `--status backlog` **only** for work you are deliberately deferring out of this cycle — speculative ideas, someday-maybe items, work parked pending a decision. Most discovered work is actionable and belongs on the frontier as `open` (or `--blocked-by` if it genuinely depends on other tickets), not in the backlog.
 
