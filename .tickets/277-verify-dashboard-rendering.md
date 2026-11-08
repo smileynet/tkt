@@ -20,15 +20,6 @@ Record actual browser/client identity, viewport sizes, captures, interactions, c
 
 - [ ] All transferred rendered checks have current laptop/phone captures and source-bound visual acceptance, with any unavailable check explicitly unverified.
 
-- [ ] Inspect overview, history, and Plan views at phone and laptop widths. <!-- tkt-from:228:6 -->
-
-
-- [ ] Rendered laptop/phone layout and interactions are inspected when a permitted browser is available. <!-- tkt-from:240:6 -->
-
-
-- [ ] Actual laptop/phone layout and interactions are inspected when a permitted browser is available. <!-- tkt-from:243:4 -->
-
-
 ## Note — 2026-11-08
 
 By: anonymous
