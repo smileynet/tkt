@@ -1,7 +1,7 @@
 ---
 id: "277"
 title: "Verify dashboard rendering and interactions on laptop and phone"
-status: open
+status: cancelled
 blocked_by: []
 validation_criteria:
   - "Current dashboard visual evidence covers every transferred criterion at recorded laptop and phone sizes, with source-bound review and explicit limitations"
@@ -28,3 +28,9 @@ By: anonymous
 ## Planning gate
 
 Actual laptop/phone rendering, interactions, and native clipboard behavior require a permitted browser with source-bound captures; model and DOM checks are insufficient.
+
+## Cancellation
+
+- Reason: obsolete
+- Note: Owner direction: dashboard generation and updates follow the Grey Matter skill; standalone browser-validation tracking is unnecessary. Obsolete transferred criteria were removed atomically before cancellation.
+- Date: 2026-11-08
