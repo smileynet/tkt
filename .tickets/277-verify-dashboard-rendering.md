@@ -18,3 +18,6 @@ Record actual browser/client identity, viewport sizes, captures, interactions, c
 ## Acceptance criteria
 
 - [ ] All transferred rendered checks have current laptop/phone captures and source-bound visual acceptance, with any unavailable check explicitly unverified.
+
+- [ ] Inspect overview, history, and Plan views at phone and laptop widths. <!-- tkt-from:228:6 -->
+
