@@ -1,7 +1,7 @@
 ---
 id: "281"
 title: "Ticket id collision when push.enabled=false: allocation is local-only"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "decision recorded on where collision prevention lives"
