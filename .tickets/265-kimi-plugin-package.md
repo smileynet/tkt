@@ -21,3 +21,10 @@ Intent: Grey Matter ticket 271 needs tkt-core in Kimi; the 2026-11-08 review fou
 - [ ] Rebuilding unchanged output is a no-op and changed or damaged output is repaired.
 - [ ] The package has no hooks, MCP servers, setup script, or Grey Matter dependency.
 - [ ] Focused fixtures and Kimi static validation pass, with warnings and unrun checks reported.
+
+## Note — 2026-11-08
+
+By: anonymous
+
+<!-- tkt-note:v1 8547-1794165025008880000 -->
+Verification: Kimi package tests 2/2 passed; native validation 0 errors/0 warnings. Full mise run check passed 46 tooling tests, then failed in untouched src/commands/done.rs:202 because Clippy -D warnings flags [b'\n'] as byte-char-slices (suggested *b"\n"). This is outside the Kimi package scope; Rust tests did not run after that lint failure.
