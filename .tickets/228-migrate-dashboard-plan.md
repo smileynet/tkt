@@ -30,7 +30,6 @@ Intent source: the 2026-10-29 session wrap retrospective. The current dashboard 
 - [x] Align AGENTS.md dashboard instructions with the generated-block ownership rules.
 - [x] Re-running snapshot-tickets.mjs refreshes the Plan tab without altering entries.
 - [x] Current check-dashboard.mjs passes without errors or warnings.
-- [>] Inspect overview, history, and Plan views at phone and laptop widths. <!-- tkt-moved:277 -->
 
 ## Out of scope
 
