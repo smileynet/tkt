@@ -42,6 +42,7 @@ For full flags and options, see [commands.md](references/commands.md).
 
 **Creation/edit traps:** `tkt new` supplies section prompts; use `--body` with text,
 `@file` or stdin `-`, or new/batch `--template NAME`, to provide a complete body.
+`edit --body` replaces the specification while preserving existing notes.
 Fill intent/acceptance prompts before validating open work. Use backlog only for genuinely deferred
 work. `tkt edit --blocked-by` replaces the whole list: read the existing blockers,
 combine them with the new IDs, and pass the complete set.

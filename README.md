@@ -248,6 +248,7 @@ issues as `owner/repo#NNN` or link them. Quoted code, URLs and headings are excl
 
 ```bash
 tkt edit 02 --title "New title"
+tkt edit 02 --body @brief.md   # replace specification, preserve existing notes
 tkt edit 02 --blocked-by 01,03
 tkt edit 02 --priority high
 tkt edit 02 --parent 01           # hierarchy, independent of prerequisites

@@ -13,6 +13,7 @@ use crate::mutation::MutationContext;
 pub fn run(
     id: &str,
     title: Option<&str>,
+    body: Option<&str>,
     tags: Option<&[String]>,
     add_tags: &[String],
     remove_tags: &[String],
@@ -39,6 +40,10 @@ pub fn run(
     let mut file = t.file.clone();
     let mut changed: Vec<&str> = Vec::new();
 
+    if let Some(replacement) = super::creation_body::load(&ctx.tickets_dir, body, None)? {
+        file.replace_body_preserving_notes(&replacement);
+        changed.push("body");
+    }
     if let Some(title_val) = title {
         if title_val.is_empty() {
             domain_bail!("title is required and cannot be cleared");

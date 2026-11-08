@@ -137,9 +137,10 @@ issues (`owner/repo#NNN` or a link) and quote literal examples as code. Rebase m
 report candidate stale body citations after ID collisions; review them manually
 because user-owned prose is preserved and the old ID can be ambiguous.
 
-Prefer a complete body at creation: new `--body @file`, `--body -` (stdin), or
+Prefer a complete body: new `--body @file`, `--body -` (stdin), or
 literal text. New/batch `--template NAME` loads `.tickets/templates/NAME.md`
-verbatim. Default prompts must be filled and link the intent source; they remain
+verbatim. `edit --body` preserves notes.
+Default prompts must be filled and link the intent source; they remain
 stub findings until replaced. Claim records the current agent as optional assignee;
 other owners require an explicit force override, independently of eligibility.
 Quoted template examples are valid specification content. Actual default prompts

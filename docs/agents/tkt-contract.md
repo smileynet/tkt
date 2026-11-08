@@ -25,7 +25,7 @@ tkt claim <id>                                    # status→in_progress, pushed
 tkt cancel <id> --reason R --note "why" [--by ID] [--repoint|--drop-edges]
 tkt reopen <id>                                   # cancelled→open, keeps history
 tkt close <id> [--note "..."] [--resolution "..."] [--ac N,N] [--check-all] [--force] [--evidence "..." (repeatable: one per validation criterion, or N=text)]
-tkt edit <id> [--title T] [--parent ID] [--tags T] [--add-tag T] [--remove-tag T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
+tkt edit <id> [--title T] [--body TEXT|@FILE|-] [--parent ID] [--tags T] [--add-tag T] [--remove-tag T] [--blocked-by IDS] [--priority P|''] [--env E|''] [--spec S|''] [--status S] [--ac N,N] [--validation VC]
 tkt renumber <old> <new> [--file NAME]            # birth-window only
 tkt query [--status S] [--priority P] [--parent ID] [--all-context] # context-scoped JSON Lines; bypass context explicitly
 tkt blocked                                       # open tickets with unsatisfied deps
@@ -185,7 +185,9 @@ citations; qualify external issues or link them and quote code examples.
 
 Body AC checkboxes map to `--check-all` / `--ac`; frontmatter validation_criteria
 maps 1:1 by index to --evidence. The counts are independent. Fill body prompts at
-creation and link the intent source (--spec or a durable body reference).
+creation and link the intent source (--spec or a durable body reference). `edit --body`
+accepts text, `@FILE`, or stdin `-`; it replaces the specification while preserving
+the exact existing note suffix, including note markers.
 
 Claim, close, and status-changing edit synchronize existing `docs/plan.md` rows in
 the same commit. Commit or stash plan edits first. Missing rows remain warnings

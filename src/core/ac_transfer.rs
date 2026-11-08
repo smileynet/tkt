@@ -89,6 +89,19 @@ pub(super) fn section_range_named(body: &str, name: &str) -> Option<std::ops::Ra
     start.map(|start| start..body.len())
 }
 
+/// Return the exact suffix beginning at the first real note heading.
+pub(super) fn note_suffix(body: &str) -> Option<&str> {
+    let mut fence = None;
+    let mut offset = 0;
+    for line in body.split_inclusive('\n') {
+        if !fenced(line, &mut fence) && line.trim_end().starts_with("## Note — ") {
+            return Some(&body[offset..]);
+        }
+        offset += line.len();
+    }
+    None
+}
+
 pub fn transfer_errors(corpus: &[Ticket]) -> Vec<(String, String)> {
     let mut errors = Vec::new();
     for source in corpus {
@@ -180,4 +193,18 @@ pub fn transfer_errors(corpus: &[Ticket]) -> Vec<(String, String)> {
         }
     }
     errors
+}
+
+#[cfg(test)]
+mod tests {
+    use super::note_suffix;
+
+    #[test]
+    fn note_suffix_ignores_fenced_examples_and_preserves_real_notes() {
+        let body = "# Example\n\n```markdown\n## Note — example\nNot a real note.\n```\n\n## Note — 2026-11-08T12:00:00Z @kimi\nReal note.\n";
+        assert_eq!(
+            note_suffix(body),
+            Some("## Note — 2026-11-08T12:00:00Z @kimi\nReal note.\n")
+        );
+    }
 }

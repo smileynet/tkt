@@ -26,7 +26,7 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 | `tkt batch "slug:title" ...` | Create multiple tasks in one push |
 | `tkt claim <id>` | Mark in-progress (push = visible WIP) |
 | `tkt close <id> --resolution "..."` | Mark done, write resolution |
-| `tkt edit <id> [--title] [--priority] [--blocked-by] [--status]` | Surgical field change |
+| `tkt edit <id> [--title] [--body] [--priority] [--blocked-by] [--status]` | Surgical field/body change; body edits preserve notes |
 | `tkt note <id> --append TEXT\|@FILE\|-` | Append a dated attributable note; lifecycle unchanged |
 | `tkt import --github [--repo OWNER/NAME] [--label NAME] [--validation TEXT]` | Create open tickets from bounded GitHub reads; replay preserves local work |
 
@@ -158,6 +158,7 @@ read them instead of parsing `result`.
 | Flag | Effect |
 |------|--------|
 | `--title "..."` | Change title |
+| `--body TEXT\|@FILE\|-` | Replace specification from text, UTF-8 file, or stdin; preserve existing notes |
 | `--status S` | Change status (`open`, `backlog`, `in_progress`). `done` is rejected; use `tkt close` so closure gates run |
 | `--priority P` | Change priority (pass `''` to clear) |
 | `--blocked-by N,N` | Replace dependencies |

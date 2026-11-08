@@ -298,6 +298,9 @@ enum Commands {
         id: String,
         #[arg(long)]
         title: Option<String>,
+        /// Replace the body from literal text, @FILE, or - for stdin; notes are preserved
+        #[arg(long)]
+        body: Option<String>,
         /// Replace ticket tags; repeat or use commas to provide multiple tags, empty clears
         #[arg(long, value_delimiter = ',', action = clap::ArgAction::Append)]
         tags: Option<Vec<String>>,
@@ -681,6 +684,7 @@ pub fn run() -> i32 {
             Commands::Edit {
                 id,
                 title,
+                body,
                 tags,
                 add_tags,
                 remove_tags,
@@ -697,6 +701,7 @@ pub fn run() -> i32 {
             } => crate::commands::edit::run(
                 &id,
                 title.as_deref(),
+                body.as_deref(),
                 tags.as_deref(),
                 &add_tags,
                 &remove_tags,

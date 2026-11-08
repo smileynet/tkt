@@ -156,6 +156,10 @@ pub fn resolution_section_range(body: &str) -> Option<std::ops::Range<usize>> {
     ac_transfer::section_range_named(body, "## Resolution")
 }
 
+pub(crate) fn note_suffix(body: &str) -> Option<&str> {
+    ac_transfer::note_suffix(body)
+}
+
 #[cfg(test)]
 mod tests {
     use super::atomic_write;

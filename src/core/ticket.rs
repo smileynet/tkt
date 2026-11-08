@@ -576,6 +576,15 @@ impl TicketFile {
         self.set_field("agents", &format!("[{}]", formatted));
     }
 
+    /// Replace the specification body while preserving the existing note suffix exactly.
+    pub fn replace_body_preserving_notes(&mut self, replacement: &str) {
+        if let Some(notes) = crate::core::note_suffix(&self.body) {
+            self.body = format!("{}\n\n{}", replacement.trim_end(), notes);
+        } else {
+            self.body = replacement.to_string();
+        }
+    }
+
     /// Append a resolution section to the body (idempotent — skips if already present).
     pub fn append_resolution(&mut self, date: &str, note: &str, spike_branch: Option<&str>) {
         if crate::core::resolution_section_range(&self.body).is_some() {
