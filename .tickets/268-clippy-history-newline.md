@@ -2,7 +2,7 @@
 id: "268"
 title: "Fix the history newline comparison that blocks Clippy"
 status: in_progress
-blocked_by: []
+blocked_by: ["272"]
 priority: high
 validation_criteria:
   - "mise run check"
