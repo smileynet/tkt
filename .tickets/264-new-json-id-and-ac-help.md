@@ -14,7 +14,7 @@ Structured success output for `tkt new -o json` (add `id` and `path`), and a hel
 
 ## Intent and context
 
-Source: android-helper session retrospective, 2026-11-07. Filed from android-helper; no work done here. Extends done tickets 105 and 143 (JSON success output).
+Source: android-helper session retrospective, 2026-11-07. Filed from android-helper; no work done here. Extends done tickets #105 and #143 (JSON success output).
 
 Observed with tkt 0.4.0 (1fbc40c):
 - `tkt new -o json` returns `{"ok":true,"result":"created 01 demo (local only)"}`, with no `id` or `path`. A script parsing that text failed in android-helper, created a duplicate ticket and needed `tkt undo` (two extra commits).
