@@ -37,7 +37,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.9.0";
+const DEPLOY_VERSION = "1.10.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -174,16 +174,39 @@ function codexPlugin(pack) {
 }
 
 // ZCode: `~/.zcode/cli/config.json` records `plugins.enabledPlugins["<name>@<marketplace>"]`
-// booleans; a plugin with no entry is enabled by default, so a cache hit counts too — an
-// explicit false alone does not.
+// booleans. Only an explicit true is coverage: a foreign install record with no entry lists
+// [disabled] on ZCode 0.17.1 until `plugins enable` writes one (Windows trial 2026-11-08), so
+// a bare cache hit proves nothing — ask the CLI for its verdict when reachable, else treat the
+// harness as uncovered and deploy keeps the bare copies carrying the pack.
+const zcodeCoverage = new Map();
+function zcodeCli() {
+  if (process.env.ZCODE_CLI) return process.env.ZCODE_CLI;
+  if (platform() === "darwin") return "/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs";
+  if (platform() === "win32" && process.env.LOCALAPPDATA)
+    return join(process.env.LOCALAPPDATA, "Programs", "ZCode", "resources", "glm", "zcode.cjs");
+  return null;
+}
+function zcodePluginReportsEnabled(cli, name) {
+  const run = spawnSync(process.execPath, [cli, "plugins", "list"], { encoding: "utf8" });
+  if (run.error || run.status !== 0) return false;
+  return new RegExp(`^-\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}@\\S+\\s+\\[enabled\\]`, "m").test(run.stdout);
+}
 function zcodePlugin(pack) {
+  if (zcodeCoverage.has(pack.name)) return zcodeCoverage.get(pack.name);
   const enabled = readJson(join(ZCODE_HOME(), "cli", "config.json"))?.plugins?.enabledPlugins ?? {};
   const ids = Object.keys(enabled).filter((id) => id.startsWith(`${pack.name}@`));
-  if (ids.length) return ids.some((id) => enabled[id] === true) ? `ZCode plugin ${ids.find((id) => enabled[id] === true)}` : null;
-  const cache = join(ZCODE_HOME(), "cli", "plugins", "cache");
-  if (!isDir(cache)) return null;
-  const market = readdirSync(cache).find((m) => isDir(join(cache, m, pack.name)));
-  return market ? `ZCode plugin ${pack.name}@${market}` : null;
+  let label = null;
+  if (ids.length) {
+    const on = ids.find((id) => enabled[id] === true);
+    if (on) label = `ZCode plugin ${on}`;
+  } else {
+    const cache = join(ZCODE_HOME(), "cli", "plugins", "cache");
+    const market = isDir(cache) ? readdirSync(cache).find((m) => isDir(join(cache, m, pack.name))) : undefined;
+    const cli = zcodeCli();
+    if (market && cli && isFile(cli) && zcodePluginReportsEnabled(cli, pack.name)) label = `ZCode plugin ${pack.name}@${market}`;
+  }
+  zcodeCoverage.set(pack.name, label);
+  return label;
 }
 
 // Refresh before pruning copies: a failed plugin update must leave the old deployment intact.
@@ -217,14 +240,15 @@ function refreshCodex(pack, args) {
 // ZCode: refresh the installed plugin from this checkout via its CLI. The marketplace update
 // re-syncs the snapshot from the directory source; the plugin update then re-copies content at
 // the same version (spike-confirmed), so no version bump is needed. A version change prints
-// "restart zcode to apply" — skills load at session start.
+// "restart zcode to apply" — skills load at session start. The closing `plugins enable` is
+// idempotent and recovers an install left [disabled] (a foreign record with no config entry).
 function refreshZcode(pack, args) {
   const label = zcodePlugin(pack);
   if (!label) return;
   const id = label.slice("ZCode plugin ".length);
   const marketplace = id.split("@")[1];
   if (args.dryRun) { console.log(`\nwould refresh ZCode plugin ${id}`); return; }
-  const cli = process.env.ZCODE_CLI || (platform() === "darwin" ? "/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs" : null);
+  const cli = zcodeCli();
   if (!cli || !isFile(cli)) {
     console.log(`  zcode CLI not found (set ZCODE_CLI): plugin refresh skipped (${id} stays as installed)`);
     return;
@@ -233,9 +257,10 @@ function refreshZcode(pack, args) {
   try {
     execFileSync(process.execPath, [cli, "plugins", "marketplace", "update", marketplace], { stdio: "inherit" });
     execFileSync(process.execPath, [cli, "plugins", "update", id], { stdio: "inherit" });
+    execFileSync(process.execPath, [cli, "plugins", "enable", id], { stdio: "inherit" });
   } catch (error) {
     console.log(`  warning: ZCode plugin refresh did not finish (${String(error.message).split("\n")[0]})`);
-    console.log(`  then run it yourself from a terminal on this machine:\n    node ${cli} plugins marketplace update ${marketplace} && node ${cli} plugins update ${id}`);
+    console.log(`  then run it yourself from a terminal on this machine:\n    node ${cli} plugins marketplace update ${marketplace} && node ${cli} plugins update ${id} && node ${cli} plugins enable ${id}`);
     return;
   }
   // Superseded version cache dirs linger after upgrades; keep only the newest.
