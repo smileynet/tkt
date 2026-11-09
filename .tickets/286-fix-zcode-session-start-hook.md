@@ -1,7 +1,7 @@
 ---
 id: "286"
 title: "SessionStart hook fails under ZCode: command/args manifest mix and non-JSON stdout"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "hook manifest invokes the script under ZCode (process-type or single command string)"
