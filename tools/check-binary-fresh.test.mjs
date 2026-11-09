@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { removeTree } from "./test-fixtures.mjs";
+
 
 const tools = dirname(fileURLToPath(import.meta.url));
 function fixture(run) {
@@ -23,7 +25,7 @@ function fixture(run) {
     git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--allow-empty", "-m", "fixture", "-q");
     return run({ root, repo, bin, git });
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    removeTree(root);
   }
 }
 
@@ -101,6 +103,6 @@ test("freshness wrapper returns operational error JSON outside a git repository"
     assert.equal(result.status, 2);
     assert.equal(JSON.parse(result.stdout).status, "error");
   } finally {
-    rmSync(root, { recursive: true, force: true });
+    removeTree(root);
   }
 });

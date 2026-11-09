@@ -1,11 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { changedPaths, executionPlan, selectChecks } from "./check-tools.mjs";
 import { parse } from "smol-toml";
+import { removeTree } from "./test-fixtures.mjs";
+
 
 test("source selection keeps unrelated work cheap and selects native regressions conservatively", () => {
   assert.deepEqual(selectChecks(["tools/deploy.mjs", "src/core/tickets.rs"]), { identity: false, generation: false });
@@ -43,7 +45,7 @@ test("task wiring forces native regressions for releases and preserves the Rust 
 
 test("explicit base includes intermediate commits, dirty edits, deletions and untracked inputs", t => {
   const repo = mkdtempSync(join(tmpdir(), "tool-scope-"));
-  t.after(() => rmSync(repo, { recursive: true, force: true }));
+  t.after(() => removeTree(repo));
   const git = (...args) => execFileSync("git", ["-C", repo, ...args], { encoding: "utf8", env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1" } }).trim();
   git("init", "-b", "main");
   git("config", "user.name", "Fixture"); git("config", "user.email", "fixture@example.invalid");

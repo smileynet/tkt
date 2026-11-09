@@ -3,14 +3,15 @@ import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
+import { removeTree } from "./test-fixtures.mjs";
 
 const installer = fileURLToPath(new URL("./deploy.mjs", import.meta.url));
 
 test("static manifest checks preserve bytes and reject invalid input without native tools", (t) => {
   const root = mkdtempSync(join(tmpdir(), "tkt-static-validation-"));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+  t.after(() => removeTree(root));
   const pack = join(root, "pack"), manifest = join(pack, ".claude-plugin/plugin.json");
   mkdirSync(join(pack, ".claude-plugin"), { recursive: true });
   mkdirSync(join(pack, "skills/example"), { recursive: true });
@@ -23,6 +24,7 @@ test("static manifest checks preserve bytes and reject invalid input without nat
   writeFileSync(preload, `import cp from "node:child_process";
 import {syncBuiltinESMExports} from "node:module";
 import {writeFileSync} from "node:fs";
+
 const original = cp.spawnSync;
 cp.spawnSync = (command, ...args) => {
   if (command !== "claude") return original(command, ...args);
@@ -30,7 +32,7 @@ cp.spawnSync = (command, ...args) => {
   return {status: 1, stdout: "", stderr: "fixture native rejection"};
 };
 syncBuiltinESMExports();\n`);
-  const run = (...args) => spawnSync(process.execPath, ["--import", preload, installer, "check", "--pack", pack, ...args], {
+  const run = (...args) => spawnSync(process.execPath, ["--import", pathToFileURL(preload).href, installer, "check", "--pack", pack, ...args], {
     encoding: "utf8", env: { ...process.env, DO_NOT_TRACK: "1" },
   });
   const clean = run("--static");

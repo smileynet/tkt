@@ -4,11 +4,13 @@ import {mkdtempSync,mkdirSync,writeFileSync,symlinkSync,lstatSync,readFileSync,r
 import {join,relative} from 'node:path';
 import {tmpdir} from 'node:os';
 import {migrateLegacySkills} from './migrate-legacy-skills.mjs';
+import { removeTree } from './test-fixtures.mjs';
+
 function fixture(t) {
   const root=mkdtempSync(join(tmpdir(),'tkt-legacy-')),home=join(root,'home'),source=join(root,'old','skills','tkt');
   mkdirSync(source,{recursive:true}); writeFileSync(join(source,'SKILL.md'),'---\nname: tkt\n---\nPrevious release');
   for(const harness of ['.kiro','.claude','.codex'])mkdirSync(join(home,harness,'skills'),{recursive:true});
-  t.after(()=>rmSync(root,{recursive:true,force:true}));
+  t.after(()=>removeTree(root));
   const link=(h,target=source)=>symlinkSync(target,join(home,h,'skills','tkt'),process.platform==='win32'?'junction':'dir');
   return {home,source,link};
 }

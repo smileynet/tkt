@@ -1,12 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { publisherOptions, stagedLocations } from "./publish-reviewed.mjs";
 import { dispatchPublication, publicationDispatchApi } from "./dispatch-publication.mjs";
+import { removeTree } from "./test-fixtures.mjs";
+
 const repo = dirname(dirname(fileURLToPath(import.meta.url)));
 const args = () => ["--repo", "/candidate", "--review-repo", "/review", "--review-sha", "a".repeat(40), "--index", "docs/releases/example/index.json", "--development-out", "/development", "--cargo", "/cargo", "--rustc", "/rustc"];
 test("publisher CLI rejects overrides and defers reading its credential", () => {
@@ -65,7 +67,7 @@ async function fixture(fn) {
   };
   const services = { api, actions: { run: async () => structuredClone(state.run) }, readCandidate: async () => structuredClone(candidate), checkReview: () => {} };
   try { await fn({ root, options, state, candidate, services, run: (extra = {}) => dispatchPublication({ ...options, ...extra }, services) }); }
-  finally { rmSync(root, { recursive: true, force: true }); }
+  finally { removeTree(root); }
 }
 test("local dispatch defaults to a read-only plan", () => fixture(async (f) => {
   assert.equal((await f.run()).mode, "dry-run"); assert.equal(f.state.calls, 0);

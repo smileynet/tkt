@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { removeTree } from "./test-fixtures.mjs";
+
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const builder = join(root, "tools", "build-kimi-plugin.mjs");
@@ -12,7 +14,7 @@ const skillNames = ["tkt-core", "tkt-orient", "tkt-reconcile", "tkt-work"];
 
 function fixture(t) {
   const dir = mkdtempSync(join(tmpdir(), "tkt-kimi-plugin-"));
-  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  t.after(() => removeTree(dir));
   return join(dir, "plugin");
 }
 

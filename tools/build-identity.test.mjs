@@ -5,6 +5,8 @@ import {execFileSync, spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
+import { removeTree } from "./test-fixtures.mjs";
+
 const repo = fileURLToPath(new URL("../", import.meta.url));
 test("built identity belongs to packaged source or its own checkout across rebuilds", () => {
   const temp = mkdtempSync(join(tmpdir(), "tkt build identity ")), parent = join(temp, "parent"), source = join(parent, "source");
@@ -45,5 +47,5 @@ test("built identity belongs to packaged source or its own checkout across rebui
     assert.equal(build(worktree), own, "linked worktree uses its own Git paths");
     const linked = commit(worktree, "Linked commit"); assert.equal(build(worktree), linked, "linked branch change rebuilds");
     git(worktree, "checkout", "--detach", git(source, "rev-parse", "main")); assert.equal(build(worktree), own, "detached switch rebuilds");
-  } finally { rmSync(temp, { recursive: true, force: true }); }
+  } finally { removeTree(temp); }
 });

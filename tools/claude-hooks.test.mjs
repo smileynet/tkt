@@ -5,6 +5,8 @@ import { basename, join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { removeTree } from "./test-fixtures.mjs";
+
 
 const handler = fileURLToPath(new URL("../.claude-plugin/hooks/session-start.mjs", import.meta.url));
 const body = `
@@ -33,7 +35,7 @@ function fixture(fn) {
   }
   const run = (overrides = {}, input = { hook_event_name: "SessionStart", source: "startup" }) => spawnSync(process.execPath, [handler], { cwd: dir, env: { ...env, ...overrides }, encoding: "utf8", input: JSON.stringify(input) });
   try { fn({ project, dir, calls, run }); }
-  finally { rmSync(dir, { recursive: true, force: true }); }
+  finally { removeTree(dir); }
 }
 
 test("SessionStart gathers frontier and WIP from the launch project before emitting context", () => fixture(({ project, calls, run }) => {

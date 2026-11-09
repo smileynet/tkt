@@ -1,11 +1,13 @@
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, copyFileSync, lstatSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, copyFileSync, lstatSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, relative, isAbsolute, delimiter, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { SHIM, parseUpdates, verifyPush } from './pre-push-check.mjs';
+import { removeTree } from './test-fixtures.mjs';
+
 
 const suite = mkdtempSync(join(tmpdir(), 'tkt-pre-push-tests-'));
 const source = fileURLToPath(new URL('./pre-push-check.mjs', import.meta.url));
@@ -22,7 +24,7 @@ after(() => {
   const inside = relative(resolve(tmpdir()), resolve(suite));
   assert.ok(inside && !inside.startsWith('..') && !isAbsolute(inside));
   assert.ok(suite.includes('tkt-pre-push-tests-'));
-  rmSync(suite, { recursive: true, force: true });
+  removeTree(suite);
 });
 function git(root, args, env = base, expected = 0) {
   const result = spawnSync('git', ['-C', root, ...args], { env, encoding: 'utf8' });

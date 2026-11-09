@@ -1,14 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkPack } from "./check-skill-syntax.mjs";
+import { removeTree } from "./test-fixtures.mjs";
+
 
 function fixture(t, body) {
   const pack = mkdtempSync(join(tmpdir(), "tkt-skill-syntax-"));
-  t.after(() => rmSync(pack, { recursive: true, force: true }));
+  t.after(() => removeTree(pack));
   mkdirSync(join(pack, "skills/example"), { recursive: true });
   writeFileSync(join(pack, "skills/example/SKILL.md"), `---\nname: example\ndescription: Example fixture\n---\n${body}`);
   return pack;

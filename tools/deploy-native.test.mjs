@@ -7,6 +7,8 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
+import { removeTree } from "./test-fixtures.mjs";
+
 
 const INSTALLER = join(dirname(fileURLToPath(import.meta.url)), "deploy.mjs");
 function runInstaller(args) {
@@ -19,7 +21,7 @@ test("deployment check rejects root context and opt-in catalog warnings", (t) =>
   try { execFileSync("claude", ["--version"], { stdio: "pipe" }); }
   catch { t.skip("Claude CLI unavailable"); return; }
   const pack = mkdtempSync(join(tmpdir(), "deploy-validation-"));
-  t.after(() => rmSync(pack, { recursive: true, force: true }));
+  t.after(() => removeTree(pack));
   mkdirSync(join(pack, ".claude-plugin"));
   mkdirSync(join(pack, "skills", "example"), { recursive: true });
   writeFileSync(join(pack, ".claude-plugin", "plugin.json"), JSON.stringify({
