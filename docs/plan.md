@@ -234,4 +234,4 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 278 | Keep routine dashboard verification in the delivery-dashboard workflow | ✅ done |
 | 279 | Check skill body size before deployment | ✅ done |
 | 281 | Ticket id collision when push.enabled=false: allocation is local-only | ✅ done |
-| 282 | Validate the tkt plugin live in ZCode (invocation, SessionStart hook, GitHub-source update) | in_progress |
+| 282 | Validate the tkt plugin live in ZCode (invocation, SessionStart hook, GitHub-source update) | ✅ done |
