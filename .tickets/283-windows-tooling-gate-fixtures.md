@@ -1,7 +1,7 @@
 ---
 id: "283"
 title: "Repair Windows tooling-gate fixture failures (29 failing on clean tree)"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "every failing fixture repaired or Windows-skipped with recorded reason"
