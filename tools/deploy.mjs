@@ -752,6 +752,12 @@ function doCheck(pack, args) {
     else {
       if (e.source !== "./") problems.push(`marketplace.json entry "${pack.name}" source is ${JSON.stringify(e.source)}, expected "./"`);
       if ("version" in e) problems.push(`marketplace.json entry "${pack.name}" sets version; keep it only in plugin.json`);
+      // Claude binds dependencies from plugin.json; ZCode resolves only the entry copy, so the
+      // two sets must agree (proposal 23, prior-art finding 1).
+      const depId = (d) => typeof d === "string" ? d : `${d?.name}@${d?.marketplace ?? ""}`;
+      const depSet = (d) => [...(d ?? [])].map(depId).sort().join(",");
+      if (depSet(e.dependencies) !== depSet(pack.manifest.dependencies))
+        problems.push(`marketplace.json entry "${pack.name}" dependencies [${depSet(e.dependencies)}] differ from plugin.json [${depSet(pack.manifest.dependencies)}]; declare the same set in both`);
     }
   }
   // Codex: same identity and version; its marketplace points at the repo root.
