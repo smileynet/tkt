@@ -1,7 +1,7 @@
 ---
 id: "282"
 title: "Validate the tkt plugin live in ZCode (invocation, SessionStart hook, GitHub-source update)"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "tkt-core invoked live in a ZCode session via both tkt:tkt-core and the bare alias"
