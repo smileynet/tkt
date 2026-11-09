@@ -106,8 +106,14 @@ Use Kimi's plugin-builder tools for native validation and personal registration:
 
 ```sh
 python3 /path/to/plugin-builder/scripts/validate_plugin.py dist/kimi-plugin
-bash /path/to/plugin-builder/scripts/register_personal.sh dist/kimi-plugin
+bash /path/to/plugin-builder/scripts/register_personal.sh dist/kimi-plugin   # macOS/Linux
+python /path/to/plugin-builder/scripts/register_personal.py dist/kimi-plugin # Windows
 ```
+
+On Windows the bash variant aborts with `Error: the kimi-daimon at
+DAIMON_RUNTIME_BINARY_PATH is not executable: ...\kimi-daimon.cmd` — its
+executability test rejects the `.cmd` launcher under Git Bash (observed
+2026-11-08). Use the Python variant there; it registers identically.
 
 Run registration inside a Kimi session. It uses the client-provided daemon, scans
 rights, requires error-free validation and reads back the registered ID, version and
