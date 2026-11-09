@@ -21,7 +21,15 @@ try {
     if (result.status !== 0) throw new Error(`tkt ${args.join(" ")} failed: ${result.error?.message ?? result.stderr}`);
     output.push(result.stdout.trim());
   }
-  console.log(`tkt frontier\n${output[0] || "None."}\n\ntkt in-progress tickets\n${output[1] || "None."}`);
+  const context = `tkt frontier\n${output[0] || "None."}\n\ntkt in-progress tickets\n${output[1] || "None."}`;
+  // ZCode parses hook stdout as a strict hookEventName JSON union and discards
+  // plain text; Claude Code injects plain stdout directly. ZCode also sets the
+  // CLAUDE_* tokens, so a ZCODE_* token is the host discriminator.
+  if (process.env.ZCODE_SESSION_ID || process.env.ZCODE_PLUGIN_ROOT) {
+    console.log(JSON.stringify({ hookEventName: "SessionStart", additionalContext: context }));
+  } else {
+    console.log(context);
+  }
 } catch (error) {
   console.error(`tkt SessionStart: ${error.message}`);
   process.exit(1);

@@ -9,6 +9,7 @@ import { removeTree } from "./test-fixtures.mjs";
 
 
 const handler = fileURLToPath(new URL("../.claude-plugin/hooks/session-start.mjs", import.meta.url));
+const manifest = fileURLToPath(new URL("../.claude-plugin/claude-hooks.json", import.meta.url));
 const body = `
 const fs = require('node:fs');
 fs.appendFileSync(process.env.FIXTURE_CALLS, JSON.stringify({args:process.argv.slice(1),cwd:process.cwd()})+'\\n');
@@ -24,6 +25,10 @@ function fixture(fn) {
   mkdirSync(join(project, ".tickets"), { recursive: true });
   mkdirSync(bin);
   const env = { ...process.env, CLAUDE_PROJECT_DIR: project, FIXTURE_CALLS: calls, PATH: bin, DO_NOT_TRACK: "1" };
+  // The host dialect is chosen by ZCODE_* markers; strip them so a ZCode-hosted
+  // test runner cannot flip the plain-text (Claude Code) expectations.
+  delete env.ZCODE_SESSION_ID;
+  delete env.ZCODE_PLUGIN_ROOT;
   if (process.platform === "win32") {
     cpSync(process.execPath, join(bin, "tkt.exe"));
     const preload = join(dir, "preload.cjs");
@@ -64,6 +69,26 @@ test("failed second query never leaks partial frontier context", () => fixture((
   assert.equal(result.stdout, "");
   assert.match(result.stderr, /query --status in_progress failed/);
 }));
+
+test("ZCode-hosted runs emit the strict hookEventName JSON envelope", () => fixture(({ run }) => {
+  for (const marker of [{ ZCODE_SESSION_ID: "sess-fixture" }, { ZCODE_PLUGIN_ROOT: "/plugins/tkt" }]) {
+    const result = run(marker);
+    assert.equal(result.status, 0, result.stderr);
+    const envelope = JSON.parse(result.stdout);
+    assert.equal(envelope.hookEventName, "SessionStart");
+    assert.match(envelope.additionalContext, /tkt frontier\nFrontier fixture/);
+    assert.match(envelope.additionalContext, /tkt in-progress tickets\nWIP fixture/);
+    assert.deepEqual(Object.keys(envelope).sort(), ["additionalContext", "hookEventName"]);
+  }
+}));
+
+test("manifest keeps a single shell-string command with no args field", () => {
+  const entry = JSON.parse(readFileSync(manifest, "utf8")).hooks.SessionStart[0].hooks[0];
+  assert.equal(entry.type, "command");
+  assert.equal(entry.args, undefined, "args is a Claude Code direct-spawn field that ZCode's command type ignores, spawning bare node (ticket 286)");
+  assert.match(entry.command, /^node ".+\.claude-plugin\/hooks\/session-start\.mjs"$/);
+  assert.equal(entry.timeout, 15);
+});
 
 test("native executable fixture preserves the first tkt argument", () => fixture(({ dir, calls }) => {
   const preload = join(dir, "argument-control.cjs");
