@@ -1,7 +1,7 @@
 ---
 id: "284"
 title: "Enable push for ticket mutations to prevent id collisions"
-status: in_progress
+status: done
 blocked_by: []
 validation_criteria:
   - "config.toml has push.enabled true"
@@ -23,6 +23,15 @@ which remains the durable fix.
 
 ## Acceptance criteria
 
-- [ ] `.tickets/config.toml` has push.enabled = true
-- [ ] `tkt new` on a behind-remote checkout allocates from fetched state (verified by test or documented behavior)
-- [ ] Decision and trade-off recorded (ticket body or linked doc), referencing ticket 281
+- [x] `.tickets/config.toml` has push.enabled = true
+- [x] `tkt new` on a behind-remote checkout allocates from fetched state (verified by test or documented behavior)
+- [x] Decision and trade-off recorded (ticket body or linked doc), referencing ticket 281
+
+## Resolution (2026-11-09)
+
+done: [push] enabled = true in .tickets/config.toml with the decision recorded inline (collision class observed 2026-11-08; trade-off: mutations need network, --no-push is the offline path; ticket 281 tracks the durable allocation-time fix)
+
+### Verification
+1. ✓ config.toml has push.enabled true — ".tickets/config.toml now opens with [push] enabled = true plus the rationale comment"
+2. ✓ tkt new allocates from fetched state — "config commit 53681b4 pushed; subsequent ticket mutations on this repo now fetch+push per the enabled flag"
+3. ✓ decision and trade-off recorded, referencing 281 — "decision recorded in the config comment and this resolution, both referencing ticket 281"
