@@ -2,6 +2,14 @@
 # User config provides defaults; this file only needs project-specific overrides.
 # Contributors without user config get these as the minimum quality bar.
 
+[push]
+# Enabled 2026-11-08 (ticket 284): local-only allocation let two sessions take
+# id 278 concurrently (collision surfaced at rebase; fixed by renumbering).
+# Fetch-before-allocate prevents that class. Trade-off: ticket mutations need
+# network; pass --no-push explicitly when offline. Ticket 281 tracks the
+# durable allocation-time detection.
+enabled = true
+
 [close]
 require_resolution = true
 require_validation_criteria = true
