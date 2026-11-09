@@ -114,15 +114,48 @@ impl MutationContext {
         })
     }
 
-    /// Find a ticket by ID in the loaded corpus. Returns a domain error if not found.
+    /// Find a ticket by ID in the loaded corpus. Returns a domain error if not
+    /// found, or if more than one ticket shares the id (a persisted collision)
+    /// — mutating the first match would silently target the wrong ticket.
     pub fn find_ticket(&self, id: &str) -> Result<&Ticket> {
-        core::find_ticket(&self.corpus, id).map_err(|_| {
-            DomainError::new(
+        let matches: Vec<&Ticket> = self
+            .corpus
+            .iter()
+            .filter(|ticket| ticket.id == id)
+            .collect();
+        match matches.as_slice() {
+            [] => Err(DomainError::new(
                 crate::ErrorKind::NotFound,
                 format!("no ticket with id {:?}", id),
             )
-            .into()
-        })
+            .into()),
+            [only] => Ok(only),
+            _ => {
+                let mut names: Vec<String> = matches
+                    .iter()
+                    .map(|ticket| {
+                        ticket
+                            .path
+                            .file_name()
+                            .unwrap()
+                            .to_string_lossy()
+                            .to_string()
+                    })
+                    .collect();
+                names.sort();
+                Err(DomainError::with_hint(
+                    crate::ErrorKind::Conflict,
+                    format!(
+                        "id {:?} is ambiguous: {} tickets share it ({})",
+                        id,
+                        names.len(),
+                        names.join(", ")
+                    ),
+                    "resolve the collision first: `tkt validate` reports duplicate ids; `tkt rebase` renumbers local tickets that collide with upstream".to_string(),
+                )
+                .into())
+            }
+        }
     }
 
     /// Check the remote status of a ticket. Returns `Some(status_string)` if remote

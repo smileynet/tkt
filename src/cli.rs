@@ -30,7 +30,7 @@ pub(crate) struct Cli {
     #[arg(long, global = true)]
     dry_run: bool,
 
-    /// Commit ticket changes locally without fetching or pushing
+    /// Commit ticket changes locally without pushing; new/batch still fetch read-only to skip remote ids
     #[arg(long, global = true)]
     no_push: bool,
 

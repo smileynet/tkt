@@ -190,7 +190,7 @@ There are no `--add-blocked-by` or `--remove-blocked-by` flags.
 | Flag | Effect |
 |------|--------|
 | `--dry-run` | Preview mutations without writing |
-| `--no-push` | Commit locally without fetching/pushing for this invocation |
+| `--no-push` | Commit locally without pushing for this invocation; `new`/`batch` still fetch read-only so allocated ids skip remote tickets |
 | `-q` / `--quiet` | Suppress confirmations, emit only essential data |
 | `-o json` | Structured JSON output (data to stdout, errors to stderr) |
 | `--color always\|never\|auto` | Control ANSI color (default: auto) |
@@ -230,10 +230,14 @@ They install no workflow/hook and do not prove evidence truth or implementation 
 Ticket commits skip commit hooks by default using an invocation-local empty hook
 directory; `[commit] hooks = "run"` opts back in. Only ticket/plan pathspecs enter
 those commits; unrelated staged files stay staged. Push hooks still run. Global
-`--no-push` skips fetching/pushing for that invocation while retaining local
-commits; `[push] enabled = false` remains the persistent setting. After deferred
-work, run `tkt rebase` to resolve any upstream ID collision before pushing. A
-rejected push reports the local commit and a retry instruction.
+`--no-push` skips pushing for that invocation while retaining local commits;
+allocation (`new`/`batch`) still fetches read-only so allocated ids skip remote
+tickets, warning and falling back to local state only when the remote is
+unobservable; `[push] enabled = false` behaves the same persistently. Mutations
+refuse an id shared by multiple ticket files (ambiguous) until the collision is
+reconciled. After deferred work, run `tkt rebase` to resolve any upstream ID
+collision before pushing. A rejected push reports the local commit and a retry
+instruction.
 
 
 At close, body checkboxes use `--check-all` / `--ac`; evidence maps 1:1 by index to

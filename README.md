@@ -237,8 +237,9 @@ cancelled work to open with its history retained. Close refuses cancelled work.
 
 Ticket commits skip commit hooks by default; `[commit] hooks = "run"` opts in.
 Only affected ticket/plan paths are committed, preserving unrelated staged files.
-Push hooks still run. Use global `--no-push` for local filing without fetch/push,
-or `[push] enabled = false` persistently; run `tkt rebase` before later pushing
+Push hooks still run. Use global `--no-push` for local filing without pushing,
+or `[push] enabled = false` persistently; `new`/`batch` still fetch read-only so
+allocated ids skip remote tickets. Run `tkt rebase` before later pushing
 when IDs collide. Push failures name the durable local commit and retry action.
 
 Rebase reports possible stale body references with file/line and ID mapping while
@@ -365,7 +366,7 @@ Optional. Create `.tickets/config.toml` to customize behavior:
 
 ```toml
 [push]
-enabled = true              # false for local-only repos (no network on writes)
+enabled = true              # false to skip pushing; new/batch still fetch read-only to skip remote ids
 
 [close]
 require_checked_acs = true  # require acceptance criteria checked before close

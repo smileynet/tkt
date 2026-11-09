@@ -81,17 +81,19 @@ impl GitTransaction {
                 "cannot mutate remote-backed tickets from detached HEAD; switch to a branch or set push.enabled = false for local-only work"
             );
         }
-        let upstream = if remote {
+        let upstream = if !has_remote {
+            None
+        } else if fetch {
+            // Observing the remote (resolve + fetch) is read-only and stays on
+            // even when publication is disabled, so allocation skips remote
+            // ids (ADR 0006). Unfetched transactions (import) keep resolving
+            // an upstream only when they publish.
+            observe_upstream(&repo, remote)?
+        } else if remote {
             git::resolve_upstream(&repo)?
         } else {
             None
         };
-
-        if fetch {
-            if let Some(upstream) = &upstream {
-                git::fetch(&repo, upstream)?;
-            }
-        }
 
         Ok(Self {
             repo,
@@ -223,6 +225,52 @@ impl GitTransaction {
                 bail!("allocation failed after 2 attempts (push repeatedly rejected)");
             }
         }
+    }
+}
+
+/// Resolve the upstream and fetch it so allocation can skip remote ids.
+///
+/// Observation is read-only and deliberately decoupled from publication:
+/// `push.enabled = false` and `--no-push` suppress the push, not the fetch.
+/// When publication is disabled, an unobservable remote downgrades allocation
+/// to local state with a loud warning instead of failing — local-only work
+/// must stay possible offline. With publication enabled it stays fatal:
+/// pushing requires fresh remote state.
+fn observe_upstream(repo: &Path, publish: bool) -> Result<Option<git::Upstream>> {
+    let upstream = match git::resolve_upstream(repo) {
+        Ok(Some(upstream)) => upstream,
+        Ok(None) => return Ok(None),
+        Err(error) if !publish => {
+            degraded_allocation(&format!(
+                "cannot resolve an upstream ({error:#}); allocating from local state only — ids may collide with remote tickets"
+            ));
+            return Ok(None);
+        }
+        Err(error) => return Err(error),
+    };
+    if let Err(error) = git::fetch(repo, &upstream) {
+        if !publish {
+            degraded_allocation(&format!(
+                "fetch of remote {:?} failed ({error:#}); allocating from local state only — ids may collide with remote tickets",
+                upstream.remote
+            ));
+            return Ok(None);
+        }
+        return Err(error);
+    }
+    Ok(Some(upstream))
+}
+
+/// Announce degraded local-only allocation: prose on stderr, a JSON notice
+/// envelope under `-o json` (matching the remote-refresh preview notice).
+fn degraded_allocation(message: &str) {
+    if crate::JSON_OUTPUT.load(std::sync::atomic::Ordering::Relaxed) {
+        eprintln!(
+            "{}",
+            serde_json::json!({"notice": {"kind": "local_only_allocation", "message": message}})
+        );
+    } else {
+        eprintln!("warning: {message}");
     }
 }
 

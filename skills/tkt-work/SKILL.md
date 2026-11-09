@@ -80,7 +80,7 @@ cancelled work with `tkt reopen` before working/closing it. Terminal dependents'
 old cancelled-blocker edges are dropped and named; inspect dry-run before applying.
 
 Ticket commit hooks are skipped by default (`commit.hooks = "run"` opts in);
-pre-push hooks remain active. Use `--no-push` for a local commit without fetch/push,
+pre-push hooks remain active. Use `--no-push` for a local commit without pushing,
 then resolve ID collisions with `tkt rebase` before the later push. Unrelated
 pre-staged paths remain staged, outside ticket commits.
 

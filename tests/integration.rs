@@ -2082,6 +2082,181 @@ fn test_project_config_push_disabled_skips_push() {
 }
 
 #[test]
+fn test_new_with_push_disabled_allocates_remote_aware_ids() {
+    let tmp = TempDir::new().unwrap();
+    let remote = tmp.path().join("remote.git");
+    let clone_a = tmp.path().join("clone_a");
+    let clone_b = tmp.path().join("clone_b");
+
+    Command::new("git")
+        .args(["init", "--bare", "-q", "-b", "main"])
+        .arg(&remote)
+        .output()
+        .unwrap();
+    for clone in [&clone_a, &clone_b] {
+        Command::new("git")
+            .args(["clone", "-q"])
+            .arg(&remote)
+            .arg(clone)
+            .output()
+            .unwrap();
+        git(clone, &["config", "user.email", "test@test"]);
+        git(clone, &["config", "user.name", "test"]);
+    }
+
+    // A seeds ticket 01 and pushes.
+    std::fs::create_dir_all(clone_a.join(".tickets")).unwrap();
+    std::fs::write(
+        clone_a.join(".tickets/01-seed.md"),
+        "---\nid: \"01\"\ntitle: \"Seed\"\nstatus: done\nblocked_by: []\n---\n\n# Seed\n\n## Resolution (2026-01-01)\n\nSeeded.\n",
+    )
+    .unwrap();
+    git(&clone_a, &["add", "-A"]);
+    git(&clone_a, &["commit", "-qm", "seed"]);
+    git(&clone_a, &["push", "-q"]);
+
+    // B syncs up to 01, disables push, and never pulls again.
+    git(&clone_b, &["pull", "-q"]);
+    std::fs::write(
+        clone_b.join(".tickets/config.toml"),
+        "[push]\nenabled = false\n",
+    )
+    .unwrap();
+    git(&clone_b, &["add", "-A"]);
+    git(&clone_b, &["commit", "-qm", "disable push"]);
+
+    // A allocates 02 and 03 on the remote after B went quiet.
+    let (code, out) = run_tkt(&clone_a, &["new", "alpha", "--title", "Alpha"]);
+    assert_eq!(code, 0, "A new alpha: {}", out);
+    let (code, out) = run_tkt(&clone_a, &["new", "beta", "--title", "Beta"]);
+    assert_eq!(code, 0, "A new beta: {}", out);
+
+    // B allocates without pulling: the read-only fetch must make it skip 02/03.
+    let (code, out) = run_tkt(&clone_b, &["new", "local-work", "--title", "Local work"]);
+    assert_eq!(code, 0, "new with push disabled should succeed: {}", out);
+    assert!(
+        out.contains("created 04"),
+        "allocation must skip remote ids 02/03 even though push is disabled: {}",
+        out
+    );
+    assert!(clone_b.join(".tickets/04-local-work.md").exists());
+
+    // Publication stays suppressed: the allocation commit is local-only.
+    let local_head = git(&clone_b, &["rev-parse", "HEAD"]);
+    let remote_head = git(&clone_b, &["rev-parse", "origin/main"]);
+    assert_ne!(local_head, remote_head, "push must stay disabled");
+
+    // No duplicate ids in B's corpus after the remote-aware allocation.
+    let (code, out) = run_tkt(&clone_b, &["validate"]);
+    assert_eq!(code, 0, "validate should pass (warnings allowed): {}", out);
+    assert!(!out.contains("duplicate-id"), "no duplicate ids: {}", out);
+}
+
+#[test]
+fn test_new_with_push_disabled_tolerates_unreachable_remote() {
+    let (tmp, clone) = setup_repo();
+    std::fs::write(
+        clone.join(".tickets/config.toml"),
+        "[push]\nenabled = false\n",
+    )
+    .unwrap();
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "disable push"]);
+    // Point origin at a path that cannot be fetched or queried.
+    git(
+        &clone,
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            tmp.path().join("gone.git").to_str().unwrap(),
+        ],
+    );
+
+    let (code, out) = run_tkt(&clone, &["new", "offline-work", "--title", "Offline work"]);
+    assert_eq!(
+        code, 0,
+        "local-only allocation must survive an unreachable remote: {}",
+        out
+    );
+    assert!(clone.join(".tickets/02-offline-work.md").exists());
+    assert!(
+        out.contains("local state only"),
+        "the degraded allocation mode must be announced loudly: {}",
+        out
+    );
+}
+
+#[test]
+fn test_validate_reports_duplicate_id_files_as_error() {
+    let (_tmp, clone) = setup_repo();
+    // A persisted collision: two files sharing id 02.
+    for slug in ["alpha", "beta"] {
+        std::fs::write(
+            clone.join(format!(".tickets/02-{slug}.md")),
+            format!(
+                "---\nid: \"02\"\ntitle: \"{}\"\nstatus: open\nblocked_by: []\n---\n\n# {}\n",
+                slug, slug
+            ),
+        )
+        .unwrap();
+    }
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "duplicate ids"]);
+
+    let (code, out) = run_tkt(&clone, &["validate"]);
+    assert_eq!(code, 1, "duplicate ids must fail validate: {}", out);
+    assert!(out.contains("duplicate-id"), "rule name: {}", out);
+    assert!(
+        out.contains("02-alpha.md") && out.contains("02-beta.md"),
+        "both files named: {}",
+        out
+    );
+}
+
+#[test]
+fn test_mutations_refuse_ambiguous_duplicate_id() {
+    let (_tmp, clone) = setup_repo();
+    // A persisted collision: two open tickets sharing id 02.
+    for slug in ["alpha", "beta"] {
+        std::fs::write(
+            clone.join(format!(".tickets/02-{slug}.md")),
+            format!(
+                "---\nid: \"02\"\ntitle: \"{}\"\nstatus: open\nblocked_by: []\n---\n\n# {}\n\n## Acceptance criteria\n\n- [x] done\n",
+                slug, slug
+            ),
+        )
+        .unwrap();
+    }
+    git(&clone, &["add", "-A"]);
+    git(&clone, &["commit", "-qm", "duplicate ids"]);
+
+    let (code, out) = run_tkt(&clone, &["claim", "02"]);
+    assert_ne!(code, 0, "claiming an ambiguous id must fail: {}", out);
+    assert!(
+        out.contains("ambiguous"),
+        "error must say the id is ambiguous: {}",
+        out
+    );
+    assert!(
+        out.contains("02-alpha.md") && out.contains("02-beta.md"),
+        "error must name both files: {}",
+        out
+    );
+
+    let (code, out) = run_tkt(&clone, &["close", "02", "--resolution", "done"]);
+    assert_ne!(code, 0, "closing an ambiguous id must fail: {}", out);
+    assert!(out.contains("ambiguous"), "{}", out);
+
+    // Neither file was mutated.
+    for slug in ["alpha", "beta"] {
+        let content =
+            std::fs::read_to_string(clone.join(format!(".tickets/02-{slug}.md"))).unwrap();
+        assert!(content.contains("status: open"), "{slug} must be untouched");
+    }
+}
+
+#[test]
 fn test_project_config_show_dumps_settings() {
     let (_tmp, clone) = setup_repo();
 

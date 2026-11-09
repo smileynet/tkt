@@ -59,7 +59,7 @@ remains snippet-only and quiet writes omit recommendation chatter.
 | Flag | Effect |
 |------|--------|
 | `-q` / `--quiet` | Suppress confirmations, emit only essential data |
-| `--no-push` | Commit ticket work locally without fetching or pushing |
+| `--no-push` | Commit ticket work locally without pushing; `new`/`batch` still fetch read-only so allocated ids skip remote tickets |
 | `-o json` / `--output=json` | Structured JSON output (success to stdout, errors to stderr) |
 | `--dry-run` | Preview mutations without writing |
 | `--color=always\|never\|auto` | Control ANSI color output (default: auto) |

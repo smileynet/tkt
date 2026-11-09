@@ -1063,14 +1063,6 @@ pub fn resolve_blocked_by_ref(raw: &str, index: &CorpusIndex) -> Option<String> 
     None
 }
 
-/// Find a ticket by id in the corpus.
-pub fn find_ticket<'a>(corpus: &'a [Ticket], id: &str) -> Result<&'a Ticket> {
-    corpus
-        .iter()
-        .find(|t| t.id == id)
-        .ok_or_else(|| anyhow::anyhow!("no ticket with id {}", id))
-}
-
 // --- Helpers ---
 
 fn is_fence(line: &str) -> bool {
