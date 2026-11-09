@@ -1,7 +1,7 @@
 ---
 id: "285"
 title: "Document Windows register_personal.py workaround in plugin-maintenance.md"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "plugin-maintenance.md shows Python variant as the Windows path"
