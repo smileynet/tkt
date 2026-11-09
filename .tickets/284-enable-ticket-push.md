@@ -1,7 +1,7 @@
 ---
 id: "284"
 title: "Enable push for ticket mutations to prevent id collisions"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "config.toml has push.enabled true"
