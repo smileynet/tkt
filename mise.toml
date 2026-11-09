@@ -20,8 +20,10 @@ description = "Run all tooling regressions and the Rust gate for release verific
 run = "node tools/check-tools.mjs --release && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test"
 
 [tasks.deploy]
-description = "Deploy tkt skills to agent harness scan roots and refresh the Antigravity (agy) plugin"
-run = "tools/deploy-skills.sh"
+description = "Deploy tkt skills to agent harness scan roots, refresh the Antigravity (agy) plugin, and reinstall the CLI to ~/.local/bin"
+run = """
+bash tools/install-local.sh && tools/deploy-skills.sh
+"""
 
 [tasks."deploy:dry-run"]
 description = "Preview what deploy would do"

@@ -29,7 +29,7 @@ For dispatch and reference-inventory traps, read `docs/agents/session-operations
 ```bash
 cargo build                    # debug build
 cargo build --release          # release build (stripped, LTO)
-cargo install --path .         # deploy to PATH (shows git hash in --version)
+bash tools/install-local.sh  # deploy CLI to ~/.local/bin (shows git hash in --version)
 cargo test                     # all tests
 cargo test -- --nocapture      # with output
 cargo clippy                   # lint (must be 0 warnings)
@@ -72,10 +72,10 @@ opt-in; they do not authorize hosted runs or publication in this repository.
 - **Always push after committing** (a remote exists). Before pushing, `git fetch` and
   verify no upstream divergence; fast-forward or rebase cleanly, otherwise report the
   upstream state before proceeding.
-- **Deploy by default.** Prefer to deploy changes (`cargo install --path .` when Rust code
+- **Deploy by default.** Prefer to deploy changes (`bash tools/install-local.sh` when Rust code
   changed; `node tools/deploy.mjs` when skills, guidance, plugin manifests or deployment tooling
   changed, which refreshes both the harness scan roots and the Antigravity `agy` plugin) as
-  part of finishing the work, unless the user says otherwise.
+  part of finishing the work, unless the user says otherwise. `mise run deploy` does both.
 - Run the full gate for Rust changes; run applicable Node/workflow fixtures for
   tooling changes. Docs/ticket-only edits need accuracy, links and scope checks;
   they do not require rebuilding Rust. Commit + push each completed unit and deploy
