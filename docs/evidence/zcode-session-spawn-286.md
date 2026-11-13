@@ -8,14 +8,12 @@ plugin cache patched byte-identical since 2026-11-08 18:25 local):
 - Standalone from the cache path with a `ZCODE_*` marker: exit 0, correct
   `{"hookEventName":"SessionStart","additionalContext":…}` envelope, live board data.
 - Zero `hook.run.failed` events since the patch (all five failures predate it).
-- **Still unobserved:** a hook execution that *succeeds* end-to-end inside ZCode.
-  Resuming an existing conversation does not run SessionStart hooks (the phase
-  completes as a no-op; observed 1 ms at turn 24 of this session). No fresh
-  session with a first turn has occurred in any `.tickets` project since the
-  patch. Remaining step: open a new chat in a `.tickets` project, send one
-  message, then read the log for the turn's `session_start_hooks` phase and the
-  injected context (success emits no `hook.run.*` event; failure emits
-  `hook.run.failed`).
+- **Still unobserved as of 2026-11-12:** a hook execution that *succeeds*
+  end-to-end inside ZCode. Resuming an existing conversation does not run
+  SessionStart hooks (the phase completes as a no-op; observed 1 ms at turn 24
+  of this session). No fresh session with a first turn had occurred in any
+  `.tickets` project since the patch. → **Observed 2026-11-13, see the last
+  section.**
 
 ## Can an agent spawn a fresh ZCode session by itself? No (0.17.1)
 
@@ -60,3 +58,30 @@ probing:
 Practical consequence: live per-session verification of SessionStart hooks (or
 anything model-dependent) requires a Desktop-originated fresh session — i.e. a
 human opening a new chat — until ZCode ships standalone provider support.
+
+## Observed: fresh-session success (2026-11-13)
+
+The human opened a new chat in this repo and sent one message. ZCode log
+`~/.zcode/cli/log/zcode-2026-11-13.jsonl`:
+
+- Session `sess_ac71ac6a-5e93-412e-82c2-f878fa365897`, turn
+  `turn_f7b8b328-32cd-4064-9ddc-cd5b7567a07b` (first turn, 04:34:57Z):
+  `turn.phase.started` then `turn.phase.completed` for phase
+  `session_start_hooks`, `status: "completed"`, **851 ms** — a real hook
+  execution, not the ~1 ms resume no-op.
+- The turn's model context contains the injected SessionStart
+  `additionalContext`: the tkt frontier block (tickets 287, 286) followed by
+  `tkt in-progress tickets`. ZCode injects context only from stdout that
+  parses as strict `hookEventName`-discriminated JSON, so the 56a9cd8
+  envelope shape passed the live parser.
+- Zero `hook.run.failed` events in the day's log (and none since the patch).
+  Success emits no `hook.run.*` event, so the completed phase, the delivered
+  context and the absence of failure together are the success record.
+- The host is the GUI-launched Desktop with the minimal agent PATH (no
+  `~/.local/bin`, `~/.cargo/bin` or `node` on the agent shell PATH), so the
+  run also exercised the b23414a PATH-survivability fix.
+- Plugin cache parity re-checked at close time: `.claude-plugin/plugin.json`,
+  root `plugin.json`, `.claude-plugin/claude-hooks.json` and
+  `.claude-plugin/hooks/session-start.mjs` are byte-identical to repo HEAD
+  (b23414a). The log does not record the injected payload itself; the
+  delivered context is observed in the session, not the log file.
