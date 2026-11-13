@@ -39,7 +39,7 @@ function fixture(fn) {
     chmodSync(join(bin, "tkt"), 0o755);
   }
   const run = (overrides = {}, input = { hook_event_name: "SessionStart", source: "startup" }) => spawnSync(process.execPath, [handler], { cwd: dir, env: { ...env, ...overrides }, encoding: "utf8", input: JSON.stringify(input) });
-  try { fn({ project, dir, calls, run }); }
+  try { fn({ project, dir, bin, calls, run }); }
   finally { removeTree(dir); }
 }
 
@@ -54,7 +54,11 @@ test("SessionStart gathers frontier and WIP from the launch project before emitt
 }));
 
 test("missing project tickets or tkt produces no context", () => fixture(({ project, dir, run }) => {
-  for (const env of [{ PATH: "" }, { CLAUDE_PROJECT_DIR: dir }]) {
+  // A tkt-free HOME keeps this deterministic now that the hook appends
+  // ~/.cargo/bin and ~/.local/bin fallbacks to a stripped PATH.
+  const bareHome = join(dir, "bare-home");
+  mkdirSync(bareHome);
+  for (const env of [{ PATH: "", HOME: bareHome, USERPROFILE: bareHome }, { CLAUDE_PROJECT_DIR: dir }]) {
     const result = run(env);
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, "");
@@ -80,6 +84,39 @@ test("ZCode-hosted runs emit the strict hookEventName JSON envelope", () => fixt
     assert.match(envelope.additionalContext, /tkt in-progress tickets\nWIP fixture/);
     assert.deepEqual(Object.keys(envelope).sort(), ["additionalContext", "hookEventName"]);
   }
+}));
+
+test("GUI-minimal PATH still finds tkt via HOME install roots", () => fixture(({ run, dir }) => {
+  // A GUI-launched host passes PATH=/usr/bin:/bin:… with no user install roots;
+  // the hook must still discover ~/.cargo/bin/tkt (live 2026-11-13: the fresh
+  // ZCode session ran the hook, found no tkt, and silently injected nothing).
+  const home = join(dir, "fixture-home");
+  const cargoBin = join(home, ".cargo", "bin");
+  mkdirSync(cargoBin, { recursive: true });
+  if (process.platform === "win32") {
+    // fixture() already installs the NODE_OPTIONS preload for basename tkt.exe;
+    // a node copy under that name picks the fixture body up the same way.
+    cpSync(process.execPath, join(cargoBin, "tkt.exe"));
+  } else {
+    writeFileSync(join(cargoBin, "tkt"), `#!${process.execPath}\n${body.replace("process.argv.slice(1)", "process.argv.slice(2)")}\n`);
+    chmodSync(join(cargoBin, "tkt"), 0o755);
+  }
+  const result = run({ PATH: "/usr/bin:/bin", HOME: home, USERPROFILE: home });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /tkt frontier\nFrontier fixture/, "tkt must resolve from $HOME/.cargo/bin when PATH lacks it");
+}));
+
+test("inherited PATH keeps precedence over appended install roots", () => fixture(({ run, dir }) => {
+  const home = join(dir, "fixture-home");
+  const cargoBin = join(home, ".cargo", "bin");
+  mkdirSync(cargoBin, { recursive: true });
+  const homeBody = body.replace("'Frontier fixture'", "'HOME-root fixture'");
+  writeFileSync(join(cargoBin, "tkt"), `#!${process.execPath}\n${homeBody.replace("process.argv.slice(1)", "process.argv.slice(2)")}\n`);
+  chmodSync(join(cargoBin, "tkt"), 0o755);
+  const result = run({ HOME: home, USERPROFILE: home });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Frontier fixture/);
+  assert.doesNotMatch(result.stdout, /HOME-root fixture/, "an explicit PATH tkt must win over the appended roots");
 }));
 
 test("manifest keeps a single shell-string command with no args field", () => {
