@@ -6,7 +6,7 @@ title: "Context"
 # Context
 
 **Ticket**:
-A single unit of work stored as `.tickets/{NN}-{slug}.md` with YAML frontmatter (id, title, status, blocked_by). Describes WHAT to build, not HOW.
+A single unit of work stored as `.tickets/{NN}-{slug}.md` with managed YAML frontmatter and a user-owned specification body. See the frontmatter contract below for managed fields. Describes WHAT to build, not HOW.
 _Avoid_: issue (overloaded with GitHub), task (too generic)
 
 **Frontier**:
@@ -18,8 +18,25 @@ The period between a ticket's creation and its id being cited elsewhere. `tkt re
 _Avoid_: grace period (implies time-based)
 
 **Frontmatter contract**:
-The YAML fields tkt reads/writes: `id`, `title`, `status`, `blocked_by`, `priority`, `env`, `spec`. Other fields are preserved but not managed.
+The YAML fields tkt manages: `id`, `title`, `status`, `blocked_by`, `priority`, `env`, `spec`, `parent`, `assignee`, `validation_criteria`, `tags`, `requires`, and signed `agents`. Unknown fields and their raw values are preserved, not necessarily interpreted.
 _Avoid_: schema (implies strict validation of all content)
+
+| Managed field | Owned meaning |
+|---|---|
+| `id` / `title` | Stable ticket identity and human summary |
+| `status` | Stored lifecycle; only `close` may reach `done`, and cancellation stays distinct |
+| `blocked_by` | Prerequisite IDs; only completed (`done`) blockers satisfy readiness |
+| `priority` | Optional frontier bucket: urgent, high, medium or low; unset sorts as medium |
+| `env` | Legacy single-capability compatibility field; prefer `requires` |
+| `spec` | Optional durable intent/specification source |
+| `parent` | Optional hierarchy parent; direct children make a ticket a frontier-excluded container |
+| `assignee` | Optional owner recorded from invocation identity at claim; separate from eligibility |
+| `validation_criteria` | Ordered close-time criteria, each with corresponding evidence |
+| `tags` | Work-stream/context labels; label namespaces may constrain values |
+| `requires` | All-of machine capabilities needed for frontier eligibility |
+| `agents` | Optional homogeneous allow (`agent`) or exclude (`!agent`) invocation policy |
+
+`TicketFile` preserves unknown frontmatter fields byte-for-byte where untouched. Cancellation metadata is body-owned (`## Cancellation`), not another managed frontmatter field.
 
 **Surgical edit**:
 A frontmatter field rewrite that preserves unknown fields, body text, and formatting of untouched areas. The core editing primitive.
@@ -39,7 +56,7 @@ Raw frontmatter editor in `src/core/ticket.rs`. Owns the `Vec<(String, String)>`
 _Avoid_: RawTicket (not raw — it parses), FileHandle (it's not a handle)
 
 **Status**:
-Enum (`Backlog | Open | InProgress | Done`) in `src/core/ticket.rs`. Parsed at construction time — invalid values rejected before entering the corpus. `Backlog` tickets are excluded from the frontier. Exhaustive matching ensures no status is unhandled.
+Enum (`Backlog | Open | InProgress | Done | Cancelled`) in `src/core/ticket.rs`. Parsed at construction time; invalid values are rejected. `Backlog` is deferred and excluded from the frontier. `Cancelled` is terminal history, not successful completion, and cannot satisfy prerequisites. Exhaustive matching keeps every status handled.
 _Avoid_: state (too generic), lifecycle (the enum is one snapshot, not the lifecycle itself)
 
 **Consent**:

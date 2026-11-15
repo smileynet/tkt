@@ -423,7 +423,7 @@ a non-`either` `env` with `requires`; use `requires: [corp, gpu]` when both are 
 User-level defaults in `~/.config/tkt/config.toml`. Project config overrides.
 
 ```bash
-tkt config --list          # show project config
+tkt config --list          # list user configuration values
 tkt config --show          # show resolved config with sources
 tkt config --set push.enabled=false
 ```
@@ -521,94 +521,6 @@ separate authorization after candidate, install and final audit gates.
 
 [MIT](LICENSE)
 
-## Parent progress
+## Detailed behavior
 
-Parents with any direct children are containers, excluded from ready. Use `tkt children ID` for full-corpus direct-child progress (done/total includes cancelled in total, with cancelled separate); `-o json` emits one object and `-q` lists child IDs. Progress never changes stored status: close parents explicitly with normal AC/evidence gates.
-
-## Transferring acceptance criteria
-
-Move an unchecked body criterion with `tkt move-ac SOURCE --ac N --to DEST` (N counts all top-level single-line body ACs, including checked/moved). The source uses `[>]` plus a destination marker; the receiver gets an unchecked copy with a source back-reference. This records transfer, not completion. Validation criteria and evidence remain independent and unchanged; supply truthful proof for every retained validation criterion at close. Retry the same transfer after interruption; inspect conflicts instead of editing link identities.
-
-## Parent-scoped frontier
-
-Use `tkt ready --parent ID` for ready direct children of an existing parent, preserving priority/ID order, capability matching, invocation eligibility/ownership and tag context (including its existing untagged-ticket behavior). Human in-progress context is parent-scoped too. JSON rows include stored parent when present. This is native-parent-only; no epic-tag alias is added. Legacy tag groups can continue using `tkt context epic:slug` with normal ready.
-
-## Plan lifecycle comparison
-
-Plan tables compare all five lifecycle labels exactly. Both `done` and canonical `✅ done` are recognized; cancellation rows retain their reason. Unknown status cells are findings rather than silently treated as open. Plain sync-plan remains advisory for derivable drift; --check or --strict fails, while --fix regenerates cells without managing narrative prose.
-
-Update-check cadence is user-only: `tkt config --set update_check.interval=1h` (also `24h`, `7d`, or `never`; positive whole hours/days). Default: `24h`. `TKT_UPDATE_CHECK_INTERVAL` overrides the setting; `TKT_UPDATE_CHECK=0`, `DO_NOT_TRACK=1`, CI, quiet and dry-run still suppress update-check requests/cache writes. Invalid intervals are rejected on config writes; a malformed stored/environment interval skips the advisory check with a warning.
-
-Source-reference readiness: `validate` reports `no-source-reference` at info severity for open/in-progress tickets lacking a nonempty spec, prerequisite, parent, local ticket citation, docs/specs/.memory path or HTTP(S) link. Fenced examples do not count. Backlog and terminal tickets are excluded. It remains advisory even under `--strict`; `[validate] require_source_reference = true` explicitly makes absence an error. Existing integrity rules still validate referenced targets separately.
-
-Frontier readiness: `validate` emits info-only `frontier-readiness` for missing source reference, non-moved/nonempty acceptance checkbox or validation-criterion slots on the project structural frontier. It reuses the source predicate and native dependency/container/capability selection, with the same configured machine/legacy-env capability resolution as ready. Validation is project-wide: invocation ownership, agent eligibility, tag context and ready --parent are views and do not narrow this audit. Info remains advisory under --strict; no new claim/close gate, queue filter or sort is added. These are slot checks, not proof that the contents are sufficient. Backlog-chain diagnosis is outside this first bounded rule.
-
-Optional Git advice: `tkt hooks install|check|remove|run` manages only the exact owned project pre-commit shim, shared by repository worktrees. Install/remove are explicit, respect global dry-run and preserve foreign/modified hooks or any configured core.hooksPath. The shim always permits committing, even when validation or tkt fails; it is not the verification gate. No hook is installed by init/deploy, no Git config or commit/push changes, and normal tkt mutation hook bypass remains unchanged.
-
-See [optional hook installation and recovery](docs/optional-hooks.md).
-
-Derived plans: `tkt sync-plan --generate [FILE]` renders the full corpus in priority/ID order (all statuses, no tag/agent narrowing). No file means Markdown stdout; -o json wraps projection/count. An explicit new/empty file or one owned unfenced tkt:projection:begin/end block is atomically written; human text outside stays exact. Global dry-run writes nothing. Unmarked nonempty files, bad markers, output links/database paths and incomplete/duplicate IDs are rejected; parent directories must exist. Generation conflicts with check/fix/strict/brief. Existing 3-column drift/fix semantics remain, with numeric and canonical slug IDs; no narrative parsing or commit/push.
-
-See [derived plan ownership and preview](docs/plan-projection.md).
-
-Dry-run diagnostics: file debug logging is suppressed for previews, including the local validate/rebase dry-run forms. Existing logs are neither created nor appended. Explicit human/JSON stderr debug output remains available; ordinary non-preview file logging is unchanged. This repairs the documented no-write preview behavior.
-
-Migration safety: tk preview and apply prepare readable source snapshots and reject destination or backup conflicts. New output/backups are published completely without overwriting arrivals; an original is removed only after its converted output succeeds. Backups remain .tickets.bak. This is per-file safety, not an atomic batch or external-editor lock; retain backups and inspect partial results on failure. Hard-link support is required for new-file publication.
-
-See [migration publication and recovery](docs/migration-publication.md).
-
-### Local configuration, context and initialization writes
-
-Config/context/init text writes use atomic publication, reject linked or non-regular targets and unreadable existing text, and refuse changed preparation snapshots. New files never overwrite arrivals. These are per-file operations, not a batch transaction or external-writer lock; context --clear removes the state entry itself.
-
-Preview performs no writes; existing command previews do not inspect every filesystem precondition. Coordinate external writers. `init --write FILE` retains explicit custom paths, including paths outside the checkout; it is not a path-containment boundary. Directory effects reject linked/non-directory targets, but ancestor paths are resolved by the filesystem. New-file publication requires hard-link support on the destination filesystem.
-
-## Controlled history reversal
-
-Explicit recovery: tkt --dry-run undo then tkt undo reverts only a clean HEAD new/claim/close carrying a versioned receipt from this build. Legacy/other operations, root/merge/rebased history and repeated undo are refused. It adds a revert commit, never resets history; push rejection keeps a local commit without automatic rebase.
-
-The first version supports regular non-executable ticket files and an optional already-tracked plan status update. Other effects (configuration, context, init, hooks, telemetry and caches) are outside the inverse. Unrelated untracked files are preserved; the index and tracked worktree must be clean with no active Git operation or index lock. A receipt is structural provenance, not author authentication.
-
-Global --no-push and push.enabled apply. Preview reads without fetching or creating a temporary index. A failed revert leaves conflict/sequencer state for inspection; a failed commit leaves the staged inverse. An opted-in hook that changes the prepared tree leaves a local commit and prevents push. Inspect git status and use explicit reviewed Git recovery for unsupported or interrupted work. Do not undo a valid local commit just because publishing failed.
-
-See [undo eligibility and recovery](docs/undo.md).
-
-
-Append a ticket note with tkt note ID --append "text" (or @FILE / - for UTF-8 stdin, at most 64 KiB). Notes preserve lifecycle and existing body bytes; identify the caller with --agent or TKT_AGENT. The literal ## Resolution is reserved even inside examples. The target must be tracked and clean. Only cooperating note processes in the same worktree serialize; external editors, other mutations and other worktrees require coordination. Dry-run writes nothing. Every invocation appends: after a push fails, inspect the retained local commit and retry git push. If committing fails, inspect and explicitly finish or restore the retained note before retrying; do not append again. Note commits are outside undo receipt eligibility.
-
-See [ticket-note input and recovery](docs/ticket-notes.md).
-
-
-Import open GitHub issues with tkt import --github (current origin) or --repo OWNER/NAME; --label selects one source label. Preview first with --dry-run. gh owns authentication; only github.com is supported and nothing is written to GitHub. Successful extraction stays below 1,000 received objects and 10 MiB raw JSON, including skipped closed issues/PRs. Only import:github is generated as a local tag; preserve source labels and unknown fields in owned JSON snapshots. Never infer local acceptance or validation from provider checkboxes. Repeatable --validation (alias --vc, at most 16 nonempty values of 2,000 bytes each) applies the same explicit criteria to every new issue and satisfies projects requiring criteria at creation.
-
-See [GitHub import, ownership and recovery](docs/github-import.md).
-
-Imports are create-only and require a clean tracked worktree/index; unrelated untracked work is preserved. Valid existing immutable source identities are skipped without replacing local notes or lifecycle. Provider renames retain original provenance; divergent local/upstream ownership receipts require explicit reconciliation. A per-worktree allocation marker serializes new/batch/import only; coordinate other writers. Dry-run does not fetch, lock or persist. Interrupted markers require inspection, never automatic stealing. A pending import journal resumes only with the same repository, label, validation arguments and branch, using its recorded source before a new API read. Commit failure can retain staged files; push failure retains a local commit. Inspect the reported state and repeat that exact request to resume, or retry git push for a durable commit. Import is outside undo eligibility.
-
-
-Use tkt done --week for current done work in the inclusive last 604,800 seconds (7x24h), UTC; tkt done shows all current done work. Dates come from verified same-path/same-ID single-parent Git status transitions using recorded committer time, not body dates or file mtime. Unknown dates stay visible with a reason and null window membership; known out-of-window rows are omitted only with --week. Cancelled/reopened work is excluded. Tag context applies with a narrowing notice; --all-context bypasses it. No agent/owner/machine filtering or persisted completion field is added. JSON is one object with separate dated and unknown counts; it is not proof of acceptance quality.
-
-History attribution is bounded: 4,096 lookups/report, 256 path commits/ticket, 32 MiB/object, 8 MiB/listing, 4,096 ticket entries/tree, 16 MiB/8,192 entries each for tree and state/blob/commit metadata payload caches, and 64 MiB history payload/report. It uses local Git with no lazy fetch/replacement objects/optional locks; unsupported read options, missing/shallow/merge/rename/ID-discontinuous/unparseable history or limits produce unknowns. Existing diagnostic/telemetry settings still apply; no tickets, index or refs are changed.
-
-See [completed-work dates and report limits](docs/done-report.md).
-
-
-Lifecycle hooks are optional advisory commands configured as JSON argv arrays in hooks.on_new/on_claim/on_close (default []). Project commands execute only after separate Git-local trust: git config --local tkt.lifecycleHooks true; this approves future hook edits and linked worktrees too. Inspect trusted code and revoke trust before untrusted updates. Hooks inherit caller credentials/environment. They run after the publication attempt, never gate it; spawn/failure/timeout warnings preserve the original result. The two-second deadline terminates only the direct child, not descendants; trusted hooks must not detach. Dry-run/failed commits emit nothing, allocation retries emit only the final retained attempt, and nested hooks are suppressed. No automatic replay: inspect the consumer and explicitly replay safely, never repeat a successful mutation as a notification retry.
-
-See [hook configuration, trust and recovery](docs/lifecycle-hooks.md).
-
-The [optional extension-schema design](docs/extension-schema-design.md) specifies a narrow future scalar contract and explicit migration rules. Runtime schema enforcement and migration are not implemented; current unknown-field preservation remains the supported behavior.
-
-
-Primary/worker roles are invocation conventions: identify each caller with --agent or TKT_AGENT; use --agents/--exclude-agents for eligibility and let identified claim record assignee. Keep tags for workstreams and requires for all-of declared machine capabilities, never agent roles. Primary oversight is not a second claim; use authorized delegation and required independent review. An explicit coordinated handoff may reopen WIP with edit --status open, update eligibility, then use claim --force to override retained ownership. Force never claims WIP; direct claim does not establish machine/dependency readiness. There is no init --role or new/edit --assignee flag.
-
-Read the [primary/worker role and handoff examples](skills/tkt-core/references/roles.md) before coordinating sessions.
-
-
-Native write nudges are explicit: tkt init --write-nudge claude|codex|both installs owned advisory config; --nudge-action check is read-only and remove removes exact owned entries while retaining inactive helper/ownership files. Ordinary init/--all leaves native hooks unchanged. Node22+ is required only for this optional helper. No trust, user settings, permissions or deny policy is changed. Detection covers Claude Edit/Write ticket paths and canonical Codex apply_patch headers only; body/spec edits remain allowed. Inspect both generated commands and helper before native trust review; helper changes may not invalidate native trust. Check proves owned config presence, not native activation. Foreign/modified/duplicate JSON is preserved by refusal; writes are atomic per-file, not a multi-file transaction.
-
-Before setup/removal, read [native write-nudge coverage, trust and recovery](skills/tkt-core/references/native-hooks.md).
-JSON dry runs also describe prepared effects on stderr as JSON Lines under
-`preview_effects` (`operation`, `paths`, `unresolved`), preserving command stdout.
-Remote previews use cached refs without lazy object fetching; missing cached
-objects can fail the preview, and future allocation/publication remains unresolved.
+The [command reference](skills/tkt-core/references/commands.md) owns exhaustive flags and behavior for parent progress/scoping, criterion transfer, plans, readiness, configuration, undo, notes, import, reports, hooks and previews. Recovery guides cover [undo](docs/undo.md), [ticket notes](docs/ticket-notes.md), [GitHub import](docs/github-import.md), [reports](docs/done-report.md), [lifecycle hooks](docs/lifecycle-hooks.md), [optional Git hooks](docs/optional-hooks.md), [plan generation](docs/plan-projection.md) and [migration](docs/migration-publication.md). See [role examples](skills/tkt-core/references/roles.md), [native write nudges](skills/tkt-core/references/native-hooks.md), and the [contributor contract](docs/agents/tkt-contract.md) before those specialized workflows.
