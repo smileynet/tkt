@@ -1,7 +1,7 @@
 ---
 id: "293"
 title: "Re-center documentation on the core workflow and refresh domain vocabulary"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -35,13 +35,22 @@ Refresh the glossary for all five statuses and managed native fields. Correct kn
 
 ## Acceptance criteria
 
-- [ ] README leads with a working quick start and core workflow; detailed appended contracts are represented by accurate reference links rather than duplicated essays.
-- [ ] `tkt-core` and `tkt-work` retain their JTBD/execution guidance while redundant feature-contract appendices are removed or reduced to links.
-- [ ] No behavioral contract is lost: command/reference and contributor docs retain the detailed behavior.
-- [ ] Glossary lists cancelled and all currently managed native fields with accurate ownership distinctions.
-- [ ] README correctly describes `config --list` user scope and limits push-on-write wording to ticket mutations.
-- [ ] Existing link/body-size/tooling checks and the full maintainer gate pass; changed guidance is deployed.
+- [x] README leads with a working quick start and core workflow; detailed appended contracts are represented by accurate reference links rather than duplicated essays.
+- [x] `tkt-core` and `tkt-work` retain their JTBD/execution guidance while redundant feature-contract appendices are removed or reduced to links.
+- [x] No behavioral contract is lost: command/reference and contributor docs retain the detailed behavior.
+- [x] Glossary lists cancelled and all currently managed native fields with accurate ownership distinctions.
+- [x] README correctly describes `config --list` user scope and limits push-on-write wording to ticket mutations.
+- [x] Existing link/body-size/tooling checks and the full maintainer gate pass; changed guidance is deployed.
 
 ## Out of scope
 
 Redesigning the public CLI, rewriting historical tickets, changing release authorization, or deleting standalone recovery references.
+
+## Resolution (2026-11-15)
+
+Consolidated duplicated feature contracts into maintained references, corrected configuration/push wording, and refreshed managed-field and cancellation vocabulary
+
+### Verification
+1. ✓ documentation checks, links, and native skill body-size gates pass — "node tools/check-tools.mjs passed 54/54 including native skill syntax/body-size gates; 38 changed-document local links and anchors resolved; CRLF-aware git diff --check passed"
+2. ✓ glossary and configuration wording match current CLI behavior — "Glossary now covers all 13 managed fields and all five statuses; src/commands/config.rs confirms --list reads user configuration while --show reports resolved project values with sources"
+3. ✓ mise run check passes and guidance deployment succeeds — "mise run check completed successfully and node tools/deploy.mjs refreshed the configured guidance installations"
