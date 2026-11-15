@@ -93,3 +93,10 @@ Priority filters need the multi-level priority system to be meaningful.
 ## Resolution (2026-08-09)
 
 Implemented: query --status and --priority filters, tkt blocked view with dependency chain. Composable, JSON unaffected. Research AC (observe queries) deferred — shipped the core based on spec's JTBD analysis.
+
+## Note — 2026-11-15
+
+By: kimi
+
+<!-- tkt-note:v1 26504-1794736288059357000 -->
+Deferred-research disposition (2026-11-15, #292): the claimed observational query research was not performed and is not accepted retroactively as evidence. The original research checkbox remains historical. Current priority-filter demand comes from the owner-approved #294 JTBD, not invented usage measurements; further filters require fresh evidence.
