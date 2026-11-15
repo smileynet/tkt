@@ -1,7 +1,7 @@
 ---
 id: "291"
 title: "Reconcile the current board and active-ticket quality"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -33,13 +33,22 @@ Record the six audit follow-ups in priority order and keep the existing assigned
 
 ## Acceptance criteria
 
-- [ ] `tkt sync-plan --check --brief` exits zero with all active and new tickets represented.
-- [ ] The current plan no longer claims that no ready ticket remains and names the audit follow-ups as current work.
-- [ ] Ticket 287 has intent/context, behavioral scope, and concrete body acceptance criteria.
-- [ ] Ticket 288 qualifies grey-matter ticket 292 so validation emits no dangling local reference.
-- [ ] `tkt validate --brief` emits no findings for active tickets 90, 147, 184, 269, 270, 287, 288, or the new audit follow-ups, apart from explicitly documented informational readiness findings.
-- [ ] Existing historical warnings and evidence remain otherwise unchanged.
+- [x] `tkt sync-plan --check --brief` exits zero with all active and new tickets represented.
+- [x] The current plan no longer claims that no ready ticket remains and names the audit follow-ups as current work.
+- [x] Ticket 287 has intent/context, behavioral scope, and concrete body acceptance criteria.
+- [x] Ticket 288 qualifies grey-matter ticket 292 so validation emits no dangling local reference.
+- [x] `tkt validate --brief` emits no findings for active tickets 90, 147, 184, 269, 270, 287, 288, or the new audit follow-ups, apart from explicitly documented informational readiness findings.
+- [x] Existing historical warnings and evidence remain otherwise unchanged.
 
 ## Out of scope
 
 Implementing tickets 287/288, clearing external evidence gates, changing ownership, or fabricating missing historical closure evidence.
+
+## Resolution (2026-11-15)
+
+Reconciled the live audit queue, added missing plan rows, groomed tickets 287/288, and preserved historical records.
+
+### Verification
+1. ✓ tkt sync-plan --check --brief exits zero — "tkt sync-plan --check --brief => pass (0 finding(s)); plan includes 287-294 and preserves existing work"
+2. ✓ tkt validate --brief has no active-ticket errors or undocumented readiness findings — "tkt validate --brief => pass with only eight historical missing-resolution warnings; no active-ticket or readiness findings"
+3. ✓ historical statuses, criteria, resolutions, and evidence are unchanged — "Scoped diff and git history show only new plan narrative/rows and approved ticket-body grooming; no historical statuses, criteria, resolutions or evidence changed"
