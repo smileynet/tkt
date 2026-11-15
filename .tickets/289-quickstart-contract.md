@@ -24,6 +24,8 @@ Owner-approved audit on 2026-11-13 and implementation approval on 2026-11-15. Re
 - `src/commands/capabilities.rs` advertised scripting workflow.
 - Integration tests exercise the built binary in isolated repositories.
 
+Source documentation: `README.md`, Quick Start.
+
 ## What to build
 
 A new user can copy the documented quick start into a fresh Git repository and finish with a valid closed ticket. The example initializes the store, supplies real intent and acceptance/validation content, and closes with checked acceptance and evidence. The machine-readable scripting example selects at most one ticket instead of claiming the entire frontier or passing several IDs to one `claim` invocation.
