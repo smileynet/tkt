@@ -1,7 +1,7 @@
 ---
 id: "292"
 title: "Make advisory audit outcomes explicit and reconcile superseded acceptance"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -34,13 +34,22 @@ Record an explicit superseding decision for ticket 121 and a decision/follow-up 
 
 ## Acceptance criteria
 
-- [ ] Warning-only audit JSON retains `status: pass`, adds counts, and exposes `outcome: pass_with_warnings`.
-- [ ] Warning-only audit brief output says `pass with warnings` and retains exit zero.
-- [ ] Clean and strict-failure outcomes remain compatible and have regression tests.
-- [ ] Ticket 121 records the current advisory contract as an explicit supersession of its old exit-code AC.
-- [ ] Ticket 46 records whether the deferred usage research remains demand or is rejected, without claiming it was historically performed.
-- [ ] The full maintainer gate passes.
+- [x] Warning-only audit JSON retains `status: pass`, adds counts, and exposes `outcome: pass_with_warnings`.
+- [x] Warning-only audit brief output says `pass with warnings` and retains exit zero.
+- [x] Clean and strict-failure outcomes remain compatible and have regression tests.
+- [x] Ticket 121 records the current advisory contract as an explicit supersession of its old exit-code AC.
+- [x] Ticket 46 records whether the deferred usage research remains demand or is rejected, without claiming it was historically performed.
+- [x] The full maintainer gate passes.
 
 ## Out of scope
 
 Promoting warnings to failure by default, semantic proof validation, editing historical checked boxes, or suppressing unresolved historical findings.
+
+## Resolution (2026-11-15)
+
+Added audit outcome and severity counts while preserving status and exit compatibility, documented the contract, and recorded historical supersession/disposition without rewriting acceptance or proof.
+
+### Verification
+1. ✓ cargo test audit covers clean, warning, and strict outcomes — "cargo test --test audit_outcomes => 3 passed for clean, warning-only and strict; audit_template_content => 1 passed"
+2. ✓ audit JSON adds counts and pass_with_warnings without changing status or exit compatibility — "Live deep audit: status pass, outcome pass_with_warnings, counts errors=0 warnings=18 info=0; brief says pass with warnings; strict regression retains fail/exit 1"
+3. ✓ tickets 46 and 121 record explicit decisions and mise run check passes — "Notes added to 121 and 46 explicitly supersede warning-exit AC and reject retroactive research proof while identifying #294 demand; mise run check completed successfully"
