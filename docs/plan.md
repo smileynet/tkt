@@ -29,9 +29,22 @@ The actionable implementation queue, including parent #191, is complete. Histori
 
 A subsequent [78-project review](evidence/cross-project-review-2026-11-03.md) found no verified tkt regression requiring terminal-ticket reopening. #147 still lacks a consent-reset reproduction; #184 remains deferred. Existing #168 now has a measured corpus baseline and #86 has corroborating downstream demand. Working-copy warnings are distinguished from product defects and stale local checkouts from current upstream guidance.
 
-## Current maintenance frontier
+## Current audit implementation
 
-The newly requested Decisions tab is implemented under #243, with recommended
+The owner approved these audit follow-ups on 2026-11-15. This is the active work queue; the ticket files own status and evidence, while this table records the intended execution order. Existing open or deferred work remains visible below without invented dependency edges.
+
+| ID | Work | Status |
+|---:|---|---|
+| 291 | Reconcile the current board and active-ticket quality | in_progress |
+| 289 | Repair and smoke-test the first-run quick start | open |
+| 290 | Make ticket status, sequencing and selection authority consistent | open |
+| 292 | Report explicit audit outcomes and disposition historical contracts | open |
+| 293 | Consolidate user guidance and refresh the domain glossary | open |
+| 294 | Filter the ready frontier by priority threshold | open |
+
+## Historical maintenance frontier
+
+The newly requested Decisions tab was implemented under #243, with recommended
 radio choices, notes and a chat export. Its model/DOM checks pass; rendered
 laptop/phone acceptance remains unverified under the existing browser restriction.
 LAN hosting is active under completed #244; see [the hosting guide](dashboard-lan.md)
@@ -143,11 +156,11 @@ The owner requested execution of actionable parked work. The [per-ticket review]
 | 191 | Centralize command mutation effects and dry-run policy | ✅ done |
 | 202 | Design versioned embedded skills for binary-only installs | ✅ done |
 
-### Current execution queue
+### Historical execution queue
 
-Fresh review of all six remaining tickets: [reproduction results and rendering checklist](evidence/remaining-six-review-2026-11-04.md). Private current-reader controls did not reproduce a persistent consent reset; session overrides and alternate roots explain disabled state without file changes. No gate was removed on inference. Browser inventory still denies local browser use; no fallback was attempted. Narrative support remains owner-deferred; its separate status-cell repair was delivered in #248.
+The earlier review of all six then-remaining tickets is retained: [reproduction results and rendering checklist](evidence/remaining-six-review-2026-11-04.md). Private current-reader controls did not reproduce a persistent consent reset; session overrides and alternate roots explain disabled state without file changes. No gate was removed on inference. Browser inventory still denies local browser use; no fallback was attempted. Narrative support remains owner-deferred; its separate status-cell repair was delivered in #248.
 
-The remaining implementation queue is complete: #261 and parent #191 closed after the fresh 523-Rust/42-Node gate and independent critic acceptance ([receipt](evidence/git-effects-261.md)). The installed CLI is `e755765`; workflow deployment is recorded in the receipt. The earlier #259 test-isolation incident remains documented with prior consent/data state unknown ([receipt](evidence/telemetry-preview-259.md)). No open ready ticket remains. #90 is gated by automatic approval review rejecting the launcher implementation as blocked by policy. Three dashboard tickets (#228, #240, #243) retain unavailable rendered acceptance. Two backlog tickets remain: #147 needs its exact cross-session reproduction; #184 is explicitly deferred. This queue adds no dependency edges.
+That implementation queue completed when #261 and parent #191 closed after the fresh 523-Rust/42-Node gate and independent critic acceptance ([receipt](evidence/git-effects-261.md)). The installed CLI was `e755765`; workflow deployment is recorded in the receipt. The earlier #259 test-isolation incident remains documented with prior consent/data state unknown ([receipt](evidence/telemetry-preview-259.md)). Current audit work is listed above. Existing #90 remains gated by automatic approval review rejecting the launcher implementation as blocked by policy, #269 remains open, #287 remains open, and #288 remains in its unactivated publication scope. Two backlog tickets remain: #147 needs its exact cross-session reproduction; #184 is explicitly deferred. This record adds no dependency edges.
 
 ## Recorded cancellations under ADR 0004
 
@@ -236,3 +249,5 @@ Latest 2026-11-04 delivery: #261 and parent #191 are complete after critic accep
 | 281 | Ticket id collision when push.enabled=false: allocation is local-only | ✅ done |
 | 282 | Validate the tkt plugin live in ZCode (invocation, SessionStart hook, GitHub-source update) | ✅ done |
 | 286 | SessionStart hook fails under ZCode: command/args manifest mix and non-JSON stdout | ✅ done |
+| 287 | Single-source plugin manifests from Cargo/package metadata | open |
+| 288 | Publish to GitHub marketplace | backlog |
