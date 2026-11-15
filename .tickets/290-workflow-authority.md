@@ -1,7 +1,7 @@
 ---
 id: "290"
 title: "Unify ticket authority, selection, and external-source workflow"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -34,13 +34,22 @@ Correct statements that all projects enforce validation criteria/evidence: descr
 
 ## Acceptance criteria
 
-- [ ] `tkt-work` contains no `CREW_TICKET_SOURCES`, GitLab execution path, or `CREW_TICKET_SYNC` provider-close behavior.
-- [ ] `tkt-orient` and `tkt-work` agree that ticket files own status/evidence and the plan owns sequencing.
-- [ ] `tkt-work` no longer instructs agents to pick the first ready row independently of orientation.
-- [ ] Init snippets and core workflow descriptions use the same authority/selection language.
-- [ ] Close-policy guidance states actual defaults rather than universal enforcement.
-- [ ] The full maintainer gate passes and workflow guidance is deployed.
+- [x] `tkt-work` contains no `CREW_TICKET_SOURCES`, GitLab execution path, or `CREW_TICKET_SYNC` provider-close behavior.
+- [x] `tkt-orient` and `tkt-work` agree that ticket files own status/evidence and the plan owns sequencing.
+- [x] `tkt-work` no longer instructs agents to pick the first ready row independently of orientation.
+- [x] Init snippets and core workflow descriptions use the same authority/selection language.
+- [x] Close-policy guidance states actual defaults rather than universal enforcement.
+- [x] The full maintainer gate passes and workflow guidance is deployed.
 
 ## Out of scope
 
 Removing GitHub import, changing claim races, changing priority/ID sorting, or adding provider synchronization.
+
+## Resolution (2026-11-15)
+
+Removed parallel external execution/provider closure, established one ticket/plan/frontier authority contract, corrected close defaults, aligned init snippets, and deployed the guidance.
+
+### Verification
+1. ✓ legacy external execution and provider-close variables are absent from tkt-work — "Focused guidance regression proves CREW_TICKET_SOURCES, CREW_TICKET_SYNC, glab issue and gh issue close absent; grep across skills also returned no matches"
+2. ✓ orient, work, init, and core guidance agree on status, sequence, and selection authority — "cargo test --test onboarding => 5 passed; all six generated instruction targets plus core/orient/work state ticket lifecycle/evidence, plan sequencing, and explicit oriented/user selection"
+3. ✓ mise run check passes and guidance deployment succeeds — "mise run check completed all suites; node tools/check-tools.mjs => 54/54 including skill-size gates; install-local fresh at 76a6a87 and node tools/deploy.mjs validation/install succeeded"
