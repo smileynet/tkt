@@ -90,3 +90,5 @@ Recurring cosmetic warnings (e.g. `unchecked-acs-on-done` on done-and-superseded
 - Reconcile tickets or re-prioritize/rewrite the plan (that's `tkt-reconcile`, at session end — orient only reads the plan)
 - Auto-release another session's `in_progress` claim (flag + offer; the user decides)
 - Replace a prose handoff document — if the project keeps one, orient reads it for context but doesn't own it
+
+Query supports `--match`, repeatable `--tag`, and `--fields`; see [query usage](../tkt-core/references/commands.md).

@@ -24,7 +24,7 @@ optional debug/telemetry/update behavior is independent of command effects.
 `output.default` describes the default wire format (`text`, `json` or
 `json_lines`), not a new value for the `--output` flag. That flag still accepts
 `json` or `text`. Read mode flags and descriptions: audit/validate/plan findings
-use JSON by default and `--brief` selects text. Query always emits JSON Lines.
+use JSON by default and `--brief` selects text. Query emits JSON Lines without projection; with --fields, -o json emits JSON Lines and -o text emits tab-separated JSON values.
 Capabilities always emits one JSON object. Quiet/output combinations retain
 their current command behavior; the manifest does not normalize their output.
 

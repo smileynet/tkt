@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use std::collections::{BTreeMap, HashSet};
 
-use crate::commands::common::{is_json_output, tickets_dir};
+use crate::commands::common::{domain_bail, is_json_output, tickets_dir};
 use crate::core::{self, Status};
 
 pub fn run(
@@ -12,7 +12,12 @@ pub fn run(
     priority_filter: Option<&str>,
     parent_filter: Option<&str>,
     all_context: bool,
+    text_match: Option<&str>,
+    tags: &[String],
+    projection: Option<&str>,
 ) -> Result<i32> {
+    let projection = projection.map(parse_fields).transpose()?;
+    let needle = text_match.map(str::to_lowercase);
     let dir = tickets_dir()?;
     let corpus = core::load_corpus(&dir)?;
     let ctx = crate::context::load(&dir);
@@ -25,6 +30,16 @@ pub fn run(
     let mut count: u32 = 0;
     let mut context_hidden = 0;
     for t in &corpus {
+        if let Some(needle) = &needle {
+            if !t.title.to_lowercase().contains(needle)
+                && !t.file.body.to_lowercase().contains(needle)
+            {
+                continue;
+            }
+        }
+        if !tags.iter().all(|tag| t.tags.contains(tag)) {
+            continue;
+        }
         if let Some(sf) = status_filter {
             if t.status.as_str() != sf {
                 continue;
@@ -148,7 +163,26 @@ pub fn run(
                 serde_json::to_string(&raw_frontmatter)?
             ));
         }
-        println!("{{{}}}", fields.join(","));
+        let serialized = format!("{{{}}}", fields.join(","));
+        if let Some(projection) = &projection {
+            let row: serde_json::Value = serde_json::from_str(&serialized)?;
+            let values: Vec<String> = projection
+                .iter()
+                .map(|field| row[*field].to_string())
+                .collect();
+            if is_json_output() {
+                let entries: Vec<String> = projection
+                    .iter()
+                    .zip(&values)
+                    .map(|(field, value)| format!("\"{field}\":{value}"))
+                    .collect();
+                println!("{{{}}}", entries.join(","));
+            } else {
+                println!("{}", values.join("\t"));
+            }
+        } else {
+            println!("{serialized}");
+        }
     }
     if context_hidden > 0 && !all_context {
         let message = format!(
@@ -172,4 +206,34 @@ pub fn run(
     }
     crate::RESULT_COUNT.store(count as i32, std::sync::atomic::Ordering::Relaxed);
     Ok(0)
+}
+
+fn parse_fields(input: &str) -> Result<Vec<&str>> {
+    let mut fields = Vec::new();
+    for field in input.split(',').map(str::trim) {
+        if !matches!(
+            field,
+            "id" | "title"
+                | "status"
+                | "blocked_by"
+                | "pending_blockers"
+                | "env"
+                | "priority"
+                | "spec"
+                | "parent"
+                | "tags"
+                | "validation_criteria"
+                | "requires"
+                | "agents"
+                | "assignee"
+                | "frontmatter"
+        ) {
+            domain_bail!("unknown or empty query field: {field}");
+        }
+        if fields.contains(&field) {
+            domain_bail!("duplicate query field: {field}");
+        }
+        fields.push(field);
+    }
+    Ok(fields)
 }

@@ -152,7 +152,7 @@ context is preserved and is not inherited by edits.
 
 Use `--parent ID` on new/batch for hierarchy independently of `--blocked-by`.
 Edit sets the same field (`--parent ''` clears it); missing/self/cyclic references
-are rejected. Query emits parent and accepts `--parent ID` to select its children.
+are rejected. Query: `--parent ID` (children), `--match`, `--tag`, `--fields` (output).
 
 Creation JSON: read final `id`/`path` (batch `tickets[]`), not `result`.
 

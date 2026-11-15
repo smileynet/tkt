@@ -1187,6 +1187,8 @@ mod phase_tests {
         )
         .unwrap();
         let txn = GitTransaction::new_unfetched(&dir).unwrap();
+        // Git may spell the same Windows root without Rust's verbatim path prefix.
+        assert_eq!(txn.repo.canonicalize().unwrap(), root);
         let journal = root.join(".git/tkt-github-import.json");
         let pairs = vec![Pair {
             source_id: 101,
@@ -1249,9 +1251,9 @@ mod phase_tests {
             assert_eq!(effects[0].operation, operation);
             assert!(effects[0].unresolved);
             let mut expected: std::collections::BTreeSet<_> =
-                [journal.clone(), root.to_path_buf()].into_iter().collect();
+                [journal.clone(), txn.repo.clone()].into_iter().collect();
             if owns_pairs {
-                expected.extend(paths(&pairs).iter().map(|path| root.join(path)));
+                expected.extend(paths(&pairs).iter().map(|path| txn.repo.join(path)));
             }
             assert_eq!(
                 effects[0]

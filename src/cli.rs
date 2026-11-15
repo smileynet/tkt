@@ -373,6 +373,15 @@ enum Commands {
     },
     /// Dump tickets as JSON Lines (one object per line); active tag context filters by default
     Query {
+        /// Case-insensitive literal substring in title or body
+        #[arg(long = "match")]
+        text_match: Option<String>,
+        /// Require an exact tag (repeat for all-of matching)
+        #[arg(long)]
+        tag: Vec<String>,
+        /// Comma-separated output fields; text uses tab-separated JSON values
+        #[arg(long)]
+        fields: Option<String>,
         /// Filter by status (open, in_progress, done, backlog, cancelled)
         #[arg(long)]
         status: Option<String>,
@@ -752,6 +761,9 @@ pub fn run() -> i32 {
                 }
             }
             Commands::Query {
+                text_match,
+                tag,
+                fields,
                 status,
                 priority,
                 parent,
@@ -761,6 +773,9 @@ pub fn run() -> i32 {
                 priority.as_deref(),
                 parent.as_deref(),
                 all_context,
+                text_match.as_deref(),
+                &tag,
+                fields.as_deref(),
             ),
             Commands::Blocked => crate::commands::blocked::run(),
             Commands::Children { id } => crate::commands::children::run(&id),
@@ -1118,11 +1133,23 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
             }
         }
         Commands::Query {
+            text_match,
+            tag,
+            fields,
             status,
             priority,
             parent,
             all_context,
         } => {
+            if text_match.is_some() {
+                flags.push("match");
+            }
+            if !tag.is_empty() {
+                flags.push("tag");
+            }
+            if fields.is_some() {
+                flags.push("fields");
+            }
             if parent.is_some() {
                 flags.push("parent");
             }

@@ -298,6 +298,8 @@ It installs no workflow or hook and does not replace project-specific tests.
 
 ### Query
 
+Use `tkt query --match sharing --tag cli --fields id,status,title -o json` for focused lookups. `--match` is a case-insensitive literal substring over title/body (empty matches all); repeat `--tag` to require every exact, case-sensitive tag. These combine with status, priority, parent and active context; `--all-context` bypasses only context. `--fields` is a comma-separated list of top-level query keys, in requested order. Missing optional values become null; unknown, empty or duplicate names are errors. With projection, `-o json` emits JSON Lines and `-o text` (the default) emits headerless tab-separated JSON values, preserving escaped tabs/newlines. Without projection the existing JSON Lines output is unchanged.
+
 Claim, close, and status edits update existing `docs/plan.md` rows in their own
 commit. Commit or stash plan changes first. Missing rows remain warnings until
 `tkt sync-plan --fix` appends them under Unplanned tickets. Without a plan, ticket

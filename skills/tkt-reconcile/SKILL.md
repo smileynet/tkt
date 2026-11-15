@@ -162,3 +162,5 @@ Present: tickets created, tickets updated, plan re-organization (what moved and 
 - Decompose a spec from scratch into a ticket set (that's the `tkt-core` skill's ticket-creation workflow, or your harness's planning flow)
 - Create specs or features
 - Rewrite the plan's narrative prose or change its format (status/ordering only)
+
+Query supports `--match`, repeatable `--tag`, and `--fields`; see [query usage](../tkt-core/references/commands.md).

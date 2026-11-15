@@ -41,6 +41,8 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 | `tkt query --all-context` | Bypass tag context without changing it; other explicit filters still apply |
 | `tkt query --status open --priority high` | Filtered view |
 
+Use `tkt query --match sharing --tag cli --fields id,status,title -o json` for focused lookups. `--match` is a case-insensitive literal substring over title/body (empty matches all); repeat `--tag` to require every exact, case-sensitive tag. These combine with status, priority, parent and active context; `--all-context` bypasses only context. `--fields` is a comma-separated list of top-level query keys, in requested order. Missing optional values become null; unknown, empty or duplicate names are errors. With projection, `-o json` emits JSON Lines and `-o text` (the default) emits headerless tab-separated JSON values, preserving escaped tabs/newlines. Without projection the existing JSON Lines output is unchanged.
+
 Query emits typed `id`, `title`, `status`, `blocked_by`, `pending_blockers`, `tags`,
 `validation_criteria`, `requires`, `agents` and `assignee`. Optional `env`, `priority`,
 `spec` and `parent` retain their stored values. Unknown or unparsed stored keys appear in

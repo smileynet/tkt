@@ -30,7 +30,7 @@ command discovery. Installing the CLI alone does not install the workflow skills
 | Coordinating primary/workers or handing off ownership | keep identity separate from machine capabilities | Read [role examples](references/roles.md) |
 | Preparing a completed-work report | inspect Git dates and explicit unknowns | `tkt done --week -o json` |
 | Checking project health | find cycles, broken deps, stale WIP | `tkt validate` / `tkt audit` |
-| Querying the full corpus | bypass context; optionally filter status or priority | `tkt query --all-context --status open --priority high` |
+| Querying tickets | filter text/tags and select fields | `tkt query --match sharing --tag cli --fields id,status,title -o json` |
 | Working in a specific environment | see only relevant work | Set `machine.capabilities` in config (or `CREW_ENV=corp` for legacy env filtering) → `tkt ready` filters by `requires` |
 | Keeping a plan in sync | report drift between tickets and plan doc (advisory) | `tkt sync-plan` (add `--check` to gate CI) |
 | Scoping work to a subsystem | filter frontier by tags | `tkt context backend` → `tkt ready` shows only matching |
