@@ -1,7 +1,7 @@
 ---
 id: "292"
 title: "Make advisory audit outcomes explicit and reconcile superseded acceptance"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "audit JSON adds counts and pass_with_warnings without changing status or exit compatibility"
   - "tickets 46 and 121 record explicit decisions and mise run check passes"
 tags: ["stream:quality", "kind:enhancement", "triage:ready-for-agent"]
+assignee: "kimi"
 ---
 # Make advisory audit outcomes explicit and reconcile superseded acceptance
 
