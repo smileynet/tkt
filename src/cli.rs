@@ -177,6 +177,9 @@ enum Commands {
         /// Scope to direct children of an existing parent (intersects tag context)
         #[arg(long)]
         parent: Option<String>,
+        /// Keep this priority and above; unset ticket priority counts as medium
+        #[arg(long)]
+        priority: Option<String>,
     },
     /// Initialize .tickets/ and deploy agent integration files
     Init {
@@ -556,10 +559,15 @@ pub fn run() -> i32 {
                 label.as_deref(),
                 &validation_criteria,
             ),
-            Commands::Ready { json, parent } => crate::commands::ready::run(
+            Commands::Ready {
+                json,
+                parent,
+                priority,
+            } => crate::commands::ready::run(
                 json || json_output,
                 current_agent.as_ref(),
                 parent.as_deref(),
+                priority.as_deref(),
             ),
             Commands::Init {
                 write,
@@ -1187,12 +1195,19 @@ fn notable_flags(cmd: &Commands) -> Vec<&'static str> {
                 flags.push("strict");
             }
         }
-        Commands::Ready { json, parent } => {
+        Commands::Ready {
+            json,
+            parent,
+            priority,
+        } => {
             if *json {
                 flags.push("json");
             }
             if parent.is_some() {
                 flags.push("parent");
+            }
+            if priority.is_some() {
+                flags.push("priority");
             }
         }
         // Commands with no notable optional flags

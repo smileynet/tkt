@@ -16,7 +16,7 @@ now lives here; AGENTS.md keeps operational rules and conditional read pointers.
 
 ```bash
 tkt --version                                     # print version
-tkt ready [--json]                                # frontier: open + deps done + env match
+tkt ready [--json] [--parent ID] [--priority P]    # eligible frontier; optional parent scope and priority threshold
 tkt context [TAGS...] [--clear]                   # set/show/clear active tag context for scoped work
 tkt migrate [--from FORMAT] [--detect] [--confirm] # convert foreign ticket schemas (tk → tkt; preview first)
 tkt new <slug> --title "..." [--body TEXT|@FILE|- | --template NAME] [--spec S] [--parent ID] [--blocked-by NN,NN] [--priority P] [--env E] [--status S] [--tags T] [--validation VC] [--requires R]
@@ -75,7 +75,7 @@ the retained allocation, not rolled-back IDs.
 
 ### Priority levels
 
-`urgent` > `high` > `medium` (default) > `low`. Frontier sorts by priority bucket then ID.
+`urgent` > `high` > `medium` (default) > `low`. Frontier sorts by priority bucket then ID. `tkt ready --priority high` applies a high-and-above threshold after the existing readiness, parent, context, capability, ownership and eligibility selection: urgent selects urgent only, high adds high, medium adds medium and unset priority, and low includes the full frontier. Filtering preserves priority/ID order and the ready JSON schema. `tkt query --priority high` remains exact stored-priority matching over the corpus, with no unset-to-medium substitution or readiness selection.
 
 
 <a id="rule-13"></a>

@@ -5,7 +5,25 @@ use anyhow::Result;
 use crate::commands::common::{is_quiet, project_config, tickets_dir};
 use crate::core::{self, AgentId, Status, Ticket};
 
-pub fn run(json: bool, agent: Option<&AgentId>, parent: Option<&str>) -> Result<i32> {
+pub fn run(
+    json: bool,
+    agent: Option<&AgentId>,
+    parent: Option<&str>,
+    priority_filter: Option<&str>,
+) -> Result<i32> {
+    let threshold = priority_filter
+        .map(|value| {
+            core::Priority::parse(value).ok_or_else(|| {
+                crate::DomainError::new(
+                    crate::ErrorKind::Validation,
+                    format!(
+                        "invalid priority {:?} (expected urgent/high/medium/low)",
+                        value
+                    ),
+                )
+            })
+        })
+        .transpose()?;
     let dir = tickets_dir()?;
     let pcfg = project_config(&dir)?;
     let corpus = core::load_corpus(&dir)?;
@@ -44,6 +62,11 @@ pub fn run(json: bool, agent: Option<&AgentId>, parent: Option<&str>) -> Result<
                 .assignee
                 .as_ref()
                 .is_none_or(|owner| Some(owner) == agent)
+        })
+        .filter(|ticket| {
+            threshold.is_none_or(|threshold| {
+                ticket.priority.unwrap_or(core::Priority::Medium).sort_key() <= threshold.sort_key()
+            })
         })
         .collect();
 

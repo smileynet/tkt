@@ -36,6 +36,7 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
 |---------|--------|
 | `tkt ready` | Unblocked tasks sorted by priority |
 | `tkt ready --json` | JSON Lines output |
+| `tkt ready --priority high` | Urgent/high eligible frontier; priority is a threshold |
 | `tkt blocked` | Tasks with unsatisfied dependencies |
 | `tkt query` | Context-scoped tasks as JSON Lines; stderr notice when context narrows results |
 | `tkt query --all-context` | Bypass tag context without changing it; other explicit filters still apply |
@@ -54,6 +55,10 @@ eligible frontier rows). Human frontier output does not list completed blockers.
 Query keeps tag context by default. When context actually excludes matching rows,
 its notice goes to stderr (a `context_filter` JSONL warning under `-o json`), never
 ticket stdout. `--all-context` bypasses context; status/priority/parent filters still apply.
+
+Ready priority filtering is a threshold over the already eligible frontier. `tkt ready --priority urgent` selects urgent only; `high` selects urgent/high; `medium` selects urgent/high/medium and treats unset priority as medium; `low` includes the full prioritized frontier. The threshold applies after dependency, container, capability, parent, tag-context, invocation-eligibility and ownership selection. Priority/ID ordering, human output conventions and the existing JSON schema remain unchanged. The human in-progress section retains its existing parent-scoped behavior rather than becoming a priority-filtered frontier.
+
+By contrast, `tkt query --priority high` performs exact stored-priority matching over the corpus. It neither applies a threshold nor synthesizes medium for an unset field, and query does not impose ready's dependency/container/capability/ownership/eligibility selection.
 
 ## Health and maintenance
 

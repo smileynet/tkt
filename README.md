@@ -175,11 +175,12 @@ channels and update boundaries, and restart chats after plugin refresh.
 ### See what's ready to work on
 
 ```bash
-tkt ready                # human-friendly
-tkt ready --json         # machine-readable (JSON Lines)
+tkt ready                   # human-friendly
+tkt ready --json            # machine-readable (JSON Lines)
+tkt ready --priority high   # urgent/high eligible frontier only
 ```
 
-Shows open tasks with all dependencies satisfied, sorted by priority then ID.
+Shows open tasks with all dependencies satisfied, sorted by priority then ID. The ready priority option is a threshold: `urgent` selects urgent only, `high` adds high, `medium` adds medium and unset-priority tickets, and `low` includes the full frontier. It composes with parent, context, capability, ownership and eligibility filtering without changing order or JSON fields. By contrast, `tkt query --priority high` is an exact stored-priority filter over the corpus, not a readiness or threshold view.
 
 ### Create tasks
 
