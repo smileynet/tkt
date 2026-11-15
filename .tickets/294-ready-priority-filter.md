@@ -1,7 +1,7 @@
 ---
 id: "294"
 title: "Add priority-filtered frontier views for the deferred JTBD"
-status: in_progress
+status: done
 blocked_by: []
 priority: low
 validation_criteria:
@@ -33,13 +33,22 @@ Document the distinction from `query --priority`, which is an exact stored-prior
 
 ## Acceptance criteria
 
-- [ ] `tkt ready --priority high` shows only urgent/high eligible tickets in unchanged priority/ID order.
-- [ ] All four thresholds and unset-priority behavior have integration coverage.
-- [ ] Parent scoping, tag context, ownership/eligibility, and human/JSON output remain compatible.
-- [ ] Capabilities, README/core JTBD, command reference, and contributor contract describe threshold semantics and the query distinction.
-- [ ] Ticket 46's deferred research disposition is updated with the owner-approved implementation decision.
-- [ ] The full maintainer gate passes and the CLI is installed fresh.
+- [x] `tkt ready --priority high` shows only urgent/high eligible tickets in unchanged priority/ID order.
+- [x] All four thresholds and unset-priority behavior have integration coverage.
+- [x] Parent scoping, tag context, ownership/eligibility, and human/JSON output remain compatible.
+- [x] Capabilities, README/core JTBD, command reference, and contributor contract describe threshold semantics and the query distinction.
+- [x] Ticket 46's deferred research disposition is updated with the owner-approved implementation decision.
+- [x] The full maintainer gate passes and the CLI is installed fresh.
 
 ## Out of scope
 
 Computed urgency scores, changing sort order, arbitrary priority expressions, or changing query's exact priority matching.
+
+## Resolution (2026-11-15)
+
+Added ready priority thresholds after existing frontier selection, with unset priority treated as medium and unchanged order and JSON schema; aligned capabilities, tests, and all agent-facing guidance
+
+### Verification
+1. ✓ cargo test --test ready_filters covers all thresholds and composition — "cargo test --test ready_filters passed 4/4: all thresholds, unset-as-medium, empty/invalid results, unchanged ordering/schema, human/JSON, and parent/context/capability/ownership/eligibility composition; related compatibility suites also passed"
+2. ✓ capabilities and all required guidance surfaces describe ready threshold versus query exact semantics — "Capabilities advertise the ready priority enum and threshold semantics; README, core JTBD, command reference, contributor contract, and generated init snippets distinguish them from query exact stored-priority matching"
+3. ✓ mise run check passes and the fresh CLI is installed — "mise run check passed on the final source; tools/install-local.sh installed fresh tkt 0.4.0 (1c60c1a), and node tools/deploy.mjs succeeded"
