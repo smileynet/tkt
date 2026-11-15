@@ -40,7 +40,7 @@ The owner approved these audit follow-ups on 2026-11-15. This is the active work
 | 290 | Make ticket status, sequencing and selection authority consistent | ✅ done |
 | 292 | Report explicit audit outcomes and disposition historical contracts | ✅ done |
 | 293 | Consolidate user guidance and refresh the domain glossary | ✅ done |
-| 294 | Filter the ready frontier by priority threshold | open |
+| 294 | Filter the ready frontier by priority threshold | in_progress |
 
 ## Historical maintenance frontier
 

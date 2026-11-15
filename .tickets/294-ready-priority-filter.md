@@ -1,7 +1,7 @@
 ---
 id: "294"
 title: "Add priority-filtered frontier views for the deferred JTBD"
-status: open
+status: in_progress
 blocked_by: []
 priority: low
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "capabilities and all required guidance surfaces describe ready threshold versus query exact semantics"
   - "mise run check passes and the fresh CLI is installed"
 tags: ["stream:workflow", "kind:enhancement", "triage:ready-for-agent"]
+assignee: "kimi"
 ---
 # Add priority-filtered frontier views for the deferred JTBD
 
