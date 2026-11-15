@@ -78,6 +78,8 @@ ticket stdout. `--all-context` bypasses context; status/priority/parent filters 
 | `tkt doctor <path>` | Scan all projects, flag issues |
 | `tkt doctor --strict` | Strict mode |
 
+Audit JSON retains its existing `status` and exit-code contract and adds `outcome` plus `counts.errors`, `counts.warnings`, and `counts.info`. Warning-only results use `status: "pass"`, `outcome: "pass_with_warnings"`, and exit 0; brief output says `pass with warnings`. Clean results use `pass`/`pass`; strict failure retains `fail` and exit 1.
+
 ## Other commands
 
 | Command | Job | When to use |

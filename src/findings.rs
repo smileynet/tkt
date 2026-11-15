@@ -44,7 +44,48 @@ pub fn print_findings(findings: &[Finding], brief: bool, status: &str) {
     }
 }
 
-/// Determine pass/fail status from findings and strict mode.
+/// Print audit findings with additive outcome clarity, preserving status/exit compatibility.
+pub fn print_audit_findings(findings: &[Finding], brief: bool, status: &str) {
+    let errors = findings.iter().filter(|f| f.severity == "error").count();
+    let warnings = findings.iter().filter(|f| f.severity == "warning").count();
+    let info = findings.iter().filter(|f| f.severity == "info").count();
+    let outcome = if status == "pass" && warnings > 0 {
+        "pass_with_warnings"
+    } else {
+        status
+    };
+    if brief {
+        for f in findings {
+            println!("{}: {} [{}] {}", f.severity, f.file, f.rule, f.message);
+        }
+        let summary = if outcome == "pass_with_warnings" {
+            "pass with warnings"
+        } else {
+            outcome
+        };
+        println!("{} ({} finding(s))", summary, findings.len());
+    } else {
+        println!(
+            "{{\"status\":\"{}\",\"outcome\":\"{}\",\"counts\":{{\"errors\":{},\"warnings\":{},\"info\":{}}},\"findings\":[{}]}}",
+            status,
+            outcome,
+            errors,
+            warnings,
+            info,
+            findings
+                .iter()
+                .map(|f| format!(
+                    "{{\"file\":\"{}\",\"rule\":\"{}\",\"message\":\"{}\",\"severity\":\"{}\"}}",
+                    core::json_string_escape(&f.file),
+                    core::json_string_escape(&f.rule),
+                    core::json_string_escape(&f.message),
+                    core::json_string_escape(&f.severity),
+                ))
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+    }
+}
 pub fn status_from_findings(findings: &[Finding], strict: bool) -> &'static str {
     let has_errors = findings.iter().any(|f| f.severity == "error");
     let has_warnings = findings.iter().any(|f| f.severity == "warning");

@@ -181,6 +181,8 @@ examples. Empty/default prompts and real placeholder ACs remain warnings even
 when checked after closure; historical evidence omissions are not waived.
 Open/in-progress stub detection retains its sole-placeholder policy.
 
+Audit output adds `outcome` and error/warning/info counts without changing `status` or exit codes. Warning-only advisory results are `status: pass`, `outcome: pass_with_warnings`, and exit 0; brief output says `pass with warnings`. Clean results remain `pass`, and strict failure remains `fail` with exit 1.
+
 Rebase reports candidate stale body citations (path/line/old-new mapping) without
 rewriting prose. Validation warns on missing unqualified local #NNN/ticket NNN
 citations; qualify external issues or link them and quote code examples.

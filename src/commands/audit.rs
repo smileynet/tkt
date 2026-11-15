@@ -41,7 +41,7 @@ pub fn run(strict: bool, brief: bool, deep: bool) -> Result<i32> {
     }
 
     let status = findings::status_from_findings(&all_findings, strict);
-    findings::print_findings(&all_findings, brief, status);
+    findings::print_audit_findings(&all_findings, brief, status);
     Ok(if status == "fail" { 1 } else { 0 })
 }
 
