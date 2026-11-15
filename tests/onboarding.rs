@@ -63,6 +63,18 @@ fn every_generated_instruction_target_retains_the_discovery_pointer() {
     ] {
         let instructions = std::fs::read_to_string(dir.path().join(path)).unwrap();
         assert!(instructions.contains("tkt capabilities -o json"), "{path}");
+        assert!(
+            instructions.contains("Ticket files own lifecycle status and closure evidence"),
+            "{path}"
+        );
+        assert!(
+            instructions.contains("docs/plan.md owns intended human sequencing"),
+            "{path}"
+        );
+        assert!(
+            instructions.contains("explicit user request selects the ticket"),
+            "{path}"
+        );
     }
 }
 
@@ -75,4 +87,37 @@ fn pure_snippet_and_quiet_writes_do_not_gain_setup_chatter() {
     assert!(!dir.path().join(".tickets").exists());
     let quiet = cli(dir.path(), &["init", "--write", "-q"]);
     assert!(quiet.is_empty(), "{quiet}");
+}
+
+#[test]
+fn distributed_workflow_guidance_has_one_authority_and_no_provider_execution() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let work = std::fs::read_to_string(root.join("skills/tkt-work/SKILL.md")).unwrap();
+    for removed in [
+        "CREW_TICKET_SOURCES",
+        "CREW_TICKET_SYNC",
+        "glab issue",
+        "gh issue close",
+    ] {
+        assert!(
+            !work.contains(removed),
+            "legacy provider behavior: {removed}"
+        );
+    }
+    assert!(work.contains("Do not independently select the first `tkt ready` row"));
+    assert!(!work.contains("plan is the single source of truth for work status"));
+    for default in [
+        "close.require_checked_acs = true",
+        "close.require_resolution = false",
+        "close.require_validation_criteria = false",
+        "close.require_validation_evidence = \"warn\"",
+    ] {
+        assert!(work.contains(default), "missing actual default {default}");
+    }
+    for skill in ["tkt-orient", "tkt-work"] {
+        let guidance =
+            std::fs::read_to_string(root.join(format!("skills/{skill}/SKILL.md"))).unwrap();
+        assert!(guidance.contains("Ticket files own status/evidence"));
+        assert!(guidance.contains("plan owns") || guidance.contains("Plan owns"));
+    }
 }

@@ -21,6 +21,8 @@ const MARKER_END: &str = "<!-- tkt:end -->";
 
 const SNIPPET_AGENTS: &str = r#"## Tickets
 
+Ticket files own lifecycle status and closure evidence; docs/plan.md owns intended human sequencing. `tkt ready` computes eligible candidates; orient/propose or an explicit user request selects the ticket before claim and execution.
+
 Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
@@ -104,6 +106,8 @@ Global --dry-run writes nothing, including Git refs, locks, cadence and diagnost
 
 const SNIPPET_CLAUDE: &str = r#"## Tickets
 
+Ticket files own lifecycle status and closure evidence; docs/plan.md owns intended human sequencing. `tkt ready` computes eligible candidates; orient/propose or an explicit user request selects the ticket before claim and execution.
+
 Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
@@ -178,6 +182,8 @@ alwaysApply: true
 
 This project uses tkt for work tracking (.tickets/ directory).
 
+Ticket files own lifecycle status and closure evidence; docs/plan.md owns intended human sequencing. `tkt ready` computes eligible candidates; orient/propose or an explicit user request selects the ticket before claim and execution.
+
 Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
 Command discovery: `tkt capabilities -o json` lists every command, flag and supported input value.
@@ -216,7 +222,7 @@ Claim records --agent ownership; ready hides other owners, and claim --force ove
 - `tkt validate --brief` — check for issues
 
 ## Workflow
-1. `tkt ready` → pick the first listed ticket
+1. Apply plan ordering or explicit user selection to the eligible candidates from `tkt ready`; do not automatically pick the first row
 2. Read the ticket file completely
 3. Do the work described
 4. Verify acceptance criteria
@@ -254,6 +260,8 @@ Global --dry-run writes nothing, including Git refs, locks, cadence and diagnost
 "#;
 
 const SNIPPET_KIRO: &str = r#"# tkt Integration
+
+Ticket files own lifecycle status and closure evidence; docs/plan.md owns intended human sequencing. `tkt ready` computes eligible candidates; orient/propose or an explicit user request selects the ticket before claim and execution.
 
 Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 
@@ -337,6 +345,8 @@ trigger: always_on
 # tkt Workflow
 
 This project uses tkt for work tracking. Tickets in .tickets/.
+
+Ticket files own lifecycle status and closure evidence; docs/plan.md owns intended human sequencing. `tkt ready` computes eligible candidates; orient/propose or an explicit user request selects the ticket before claim and execution.
 
 Status mutations sync existing clean docs/plan.md rows in their commit; sync-plan --fix adds missing rows. No plan file is created automatically. sync-plan compares all five lifecycle labels, accepts done or ✅ done and cancellation reasons, reports unknown cells, and leaves narrative parsing unchanged; --check/--strict gates drift, while plain reports remain advisory.
 

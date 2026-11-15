@@ -9,6 +9,8 @@ Session-start bookend to `tkt-reconcile`. Read the reconciled plan + ticket stat
 
 This skill *reads* and *orients*. It does not re-prioritize or rewrite the plan (that's `tkt-reconcile`, at session end) and it does not claim-and-execute (that's `tkt-work`) — it stops at a proposal.
 
+Ticket files own status/evidence. The plan owns human sequencing; `tkt ready` computes eligible candidates. Orientation applies that sequence to propose one candidate, then hands the accepted or user-selected ticket to `tkt-work`.
+
 Identify this invocation with `--agent <lowercase-slug>` or `TKT_AGENT` before using `ready` or `claim`. Unidentified calls see only unrestricted work; `ready` reports hidden agent-restricted tickets on stderr. `query` keeps tag context and lists all policies regardless of current agent. Agent eligibility is independent of tags and all-of machine `requires`. See `tkt-core` for allow/exclude flags and explicit claim overrides.
 
 ## Process
@@ -86,7 +88,7 @@ Recurring cosmetic warnings (e.g. `unchecked-acs-on-done` on done-and-superseded
 
 ## Does NOT
 
-- Claim and execute the ticket (that's `tkt-work` — orient proposes, tkt-work picks + works)
+- Claim and execute the ticket (that's `tkt-work` — orient proposes or the user selects; tkt-work claims and works that ticket)
 - Reconcile tickets or re-prioritize/rewrite the plan (that's `tkt-reconcile`, at session end — orient only reads the plan)
 - Auto-release another session's `in_progress` claim (flag + offer; the user decides)
 - Replace a prose handoff document — if the project keeps one, orient reads it for context but doesn't own it

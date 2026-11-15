@@ -8,9 +8,9 @@ compatibility: Requires git
 
 Track tasks as markdown files in your git repo. One file per ticket in `.tickets/`, with status and dependencies in YAML frontmatter. tkt computes what's ready to work on next.
 
-Agent setup: `tkt init` recommends project instructions (`tkt init --write`),
-separately installed workflow skills/plugins, and `tkt capabilities -o json` for
-command discovery. Installing the CLI alone does not install the workflow skills.
+Ticket files own status/evidence. The plan owns intended sequence; `tkt ready` computes candidates. Orientation proposes or the user selects a ticket; execution claims that selection, not automatically the first row.
+
+Agent setup: `tkt init` recommends instructions (`--write`), separately installed workflow skills and `tkt capabilities -o json`. CLI installation excludes skills.
 
 ## Jobs to be done
 
@@ -40,12 +40,7 @@ command discovery. Installing the CLI alone does not install the workflow skills
 
 For full flags and options, see [commands.md](references/commands.md).
 
-**Creation/edit traps:** `tkt new` supplies section prompts; use `--body` with text,
-`@file` or stdin `-`, or new/batch `--template NAME`, to provide a complete body.
-`edit --body` replaces the specification while preserving existing notes.
-Fill intent/acceptance prompts before validating open work. Use backlog only for genuinely deferred
-work. `tkt edit --blocked-by` replaces the whole list: read the existing blockers,
-combine them with the new IDs, and pass the complete set.
+**Creation/edit:** Supply a complete body with `new --body text|@file|-` or new/batch `--template NAME`; `edit --body` preserves notes. Fill intent/acceptance prompts before validation. Backlog is only for deferred work. `edit --blocked-by` replaces the full list, so retain existing blockers explicitly.
 
 ---
 
@@ -142,13 +137,13 @@ tkt edit 07 --status backlog        # demote → disappears from frontier
 ### Solo workflow
 
 ```bash
-tkt ready → pick first → work → tkt close <id> --check-all --resolution "what was done"
+tkt ready → orient/propose or user selects <id> → work → tkt close <id> --check-all --resolution "what was done"
 ```
 
 ### Shared repo (multiple agents)
 
 ```bash
-tkt ready → tkt claim <id> → work → tkt close <id> --check-all --resolution "what was done"
+tkt ready → orient/propose or user selects <id> → tkt claim <id> → work → tkt close <id> --check-all --resolution "what was done"
 ```
 
 If `tkt claim` push is rejected → someone else got there first → pick next ticket.
