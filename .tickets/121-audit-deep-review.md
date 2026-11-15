@@ -79,3 +79,10 @@ Added --deep flag with 3 new rules (thin-evidence, force-without-justification, 
 ### Verification
 1. ✓ tkt audit --deep produces per-ticket analysis of evidence against acceptance criteria — "tkt audit --deep finds template-only-closure (8 findings) and thin-evidence rules active"
 2. ✓ companion skill enables agents to perform contextual ticket review — "audit-quality.md skill reference created and deployed to all agent environments"
+
+## Note — 2026-11-15
+
+By: kimi
+
+<!-- tkt-note:v1 26275-1794736284715933000 -->
+Superseding contract decision (2026-11-15, #292): the acceptance criterion requiring exit 1 for warn+ findings is superseded. Audit remains advisory: warning-only results retain JSON status pass and exit 0, now with outcome pass_with_warnings and severity counts; --strict retains failure. This records the current contract, not proof that the historical criterion was met.
