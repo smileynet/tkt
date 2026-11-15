@@ -1,7 +1,7 @@
 ---
 id: "293"
 title: "Re-center documentation on the core workflow and refresh domain vocabulary"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "glossary and configuration wording match current CLI behavior"
   - "mise run check passes and guidance deployment succeeds"
 tags: ["stream:workflow", "kind:enhancement", "triage:ready-for-agent"]
+assignee: "kimi"
 ---
 # Re-center documentation on the core workflow and refresh domain vocabulary
 

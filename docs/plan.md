@@ -39,7 +39,7 @@ The owner approved these audit follow-ups on 2026-11-15. This is the active work
 | 289 | Repair and smoke-test the first-run quick start | ✅ done |
 | 290 | Make ticket status, sequencing and selection authority consistent | ✅ done |
 | 292 | Report explicit audit outcomes and disposition historical contracts | ✅ done |
-| 293 | Consolidate user guidance and refresh the domain glossary | open |
+| 293 | Consolidate user guidance and refresh the domain glossary | in_progress |
 | 294 | Filter the ready frontier by priority threshold | open |
 
 ## Historical maintenance frontier
