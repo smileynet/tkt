@@ -68,7 +68,7 @@ fn feature_manifest(cli: &Command) -> Value {
         "workflows": {
             "single_agent": "ready \u{2192} close <id> --check-all --resolution '...'",
             "shared_repo": "ready \u{2192} claim <id> \u{2192} [work] \u{2192} close <id> --check-all --resolution '...'",
-            "scripting": "ready --json | jq '.id' | xargs tkt claim"
+            "scripting": "id=\"$(tkt ready --json | jq -r '.id' | head -n 1)\" && test -n \"$id\" && tkt claim \"$id\""
         },
         "config": {
             "user": crate::config::config_file_path().map(|path| path.to_string_lossy().into_owned()),

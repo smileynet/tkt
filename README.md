@@ -7,7 +7,7 @@ A git-native ticket tracker where tasks are markdown files and `git push` is the
 - **Race-safe** — concurrent sessions get unique IDs automatically
 - **Dependency graph** — only shows you what's actually unblocked
 - **AI-agent friendly** — structured output, deterministic frontier
-- **Zero config** — just `tkt new` in any git repo
+- **Zero config** — initialize with `tkt init` in any git repo
 
 ## Quick Start
 
@@ -17,18 +17,23 @@ See the [manifest reference](skills/tkt-core/references/capabilities.md).
 
 ```bash
 cargo install tkt
+tkt init
 
-tkt new auth --title "Implement authentication"
-# → ✓ created 01 auth (pushed)
+tkt new auth --title "Implement authentication" \
+  --body $'# Implement authentication\n\n## Intent\n\nProtect the API with JWT access and refresh tokens.\n\n## Acceptance criteria\n\n- [ ] Users can authenticate and refresh their session.' \
+  --validation "Authentication and session refresh pass integration tests"
+# → ✓ created 01 auth
 
 tkt new api --title "Build API" --blocked-by 01
-# → ✓ created 02 api (pushed)
+# → ✓ created 02 api
 
 tkt ready
 # → Ready (1):
 # →   01  Implement authentication
 
-tkt close 01 --note "JWT + refresh tokens shipped"
+tkt close 01 --check-all \
+  --evidence "Authentication and refresh integration tests pass" \
+  --resolution "JWT access and refresh tokens shipped"
 # → ✓ closed 01 auth
 
 tkt ready
