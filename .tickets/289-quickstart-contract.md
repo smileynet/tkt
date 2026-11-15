@@ -24,7 +24,7 @@ Owner-approved audit on 2026-11-13 and implementation approval on 2026-11-15. Re
 - `src/commands/capabilities.rs` advertised scripting workflow.
 - Integration tests exercise the built binary in isolated repositories.
 
-Source documentation: `README.md`, Quick Start.
+Tracked by #291. Source documentation: `README.md`, Quick Start.
 
 ## What to build
 
