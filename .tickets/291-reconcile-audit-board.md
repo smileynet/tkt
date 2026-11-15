@@ -1,7 +1,7 @@
 ---
 id: "291"
 title: "Reconcile the current board and active-ticket quality"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "tkt validate --brief has no active-ticket errors or undocumented readiness findings"
   - "historical statuses, criteria, resolutions, and evidence are unchanged"
 tags: ["stream:quality", "kind:enhancement", "triage:ready-for-agent"]
+assignee: "kimi"
 ---
 # Reconcile the current board and active-ticket quality
 
