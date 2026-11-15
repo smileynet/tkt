@@ -1,7 +1,7 @@
 ---
 id: "289"
 title: "Repair and smoke-test the first-run quick start"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "capabilities scripting workflow selects at most one ID and full Rust tests pass"
   - "mise run check passes"
 tags: ["stream:workflow", "kind:bug", "triage:ready-for-agent"]
+assignee: "kimi"
 ---
 # Repair and smoke-test the first-run quick start
 
