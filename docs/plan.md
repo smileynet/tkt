@@ -36,7 +36,7 @@ The owner approved these audit follow-ups on 2026-11-15. This is the active work
 | ID | Work | Status |
 |---:|---|---|
 | 291 | Reconcile the current board and active-ticket quality | ✅ done |
-| 289 | Repair and smoke-test the first-run quick start | in_progress |
+| 289 | Repair and smoke-test the first-run quick start | ✅ done |
 | 290 | Make ticket status, sequencing and selection authority consistent | open |
 | 292 | Report explicit audit outcomes and disposition historical contracts | open |
 | 293 | Consolidate user guidance and refresh the domain glossary | open |

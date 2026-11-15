@@ -1,7 +1,7 @@
 ---
 id: "289"
 title: "Repair and smoke-test the first-run quick start"
-status: in_progress
+status: done
 blocked_by: []
 priority: high
 validation_criteria:
@@ -35,12 +35,21 @@ Add executable documentation-contract coverage so these examples cannot silently
 
 ## Acceptance criteria
 
-- [ ] The README quick start begins with initialization and its create/close sequence succeeds in an isolated Git repository.
-- [ ] The quick-start ticket has substantive body content and validation criteria and closes with acceptance and evidence.
-- [ ] The capabilities scripting example selects no more than one ready ID and does not use multi-argument `xargs tkt claim`.
-- [ ] Automated tests execute the quick-start path and validate the scripting contract.
-- [ ] The full maintainer gate passes.
+- [x] The README quick start begins with initialization and its create/close sequence succeeds in an isolated Git repository.
+- [x] The quick-start ticket has substantive body content and validation criteria and closes with acceptance and evidence.
+- [x] The capabilities scripting example selects no more than one ready ID and does not use multi-argument `xargs tkt claim`.
+- [x] Automated tests execute the quick-start path and validate the scripting contract.
+- [x] The full maintainer gate passes.
 
 ## Out of scope
 
 Changing default close policy, automatic repository initialization, or unrelated CLI behavior.
+
+## Resolution (2026-11-15)
+
+Made the README quick start executable with initialization, substantive content, validation and evidence; constrained scripted claiming to one ID and added isolated integration coverage.
+
+### Verification
+1. ✓ cargo test --test quick_start passes — "cargo test --test quick_start => 2 passed; fresh init/new/body/validation/close path and single-ready-ID recipe both passed"
+2. ✓ capabilities scripting workflow selects at most one ID and full Rust tests pass — "capabilities workflow uses head -n 1 plus a nonempty-ID guard; cargo test --test capabilities => 3 passed; full cargo test completed successfully in mise gate"
+3. ✓ mise run check passes — "mise run check retry completed all Rust/tooling suites successfully; commit 5e04025 pushed and installed binary reports 5e04025"
