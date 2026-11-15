@@ -1,7 +1,7 @@
 ---
 id: "290"
 title: "Unify ticket authority, selection, and external-source workflow"
-status: open
+status: in_progress
 blocked_by: []
 priority: high
 validation_criteria:
@@ -9,6 +9,7 @@ validation_criteria:
   - "orient, work, init, and core guidance agree on status, sequence, and selection authority"
   - "mise run check passes and guidance deployment succeeds"
 tags: ["stream:workflow", "kind:bug", "triage:ready-for-agent"]
+assignee: "kimi"
 ---
 # Unify ticket authority, selection, and external-source workflow
 
