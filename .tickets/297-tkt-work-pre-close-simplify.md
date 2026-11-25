@@ -1,7 +1,7 @@
 ---
 id: "297"
 title: "Add post-pass diff simplification step to tkt-work before ticket close"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "skills/tkt-work/SKILL.md includes a bounded post-pass simplification step before closing while keeping description <= 500 chars"
