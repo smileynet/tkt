@@ -1,7 +1,7 @@
 ---
 id: "287"
 title: "single-source the plugin manifests: root plugin.json vs .claude-plugin/plugin.json, explicit skills, version gate against Cargo.toml"
-status: open
+status: in_progress
 blocked_by: []
 priority: medium
 validation_criteria:
