@@ -1,6 +1,6 @@
 ---
 name: tkt-reconcile
-description: "End-of-session ticket and plan sync: update stale tickets, capture untracked work, and re-sequence docs/plan.md to match current priorities. Use when wrapping up a session, auditing ticket health, after planning, or asked 'is everything captured?' / 'update the plan'. Trigger: sync tickets, update the plan, re-prioritize, ticket audit, ticket hygiene, wrap up tickets, tag scope, work stream."
+description: "End-of-session ticket and plan sync: update stale tickets, capture untracked work, and re-sequence docs/plan.md to match priorities and work streams. Use when wrapping up, auditing ticket health, or asked 'is everything captured?'."
 ---
 
 # Tkt Reconcile

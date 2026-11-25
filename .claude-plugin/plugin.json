@@ -25,6 +25,15 @@
         ".claude-plugin/hooks/pre-tool-use.mjs"
       ],
       "dshHook": ".claude-plugin/hooks/dsh-session-start.mjs",
+      "agyHooks": {
+        "manifest": ".claude-plugin/agy-hooks.json",
+        "files": [
+          ".claude-plugin/hooks/agy-session-start.mjs"
+        ]
+      },
+      "agyRules": [
+        ".claude-plugin/agy-rules/tickets.md"
+      ],
       "forbidRefs": [
         "frontier-work",
         "read-handoff",

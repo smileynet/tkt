@@ -3,5 +3,5 @@
   "owner": "smileynet/grey-matter-deployer",
   "source": "https://github.com/smileynet/grey-matter",
   "file": "tools/deploy.mjs",
-  "sha256": "8e90868807f35937d9995f14ef57c7cd46c7f6b74fddb8f2281102ec5a784bc3"
+  "sha256": "ac7fd33d9af5ed962b97265a240426c8822e0486bf2376a25e28a496c42ba8a0"
 }

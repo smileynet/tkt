@@ -1,0 +1,3 @@
+interface:
+  display_name: "tkt Work"
+  short_description: "Claim, verify, implement, and close a ready frontier ticket"

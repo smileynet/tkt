@@ -258,3 +258,17 @@ test("native executable fixture preserves the first tkt argument", () => fixture
   const observed = readFileSync(calls, "utf8").trim().split("\n").map(JSON.parse);
   assert.deepEqual(observed.map((call) => call.args), [["query", "--status", "in_progress"]]);
 }));
+
+test("Antigravity SessionStart hook reads workspacePaths and emits injectSteps", () => fixture(({ project, bin, dir }) => {
+  const agyHandler = fileURLToPath(new URL("../.claude-plugin/hooks/agy-session-start.mjs", import.meta.url));
+  const env = { ...process.env, PATH: bin, DO_NOT_TRACK: "1", FIXTURE_CALLS: join(dir, "agy-calls") };
+  if (process.platform === "win32") env.NODE_OPTIONS = `--require ${JSON.stringify(join(dir, "preload.cjs"))}`;
+  const ok = spawnSync(process.execPath, [agyHandler], { cwd: dir, env, encoding: "utf8", input: JSON.stringify({ workspacePaths: [dir, project] }) });
+  assert.equal(ok.status, 0, ok.stderr);
+  const payload = JSON.parse(ok.stdout);
+  assert.match(payload.injectSteps[0].systemMessage.systemMessage, /tkt frontier\nFrontier fixture/);
+  assert.match(payload.injectSteps[0].systemMessage.systemMessage, /tkt in-progress tickets\nWIP fixture/);
+  const empty = spawnSync(process.execPath, [agyHandler], { cwd: dir, env, encoding: "utf8", input: JSON.stringify({ workspacePaths: [dir] }) });
+  assert.equal(empty.status, 0, empty.stderr);
+  assert.equal(empty.stdout, "");
+}));

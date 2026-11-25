@@ -1,0 +1,3 @@
+interface:
+  display_name: "tkt Orient"
+  short_description: "Start-of-session pickup from docs/plan.md and .tickets/"

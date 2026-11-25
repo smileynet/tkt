@@ -1,6 +1,6 @@
 ---
 name: tkt-core
-description: "Track tasks as markdown files in your git repo. Use when managing tickets, checking the frontier (what's ready), claiming work, closing tasks, creating tickets, decomposing work into a task graph, or validating project health. Trigger: tkt, tickets, what to work on, create ticket, validate tickets, decompose, break into tasks, work breakdown, task graph, ticket format, blocked by, backlog, park this, defer."
+description: "Track git-native Markdown tickets in .tickets/ and compute the dependency-graph frontier. Use for tkt commands: ready, new, claim, close, edit, backlog/defer, blocked-by task graphs, and validate."
 compatibility: Requires git
 ---
 

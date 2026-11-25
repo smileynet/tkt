@@ -8,7 +8,8 @@ import { parseDocument, isMap } from "yaml";
 
 export function checkPack(pack) {
   const errors = [];
-  const metrics = { skills: 0, sidecars: 0 };
+  const warnings = [];
+  const metrics = { skills: 0, sidecars: 0, descriptionChars: 0 };
   const readYaml = (file, text) => {
     const doc = parseDocument(text, { strict: true, uniqueKeys: true });
     const diagnostics = [...doc.errors, ...doc.warnings];
@@ -42,6 +43,10 @@ export function checkPack(pack) {
     if (data) {
       string(data, "name", file, true, 64);
       string(data, "description", file, true, 1024);
+      if (typeof data.description === "string") {
+        metrics.descriptionChars += data.description.length;
+        if (data.description.length > 300) warnings.push(`${relative(pack, file)}: description is ${data.description.length} chars (soft target <= 300; front-load triggers in the first 140 chars for Codex's 2% skill-index budget)`);
+      }
       if (typeof data.name === "string" && (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.name) || data.name !== basename(dir))) errors.push(`${relative(pack, file)}: name must match its lowercase hyphenated directory`);
       string(data, "license", file);
       string(data, "compatibility", file, false, 500);
@@ -67,7 +72,8 @@ export function checkPack(pack) {
   };
   walk(join(pack, "skills"));
   if (!metrics.skills) errors.push("pack contains no skills");
-  return { status: errors.length ? "fail" : "pass", metrics, errors };
+  if (metrics.descriptionChars > 10000) warnings.push(`pack description total is ${metrics.descriptionChars} chars (soft target <= 10000 for Codex's 2% skill-index budget)`);
+  return { status: errors.length ? "fail" : "pass", metrics, errors, warnings };
 }
 
 if (process.argv[1] && existsSync(resolve(process.argv[1])) && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(resolve(process.argv[1]))) {

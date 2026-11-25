@@ -1,0 +1,3 @@
+interface:
+  display_name: "tkt Reconcile"
+  short_description: "End-of-session ticket audit and docs/plan.md re-sequencing"

@@ -1,6 +1,6 @@
 ---
 name: tkt-orient
-description: "Start-of-session pickup from the reconciled plan and tickets: read the frontier, in-progress threads, and plan ordering that tkt-reconcile left behind, flag stale WIP, and propose the next step. Use when starting a session, resuming after a break, or asking 'where were we?' / 'what's next?' / 'pick up where we left off'. Trigger: start of session, orient, resume, pick up where we left off, where were we, what's next, catch me up, continue, session start, what's on the board."
+description: "Start-of-session pickup from docs/plan.md and .tickets/: read the frontier and in-progress threads, flag stale WIP, and propose the next ticket. Use when starting/resuming a session or asking 'where were we?' / 'what's next?'."
 ---
 
 # Tkt Orient

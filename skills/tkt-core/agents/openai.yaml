@@ -1,0 +1,3 @@
+interface:
+  display_name: "tkt Core"
+  short_description: "Track git-native tickets, dependencies, and the ready frontier"

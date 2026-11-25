@@ -1,6 +1,6 @@
 ---
 name: tkt-work
-description: "Claim and execute a ready ticket from the frontier: verify premises against primary sources, do the work, check acceptance criteria, and close with evidence. Execution loop between tkt-orient and tkt-reconcile. Use when asked to work the frontier, do the next ticket, or start ticket NN. Trigger: work the frontier, next ticket, claim and work, start ticket, execute ticket, close with evidence."
+description: "Claim and execute a ready frontier ticket: verify premises against primary sources, implement, verify acceptance criteria, and close with evidence. Use when working the frontier, starting ticket NN, or doing the next ticket."
 compatibility: Requires git
 ---
 
@@ -49,7 +49,9 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
    can rest on a stale or wrong fact. Check the facts the work depends on against
    primary sources (crate metadata/`Cargo.toml`, library source, a real HTTP/CLI
    probe), not the ticket's assertion. If a premise is wrong, correct the ticket
-   first (intent-preserving), then build. (Field evidence: a single session
+   first (intent-preserving), then build. Once the load-bearing premises and
+   target files are verified, stop exploring and move directly to step 6; complete
+   through verification and `tkt close` rather than stopping mid-loop. (Field evidence: a single session
    overturned four ticket premises this way — "upgrade dep X alone" that a pin
    made impossible, "new dependency" that was already present, "the API returns
    Err" that actually panics, a version target that was never released.)

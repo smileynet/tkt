@@ -1,0 +1,10 @@
+{
+  "tkt-session-start": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node ./hooks/agy-session-start.mjs"
+      }
+    ]
+  }
+}

@@ -666,9 +666,32 @@ function agyDeploy(pack, args) {
   const errors = lint(pack);
   if (errors.length) { console.error("agy build aborted, lint failed:"); for (const e of errors) console.error("  - " + e); process.exit(1); }
   const m = pack.manifest;
+  const extraFiles = [];
+  const logoSource = [".claude-plugin/icon.svg", ".claude-plugin/icon.png"].map((rel) => join(pack.dir, rel)).find((p) => isFile(p));
+  const logoRel = logoSource ? `assets/logo${logoSource.endsWith(".svg") ? ".svg" : ".png"}` : null;
+  if (logoSource && logoRel) extraFiles.push([join(out, logoRel), readFileSync(logoSource)]);
+  const kimiPrompts = readJson(join(pack.dir, ".kimi-plugin", "kimi.plugin.json"))?.interface?.tryPrompts;
+  const suggestedPrompts = Array.isArray(pack.deploy.agySuggestedPrompts) ? pack.deploy.agySuggestedPrompts : (Array.isArray(kimiPrompts) ? kimiPrompts : null);
+  if (pack.deploy.agyHooks) {
+    const manifestSrc = resolve(pack.dir, pack.deploy.agyHooks.manifest);
+    if (!isFile(manifestSrc)) throw new PackError(`agyHooks manifest missing: ${pack.deploy.agyHooks.manifest}`);
+    extraFiles.push([join(out, "hooks.json"), readFileSync(manifestSrc)]);
+    for (const rel of pack.deploy.agyHooks.files ?? []) {
+      const src = resolve(pack.dir, rel);
+      if (!isFile(src)) throw new PackError(`agyHooks file missing: ${rel}`);
+      extraFiles.push([join(out, "hooks", basename(rel)), readFileSync(src)]);
+    }
+  }
+  for (const rel of pack.deploy.agyRules ?? []) {
+    const src = resolve(pack.dir, rel);
+    if (!isFile(src)) throw new PackError(`agyRules file missing: ${rel}`);
+    extraFiles.push([join(out, "rules", basename(rel)), readFileSync(src)]);
+  }
   const agyManifest = {
     name: m.name, displayName: m.displayName ?? m.name, version: m.version, description: m.description,
     author: m.author, keywords: m.keywords, repository: m.repository, license: m.license,
+    ...(logoRel ? { logo: logoRel } : {}),
+    ...(suggestedPrompts?.length ? { suggestedPrompts } : {}),
   };
   console.log(`\nagy plugin: ${tilde(out)}  (${pack.skills.length} skills, v${m.version})`);
   const resources = agyResources(pack);
@@ -676,11 +699,15 @@ function agyDeploy(pack, args) {
   const project = (file) => file === join(pack.dir, "AGENTS.md") ? join(out, resourceName(pack), "AGENTS.md") : projectResource(pack, file, join(out, "skills"), out);
   if (args.dryRun) return;
   const manifestPath = join(out, "plugin.json"), manifestBytes = JSON.stringify(agyManifest, null, 2) + "\n";
-  if (!projectionMatches(resources, project, [out], [[manifestPath, Buffer.from(manifestBytes)]])) {
+  const allExtra = [[manifestPath, Buffer.from(manifestBytes)], ...extraFiles];
+  if (!projectionMatches(resources, project, [out], allExtra)) {
     rmSync(out, { recursive: true, force: true });
     mkdirSync(join(out, "skills"), { recursive: true });
     for (const target of copyResources(resources, project)) mkdirSync(target, { recursive: true });
-    writeFileSync(manifestPath, manifestBytes);
+    for (const [dest, bytes] of allExtra) {
+      mkdirSync(dirname(dest), { recursive: true });
+      writeFileSync(dest, bytes);
+    }
   }
   if (args.cmd === "build") return;
   const hasAgy = spawnSync("agy", ["--version"], { stdio: "ignore" }).error?.code !== "ENOENT";
