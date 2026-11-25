@@ -1,7 +1,7 @@
 ---
 id: "296"
 title: "Harden tkt DSH hook with KV-cache resume hygiene, ctx.tools.guard(), read-only tools, and synced vendored tools"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "dsh-session-start.mjs skips re-injection on resumed sessions and registers monotonic ctx.tools.guard() blocking .tickets/*.md status: done edits (unit-tested)"
