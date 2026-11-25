@@ -21,7 +21,8 @@
     "deploy": {
       "claudeFiles": [
         ".claude-plugin/claude-hooks.json",
-        ".claude-plugin/hooks/session-start.mjs"
+        ".claude-plugin/hooks/session-start.mjs",
+        ".claude-plugin/hooks/pre-tool-use.mjs"
       ],
       "dshHook": ".claude-plugin/hooks/dsh-session-start.mjs",
       "forbidRefs": [

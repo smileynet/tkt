@@ -1,6 +1,6 @@
 ---
 name: tkt-work
-description: "Claim and execute a ticket from the frontier: pick the next ready ticket, claim it, verify its premises against primary sources, do the work, verify acceptance criteria, and close with evidence. The execution loop between tkt-orient (propose) and tkt-reconcile (wrap up). Use when working a ticket, picking up the next task, or asked 'work the frontier' / 'do the next ticket' / 'start on NN'. Trigger: work the frontier, do the next ticket, pick up work, claim and work, start ticket, next on the frontier, work a ticket, execute ticket, close ticket with evidence."
+description: "Claim and execute a ready ticket from the frontier: verify premises against primary sources, do the work, check acceptance criteria, and close with evidence. Execution loop between tkt-orient and tkt-reconcile. Use when asked to work the frontier, do the next ticket, or start ticket NN. Trigger: work the frontier, next ticket, claim and work, start ticket, execute ticket, close with evidence."
 compatibility: Requires git
 ---
 
