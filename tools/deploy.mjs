@@ -1045,12 +1045,22 @@ function qwenDeploy(pack, args) {
     const manifestBytes = Buffer.from(JSON.stringify(qwenExtensionManifest(pack, { contextFileName: "QWEN.md" }), null, 2) + "\n");
     const qwenMdBytes = Buffer.from(qwenBridgeMarkdown(pack));
     const extra = [[manifestPath, manifestBytes], [qwenMdPath, qwenMdBytes]];
+    if (pack.manifest.hooks && Array.isArray(pack.deploy.claudeFiles)) {
+      for (const rel of pack.deploy.claudeFiles) {
+        const src = resolve(pack.dir, rel);
+        if (!real(src).startsWith(real(pack.dir) + sep) || !isFile(src)) throw new PackError(`qwen hooks file missing: ${rel}`);
+        extra.push([join(out, rel), readFileSync(src)]);
+      }
+    }
     if (!args.dryRun) {
       if (!projectionMatches(resources, project, [out], extra)) {
         rmSync(out, { recursive: true, force: true });
         mkdirSync(join(out, "skills"), { recursive: true });
         for (const dir of copyResources(resources, project)) mkdirSync(dir, { recursive: true });
-        for (const [file, bytes] of extra) writeFileSync(file, bytes);
+        for (const [file, bytes] of extra) {
+          mkdirSync(dirname(file), { recursive: true });
+          writeFileSync(file, bytes);
+        }
       } else {
         console.log(`  qwen extension ${pack.name} build is up to date`);
       }
