@@ -56,13 +56,14 @@ Create or replace eligibility with mutually exclusive `--agents codex,claude` or
    made impossible, "new dependency" that was already present, "the API returns
    Err" that actually panics, a version target that was never released.)
 6. Do the work described in "What to build"
-7. Verify all acceptance criteria pass. For UI work, inspect the actual rendered
+7. **Simplify before close (post-pass hygiene):** once initial tests pass, scan the ticket's `git diff` for newly introduced trivial wrappers, single-use intermediate clutter, narration comments, silent fallbacks, or complexity piled onto an already-large file; simplify locally without widening scope, then re-run affected checks so closure evidence covers the final bytes.
+8. Verify all acceptance criteria pass. For UI work, inspect the actual rendered
    experience at its supported viewport sizes before closure, including laptop and
    phone views when supported. If the project requires independent review, bind its
    acceptance to the final source and capture identities the reviewer inspected.
    A rendering-input change requires affected checks, new captures and renewed
    acceptance; only explicitly declared closure-metadata projections may vary.
-8. Mark done + update plan (see below)
+9. Mark done + update plan (see below)
 
 ## Marking Done
 

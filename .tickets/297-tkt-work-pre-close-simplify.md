@@ -9,7 +9,7 @@ validation_criteria:
 tags: ["stream:tooling", "kind:enhancement"]
 ---
 ## Intent source
-Cross-repo adoption of prior art from SprocketLab/slop-code-bench (`plan-and-test.jinja` step 6 / `plan_first.jinja` step 4: simplify after tests pass).
+Cross-repo adoption of prior art from https://github.com/SprocketLab/slop-code-bench (`plan-and-test.jinja` step 6 / `plan_first.jinja` step 4: simplify after tests pass).
 
 ## What to build
 Add a bounded **Simplify before close** sub-step to `skills/tkt-work/SKILL.md` (under `## Working a Ticket`, after initial tests pass and before closing) instructing the agent to scan its ticket diff for newly introduced trivial wrappers, single-use clutter, narration comments, silent fallbacks, or complexity piled onto an already-large file, simplify locally without widening scope, and re-run affected checks so closure evidence covers the final bytes. Keep YAML frontmatter `description` unchanged (`<= 500` chars).
