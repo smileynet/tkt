@@ -41,7 +41,7 @@ async function fixture(fn) {
     chmodSync(join(bin, "tkt"), 0o755);
   }
   const run = (overrides = {}, input = { hook_event_name: "SessionStart", source: "startup" }) => spawnSync(process.execPath, [handler], { cwd: dir, env: { ...env, ...overrides }, encoding: "utf8", input: JSON.stringify(input) });
-  try { return await fn({ project, dir, bin, calls, run }); }
+  try { return await fn({ project, dir, bin, calls, env, run }); }
   finally { removeTree(dir); }
 }
 
@@ -179,15 +179,19 @@ test("PreToolUse blocks direct status: done edits in .tickets/*.md across Claude
 });
 
 test("DSH hook skips resumed sessions, guards status: done edits, and registers read-only tkt tools", async () => {
-  await fixture(async ({ project, bin, calls }) => {
+  await fixture(async ({ project, bin, calls, env }) => {
     const handlers = new Map();
     const guards = [];
     const registered = [];
     const injected = [];
     const prevPath = process.env.PATH;
     const prevCalls = process.env.FIXTURE_CALLS;
+    const prevNodeOptions = process.env.NODE_OPTIONS;
+    const prevDoNotTrack = process.env.DO_NOT_TRACK;
     process.env.PATH = bin;
     process.env.FIXTURE_CALLS = calls;
+    process.env.DO_NOT_TRACK = "1";
+    if (env.NODE_OPTIONS !== undefined) process.env.NODE_OPTIONS = env.NODE_OPTIONS;
     try {
       const toolCtx = {
         workingDirectory: { ensure: async () => project },
@@ -237,6 +241,10 @@ test("DSH hook skips resumed sessions, guards status: done edits, and registers 
       process.env.PATH = prevPath;
       if (prevCalls === undefined) delete process.env.FIXTURE_CALLS;
       else process.env.FIXTURE_CALLS = prevCalls;
+      if (prevNodeOptions === undefined) delete process.env.NODE_OPTIONS;
+      else process.env.NODE_OPTIONS = prevNodeOptions;
+      if (prevDoNotTrack === undefined) delete process.env.DO_NOT_TRACK;
+      else process.env.DO_NOT_TRACK = prevDoNotTrack;
     }
   });
 });
