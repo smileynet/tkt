@@ -10,12 +10,14 @@
 //
 // Usage:
 //   node deploy.mjs [install] [--dry-run] [--force] [--link] [--allow-dual] [--no-agy] [--no-kirocrew]
-//                   [--project] [--root DIR]... [--pack DIR] [--portfolio FILE]
+//                   [--no-dsh] [--no-qwen] [--project] [--root DIR]... [--pack DIR] [--portfolio FILE]
 //   node deploy.mjs list | uninstall [--dry-run] [--root DIR]...
 //   node deploy.mjs check [--static | --profile directory] # --static omits native validators
 //   node deploy.mjs audit [--strict] [--json] [--portfolio FILE] # unowned dirs, shared names, skills a harness sees twice
 //   node deploy.mjs agy [build|install] [--out DIR]
 //   node deploy.mjs kirocrew [build|install] [--out DIR]
+//   node deploy.mjs dsh [build|install] [--out DIR] [--profile NAME]...
+//   node deploy.mjs qwen [build|install] [--out DIR]
 //
 // Install with no --root picks roots from the harness table: of the harnesses present here
 // (their home dir exists), each one sees each skill exactly once, counting a plugin of this
@@ -37,7 +39,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.10.0";
+const DEPLOY_VERSION = "1.11.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -115,6 +117,8 @@ export function lint(pack) {
 // `plugin`: how to tell whether this pack is installed as the harness's plugin.
 const CODEX_HOME = () => process.env.CODEX_HOME || join(HOME, ".codex");
 const ZCODE_HOME = () => process.env.ZCODE_HOME || join(HOME, ".zcode");
+const DSH_HOME = () => process.env.DSH_HOME || join(HOME, ".dsh");
+const QWEN_HOME = () => process.env.QWEN_HOME || join(HOME, ".qwen");
 const SHARED = () => join(HOME, ".agents", "skills");
 const HARNESSES = () => [
   { id: "kiro", home: join(HOME, ".kiro"), own: join(HOME, ".kiro", "skills"),
@@ -130,6 +134,12 @@ const HARNESSES = () => [
   { id: "zcode", home: ZCODE_HOME(), own: join(ZCODE_HOME(), "skills"),
     reads: [{ root: join(ZCODE_HOME(), "skills") }, { root: SHARED() }],
     project: [".zcode", ".agents"], plugin: zcodePlugin },
+  { id: "dsh", home: DSH_HOME(), own: join(DSH_HOME(), "skills"),
+    reads: [{ root: join(DSH_HOME(), "skills") }, { root: SHARED() }],
+    project: [".dsh", ".agents"], plugin: dshPlugin },
+  { id: "qwen", home: QWEN_HOME(), own: join(QWEN_HOME(), "skills"),
+    reads: [{ root: join(QWEN_HOME(), "skills") }, { root: SHARED() }],
+    project: [".qwen", ".agents"], plugin: qwenPlugin },
 ];
 
 // Claude Code: installed_plugins.json lists `<name>@<marketplace>` ids with their install path.
@@ -270,6 +280,64 @@ function refreshZcode(pack, args) {
     console.log(`  prune   ${pack.name} ${version} (superseded cache dir)`);
     rmSync(join(base, version), { recursive: true, force: true });
   }
+}
+
+// DeepSeek Harness (dsh): profiles under $DSH_HOME/profiles/<name>/package.json declare
+// active Cordis bundles in `dsh.profile.bundles`. A bare copy in ~/.dsh/skills (rank 400)
+// or ~/.agents/skills (rank 500) silently shadows a bundled SkillProvider (rank 600), so
+// an installed bundle counts as coverage and deploy stands down / prunes owned copies.
+export const dshBundleName = (pack) => pack.deploy.dshPackage ?? `@smileynet/dsh-${pack.name}`;
+function dshProfileDirs() {
+  const dir = join(DSH_HOME(), "profiles");
+  if (!isDir(dir)) return [];
+  return readdirSync(dir).sort().map((n) => ({ name: n, dir: join(dir, n) })).filter((p) => isFile(join(p.dir, "package.json")));
+}
+function dshPlugin(pack) {
+  const pkg = dshBundleName(pack);
+  const hits = dshProfileDirs().filter((p) => {
+    const manifest = readJson(join(p.dir, "package.json"));
+    const bundles = manifest?.dsh?.profile?.bundles ?? [];
+    return Array.isArray(bundles) && bundles.includes(pkg) && isDir(join(p.dir, "node_modules", ...pkg.split("/")));
+  });
+  return hits.length ? `DSH plugin ${pkg} (${hits.map((h) => h.name).join(", ")})` : null;
+}
+function refreshDsh(pack, args) {
+  if (args.noDsh || !dshPlugin(pack)) return;
+  if (args.dryRun) { console.log(`\nwould refresh DSH bundle ${dshBundleName(pack)}`); return; }
+  dshDeploy(pack, { ...args, out: null, cmd: "build" });
+}
+
+// Qwen Code: extensions live under $QWEN_HOME/extensions/<name>/ (linked or copied) with
+// activation state in $QWEN_HOME/extension-store/state.json or extension-enablement.json.
+// Extension skills register as `<ext>:<name>` while ~/.agents/skills registers bare `<name>`,
+// causing 2x discovery if both exist; counting an enabled extension avoids ~/.agents/skills.
+function qwenExtensionDir(name) {
+  const extDir = join(QWEN_HOME(), "extensions", name);
+  const meta = readJson(join(extDir, ".qwen-extension-install.json"));
+  if (meta?.type === "link" && typeof meta.source === "string") return meta.source;
+  return extDir;
+}
+function qwenPlugin(pack) {
+  const store = readJson(join(QWEN_HOME(), "extension-store", "state.json"));
+  if (store?.extensions && typeof store.extensions === "object") {
+    const entry = Object.values(store.extensions).find((e) => e?.name === pack.name);
+    if (entry) {
+      if (entry.defaultActivation === "disabled") return null;
+      const at = qwenExtensionDir(pack.name);
+      return isFile(join(at, "qwen-extension.json")) ? `Qwen extension ${pack.name}` : null;
+    }
+  }
+  const enablement = readJson(join(QWEN_HOME(), "extensions", "extension-enablement.json"));
+  const rec = enablement?.[pack.name];
+  if (rec?.overrides?.some((o) => o === "!*" || o === "!**")) return null;
+  const at = qwenExtensionDir(pack.name);
+  return isFile(join(at, "qwen-extension.json")) ? `Qwen extension ${pack.name}` : null;
+}
+function refreshQwen(pack, args) {
+  if (args.noQwen || !qwenPlugin(pack)) return;
+  if (isFile(join(pack.dir, "qwen-extension.json"))) return; // Native root checkout linked directly.
+  if (args.dryRun) { console.log(`\nwould refresh Qwen extension ${pack.name}`); return; }
+  qwenDeploy(pack, { ...args, out: null, cmd: "build" });
 }
 
 // A plugin harness must not inherit another harness's bare copies through a root symlink.
@@ -442,6 +510,8 @@ function doInstall(pack, args) {
     verifyClaudeSource(pack, args);
     refreshCodex(pack, args);
     refreshZcode(pack, args);
+    refreshDsh(pack, args);
+    refreshQwen(pack, args);
     if (!args.allowDual) separatePluginRoots(pack, args);
   }
   const harnesses = HARNESSES().map((h) => ({ ...h, covered: !args.allowDual && h.plugin ? h.plugin(pack) : null }));
@@ -710,6 +780,248 @@ function kirocrewRefusal(pack, step, output, remaining) {
   console.log(`  then run it yourself from a terminal on this machine:\n    ${cmd}`);
 }
 
+// Parse basic SKILL.md frontmatter (name, description, whenToUse, invocation flags) with zero dependencies.
+function parseSkillMeta(skillMd, fallbackName) {
+  const text = readFileSync(skillMd, "utf8");
+  const m = text.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
+  const fields = {};
+  if (m) {
+    const rawLines = m[1].split(/\r?\n/);
+    for (let i = 0; i < rawLines.length; i++) {
+      const kv = /^([A-Za-z0-9_-]+)\s*:\s*(.*)$/.exec(rawLines[i]);
+      if (!kv) continue;
+      const [, key, rest] = kv;
+      const trimmed = rest.trim();
+      if (/^[>|][-+]?$/.test(trimmed)) {
+        const block = [];
+        let indent = null;
+        while (i + 1 < rawLines.length) {
+          const next = rawLines[i + 1];
+          if (/^\s*$/.test(next)) { block.push(""); i++; continue; }
+          const lead = /^(\s+)/.exec(next)?.[1].length ?? 0;
+          if (lead === 0) break;
+          if (indent === null) indent = lead;
+          if (lead < indent) break;
+          block.push(next.slice(indent));
+          i++;
+        }
+        fields[key] = (trimmed.startsWith(">") ? block.join(" ").replace(/\s+/g, " ") : block.join("\n")).trim();
+      } else {
+        fields[key] = trimmed.replace(/^["']|["']$/g, "");
+      }
+    }
+  }
+  const asBool = (v, def) => (v === undefined ? def : !/^(false|0|no|off)$/i.test(String(v).trim()));
+  const disableModel = fields["disable-model-invocation"] !== undefined && /^(true|1|yes|on)$/i.test(String(fields["disable-model-invocation"]).trim());
+  return {
+    name: fields.name || fallbackName,
+    description: fields.description || fallbackName,
+    ...(fields.whenToUse || fields.when_to_use ? { whenToUse: fields.whenToUse || fields.when_to_use } : {}),
+    invocation: {
+      modelInvocable: !disableModel,
+      userInvocable: asBool(fields["user-invocable"], true),
+    },
+  };
+}
+
+// DeepSeek Harness (dsh): zero-build ESM Cordis bundle registering a SkillProvider at
+// BUNDLED_SKILL_RANK (600) so it works across all profiles (web, desktop, headless, sdk, acp).
+const DSH_INDEX_JS = `import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = dirname(fileURLToPath(import.meta.url));
+const META = JSON.parse(readFileSync(join(ROOT, "skills.json"), "utf8"));
+const BUNDLED_SKILL_RANK = 600;
+const FRONTMATTER = /^---\\s*\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n?/;
+
+const candidates = META.skills.map((skill) => {
+  const dir = join(ROOT, skill.relDir);
+  const file = join(dir, "SKILL.md");
+  return {
+    name: skill.name,
+    description: skill.description,
+    ...(skill.whenToUse ? { whenToUse: skill.whenToUse } : {}),
+    invocation: skill.invocation,
+    provider: META.provider,
+    source: "bundled",
+    path: file,
+    resourceBase: { kind: "directory", path: dir },
+    rank: BUNDLED_SKILL_RANK,
+    locator: file,
+  };
+});
+
+const provider = {
+  name: META.provider,
+  list: () => Promise.resolve(candidates),
+  async get(candidate) {
+    const raw = await readFile(candidate.locator, "utf8");
+    return {
+      name: candidate.name,
+      description: candidate.description,
+      ...(candidate.whenToUse ? { whenToUse: candidate.whenToUse } : {}),
+      invocation: candidate.invocation,
+      provider: candidate.provider,
+      source: candidate.source,
+      path: candidate.path,
+      resourceBase: candidate.resourceBase,
+      content: raw.replace(FRONTMATTER, ""),
+    };
+  },
+};
+
+export const name = META.pluginName;
+export const inject = ["skills"];
+export function apply(ctx) {
+  ctx.skills.registerProvider(() => provider);
+}
+`;
+
+export function dshBundlePackage(pack, hasHook) {
+  const m = pack.manifest;
+  const pkgName = dshBundleName(pack);
+  return {
+    name: pkgName,
+    version: m.version,
+    description: m.description,
+    ...(m.license ? { license: m.license } : {}),
+    type: "module",
+    main: "./index.mjs",
+    exports: {
+      ".": "./index.mjs",
+      ...(hasHook ? { "./hook": "./hook.mjs" } : {}),
+      "./cordis.patch.yml": "./cordis.patch.yml",
+      "./skills.json": "./skills.json",
+      "./package.json": "./package.json",
+    },
+    engines: { dsh: ">=0.2.0 <0.3.0" },
+    dsh: { bundle: { patch: "./cordis.patch.yml" } },
+    peerDependencies: {
+      "@deepseek-ai/cordis": "~4.1.0",
+      "@deepseek-ai/dsh-skill": ">=0.2.0 <0.3.0",
+    },
+  };
+}
+
+function dshDeploy(pack, args) {
+  const out = args.out ?? join(pack.dir, "dist", "dsh-plugin");
+  const errors = lint(pack);
+  if (errors.length) { console.error("dsh build aborted, lint failed:"); for (const e of errors) console.error("  - " + e); process.exit(1); }
+  const pkgName = dshBundleName(pack);
+  const hookSrc = pack.deploy.dshHook ? resolve(pack.dir, pack.deploy.dshHook) : null;
+  if (hookSrc && !isFile(hookSrc)) throw new PackError(`dshHook missing: ${pack.deploy.dshHook}`);
+  const hasHook = Boolean(hookSrc);
+  console.log(`\ndsh bundle: ${tilde(out)}  (${pack.skills.length} skills, ${pkgName}@${pack.version}${hasHook ? ", +hook" : ""})`);
+  const resources = agyResources(pack);
+  const project = (file) => file === join(pack.dir, "AGENTS.md") ? join(out, resourceName(pack), "AGENTS.md") : projectResource(pack, file, join(out, "skills"), out);
+  const skillsMeta = {
+    provider: pack.name,
+    pluginName: `${pack.name}-skills`,
+    version: pack.version,
+    skills: pack.skills.map((s) => ({ ...parseSkillMeta(join(s.src, "SKILL.md"), s.name), relDir: `skills/${s.name}` })),
+  };
+  const patchLines = [
+    "- insert:",
+    `    - id: ${pack.name}-skills`,
+    `      name: '${pkgName}'`,
+    ...(hasHook ? [`    - id: ${pack.name}-hook`, `      name: '${pkgName}/hook'`] : []),
+    "",
+  ].join("\n");
+  const pkgBytes = Buffer.from(JSON.stringify(dshBundlePackage(pack, hasHook), null, 2) + "\n");
+  const metaBytes = Buffer.from(JSON.stringify(skillsMeta, null, 2) + "\n");
+  const patchBytes = Buffer.from(patchLines);
+  const indexBytes = Buffer.from(DSH_INDEX_JS);
+  const extra = [
+    [join(out, "package.json"), pkgBytes],
+    [join(out, "skills.json"), metaBytes],
+    [join(out, "cordis.patch.yml"), patchBytes],
+    [join(out, "index.mjs"), indexBytes],
+    ...(hasHook ? [[join(out, "hook.mjs"), readFileSync(hookSrc)]] : []),
+  ];
+  if (args.dryRun) return;
+  if (!projectionMatches(resources, project, [out], extra)) {
+    rmSync(out, { recursive: true, force: true });
+    mkdirSync(join(out, "skills"), { recursive: true });
+    for (const target of copyResources(resources, project)) mkdirSync(target, { recursive: true });
+    for (const [file, bytes] of extra) writeFileSync(file, bytes);
+  } else {
+    console.log(`  dsh bundle ${pkgName} build is up to date`);
+  }
+  if (args.cmd !== "install") return;
+  if (spawnSync("dsh", ["--version"], { stdio: "ignore" }).error) {
+    console.log(`  dsh not on PATH; built only. Install: dsh plugin --profile <name> add ${out}`);
+    return;
+  }
+  if (spawnSync("pnpm", ["--version"], { stdio: "ignore" }).error) {
+    console.log(`  pnpm not on PATH (required by dsh plugin); built only. Install pnpm, then run: dsh plugin --profile <name> add ${out}`);
+    return;
+  }
+  const existing = dshProfileDirs().map((p) => p.name).filter((n) => n !== "desktop");
+  const profiles = args.dshProfiles?.length ? args.dshProfiles : (existing.length ? existing : ["headless", "web"]);
+  for (const profile of profiles) {
+    console.log(`  linking ${pkgName} into dsh profile "${profile}"`);
+    const r = spawnSync("dsh", ["plugin", "--profile", profile, "add", out], { encoding: "utf8", stdio: "inherit" });
+    if (r.status !== 0) {
+      console.log(`  warning: dsh plugin add failed for profile "${profile}"; run manually:\n    dsh plugin --profile ${profile} add ${out}`);
+    }
+  }
+}
+
+// Qwen Code: native qwen-extension.json. Packs with flat skills/ and a root qwen-extension.json
+// (like tkt) link directly from the checkout; bucketed packs (like grey-matter) stage a flat
+// extension under dist/qwen-extension/ because Qwen v0.28.4 hardcodes depth-1 <extRoot>/skills/.
+export function qwenExtensionManifest(pack) {
+  const m = pack.manifest;
+  return {
+    name: m.name,
+    displayName: m.displayName ?? m.name,
+    version: m.version,
+    description: m.description,
+    ...(m.hooks ? { hooks: m.hooks } : {}),
+  };
+}
+
+function qwenDeploy(pack, args) {
+  const nativeRoot = isFile(join(pack.dir, "qwen-extension.json")) && !args.out;
+  const out = args.out ?? join(pack.dir, "dist", "qwen-extension");
+  const errors = lint(pack);
+  if (errors.length) { console.error("qwen build aborted, lint failed:"); for (const e of errors) console.error("  - " + e); process.exit(1); }
+  const target = nativeRoot ? pack.dir : out;
+  console.log(`\nqwen extension: ${tilde(target)}  (${pack.skills.length} skills, v${pack.version}${nativeRoot ? ", native root" : ""})`);
+  if (!nativeRoot) {
+    const resources = agyResources(pack);
+    const project = (file) => file === join(pack.dir, "AGENTS.md") ? join(out, resourceName(pack), "AGENTS.md") : projectResource(pack, file, join(out, "skills"), out);
+    const manifestPath = join(out, "qwen-extension.json");
+    const manifestBytes = Buffer.from(JSON.stringify(qwenExtensionManifest(pack), null, 2) + "\n");
+    if (!args.dryRun) {
+      if (!projectionMatches(resources, project, [out], [[manifestPath, manifestBytes]])) {
+        rmSync(out, { recursive: true, force: true });
+        mkdirSync(join(out, "skills"), { recursive: true });
+        for (const dir of copyResources(resources, project)) mkdirSync(dir, { recursive: true });
+        writeFileSync(manifestPath, manifestBytes);
+      } else {
+        console.log(`  qwen extension ${pack.name} build is up to date`);
+      }
+    }
+  }
+  if (args.dryRun || args.cmd !== "install") return;
+  const meta = readJson(join(QWEN_HOME(), "extensions", pack.name, ".qwen-extension-install.json"));
+  if (meta?.type === "link" && typeof meta.source === "string" && real(meta.source) === real(target)) {
+    console.log(`  qwen extension ${pack.name} is already linked to ${tilde(target)}`);
+    return;
+  }
+  if (spawnSync("qwen", ["--version"], { stdio: "ignore" }).error) {
+    console.log(`  qwen not on PATH; built only. Install: qwen extensions link ${target}`);
+    return;
+  }
+  const r = spawnSync("qwen", ["extensions", "link", target], { encoding: "utf8", stdio: "inherit" });
+  if (r.status !== 0) {
+    console.log(`  warning: qwen extensions link did not finish; run manually:\n    qwen extensions link ${target}`);
+  }
+}
+
 // Manifests agree with disk, with each other, and with the latest release tag.
 function doCheck(pack, args) {
   const problems = [...lint(pack), ...inspectPortfolio(pack, args).findings];
@@ -809,7 +1121,7 @@ function installedResourceFindings(root, manifest) {
 
 function doAudit(pack, args) {
   const harnesses = HARNESSES();
-  const roots = uniqReal([...knownRoots({ roots: [] }), ...[".agents", ".claude", ".codex", ".opencode", ".kiro", ".zcode"].map((d) => resolve(d, "skills"))].filter(isDir));
+  const roots = uniqReal([...knownRoots({ roots: [] }), ...[".agents", ".claude", ".codex", ".opencode", ".kiro", ".zcode", ".dsh", ".qwen"].map((d) => resolve(d, "skills"))].filter(isDir));
   const portfolio = inspectPortfolio(pack, args);
   const findings = [...portfolio.findings];
   const notices = [...portfolio.notices];
@@ -834,7 +1146,7 @@ function doAudit(pack, args) {
     if (unowned.length) findings.push(`${tilde(root)}: ${unowned.length} unowned: ${unowned.join(" ")}`);
     for (const [n, ps] of owners) if (ps.length > 1) findings.push(`${tilde(root)}: "${n}" claimed by ${ps.join(", ")}`);
   }
-  const pluginSkills = { claude: new Map(), codex: new Map(), zcode: new Map() };
+  const pluginSkills = { claude: new Map(), codex: new Map(), zcode: new Map(), dsh: new Map(), qwen: new Map() };
   const addPlugin = (harness, id, at, manifest) => {
     if (!manifest) { findings.push(`${harness} plugin ${id}: installed manifest missing at ${at}`); return; }
     const names = discoverPluginSkills(at, manifest);
@@ -890,6 +1202,38 @@ function doAudit(pack, args) {
       const at = join(base, versions[0]);
       const manifest = readJson(join(at, ".zcode-plugin", "plugin.json")) ?? readJson(join(at, ".claude-plugin", "plugin.json")) ?? readJson(join(at, ".codex-plugin", "plugin.json"));
       addPlugin("zcode", id, at, manifest);
+    }
+  }
+  // DSH: inspect installed Cordis bundles across profiles (deduped by package name so
+  // installing the same bundle into headless + web is one plugin, not a duplicate).
+  {
+    const seenDsh = new Set();
+    for (const p of dshProfileDirs()) {
+      const bundles = readJson(join(p.dir, "package.json"))?.dsh?.profile?.bundles ?? [];
+      for (const pkg of Array.isArray(bundles) ? bundles : []) {
+        if (seenDsh.has(pkg)) continue;
+        const at = join(p.dir, "node_modules", ...pkg.split("/"));
+        const meta = readJson(join(at, "skills.json"));
+        if (!meta?.skills) continue;
+        seenDsh.add(pkg);
+        addPlugin("dsh", pkg, real(at), { name: meta.provider, skills: ["./skills"] });
+      }
+    }
+  }
+  // Qwen Code: inspect enabled extensions under $QWEN_HOME/extensions/.
+  {
+    const extRoot = join(QWEN_HOME(), "extensions");
+    const store = readJson(join(QWEN_HOME(), "extension-store", "state.json"));
+    const enablement = readJson(join(extRoot, "extension-enablement.json"));
+    if (isDir(extRoot)) {
+      for (const name of readdirSync(extRoot).filter((n) => !n.startsWith(".") && isDir(join(extRoot, n))).sort()) {
+        const entry = store?.extensions ? Object.values(store.extensions).find((e) => e?.name === name) : null;
+        if (entry?.defaultActivation === "disabled") continue;
+        if (enablement?.[name]?.overrides?.some((o) => o === "!*" || o === "!**")) continue;
+        const at = qwenExtensionDir(name);
+        const manifest = readJson(join(at, "qwen-extension.json"));
+        if (manifest) addPlugin("qwen", name, real(at), { ...manifest, skills: ["./skills"] });
+      }
     }
   }
   for (const h of harnesses.filter((h) => isDir(h.home))) {
@@ -988,23 +1332,32 @@ function inspectPortfolio(pack, args) {
 // --- Main --------------------------------------------------------------------------------
 function parseArgs(argv) {
   const args = { cmd: "install", sub: null, dryRun: false, force: false, link: false, allowDual: false,
-    noAgy: false, noKirocrew: false, strict: false, static: false, json: false, profile: null, portfolio: null, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
+    noAgy: false, noKirocrew: false, noDsh: false, noQwen: false, strict: false, static: false, json: false,
+    profile: null, dshProfiles: [], portfolio: null, roots: [], pack: resolve(dirname(fileURLToPath(import.meta.url)), ".."), out: null };
   const rest = argv.slice(2);
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
-    if (["install", "list", "uninstall", "check", "audit", "agy", "kirocrew"].includes(a) && args.cmd === "install" && !args.sub) args.cmd = a;
-    else if ((args.cmd === "agy" || args.cmd === "kirocrew") && (a === "build" || a === "install")) args.sub = a;
+    if (["install", "list", "uninstall", "check", "audit", "agy", "kirocrew", "dsh", "qwen"].includes(a) && args.cmd === "install" && !args.sub) args.cmd = a;
+    else if (["agy", "kirocrew", "dsh", "qwen"].includes(args.cmd) && (a === "build" || a === "install")) args.sub = a;
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--force") args.force = true;
     else if (a === "--link") args.link = true;
     else if (a === "--allow-dual") args.allowDual = true;
     else if (a === "--no-agy") args.noAgy = true;
     else if (a === "--no-kirocrew") args.noKirocrew = true;
+    else if (a === "--no-dsh") args.noDsh = true;
+    else if (a === "--no-qwen") args.noQwen = true;
     else if (a === "--strict") args.strict = true;
     else if (a === "--static") args.static = true;
     else if (a === "--profile") {
-      if (rest[++i] !== "directory") { console.error("--profile requires directory"); process.exit(2); }
-      args.profile = "directory";
+      const val = rest[++i];
+      if (args.cmd === "dsh") {
+        if (!val) { console.error("--profile requires a dsh profile name"); process.exit(2); }
+        args.dshProfiles.push(val);
+      } else {
+        if (val !== "directory") { console.error("--profile requires directory"); process.exit(2); }
+        args.profile = "directory";
+      }
     }
     else if (a === "--json") args.json = true;
     else if (a === "--portfolio") args.portfolio = resolve(rest[++i]);
@@ -1041,6 +1394,8 @@ if (process.argv[1] && real(fileURLToPath(import.meta.url)) === real(process.arg
   else if (args.cmd === "audit") doAudit(pack, args);
   else if (args.cmd === "agy") agyDeploy(pack, { ...args, cmd: args.sub ?? "build" });
   else if (args.cmd === "kirocrew") kirocrewDeploy(pack, { ...args, cmd: args.sub ?? "build" });
+  else if (args.cmd === "dsh") dshDeploy(pack, { ...args, cmd: args.sub ?? "build" });
+  else if (args.cmd === "qwen") qwenDeploy(pack, { ...args, cmd: args.sub ?? "build" });
   else if (args.portfolio) {
     const portfolio = inspectPortfolio(pack, args);
     if (portfolio.findings.length) {

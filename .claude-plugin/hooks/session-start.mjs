@@ -18,7 +18,7 @@ function hookPath() {
 
 try {
   const input = JSON.parse(readFileSync(0, "utf8"));
-  const root = process.env.CLAUDE_PROJECT_DIR;
+  const root = process.env.QWEN_PROJECT_DIR || process.env.CLAUDE_PROJECT_DIR;
   if (input.hook_event_name !== "SessionStart" || !root || !isAbsolute(root)) process.exit(0);
   try {
     if (!statSync(join(root, ".tickets")).isDirectory()) process.exit(0);

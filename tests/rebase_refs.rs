@@ -6,14 +6,7 @@ use std::process::Command;
 use tempfile::TempDir;
 
 fn tkt_bin() -> PathBuf {
-    let mut path = std::env::current_exe().unwrap();
-    path.pop();
-    path.pop();
-    path.push("tkt");
-    if cfg!(windows) {
-        path.set_extension("exe");
-    }
-    path
+    PathBuf::from(env!("CARGO_BIN_EXE_tkt"))
 }
 
 fn git(dir: &Path, args: &[&str]) -> String {

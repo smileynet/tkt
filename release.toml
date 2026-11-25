@@ -21,4 +21,5 @@ pre-release-replacements = [
   { file = ".codex-plugin/plugin.json", search = '"version": "[^"]+"', replace = '"version": "{{version}}"', exactly = 1 },
   { file = "plugin.json", search = '"version": "[^"]+"', replace = '"version": "{{version}}"', exactly = 1 },
   { file = ".claude-plugin/plugin.json", search = '"version": "[^"]+"', replace = '"version": "{{version}}"', exactly = 1 },
+  { file = "qwen-extension.json", search = '"version": "[^"]+"', replace = '"version": "{{version}}"', exactly = 1 },
 ]

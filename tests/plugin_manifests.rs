@@ -67,3 +67,11 @@ fn kimi_plugin_version_matches_crate() {
         env!("CARGO_PKG_VERSION")
     );
 }
+
+#[test]
+fn qwen_extension_version_matches_crate() {
+    assert_eq!(
+        manifest_version("qwen-extension.json"),
+        env!("CARGO_PKG_VERSION")
+    );
+}

@@ -10,14 +10,7 @@ use tempfile::TempDir;
 
 /// Path to the tkt binary (cargo builds it before running tests).
 fn tkt_bin() -> PathBuf {
-    let mut path = std::env::current_exe().unwrap();
-    path.pop(); // remove test binary name
-    path.pop(); // remove 'deps'
-    path.push("tkt");
-    if cfg!(windows) {
-        path.set_extension("exe");
-    }
-    path
+    PathBuf::from(env!("CARGO_BIN_EXE_tkt"))
 }
 
 /// Run tkt in a given directory, return (exit_code, stdout+stderr).
