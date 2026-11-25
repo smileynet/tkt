@@ -731,7 +731,11 @@ function kirocrewDeploy(pack, args) {
   rmSync(out, { recursive: true, force: true });
   mkdirSync(join(out, "skills"), { recursive: true });
   for (const target of copyResources(resources, project)) mkdirSync(target, { recursive: true });
-  writeFileSync(join(out, "app.json"), JSON.stringify(kirocrewAppManifest(pack), null, 2) + "\n");
+  // A curated .kiro-crew/app.json (permissions, dependencies, startWith) ships verbatim; its
+  // skills must match the staged folders, which scripts/check-crew-app.mjs verifies.
+  const curated = join(pack.dir, ".kiro-crew", "app.json");
+  if (isFile(curated)) cpSync(curated, join(out, "app.json"));
+  else writeFileSync(join(out, "app.json"), JSON.stringify(kirocrewAppManifest(pack), null, 2) + "\n");
   if (args.cmd !== "install") return;
   const kc = (...a) => spawnSync("kirocrew", ["app", ...a], { encoding: "utf8", windowsHide: true });
   const probe = kc("list");
