@@ -49,6 +49,9 @@ export function executionPlan(paths, release = false) {
 }
 
 export function main(args) {
+  if (process.env.ELECTRON_RUN_AS_NODE === "1") {
+    throw new Error("ELECTRON_RUN_AS_NODE=1 detected (for example inside Kimi Work); run with a standalone Node 22+ binary and unset ELECTRON_RUN_AS_NODE");
+  }
   let base, release = false, plan = false;
   while (args.length) {
     const arg = args.shift();

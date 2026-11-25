@@ -80,3 +80,13 @@ test("explicit base includes intermediate commits, dirty edits, deletions and un
   assert.ok(changedPaths(repo, base).includes("build.rs"));
   assert.throws(() => changedPaths(repo, "missing-base"));
 });
+
+test("main refuses ELECTRON_RUN_AS_NODE=1 hosts before spawning subprocess fixtures", () => {
+  const result = execFileSync(process.execPath, ["-e", `
+    import { main } from "./tools/check-tools.mjs";
+    process.env.ELECTRON_RUN_AS_NODE = "1";
+    try { main(["--plan"]); process.exit(1); }
+    catch (error) { console.log(error.message); }
+  `], { cwd: new URL("..", import.meta.url), encoding: "utf8" });
+  assert.match(result, /ELECTRON_RUN_AS_NODE=1/);
+});
