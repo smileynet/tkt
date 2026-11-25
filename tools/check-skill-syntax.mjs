@@ -46,6 +46,9 @@ export function checkPack(pack) {
       string(data, "license", file);
       string(data, "compatibility", file, false, 500);
       for (const key of ["disable-model-invocation", "user-invocable", "disable-slash-command"]) boolean(data, key, file);
+      for (const [bad, good] of [["disableModelInvocation", "disable-model-invocation"], ["modelInvocable", "disable-model-invocation"], ["userInvocable", "user-invocable"]]) {
+        if (bad in data) errors.push(`${relative(pack, file)}: ${bad} is dropped by DSH; use ${good}`);
+      }
       if ("metadata" in data && (!mapping(data.metadata) || Object.values(data.metadata).some((v) => typeof v !== "string"))) errors.push(`${relative(pack, file)}: metadata must map strings to strings`);
     }
     const sidecar = join(dir, "agents", "openai.yaml");

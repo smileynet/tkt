@@ -9,7 +9,9 @@ import { removeTree } from "./test-fixtures.mjs";
 
 
 const handler = fileURLToPath(new URL("../.claude-plugin/hooks/session-start.mjs", import.meta.url));
+const preToolUseHandler = fileURLToPath(new URL("../.claude-plugin/hooks/pre-tool-use.mjs", import.meta.url));
 const manifest = fileURLToPath(new URL("../.claude-plugin/claude-hooks.json", import.meta.url));
+import { apply as applyDshHook, guardTicketStatusDone } from "../.claude-plugin/hooks/dsh-session-start.mjs";
 const body = `
 const fs = require('node:fs');
 fs.appendFileSync(process.env.FIXTURE_CALLS, JSON.stringify({args:process.argv.slice(1),cwd:process.cwd()})+'\\n');
@@ -19,7 +21,7 @@ process.exit(0);
 `;
 // Node resolves its first argument as a script path; a native tkt executable receives a subcommand.
 const nativePreload = (executable) => `if (require('node:path').basename(process.execPath).toLowerCase() === ${JSON.stringify(executable.toLowerCase())}) { process.argv[1] = require('node:path').basename(process.argv[1]); ${body} }`;
-function fixture(fn) {
+async function fixture(fn) {
   const dir = mkdtempSync(join(tmpdir(), "tkt hook's fixture-"));
   const project = join(dir, "project with spaces"), bin = join(dir, "bin"), calls = join(dir, "calls");
   mkdirSync(join(project, ".tickets"), { recursive: true });
@@ -39,7 +41,7 @@ function fixture(fn) {
     chmodSync(join(bin, "tkt"), 0o755);
   }
   const run = (overrides = {}, input = { hook_event_name: "SessionStart", source: "startup" }) => spawnSync(process.execPath, [handler], { cwd: dir, env: { ...env, ...overrides }, encoding: "utf8", input: JSON.stringify(input) });
-  try { fn({ project, dir, bin, calls, run }); }
+  try { return await fn({ project, dir, bin, calls, run }); }
   finally { removeTree(dir); }
 }
 
@@ -120,11 +122,123 @@ test("inherited PATH keeps precedence over appended install roots", () => fixtur
 }));
 
 test("manifest keeps a single shell-string command with no args field", () => {
-  const entry = JSON.parse(readFileSync(manifest, "utf8")).hooks.SessionStart[0].hooks[0];
+  const parsed = JSON.parse(readFileSync(manifest, "utf8")).hooks;
+  const entry = parsed.SessionStart[0].hooks[0];
   assert.equal(entry.type, "command");
   assert.equal(entry.args, undefined, "args is a Claude Code direct-spawn field that ZCode's command type ignores, spawning bare node (ticket 286)");
   assert.match(entry.command, /^node ".+\.claude-plugin\/hooks\/session-start\.mjs"$/);
   assert.equal(entry.timeout, 15);
+
+  const pre = parsed.PreToolUse[0];
+  assert.equal(pre.matcher, "^Edit$|^Write$|^edit$|^write_file$");
+  assert.equal(pre.hooks[0].type, "command");
+  assert.equal(pre.hooks[0].args, undefined);
+  assert.match(pre.hooks[0].command, /^node ".+\.claude-plugin\/hooks\/pre-tool-use\.mjs"$/);
+  assert.equal(pre.hooks[0].timeout, 10);
+});
+
+test("PreToolUse blocks direct status: done edits in .tickets/*.md across Claude, Qwen, and ZCode", () => {
+  const runPre = (payload, extraEnv = {}) => {
+    const env = { ...process.env, DO_NOT_TRACK: "1", ...extraEnv };
+    if (!("ZCODE_SESSION_ID" in extraEnv)) delete env.ZCODE_SESSION_ID;
+    if (!("ZCODE_PLUGIN_ROOT" in extraEnv)) delete env.ZCODE_PLUGIN_ROOT;
+    return spawnSync(process.execPath, [preToolUseHandler], { encoding: "utf8", env, input: JSON.stringify(payload) });
+  };
+
+  for (const payload of [
+    { tool_name: "Edit", tool_input: { file_path: "/repo/.tickets/01-task.md", old_string: "status: in_progress", new_string: "status: done" } },
+    { tool_name: "write_file", tool_input: { path: ".tickets\\02-win.md", content: "---\nid: \"02\"\nstatus: \"done\"\n---\n" } },
+    { tool_name: "edit", tool_input: { filePath: "project/.tickets/03-qwen.md", edits: [{ newText: "status: 'done'" }] } },
+  ]) {
+    const res = runPre(payload);
+    assert.equal(res.status, 0, res.stderr);
+    const body = JSON.parse(res.stdout);
+    assert.equal(body.hookSpecificOutput.hookEventName, "PreToolUse");
+    assert.equal(body.hookSpecificOutput.permissionDecision, "deny");
+    assert.match(body.hookSpecificOutput.permissionDecisionReason, /tkt close/);
+  }
+
+  // ZCode uses top-level envelope without hookSpecificOutput.
+  const zcode = runPre({ tool_name: "Edit", tool_input: { file_path: ".tickets/04-z.md", new_string: "status: done" } }, { ZCODE_SESSION_ID: "z-1" });
+  assert.equal(zcode.status, 0, zcode.stderr);
+  const zBody = JSON.parse(zcode.stdout);
+  assert.equal(zBody.hookEventName, "PreToolUse");
+  assert.equal(zBody.permissionDecision, "deny");
+  assert.equal(zBody.hookSpecificOutput, undefined);
+
+  // Allowed cases: non-done status, non-ticket file, and inline prose mentioning status: done.
+  for (const allowed of [
+    { tool_name: "Edit", tool_input: { file_path: ".tickets/01-task.md", new_string: "status: in_progress" } },
+    { tool_name: "Write", tool_input: { file_path: "docs/notes.md", content: "status: done\n" } },
+    { tool_name: "Edit", tool_input: { file_path: ".tickets/01-task.md", new_string: "- Never hand-edit `status: done` directly." } },
+  ]) {
+    const res = runPre(allowed);
+    assert.equal(res.status, 0, res.stderr);
+    assert.equal(res.stdout, "");
+  }
+});
+
+test("DSH hook skips resumed sessions, guards status: done edits, and registers read-only tkt tools", async () => {
+  await fixture(async ({ project, bin, calls }) => {
+    const handlers = new Map();
+    const guards = [];
+    const registered = [];
+    const injected = [];
+    const prevPath = process.env.PATH;
+    const prevCalls = process.env.FIXTURE_CALLS;
+    process.env.PATH = bin;
+    process.env.FIXTURE_CALLS = calls;
+    try {
+      const toolCtx = {
+        workingDirectory: { ensure: async () => project },
+        tools: {
+          guard: (fn) => guards.push(fn),
+          register: (def, opts) => registered.push({ def, opts }),
+        },
+      };
+      const ctx = {
+        workingDirectory: toolCtx.workingDirectory,
+        on: (event, fn) => handlers.set(event, fn),
+        inject: (_deps, fn) => fn(toolCtx),
+      };
+      applyDshHook(ctx);
+      const onCreated = handlers.get("agent/created");
+      assert.equal(typeof onCreated, "function");
+
+      // Resume must skip injection to preserve V4.1 KV-cache prefix.
+      await onCreated({ agent: { inject: (m) => injected.push(m) }, source: "resume" });
+      assert.equal(injected.length, 0);
+
+      // Fresh session injects frontier + WIP.
+      await onCreated({ agent: { inject: (m) => injected.push(m) }, source: "new" });
+      assert.equal(injected.length, 1);
+      assert.match(injected[0].content[0].text, /Frontier fixture/);
+
+      // Monotonic guard blocks .tickets/*.md status: done edits and allows others.
+      assert.equal(guards.length, 1);
+      assert.match(guardTicketStatusDone({ name: "edit", arguments: { file_path: ".tickets/10-a.md", new_string: "status: done" } }), /tkt close/);
+      assert.equal(guardTicketStatusDone({ name: "edit", arguments: { file_path: ".tickets/10-a.md", new_string: "status: in_progress" } }), undefined);
+      assert.equal(guardTicketStatusDone({ name: "write", arguments: { path: "README.md", content: "status: done\n" } }), undefined);
+
+      // Read-only parallel-safe tools registered and executable.
+      assert.deepEqual(registered.map((r) => r.def.name).sort(), ["tkt_query", "tkt_ready"]);
+      for (const { def, opts } of registered) {
+        assert.equal(def.isConcurrencySafe(), true);
+        assert.equal(await opts.when({ agent: {} }), true);
+      }
+      const readyTool = registered.find((r) => r.def.name === "tkt_ready").def;
+      const queryTool = registered.find((r) => r.def.name === "tkt_query").def;
+      const readyOut = await readyTool.execute({}, { agent: {} });
+      assert.equal(readyOut.stdout, "Frontier fixture");
+      assert.deepEqual(readyTool.output.render({}, readyOut), [{ type: "text", text: "Frontier fixture" }]);
+      const queryOut = await queryTool.execute({ status: "in_progress", allContext: true }, { agent: {} });
+      assert.equal(queryOut.stdout, "WIP fixture");
+    } finally {
+      process.env.PATH = prevPath;
+      if (prevCalls === undefined) delete process.env.FIXTURE_CALLS;
+      else process.env.FIXTURE_CALLS = prevCalls;
+    }
+  });
 });
 
 test("native executable fixture preserves the first tkt argument", () => fixture(({ dir, calls }) => {
