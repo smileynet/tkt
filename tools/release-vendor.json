@@ -11,10 +11,10 @@
   "sourceTree": "per-file SHA-256 values identify the canonical source bytes",
   "files": {
     "tools/release.mjs": "80cc78ebd88b1431a133edb4c7856b345657976a4865ce05b08d623022d75d9c",
-    "tools/release-artifacts.mjs": "b96f3d953d0eead80053458e28710f40799f52ef989be91619fbd15ba93bc006",
+    "tools/release-artifacts.mjs": "1a10054a4b7238b5f23441e2918a6ad3656623d98431237ffc0359c6f746711f",
     "tools/release-version.mjs": "8abec8d74d6fe8463d51de721317f65b2c3bfe7439013e859eff2629033388ba",
     "tools/release-git.mjs": "ee25375dc7b4bbb9e80d520ae069d667a4898124587072783f773e1d6b6c311c",
-    "tools/release-product.mjs": "d5d2e9d4bcd357e1405c45a2814ee4257f42647a876d90f2ca37e3f65c8d4073",
+    "tools/release-product.mjs": "e5f9d0a5ccafefbba54f10037d2ed83a3f3f192469bb029ccfdea83a68f9b0f0",
     "tools/release-native.mjs": "7f20a08ff225852a16e21d772425d4a5debeba51fa010ce9a6121c203b5725e4",
     "tools/release-verify.mjs": "ac03dfa912811f53e6f736c372379e3c2056710af037bdb1945437389963d86f",
     "tools/release-publish.mjs": "1ece360b681e2556ca7f0eab90b81bdf1e76d950e3210099278019dd0d05df79",

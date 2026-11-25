@@ -48,8 +48,21 @@ fn claude_plugin_version_matches_crate() {
 }
 
 #[test]
-fn agy_plugin_version_matches_crate() {
-    assert_eq!(manifest_version("plugin.json"), env!("CARGO_PKG_VERSION"));
+fn no_competing_root_plugin_manifest_and_explicit_skills() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    assert!(
+        !root.join("plugin.json").exists(),
+        "root plugin.json was retired (#287); .claude-plugin/plugin.json is the single source and agy builds dist/agy-plugin/plugin.json from it"
+    );
+    let text = std::fs::read_to_string(root.join(".claude-plugin/plugin.json")).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let skills = json["skills"]
+        .as_array()
+        .expect(".claude-plugin/plugin.json must declare explicit \"skills\" array");
+    assert!(
+        skills.iter().any(|v| v.as_str() == Some("./skills")),
+        ".claude-plugin/plugin.json skills must explicitly include \"./skills\""
+    );
 }
 
 #[test]

@@ -193,6 +193,14 @@ export function buildArtifacts({ repo, ref, out, compatibility = { status: "not-
           writeFileSync(join(tree, ".claude-plugin/plugin.json"), encoded(manifest));
         }
       }
+      const stampManifests = host === "agy" ? ["plugin.json"]
+        : host === "kimi" ? ["kimi.plugin.json"]
+        : [".claude-plugin/plugin.json", ...(existsSync(join(tree, ".codex-plugin/plugin.json")) ? [".codex-plugin/plugin.json"] : [])];
+      for (const rel of stampManifests) {
+        const manifest = json(join(tree, rel));
+        manifest.version = identity.version;
+        writeFileSync(join(tree, rel), encoded(manifest));
+      }
       let install = "agy plugin install /absolute/path/to/extracted-plugin";
       if (host !== "agy" && host !== "kimi") {
         const catalog = host === "codex" && existsSync(join(tree, ".agents/plugins/marketplace.json")) ? ".agents/plugins/marketplace.json" : ".claude-plugin/marketplace.json";

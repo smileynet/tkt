@@ -9,6 +9,9 @@
   "homepage": "https://github.com/smileynet/tkt",
   "repository": "https://github.com/smileynet/tkt",
   "license": "MIT",
+  "skills": [
+    "./skills"
+  ],
   "hooks": "./.claude-plugin/claude-hooks.json",
   "keywords": [
     "tickets",

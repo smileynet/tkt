@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { credentialReply } from "./release-cargo-credentials.mjs";
 import { cargoUploadPolicy, validateCargoUploadManifest } from "./release-cargo-upload.mjs";
+import { inspectVersions } from "./release-version.mjs";
 import { removeTree } from "./test-fixtures.mjs";
 
 const tools = dirname(fileURLToPath(import.meta.url)), repo = dirname(tools);
@@ -67,7 +68,7 @@ test("standalone Node, bash and mise preparation inspect without output or versi
   const git = (...args) => execFileSync("git", ["-C", candidate, ...args], { encoding: "utf8", stdio: "pipe" }).trim();
   try {
     mkdirSync(candidate); git("init", "-b", "main"); git("config", "user.name", "Fixture"); git("config", "user.email", "fixture@example.invalid"); git("config", "core.autocrlf", "false");
-    for (const file of ["Cargo.toml", "Cargo.lock", ".claude-plugin/plugin.json", ".codex-plugin/plugin.json", "plugin.json"]) { mkdirSync(dirname(join(candidate, file)), { recursive: true }); cpSync(join(repo, file), join(candidate, file)); }
+    for (const file of ["Cargo.toml", "Cargo.lock", ".claude-plugin/plugin.json", ".codex-plugin/plugin.json"]) { mkdirSync(dirname(join(candidate, file)), { recursive: true }); cpSync(join(repo, file), join(candidate, file)); }
     writeFileSync(join(candidate, "CHANGELOG.md"), "# Changelog\n\n## [Unreleased]\n\n### Added\n- Fixture change.\n");
     git("add", "."); git("-c", `core.hooksPath=${join(temp, "no hooks")}`, "commit", "-m", "Fixture");
     const before = git("rev-parse", "HEAD"), version = "999.0.0", args = ["prepare", "--repo", candidate, "--version", version, "--out", output];
@@ -120,4 +121,39 @@ test("distributed skills do not require the external handoff command", () => {
     const file = join(skills, entry.name, "SKILL.md");
     assert.doesNotMatch(readFileSync(file, "utf8"), /`\/handoff`/, `${entry.name} must support a tkt-only adopter`);
   }
+});
+
+test("Cargo.toml authority agrees with retained manifests and fails on drift", () => {
+  assert.equal(existsSync(join(repo, "plugin.json")), false, "root plugin.json must remain absent (#287)");
+  const claude = JSON.parse(readFileSync(join(repo, ".claude-plugin/plugin.json"), "utf8"));
+  assert.ok(Array.isArray(claude.skills) && claude.skills.includes("./skills"), ".claude-plugin/plugin.json must explicitly declare ./skills");
+
+  const read = (file) => readFileSync(join(repo, file), "utf8");
+  const has = (file) => existsSync(join(repo, file));
+  const current = inspectVersions(read, has);
+  assert.equal(current.authorityFile, "Cargo.toml");
+  assert.equal(current.name, "tkt");
+
+  const retained = [".claude-plugin/plugin.json", ".codex-plugin/plugin.json", ".kimi-plugin/kimi.plugin.json", "qwen-extension.json"];
+  for (const target of retained) {
+    assert.throws(
+      () => inspectVersions((file) => {
+        if (file !== target) return read(file);
+        const data = JSON.parse(read(file));
+        return JSON.stringify({ ...data, version: "9.9.9" });
+      }, has),
+      /source Cargo authority differs/,
+      `expected version mismatch error for ${target}`,
+    );
+  }
+  assert.throws(
+    () => inspectVersions(
+      (file) => (file === "plugin.json" ? JSON.stringify({ name: "tkt", version: "9.9.9" }) : read(file)),
+      (file) => file === "plugin.json" || has(file),
+    ),
+    /source Cargo authority differs/,
+    "expected version mismatch error if root plugin.json reappears with a drifting version",
+  );
+  const artifactSource = readFileSync(join(tools, "release-artifacts.mjs"), "utf8");
+  assert.match(artifactSource, /manifest\.version = identity\.version;/, "release-artifacts must stamp packaged manifest versions from the release authority");
 });

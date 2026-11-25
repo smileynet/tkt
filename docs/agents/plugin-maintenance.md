@@ -62,9 +62,21 @@ failure. It targets Claude 2.1.310+ and Node 22+. Private hook config/scripts li
 `runtimeFiles` or Markdown resource links. Codex explicitly selects no hooks, and
 release packaging ships these private files only in the Claude archive.
 
-tkt is also a Claude Code plugin: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`,
-with skills from the default `skills/` dir. grey-matter's plugin depends on it as
-`tkt@tkt` (this marketplace), so keep the plugin and marketplace name `tkt`. When a change touches skills or
+tkt is also a Claude Code plugin: `.claude-plugin/plugin.json` (which explicitly declares `"skills": ["./skills"]`) and `.claude-plugin/marketplace.json`. grey-matter's plugin depends on it as
+`tkt@tkt` (this marketplace), so keep the plugin and marketplace name `tkt`.
+
+#### Manifest single-sourcing and root `plugin.json` reader audit (#287)
+
+Root `plugin.json` was removed after auditing every reader in the repository and harness stack:
+
+- **Claude Code & ZCode:** read `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
+- **Codex:** reads `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`.
+- **Kimi Work:** reads `.kimi-plugin/kimi.plugin.json` (packaged by `tools/build-kimi-plugin.mjs`).
+- **Qwen Code:** reads `qwen-extension.json`.
+- **Antigravity (`agy`) & DSH:** `tools/deploy.mjs` generates `dist/agy-plugin/plugin.json` and `dist/dsh-plugin/package.json` from `.claude-plugin/plugin.json`; neither reads a root `plugin.json`.
+- **Release & version authority:** `Cargo.toml` is the single version authority. `tests/plugin_manifests.rs` and `tools/release-tools.test.mjs` (`inspectVersions`) fail if any retained manifest drifts from `Cargo.toml` or if a competing root `plugin.json` returns, and `tools/release-artifacts.mjs` stamps every packaged host bundle manifest from the release authority version.
+
+When a change touches skills or
 the CLI surface the skills describe:
 
 - **New or changed skill under `skills/`:** no manifest edit. The plugin picks it up as is.

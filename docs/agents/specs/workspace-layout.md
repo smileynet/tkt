@@ -33,7 +33,7 @@ skills/                — cross-harness skills (deployed as copy to ~/.{kiro,co
   tkt-orient/          — session-start: read reconciled plan, propose next pick
   tkt-work/            — execution loop: claim, verify premises, do work, close with evidence
   tkt-reconcile/       — session-end: make tickets current, re-sequence the plan
-plugin.json          — Antigravity (agy) / Agent Plugins manifest (packaged with skills/ by tools/deploy-skills.sh)
+.claude-plugin/plugin.json — primary plugin manifest (`skills: ["./skills"]`); `tools/deploy.mjs` generates Antigravity (`dist/agy-plugin/plugin.json`) and DSH manifests from it
 GLOSSARY.md   — project glossary
 .tickets/            — tkt's own tickets (dogfooding)
 .references/         — cloned reference repos (gitignored)

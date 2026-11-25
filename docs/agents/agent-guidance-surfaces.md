@@ -10,7 +10,7 @@ tkt teaches agents how to use it through multiple documents. When CLI behavior c
 | **Skill (SKILL.md)** | `skills/tkt-core/SKILL.md` | Users’ agents (kiro, claude, codex, agy) | Skill activation via triggers |
 | **Skill references** | `skills/tkt-core/references/*.md` | Users’ agents (lazy-loaded) | Agent reads reference link |
 | **Workflow skills** | `skills/tkt-{orient,work,reconcile}/SKILL.md` | Users’ agents (cross-harness + agy plugin) | Skill activation via triggers |
-| **Plugin manifests** | `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `plugin.json` | Claude Code, Codex, and Antigravity (`agy`) users | Plugin installation; Antigravity packaged by `tools/deploy-skills.sh` |
+| **Plugin manifests** | `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `.kimi-plugin/kimi.plugin.json`, `qwen-extension.json` | Claude Code, ZCode, Codex, Kimi, Qwen, DSH, and Antigravity (`agy`) users | Plugin installation; `tools/deploy.mjs` generates `dist/agy-plugin/plugin.json` and `dist/dsh-plugin/package.json` from `.claude-plugin/plugin.json` |
 | **Contributor runbook and contract** | `AGENTS.md` → `docs/agents/tkt-contract.md`, architecture/plugin/platform references | Contributors to tkt itself | Runbook always; reference pointers trigger by task |
 | **README (Usage section)** | `README.md` | Humans browsing crate/GitHub | Manual reading |
 
