@@ -1,7 +1,7 @@
 ---
 id: "287"
 title: "single-source the plugin manifests: root plugin.json vs .claude-plugin/plugin.json, explicit skills, version gate against Cargo.toml"
-status: in_progress
+status: done
 blocked_by: []
 priority: medium
 validation_criteria:
@@ -29,12 +29,21 @@ Audit every reader of root `plugin.json`, then delete it or generate it from `.c
 
 ## Acceptance criteria
 
-- [ ] A documented reader audit covers root `plugin.json`; the file is removed or generated from the dotted manifest.
-- [ ] `.claude-plugin/plugin.json` explicitly declares `./skills`.
-- [ ] A static/pre-push fixture fails on version disagreement among Cargo and retained manifests.
-- [ ] Release artifacts derive manifest versions from the release authority rather than hand edits.
-- [ ] Focused fixtures and the full maintainer gate pass.
+- [x] A documented reader audit covers root `plugin.json`; the file is removed or generated from the dotted manifest.
+- [x] `.claude-plugin/plugin.json` explicitly declares `./skills`.
+- [x] A static/pre-push fixture fails on version disagreement among Cargo and retained manifests.
+- [x] Release artifacts derive manifest versions from the release authority rather than hand edits.
+- [x] Focused fixtures and the full maintainer gate pass.
 
 ## Out of scope
 
 Publishing the marketplace or changing release authorization; ticket 288 owns publication separately.
+
+## Resolution (2026-11-25)
+
+done: removed obsolete root plugin.json after full reader audit, declared explicit ./skills in .claude-plugin/plugin.json, added static Cargo-vs-manifest drift fixtures and release-artifact version stamping synced from grey-matter, and verified deploy.mjs check + full mise run check
+
+### Verification
+1. ✓ an audit names every reader of the root plugin.json; it is deleted or generated from .claude-plugin/plugin.json (ZCode probes only the dotted dirs; the vendored deployer reads only .claude-plugin) — "Audited all readers across tkt (Claude/ZCode -> .claude-plugin/plugin.json; Codex -> .codex-plugin/plugin.json; Kimi -> .kimi-plugin/kimi.plugin.json; Qwen -> qwen-extension.json; Antigravity/DSH generated from .claude-plugin/plugin.json); documented in docs/agents/plugin-maintenance.md and removed root plugin.json"
+2. ✓ .claude-plugin/plugin.json declares skills explicitly (./skills) instead of relying on ZCode's default-root collection (works, trial-verified 2026-11-08, but implicit) — "Declared explicit skills: ["./skills"] in .claude-plugin/plugin.json; verified with node tools/deploy.mjs check (plugin-manifest check OK: tkt v0.4.0, 4 skills from 1 dirs) and tests/plugin_manifests.rs"
+3. ✓ a pre-push/static gate fails when Cargo.toml, root plugin.json (while it exists), and .claude-plugin/plugin.json versions disagree; release-artifacts stamps the manifest version from the release authority rather than hand-sync — "Added Cargo.toml vs retained-manifest drift fixtures in tools/release-tools.test.mjs and authority version stamping in canonical grey-matter/scripts/release-artifacts.mjs (synced to tools/release-artifacts.mjs); mise run check (check-tools + cargo fmt --check + cargo clippy -D warnings + cargo test) exited 0"
