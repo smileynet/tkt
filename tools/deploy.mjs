@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.12.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.13.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -39,7 +39,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.12.0";
+const DEPLOY_VERSION = "1.13.0";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -256,6 +256,40 @@ function refreshCodex(pack, args) {
 // the same version (spike-confirmed), so no version bump is needed. A version change prints
 // "restart zcode to apply" — skills load at session start. The closing `plugins enable` is
 // idempotent and recovers an install left [disabled] (a foreign record with no config entry).
+function zcodeAppServerCall(cli, method, params) {
+  const env = { ...process.env };
+  if (!env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE) {
+    const builtinCfg = resolve(dirname(cli), "..", "config", "provider", "zcode-builtin.json");
+    if (isFile(builtinCfg)) env.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE = builtinCfg;
+  }
+  if (!env.ZCODE_PERSONAL_PROVIDER_CONFIG_FILE) {
+    env.ZCODE_PERSONAL_PROVIDER_CONFIG_FILE = join(ZCODE_HOME(), "v2", "provider_config.json");
+  }
+  const run = spawnSync(process.execPath, [cli, "app-server", "--stdio"], {
+    env,
+    input: JSON.stringify({ id: 1, method, params }) + "\n",
+    encoding: "utf8",
+    timeout: 60000,
+    windowsHide: true,
+  });
+  if (run.error) throw run.error;
+  const reply = (run.stdout || "")
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => { try { return JSON.parse(line); } catch { return null; } })
+    .find((msg) => msg?.id === 1);
+  if (run.status !== 0 && !reply) {
+    throw new Error((run.stderr || run.stdout || `zcode app-server exited ${run.status}`).trim());
+  }
+  if (!reply) throw new Error(`zcode app-server returned no response for ${method}`);
+  if (reply.error) throw new Error(reply.error.message || JSON.stringify(reply.error));
+  const diagErr = Array.isArray(reply.result?.diagnostics)
+    ? reply.result.diagnostics.find((d) => d?.level === "error" || d?.severity === "error")
+    : null;
+  if (diagErr) throw new Error(diagErr.message || JSON.stringify(diagErr));
+  return reply.result;
+}
+
 function refreshZcode(pack, args) {
   const label = zcodePlugin(pack);
   if (!label) return;
@@ -269,8 +303,22 @@ function refreshZcode(pack, args) {
   }
   console.log(`\nrefreshing ZCode plugin ${id}`);
   try {
-    execFileSync(process.execPath, [cli, "plugins", "marketplace", "update", marketplace], { stdio: "inherit" });
-    execFileSync(process.execPath, [cli, "plugins", "update", id], { stdio: "inherit" });
+    const mp = spawnSync(process.execPath, [cli, "plugins", "marketplace", "update", marketplace], {
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    if (mp.error) throw mp.error;
+    if (mp.status === 0) {
+      if (mp.stdout) process.stdout.write(mp.stdout);
+      if (mp.stderr) process.stderr.write(mp.stderr);
+      execFileSync(process.execPath, [cli, "plugins", "update", id], { stdio: "inherit" });
+    } else if (/Unknown plugins command:\s*marketplace/i.test(`${mp.stderr || ""}\n${mp.stdout || ""}`)) {
+      const ws = { workspacePath: pack.dir, workspaceKey: pack.dir };
+      zcodeAppServerCall(cli, "plugins/marketplace/update", { workspace: ws, marketplace });
+      zcodeAppServerCall(cli, "plugins/update", { workspace: ws, pluginId: id });
+    } else {
+      throw new Error((mp.stderr || mp.stdout || `Command failed: plugins marketplace update ${marketplace}`).trim());
+    }
     execFileSync(process.execPath, [cli, "plugins", "enable", id], { stdio: "inherit" });
   } catch (error) {
     console.log(`  warning: ZCode plugin refresh did not finish (${String(error.message).split("\n")[0]})`);
