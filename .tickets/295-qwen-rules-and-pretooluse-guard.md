@@ -1,7 +1,7 @@
 ---
 id: "295"
 title: "Add Qwen conditional rules/tickets.md, shared PreToolUse status:done guard, and <=500-char skill descriptions"
-status: open
+status: in_progress
 blocked_by: []
 validation_criteria:
   - "rules/tickets.md exists with paths frontmatter for .tickets/**/*.md"
