@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// deploy.mjs 1.13.0 (grey-matter) — deploy a skill pack to every agent harness on this machine.
+// deploy.mjs 1.13.1 (grey-matter) — deploy a skill pack to every agent harness on this machine.
 //
 // One deployer for every project that ships skills (proposal 08). The project declares WHAT
 // it ships in .claude-plugin/plugin.json (name, version, `skills` dirs; deploy-only settings
@@ -39,7 +39,7 @@ import { homedir, platform } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEPLOY_VERSION = "1.13.0";
+const DEPLOY_VERSION = "1.13.1";
 export class PackError extends Error {}
 const HOME = homedir();
 const isDir = (p) => { try { return statSync(p).isDirectory(); } catch { return false; } };
@@ -269,7 +269,7 @@ function zcodeAppServerCall(cli, method, params) {
     env,
     input: JSON.stringify({ id: 1, method, params }) + "\n",
     encoding: "utf8",
-    timeout: 60000,
+    timeout: 240000,
     windowsHide: true,
   });
   if (run.error) throw run.error;
@@ -290,6 +290,28 @@ function zcodeAppServerCall(cli, method, params) {
   return reply.result;
 }
 
+function zcodeCacheUpToDate(pack, id, marketplace) {
+  if (readJson(join(ZCODE_HOME(), "cli", "config.json"))?.plugins?.enabledPlugins?.[id] !== true) return false;
+  const base = join(ZCODE_HOME(), "cli", "plugins", "cache", marketplace, pack.name);
+  const versions = isDir(base) ? readdirSync(base).filter((v) => !v.startsWith(".")) : [];
+  if (versions.length !== 1 || versions[0] !== pack.version) return false;
+  const at = join(base, pack.version);
+  if (!isDir(at)) return false;
+  const manifest = readJson(join(at, ".claude-plugin", "plugin.json"));
+  if (!manifest) return false;
+  const cachedNames = discoverPluginSkills(at, manifest);
+  if (JSON.stringify(cachedNames.slice().sort()) !== JSON.stringify(pack.skills.map((s) => s.name).sort())) return false;
+  const files = [
+    ...agyResources(pack),
+    join(pack.dir, ".claude-plugin", "plugin.json"),
+    ...(pack.deploy.claudeFiles ?? []).map((rel) => resolve(pack.dir, rel)),
+  ];
+  return (
+    files.every((file) => isFile(join(at, relative(pack.dir, file))) && readFileSync(file).equals(readFileSync(join(at, relative(pack.dir, file))))) &&
+    pack.skills.every((skill) => isDir(join(at, relative(pack.dir, skill.src))) && treeHash(skill.src) === treeHash(join(at, relative(pack.dir, skill.src))))
+  );
+}
+
 function refreshZcode(pack, args) {
   const label = zcodePlugin(pack);
   if (!label) return;
@@ -299,6 +321,10 @@ function refreshZcode(pack, args) {
   const cli = zcodeCli();
   if (!cli || !isFile(cli)) {
     console.log(`  zcode CLI not found (set ZCODE_CLI): plugin refresh skipped (${id} stays as installed)`);
+    return;
+  }
+  if (zcodeCacheUpToDate(pack, id, marketplace)) {
+    console.log(`  ZCode plugin ${id} is up to date`);
     return;
   }
   console.log(`\nrefreshing ZCode plugin ${id}`);
